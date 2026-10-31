@@ -55,14 +55,14 @@ Stand 31.10.2026, nach der Korrekturrunde. Grundlage: `docs/input/use_cases_f3.m
 
 Jede Stelle, die in Fassung 4 als «Entscheid Tim offen» markiert ist, trägt eine dieser Nummern; jede Nummer kommt im Text vor.
 
-1. **E-F4-1 UC1-AK1, Ebene 4:** neun Orte in einer Zeile (kleinere Kacheln für die Anzuchtboxen), zwei Zeilen oder Scrollen erlauben; Kachelmasse 72 × 80 dp und 28 sp aus Fassung 3 bestätigen oder an die Standarddichte (48 dp) anpassen.
-2. **E-F4-2 UC5 Reihenfolge:** «Sorte zuerst, dann Plätze» (Fassung 3) gegen die Passungsrichtung «Gefäss → Sorten»; was «Säen» ohne Zielgefäss anzeigt.
+1. **E-F4-1 UC1-AK1, Ebene 4 – entschieden 31.10.2026: drei Gruppen «Keimung» (A1/A2 weiss | A3/A4 schwarz), «Jungpflanzen» (4.2/4.3 8 cm | 4.4/4.5 5 cm), «Halbbox» (4.1); kein Wischen.** Frage war: neun Orte in einer Zeile (kleinere Kacheln für die Anzuchtboxen), zwei Zeilen oder Scrollen erlauben; Kachelmasse 72 × 80 dp und 28 sp aus Fassung 3 bestätigen oder an die Standarddichte (48 dp) anpassen.
+2. **E-F4-2 UC5 Reihenfolge – entschieden 31.10.2026: Sorte zuerst; Passung beim Umsetzen (Konzept 6.1).** Frage war: «Sorte zuerst, dann Plätze» (Fassung 3) gegen die Passungsrichtung «Gefäss → Sorten»; was «Säen» ohne Zielgefäss anzeigt.
 3. **E-F4-3 Prüfart der Edge-Function-Tests:** [Unit] mit Zusatz «Deno test» wie in Fassung 4 oder eine eigene Prüfart; betrifft das AK-Abdeckungsskript.
 4. **E-F4-4 AK-Nummern:** die 34 neuen AK, C4-AK1 bis AK3 und die Teilung der Rundgang-AK in 1a bis 1c bestätigen, bevor die Spezifikation sie in Testnamen übernimmt.
 5. **E-F4-5 Skizze A3:** «leeren» oben rechts (Konzept 6.3), die Rücktaste dafür unten rechts.
 6. **E-F4-6 Reste aus Fassung 3 ohne Beleg im Konzept:** einzeln behalten (als A) oder streichen: rund 70 Apps (A1); Auswahlregel und rund 0.35 PT des Regaltests (A3); Aufteilung der 75 Minuten je Paket (A5); Papierfach 50 bis 80 g/m² (A6); Bildschirm bis Timerende plus 2 min (U7); Hauptknopf 72 dp, Ladezeit 1 s (UC1); Frage «Erreicht die Lösung den Netztopfboden?» (UC5); Ladezeit Heute 2 s (UC8-AK9); Wechseldauer 60 bis 75 bzw. 45 min (Lösungswechsel). Diese Nummer fasst auch Punkt (d) des Korrekturauftrags.
 7. **E-F4-7 Erratum-Kandidaten im Konzept:** Wortwahl «gehört zum Gefäss» (Z. 234) und Enum `'70x42'` (Z. 646).
-8. **E-F4-8 Pumpe oder Bereich:** markiert eine Abweichung «Pumpe sprudelt nicht» oder «keine Luftzone» die Gefässe derselben Luftpumpe (Konzept 5.3) oder den Bereich (R5.2, R10.5)? Danach Erratum für die unterlegene Stelle.
+8. **E-F4-8 Pumpe oder Bereich – entschieden 31.10.2026: dieselbe Pumpe; Erratum-Kandidat für R5.2 und R10.5.** Frage war: markiert eine Abweichung «Pumpe sprudelt nicht» oder «keine Luftzone» die Gefässe derselben Luftpumpe (Konzept 5.3) oder den Bereich (R5.2, R10.5)? Danach Erratum für die unterlegene Stelle.
 9. **E-F4-9 Rundung der Teil-EC:** rechnet die Grenze «mehr als 0.25 über der erwarteten Teil-EC» mit 1.04 (gerundet) oder 1.037 (ungerundet)?
 10. **E-F4-10 Auswertungs-AK:** die AK der Auswertungssichten in C4 statt in UC10 bestätigen.
 
