@@ -1,0 +1,8 @@
+# Notice
+
+Meldet einen Warnhinweis oder Tipp mit Titel, kurzem Text und optionaler Aktion.
+
+- Props: `tone` = `info` (Standard), `ok`, `warn`, `danger`; `title`; `children` (ein bis zwei Sätze); `action` (ein Button `compact` `secondary`).
+- Warnhinweise nennen Messwert und Sollwert: «Gemessen 6.7, Sollwert deiner Anlage 5.5–6.5.» Danach die Massnahme.
+- Beim Symptom-Check gilt «Hinweis statt Diagnose»: mögliche Ursachen, keine Feststellung.
+- `danger` wird Screenreadern sofort vorgelesen (`role="alert"`), die anderen höflich (`role="status"`).

@@ -1,0 +1,153 @@
+/* Hydrovisor Design System – Tokens.
+   Generiert aus tokens.json des Artefakts «Hydrovisor – CI» (Stand 23.10.2026).
+   Nicht von Hand ändern: Ergänzungen zuerst im Design System, dann neu exportieren (Konzept Kapitel 10). */
+
+@font-face {
+  font-family: "Manrope";
+  src: url("fonts/manrope-latin-wght-normal.woff2") format("woff2");
+  font-weight: 200 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  color-scheme: light;
+  /* Farben (helles Thema und themenunabhängige Werte) */
+  --tiefwasser: #0F3D4C; /* Markenfarbe Tiefwasser. «Hydro» der Wortmarke, Grund des App-Icons und von surface-brand. In der Oberfläche über die semantischen Tokens verwenden, nicht direkt. */
+  --teal: #1B7A78; /* Markenfarbe Teal. «visor» der Wortmarke, Skalenbögen der Bildmarke, brand im hellen Thema. */
+  --aqua: #5BBFBA; /* Markenfarbe Aqua. Wortmarke und Bögen auf dunklem Grund, brand im dunklen Thema. */
+  --blattgruen: #4CAF6E; /* Markenfarbe Blattgrün. Der grüne Bereich der Bildmarke. Als Fläche oder Grafik, nie als Text (auf hellem Grund nur 2.5:1). */
+  --dunkelgruen: #2E7D4F; /* Markenfarbe Dunkelgrün. Text und Symbole für «im grünen Bereich» im hellen Thema (status-ok). */
+  --signalrot: #D7263D; /* Signalrot. Nur für Zustände (Messwert ausserhalb, Fehler), nie als Schmuckfarbe. */
+  --surface: #F2F5F4; /* Seitengrund der App. */
+  --surface-raised: #FFFFFF; /* Karten, Eingabefelder, Bottom-Sheets. */
+  --surface-sunken: #E8EDEB; /* Vertiefte Bereiche: Segment-Schalter, Skalen-Hintergrund, Platzhalter. */
+  --surface-brand: #0F3D4C; /* Markenfläche: Splash, Kopf der Startseite, App-Icon. Darauf ink-on-brand und ink-on-brand-muted. */
+  --line: #D3DCD9; /* Trennlinien und Kartenränder (dekorativ, ohne Bedeutung). */
+  --line-control: #7C918D; /* Rand von Eingabefeldern und sekundären Buttons; mindestens 3:1 auf surface und surface-raised. */
+  --ink: #10242B; /* Haupttext auf surface, surface-raised, surface-sunken und allen *-soft-Flächen. */
+  --ink-muted: #45575D; /* Sekundärtext, Einheiten, Hilfetexte auf surface, surface-raised und surface-sunken. */
+  --ink-on-brand: #FFFFFF; /* Text auf surface-brand. */
+  --ink-on-brand-muted: #B9D3D1; /* Sekundärtext und Claim auf surface-brand. */
+  --brand: var(--teal); /* Hauptaktion, aktive Zustände, Links. Hell = Teal, dunkel = Aqua. Als Text auf surface, surface-raised und brand-soft; Beschriftung auf brand-Fläche mit on-brand. */
+  --brand-strong: #145F5D; /* Hover und gedrückter Zustand von brand-Flächen; Links beim Überfahren. */
+  --brand-soft: #E6F3F2; /* Getönter Grund hinter brand-Text: ausgewählte Listeneinträge, aktive Navigation. */
+  --on-brand: #FFFFFF; /* Text und Symbole auf einer brand-Fläche (Beschriftung des Hauptbuttons). */
+  --link: var(--brand); /* Links im Text, Alias von brand. */
+  --status-ok: var(--dunkelgruen); /* «Im grünen Bereich»: Text, Symbol und Zeiger, auf surface, surface-raised und status-ok-soft. */
+  --status-ok-soft: #E9F5ED; /* Grund hinter status-ok-Text (Badge, Hinweis). */
+  --status-warn: #9A5B00; /* «Knapp daneben»: Text, Symbol und Zeiger, auf surface, surface-raised und status-warn-soft. */
+  --status-warn-soft: #FBEFD8; /* Grund hinter status-warn-Text. */
+  --status-danger: #C21F35; /* «Ausserhalb»: Text, Symbol und Zeiger, auf surface, surface-raised und status-danger-soft. Auch für Fehlermeldungen in Formularen. */
+  --status-danger-soft: #FBE4E7; /* Grund hinter status-danger-Text. */
+  --status-info: var(--brand); /* Neutrale Hinweise (Erinnerung, Tipp), Alias von brand. */
+  --status-info-soft: var(--brand-soft); /* Grund hinter status-info-Text, Alias von brand-soft. */
+  --gauge-track: #C5D3D0; /* Skalenbogen ausserhalb des Sollbereichs (neutral, ohne Bedeutung). */
+  --gauge-target: #36945A; /* Sollbereich auf der Skala, der «grüne Bereich». 3:1 auf surface-raised in beiden Themen. */
+  --chart-ph: var(--brand); /* Verlaufslinie pH. */
+  --chart-ec: #0F3D4C; /* Verlaufslinie EC. */
+  --chart-temp: #B86E00; /* Verlaufslinie Wassertemperatur. */
+  --chart-target: var(--status-ok-soft); /* Band des Sollbereichs hinter den Verlaufslinien. */
+  --focus: #0F3D4C; /* Farbe des Tastatur-Fokusrings; mindestens 3:1 auf allen Flächen. */
+  --label-ink: #000000; /* Schrift, QR-Code und Rahmen auf gedruckten Etiketten (Baustein Label). In beiden Themen schwarz, weil das Etikett auf Papier steht. */
+  --label-paper: #FFFFFF; /* Grund des Etiketts und des Etikettenbogens. In beiden Themen weiss; label-ink darauf 21:1. */
+
+  /* Schrift */
+  --font-sans: "Manrope", system-ui, Roboto, sans-serif;
+  --text-display-size: 32px;
+  --text-display-line: 40px;
+  --text-display-weight: 700;
+  --text-display-tracking: -0.02em;
+  --text-title-size: 24px;
+  --text-title-line: 32px;
+  --text-title-weight: 700;
+  --text-title-tracking: -0.01em;
+  --text-heading-size: 19px;
+  --text-heading-line: 26px;
+  --text-heading-weight: 600;
+  --text-body-size: 16px;
+  --text-body-line: 24px;
+  --text-body-weight: 400;
+  --text-body-strong-size: 16px;
+  --text-body-strong-line: 24px;
+  --text-body-strong-weight: 600;
+  --text-label-size: 15px;
+  --text-label-line: 20px;
+  --text-label-weight: 600;
+  --text-small-size: 14px;
+  --text-small-line: 20px;
+  --text-small-weight: 400;
+  --text-caption-size: 12px;
+  --text-caption-line: 16px;
+  --text-caption-weight: 600;
+  --text-caption-tracking: 0.02em;
+  --text-value-xl-size: 48px;
+  --text-value-xl-line: 52px;
+  --text-value-xl-weight: 700;
+  --text-value-xl-tracking: -0.02em;
+  --text-value-size: 28px;
+  --text-value-line: 32px;
+  --text-value-weight: 700;
+  --text-value-tracking: -0.01em;
+  --text-unit-size: 14px;
+  --text-unit-line: 20px;
+  --text-unit-weight: 500;
+
+  /* spacing – 4px-Raster. */
+  --space-1: 4px; /* Abstand Symbol zu Text. */
+  --space-2: 8px; /* Innerhalb von Badges, zwischen Wert und Einheit. */
+  --space-3: 12px; /* Zwischen zusammengehörigen Zeilen, Feldbeschriftung zu Feld. */
+  --space-4: 16px; /* Innenabstand von Karten, seitlicher Rand der App am Handy. */
+  --space-5: 20px; /* Innenabstand von Buttons (seitlich). */
+  --space-6: 24px; /* Zwischen Karten und Abschnitten; seitlicher Rand am Tablet. */
+  --space-8: 32px; /* Zwischen grossen Abschnitten. */
+  --space-12: 48px; /* Oberer Abstand von Screen-Titeln, Splash. */
+
+  /* radius – Weich, wie die runden Enden der Skalenbögen. */
+  --radius-sm: 8px; /* Badges, kleine Flächen. */
+  --radius-md: 12px; /* Buttons und Eingabefelder. */
+  --radius-lg: 16px; /* Karten und Hinweise. */
+  --radius-xl: 24px; /* Grosse Flächen: Kopf der Startseite, Bottom-Sheet. */
+  --radius-full: 9999px; /* Pillen, Segment-Schalter, runde Symbolbuttons. */
+
+  /* size – Bedienung am Regal, oft mit nassen Händen: grosse Tippflächen. */
+  --size-touch: 48px; /* Mindesthöhe und -breite jeder Tippfläche; Höhe von Buttons und Eingabefeldern. */
+  --size-touch-compact: 40px; /* Kompakte Buttons in Listen; nie unter 40px. */
+  --size-icon: 24px; /* Symbole in Navigation und Buttons. */
+  --size-icon-sm: 16px; /* Symbole in Badges und Hinweisen. */
+  --size-content: 720px; /* Maximale Inhaltsbreite am Tablet. */
+
+  /* Schatten – Zurückhaltend; im dunklen Thema trennt der Flächenton, nicht der Schatten. */
+  --shadow-sm: 0 1px 2px #10242b0f, 0 1px 3px #10242b14; /* Karten im Ruhezustand. */
+  --shadow-lg: 0 4px 10px #10242b14, 0 16px 32px -4px #10242b24; /* Bottom-Sheet, Menüs, schwebende Elemente. */
+  --focus-ring: 0 0 0 2px #F2F5F4, 0 0 0 4px #0F3D4C; /* Tastatur-Fokus: 2px Abstand im Seitengrund, dann 2px focus (als box-shadow, folgt dem Radius). */
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --surface: #11191C;
+  --surface-raised: #18242A;
+  --surface-sunken: #0B1214;
+  --line: #2A3B40;
+  --line-control: #6E8589;
+  --ink: #EAF1F0;
+  --ink-muted: #A3B7B5;
+  --brand: var(--aqua);
+  --brand-strong: #7FD0CC;
+  --brand-soft: #143A3B;
+  --on-brand: #0F3D4C;
+  --status-ok: #6FCB8E;
+  --status-ok-soft: #15321F;
+  --status-warn: #F2B451;
+  --status-warn-soft: #3A2C10;
+  --status-danger: #FF7A88;
+  --status-danger-soft: #3E1A20;
+  --gauge-track: #2F4449;
+  --gauge-target: var(--blattgruen);
+  --chart-ec: #C9DCDA;
+  --chart-temp: #F2B451;
+  --focus: #7FD0CC;
+  --shadow-sm: 0 1px 2px #00000066;
+  --shadow-lg: 0 16px 32px -4px #000000b3;
+  --focus-ring: 0 0 0 2px #11191C, 0 0 0 4px #7FD0CC;
+}

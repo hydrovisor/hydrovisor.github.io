@@ -1,0 +1,116 @@
+/* Hydrovisor — Bausteine. Alle Werte kommen aus tokens.css (var(--…)). */
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; font-family: var(--font-sans); font-size: 16px; line-height: 24px; background: var(--surface); color: var(--ink); -webkit-font-smoothing: antialiased; }
+:where(button, input, select, textarea) { font: inherit; color: inherit; }
+.hv-num { font-variant-numeric: tabular-nums; }
+a { color: var(--link); text-underline-offset: 2px; }
+a:hover { color: var(--brand-strong); }
+:where(a, button, input, [tabindex]):focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
+
+/* Vorschau-Hilfen */
+.hv-stage { padding: var(--space-4); display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: center; }
+.hv-stack { display: flex; flex-direction: column; gap: var(--space-3); }
+
+/* Logo */
+.hv-logo { display: inline-block; line-height: 0; }
+.hv-logo svg { height: 100%; width: auto; display: block; }
+.hv-logo-on-dark { display: none; }
+[data-theme="dark"] .hv-logo-on-light { display: none; }
+[data-theme="dark"] .hv-logo-on-dark { display: inline-block; }
+
+/* Button */
+.hv-btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2);
+  min-height: var(--size-touch); min-width: var(--size-touch); padding: 0 var(--space-5);
+  border-radius: var(--radius-md); border: 1px solid transparent; cursor: pointer;
+  font-size: 15px; line-height: 20px; font-weight: 600; text-decoration: none; white-space: nowrap;
+  transition: background-color .15s ease-out, border-color .15s ease-out, color .15s ease-out; }
+.hv-btn-compact { min-height: var(--size-touch-compact); padding: 0 var(--space-4); }
+.hv-btn-block { display: flex; width: 100%; }
+.hv-btn-icon { display: inline-flex; width: var(--size-icon); height: var(--size-icon); align-items: center; justify-content: center; }
+.hv-btn-icon svg { width: 100%; height: 100%; }
+.hv-btn-primary { background: var(--brand); color: var(--on-brand); }
+.hv-btn-primary:hover { background: var(--brand-strong); }
+.hv-btn-secondary { background: var(--surface-raised); border-color: var(--line-control); color: var(--ink); }
+.hv-btn-secondary:hover { background: var(--surface-sunken); }
+.hv-btn-ghost { background: transparent; color: var(--brand); }
+.hv-btn-ghost:hover { background: var(--brand-soft); }
+.hv-btn-danger { background: var(--surface-raised); border-color: var(--status-danger); color: var(--status-danger); }
+.hv-btn-danger:hover { background: var(--status-danger-soft); }
+.hv-btn:disabled { cursor: not-allowed; background: var(--surface-sunken); border-color: transparent; color: var(--ink-muted); }
+
+/* Karte */
+.hv-card { background: var(--surface-raised); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: var(--space-4); box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: var(--space-3); }
+.hv-card-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3); }
+.hv-card-title { margin: 0; font-size: 19px; line-height: 26px; font-weight: 600; }
+.hv-card-meta { font-size: 12px; line-height: 16px; font-weight: 600; letter-spacing: .02em; color: var(--ink-muted); }
+.hv-card-foot { display: flex; gap: var(--space-2); flex-wrap: wrap; padding-top: var(--space-1); }
+.hv-card-brand { background: var(--surface-brand); border-color: var(--surface-brand); color: var(--ink-on-brand); border-radius: var(--radius-xl); }
+.hv-card-brand .hv-card-meta { color: var(--ink-on-brand-muted); }
+
+/* Status-Badge */
+.hv-badge { display: inline-flex; align-items: center; gap: var(--space-1); min-height: 24px; padding: 2px var(--space-2); border-radius: var(--radius-sm);
+  font-size: 12px; line-height: 16px; font-weight: 600; letter-spacing: .02em; background: var(--surface-sunken); color: var(--ink-muted); width: max-content; max-width: 100%; }
+.hv-status-icon { width: var(--size-icon-sm); height: var(--size-icon-sm); flex: none; }
+.hv-badge-ok { background: var(--status-ok-soft); color: var(--status-ok); }
+.hv-badge-warn { background: var(--status-warn-soft); color: var(--status-warn); }
+.hv-badge-danger { background: var(--status-danger-soft); color: var(--status-danger); }
+.hv-badge-info { background: var(--status-info-soft); color: var(--status-info); }
+/* Kennzeichen «veraltet» und «unsicher»: neutral, gestrichelt, nie Statusfarbe */
+.hv-badge-stale, .hv-badge-uncertain { background: var(--surface-raised); color: var(--ink-muted); border: 1px dashed var(--line-control); padding: 1px calc(var(--space-2) - 1px); }
+
+/* Hinweis */
+.hv-notice { display: flex; gap: var(--space-3); padding: var(--space-3) var(--space-4); border-radius: var(--radius-lg); background: var(--status-info-soft); color: var(--ink); }
+.hv-notice-icon { display: inline-flex; padding-top: 4px; color: var(--status-info); }
+.hv-notice-body { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+.hv-notice-title { margin: 0; font-weight: 600; }
+.hv-notice-text { font-size: 14px; line-height: 20px; }
+.hv-notice-text p { margin: 0; }
+.hv-notice-action { padding-top: var(--space-1); }
+.hv-notice-ok { background: var(--status-ok-soft); } .hv-notice-ok .hv-notice-icon { color: var(--status-ok); }
+.hv-notice-warn { background: var(--status-warn-soft); } .hv-notice-warn .hv-notice-icon { color: var(--status-warn); }
+.hv-notice-danger { background: var(--status-danger-soft); } .hv-notice-danger .hv-notice-icon { color: var(--status-danger); }
+
+/* Messanzeige */
+.hv-gauge { margin: 0; display: flex; flex-direction: column; align-items: center; gap: var(--space-2); width: 100%; max-width: 280px; }
+.hv-gauge-scale { width: 100%; height: auto; display: block; overflow: visible; }
+.hv-gauge-track, .hv-gauge-target { fill: none; stroke-width: 5; stroke-linecap: round; }
+.hv-gauge-track { stroke: var(--gauge-track); }
+.hv-gauge-target { stroke: var(--gauge-target); }
+.hv-gauge-needle { fill: var(--ink); transition: transform .3s ease-out; }
+.hv-tone-ok { fill: var(--status-ok); } .hv-tone-warn { fill: var(--status-warn); } .hv-tone-danger { fill: var(--status-danger); }
+.hv-gauge-read { display: grid; justify-items: center; gap: 2px; text-align: center; }
+.hv-gauge-label { font-size: 14px; line-height: 20px; font-weight: 600; color: var(--ink-muted); }
+.hv-gauge-value { font-size: 48px; line-height: 52px; font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; display: inline-flex; align-items: baseline; gap: var(--space-2); }
+.hv-gauge-unit { font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0; color: var(--ink-muted); }
+.hv-gauge-target-text { font-size: 14px; line-height: 20px; color: var(--ink-muted); font-variant-numeric: tabular-nums; margin-bottom: var(--space-1); }
+@media (prefers-reduced-motion: reduce) { .hv-gauge-needle, .hv-btn { transition: none; } }
+
+/* Eingabefeld */
+.hv-field { display: flex; flex-direction: column; gap: var(--space-2); }
+.hv-field-label { font-size: 15px; line-height: 20px; font-weight: 600; }
+.hv-field-box { display: flex; align-items: center; min-height: var(--size-touch); background: var(--surface-raised); border: 1px solid var(--line-control); border-radius: var(--radius-md); padding: 0 var(--space-4); gap: var(--space-2); }
+.hv-field-box:focus-within { box-shadow: var(--focus-ring); }
+.hv-field-input { flex: 1; min-width: 0; border: 0; background: transparent; padding: var(--space-3) 0; font-size: 16px; line-height: 24px; font-variant-numeric: tabular-nums; outline: none; }
+.hv-field-input:focus-visible { box-shadow: none; }
+.hv-field-input::placeholder { color: var(--ink-muted); }
+.hv-field-unit { font-size: 14px; line-height: 20px; font-weight: 500; color: var(--ink-muted); }
+.hv-field-msg { margin: 0; display: flex; gap: var(--space-1); align-items: center; font-size: 14px; line-height: 20px; color: var(--ink-muted); }
+.hv-field-error .hv-field-box { border-color: var(--status-danger); border-width: 2px; padding: 0 calc(var(--space-4) - 1px); }
+.hv-field-msg-error { color: var(--status-danger); }
+
+/* Etikett 70 × 42 mm (Druck). Immer label-ink auf label-paper, unabhängig vom Thema. */
+.hv-label { width: 70mm; height: 42mm; box-sizing: border-box; padding: 3mm; display: flex; align-items: center; gap: 3mm; overflow: hidden;
+  background: var(--label-paper); color: var(--label-ink); font-family: var(--font-sans); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.hv-label-qr-col { flex: none; display: flex; flex-direction: column; align-items: center; gap: 1mm; }
+.hv-label-qr { width: 30mm; height: 30mm; }
+.hv-label-qr svg, .hv-label-qr img { width: 100%; height: 100%; display: block; }
+.hv-label-qr-placeholder { box-sizing: border-box; border: 0.4mm dashed var(--label-ink); display: flex; align-items: center; justify-content: center; font-size: 3mm; font-weight: 600; }
+.hv-label-code { font-size: 2.8mm; line-height: 1; font-weight: 600; letter-spacing: .02em; font-variant-numeric: tabular-nums; }
+.hv-label-text { min-width: 0; display: flex; flex-direction: column; gap: 0.8mm; }
+.hv-label-id { font-size: 20mm; line-height: 1; font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.hv-label-line { font-size: 2.6mm; line-height: 1.25; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* A4-Bogen 3 × 7 Etiketten à 70 × 42 mm */
+.hv-sheet { width: 210mm; height: 297mm; box-sizing: border-box; padding-top: 1.5mm; display: grid; grid-template-columns: repeat(3, 70mm); grid-auto-rows: 42mm; background: var(--label-paper); }
+.hv-sheet-cell { width: 70mm; height: 42mm; }
+@media print { @page { size: A4; margin: 0; } body { background: #fff; } }
