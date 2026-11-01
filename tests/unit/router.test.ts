@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { hashZu, routeAusHash } from '../../src/ui/router.ts';
+import { hashZu, maskeFuer, routeAusHash } from '../../src/ui/router.ts';
 
 describe('Hash-Router', () => {
   it('erkennt #/heute und #/info', () => {
@@ -20,5 +20,24 @@ describe('Hash-Router', () => {
   it('bildet den Hash aus der Route', () => {
     expect(hashZu({ name: 'info' })).toBe('#/info');
     expect(routeAusHash(hashZu({ name: 'heute' }))).toEqual({ name: 'heute' });
+  });
+
+  it('erkennt #/anmelden', () => {
+    expect(routeAusHash('#/anmelden')).toEqual({ name: 'anmelden' });
+    expect(hashZu({ name: 'anmelden' })).toBe('#/anmelden');
+  });
+});
+
+describe('Maske nach Sitzung', () => {
+  it('ohne Sitzung führt jede Route ausser Info zur Anmeldung', () => {
+    expect(maskeFuer({ name: 'heute' }, 'abgemeldet')).toEqual({ name: 'anmelden' });
+    expect(maskeFuer({ name: 'anmelden' }, 'abgemeldet')).toEqual({ name: 'anmelden' });
+    expect(maskeFuer({ name: 'info' }, 'abgemeldet')).toEqual({ name: 'info' });
+  });
+
+  it('mit Sitzung führt die Anmeldung nach Heute, andere Routen bleiben', () => {
+    expect(maskeFuer({ name: 'anmelden' }, 'angemeldet')).toEqual({ name: 'heute' });
+    expect(maskeFuer({ name: 'heute' }, 'angemeldet')).toEqual({ name: 'heute' });
+    expect(maskeFuer({ name: 'info' }, 'angemeldet')).toEqual({ name: 'info' });
   });
 });

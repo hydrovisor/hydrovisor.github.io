@@ -3,6 +3,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
+import { authNachbilden, sitzungSpeichern } from './hilfen.ts';
 
 const SW = resolve(import.meta.dirname, '../../dist/sw.js');
 const ABLAUF = { id: 'e2e-rundgang', art: 'rundgang', schritt: 3 };
@@ -57,6 +58,9 @@ test('TO7 neue Version während Ablauf: Hinweis nur in Heute ohne Ablauf, nichts
 }) => {
   const original = readFileSync(SW, 'utf8');
   const hinweis = page.getByText('Neue Version, neu laden');
+  // Heute erst mit Sitzung (I0-06)
+  await sitzungSpeichern(page);
+  await authNachbilden(page);
   try {
     // App installiert und vom Service Worker gesteuert
     await page.goto('/#/heute');

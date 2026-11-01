@@ -107,7 +107,10 @@ jobs:
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
           VITE_VAPID_PUBLIC_KEY: ${{ vars.VITE_VAPID_PUBLIC_KEY }}
           VITE_COMMIT: ${{ github.sha }}
-        run: npm run build
+        # ohne die Variablen baute die App still gegen die lokale Adresse (Plan 8, A1; Prüferbefund 2)
+        run: |
+          test -n "$VITE_SUPABASE_URL" && test -n "$VITE_SUPABASE_PUBLISHABLE_KEY" || { echo "::error::Repository-Variablen VITE_SUPABASE_URL oder VITE_SUPABASE_PUBLISHABLE_KEY fehlen"; exit 1; }
+          npm run build
       - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with: { path: dist }
@@ -168,7 +171,9 @@ jobs:
           VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
           VITE_VAPID_PUBLIC_KEY: ${{ vars.VITE_VAPID_PUBLIC_KEY }}
-        run: VITE_COMMIT=$(git rev-parse HEAD) npm run build
+        run: |
+          test -n "$VITE_SUPABASE_URL" && test -n "$VITE_SUPABASE_PUBLISHABLE_KEY" || { echo "::error::Repository-Variablen VITE_SUPABASE_URL oder VITE_SUPABASE_PUBLISHABLE_KEY fehlen"; exit 1; }
+          VITE_COMMIT=$(git rev-parse HEAD) npm run build
       - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
       # eigener Artefaktname: pages hat im selben Lauf schon «github-pages» hochgeladen (Rückfall-Probe 1.11.2026)
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0

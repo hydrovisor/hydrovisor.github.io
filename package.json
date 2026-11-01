@@ -19,6 +19,7 @@
     "demo": "node scripts/folgt.mjs demo I0-10"
   },
   "dependencies": {
+    "@supabase/supabase-js": "2.118.0",
     "react": "19.3.1",
     "react-dom": "19.3.1",
     "workbox-core": "7.4.1",
