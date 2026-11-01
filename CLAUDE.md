@@ -23,7 +23,7 @@ Fakten nur aus dem Repository. Was nicht im Repository steht, fragst du Tim, sta
 1. **Merge nur nach Tims Bestätigung einer Kurzzusammenfassung, was der Merge auslöst; dann führt der Lead zusammen** (`gh pr merge --squash`). Die Zusammenfassung nennt: Dateien und Bereiche, ausgelöste Workflows (Deploy, Migration mit Freigabe, Backup), Wirkung auf Supabase und die Vorschau, Folgen für andere Zweige. Ohne ausdrückliches «Ja» im Chat kein Merge (Konzept 12.1, E6, `docs/entscheide/0001-merge-nach-bestaetigung.md`).
 2. **Produktions-Migration, Secrets und VAPID-Schlüssel sind Tims Handgriffe.** Der Agent liest keine Schlüssel, setzt keine Secrets und hat keinen Zugang zum Produktionsprojekt.
 3. **VAPID-Schlüssel nie neu erzeugen** (sonst sind alle Push-Abos ungültig).
-4. **Supabase nur `hydrovisor-dev`** (Projekt-Referenz `jalvmzgvxvidgmoxuglp`, fest in `.mcp.json`) oder lokal mit `supabase start`. Nie `supabase link`, nie `supabase db push`; die Produktion migriert nur `deploy.yml` mit Tims Freigabe.
+4. **Supabase nur `hydrovisor-dev`** (Projekt-Referenz `jalvmzgvxvidgmoxuglp`, fest im MCP-Server `supabase` aus `.mcp.json`) oder lokal mit `supabase start`. Einen kontoweiten Supabase-Connector nicht verwenden. Nie `supabase link`, `--linked` oder `supabase db push`, nie `gh workflow run`; die Produktion migriert nur `deploy.yml` mit Tims Freigabe.
 5. **Nie direkt auf `main`**: jede Änderung auf einem Zweig (höchstens 28 Zeichen, Pakete `paket/<issue>-<kurz>`) mit Pull Request; Ruleset `main-schutz` verlangt Squash. Force-Push und endgültiges Löschen führt Tim selbst aus.
 6. **Keine Personendaten im öffentlichen Repository**: keine Nachnamen, Adressen, Telefonnummern, E-Mail-Adressen, auch nicht in Fixtures oder Testdaten (`00_rueckfragen.md` Annahme 12).
 7. **Referenzdateien sind Orakel**: `tests/golden/duengerrechner_referenz.csv` und `data/eval/tueten_referenz.csv` legt Tim an; Agenten ändern sie nie (Hash im Prüftor).
@@ -73,7 +73,7 @@ Die Skripte entstehen mit Paket I0-01 (Grundgerüst); ihre Namen sind der Vertra
 | Edge Functions | `deno test supabase/functions` |
 | Seed | `npm run seed -- --ziel lokal` oder `--ziel dev` (nie Produktion von Hand) |
 | Demo-Daten | `npm run demo -- --laden` / `--loeschen` (lokal, dev) |
-| AK-Abdeckung | `node scripts/ak-abdeckung.mjs --issue <nr>` |
+| AK-Abdeckung | `node scripts/ak-abdeckung.ts --issue <nr> --berichte reports` |
 | Entwurf Datenmodell prüfen | `bash docs/spec/pruefung/lauf.sh` (Docker, PostgreSQL 17) |
 | Sperr-Hook testen | `node --test .claude/hooks/sperre.test.mjs` |
 
@@ -85,12 +85,12 @@ Die Skripte entstehen mit Paket I0-01 (Grundgerüst); ihre Namen sind der Vertra
 4. Pull Request mit Vorlage, Label `abnahme-wartet`; Abnahme 1 in der Vorschau; Kurzzusammenfassung; Merge nach Tims Bestätigung; Abnahme 2 in der installierten App.
 5. Statuskommentar im Issue nach jedem Planschritt und am Sitzungsende; Entscheide als Datei in `docs/entscheide/`.
 
-Paketklassen, Rollen und Modelle: Konzept 12.2. Kern-Pakete: Datenmodell mit Zugriffsregeln (I0), Datenpfad mit Offline-Bündel (I0), Aufgaben-Rechnung (I1b), Passungs-Empfehlung (I2-4). Kern nur starten, wenn mindestens 50 % des Wochenkontingents frei sind; Verbrauch (`/usage`) ins Issue.
+Paketklassen, Rollen und Modelle: Konzept 12.2. Kern-Pakete: Datenmodell mit Zugriffsregeln (I0), Datenpfad mit Offline-Bündel (I0), Aufgaben-Rechnung (I1b), Passungs-Empfehlung (I2-4). Kern nur starten, wenn mindestens 50 % des Wochenkontingents frei sind; Verbrauch (`/usage`) ins Issue. Kein neues I1b- oder I2-Paket, solange mehr als 20 `offen-regal`-Einträge offen sind.
 
 ## Sperren (Konzept 12.4)
 
-- `.claude/settings.json`: Deny-Regeln für Push auf `main`, Force-Push, `supabase db push`, `supabase link`, Lesen von `.env*`; `gh pr merge` erlaubt, aber nur nach Regel 1.
-- `.claude/hooks/sperre.mjs` (PreToolUse für Bash, PowerShell und Supabase-MCP): lehnt Push-Ziel `main`, Force-Push, `supabase db push`/`link` und jede Supabase-Projekt-Referenz ausser `hydrovisor-dev` ab. Den Hook nicht umgehen; scheitert er fälschlich, Tim fragen.
+- `.claude/settings.json`: Deny-Regeln für Push auf `main`, Force-Push, `supabase db push`, `supabase link`, `gh workflow run` (Bash und PowerShell), Lesen von `.env*`, Schreiben in `.claude/settings.json`, `.claude/hooks/`, `.mcp.json` und die Referenzdateien; `gh pr merge` erlaubt, aber nur nach Regel 1.
+- `.claude/hooks/sperre.mjs` (PreToolUse für Bash, PowerShell und MCP): lehnt Push-Ziel `main`, Force-Push, `--all`, `supabase db push`/`link`/`--linked`, `gh workflow run` und jede Supabase-Projekt-Referenz ausser `hydrovisor-dev` ab, auch in Anführungszeichen und in `bash -c`/`pwsh -Command`. Den Hook nicht umgehen; scheitert er fälschlich, Tim fragen.
 - Prüftor `pr.yml`, Job `pruefstor` als Pflichtcheck; `test.only`, `test.skip`, neue Schnappschüsse und Änderungen an Testdateien des Testentwicklers ohne Freigabe lassen es scheitern.
 
 ## Umgebungen

@@ -23,6 +23,24 @@ const gesperrt = [
   `psql "postgresql://postgres.${FREMD}:pw@aws-0-eu-central-1.pooler.supabase.com:6543/postgres"`,
   `curl https://${FREMD}.supabase.co/rest/v1/messung`,
   `supabase functions deploy --project-ref ${FREMD}`,
+  // Befunde E2, E3 aus der Prüfung von Auftrag 3
+  'git.exe push origin main',
+  'git push origin "main"',
+  "git push origin 'main'",
+  'git push origin HEAD:"main"',
+  'git --no-pager push origin main',
+  'git -C "C:/Program Files/x" push origin main',
+  'bash -c "git push origin main"',
+  "powershell -Command 'git push origin main'",
+  'cmd /c "git push origin main"',
+  'git push --all origin',
+  `supabase functions deploy --project-ref "${FREMD}"`,
+  `supabase secrets list --project-ref '${FREMD}'`,
+  'supabase db reset --linked',
+  'supabase migration up --linked',
+  'gh workflow run deploy.yml --ref paket/12-messung',
+  'supabase --debug db push',
+  'npx supabase@latest link',
 ];
 const erlaubt = [
   'git push -u origin paket/12-messung',
@@ -34,6 +52,12 @@ const erlaubt = [
   `curl https://${DEV}.supabase.co/rest/v1/messung`,
   `supabase functions deploy --project-ref ${DEV}`,
   'npm run lint',
+  // Fehlalarme aus E22
+  'git commit -m "Hinweis: supabase link und git push origin main sind gesperrt"',
+  'grep -n "supabase db push" CLAUDE.md',
+  'git push origin paket/12-messung\necho main',
+  'supabase db reset',
+  'supabase start',
 ];
 
 for (const befehl of gesperrt) {
@@ -43,6 +67,9 @@ for (const befehl of erlaubt) {
   test(`erlaubt: ${befehl}`, () => assert.equal(pruefeBefehl(befehl, 'paket/12-messung'), null));
 }
 test('Push ohne Ziel vom Zweig main gesperrt', () => assert.ok(pruefeBefehl('git push', 'main')));
+test('Push HEAD vom Zweig main gesperrt', () => assert.ok(pruefeBefehl('git push -u origin HEAD', 'main')));
+test('Push @ vom Zweig main gesperrt', () => assert.ok(pruefeBefehl('git push origin @', 'main')));
+test('Push HEAD vom Paketzweig erlaubt', () => assert.equal(pruefeBefehl('git push -u origin HEAD', 'paket/12-messung'), null));
 test('Push ohne Ziel vom Paketzweig erlaubt', () => assert.equal(pruefeBefehl('git push', 'paket/12-messung'), null));
 test('PowerShell wird gleich geprüft', () =>
   assert.ok(pruefeEingabe({ tool_name: 'PowerShell', tool_input: { command: 'git push origin main' } }, 'x')));

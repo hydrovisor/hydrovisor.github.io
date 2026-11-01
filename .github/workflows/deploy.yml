@@ -1,6 +1,8 @@
 # Auslieferung (Konzept 11.1, 12.6; docs/spec/04_architektur.md Abschnitt 9). Nur main.
-# Migration, Seed und Edge Functions nur bei Änderungen unter supabase/, data/ oder scripts/seed*
-# und nur nach Tims Freigabe in der Umgebung production. Pages erst, wenn die App existiert.
+# Migration, Seed und Edge Functions, wenn sich seit dem Tag letzte-migration etwas unter supabase/,
+# data/ oder scripts/seed* geändert hat, und nur nach Tims Freigabe in der Umgebung production
+# (Deployment-Branches der Umgebung auf main beschränkt, Tims Handgriff). Pages erst, wenn die App existiert.
+# Aktionen per Commit angeheftet (Version im Kommentar).
 name: deploy
 
 on:
@@ -11,39 +13,47 @@ on:
 permissions:
   contents: read
 
+defaults:
+  run:
+    shell: bash
+
 concurrency:
   group: deploy
   cancel-in-progress: false
 
 jobs:
   vorhanden:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     outputs:
       app: ${{ steps.f.outputs.app }}
       db: ${{ steps.f.outputs.db }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+          fetch-tags: true
       - id: f
-        env:
-          VORHER: ${{ github.event.before }}
         run: |
           [ -f package.json ] && echo app=true >> "$GITHUB_OUTPUT" || echo app=false >> "$GITHUB_OUTPUT"
           if [ ! -f supabase/config.toml ]; then echo db=false >> "$GITHUB_OUTPUT"; exit 0; fi
-          if [ "${{ github.event_name }}" = workflow_dispatch ] || ! git cat-file -e "$VORHER" 2>/dev/null; then echo db=true >> "$GITHUB_OUTPUT"; exit 0; fi
-          if git diff --name-only "$VORHER" "$GITHUB_SHA" | grep -qE '^(supabase/|data/|scripts/seed)'; then echo db=true >> "$GITHUB_OUTPUT"; else echo db=false >> "$GITHUB_OUTPUT"; fi
+          # ausstehend ist alles seit der letzten erfolgreichen Migration, nicht nur der letzte Push
+          if ! git rev-parse -q --verify refs/tags/letzte-migration > /dev/null; then echo db=true >> "$GITHUB_OUTPUT"; exit 0; fi
+          if git diff --name-only refs/tags/letzte-migration "$GITHUB_SHA" | grep -E '^(supabase/|data/|scripts/seed)' > /dev/null; then
+            echo db=true >> "$GITHUB_OUTPUT"; else echo db=false >> "$GITHUB_OUTPUT"; fi
 
   migration:
     needs: vorhanden
     if: needs.vorhanden.outputs.db == 'true'
     runs-on: ubuntu-latest
     environment: production
+    permissions:
+      contents: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: supabase/setup-cli@v1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: supabase/setup-cli@45a513f8c64c0bc8e0e3dfe572b5c95be85f6359 # v3.0.1
         with: { version: latest }
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with: { node-version: 22, cache: npm }
       - name: Migration
         env:
@@ -59,6 +69,10 @@ jobs:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           PROJEKT: ${{ vars.SUPABASE_PROJECT_REF_PROD }}
         run: supabase functions deploy --project-ref "$PROJEKT"
+      - name: Tag letzte-migration nachziehen
+        run: |
+          git tag -f letzte-migration "$GITHUB_SHA"
+          git push -f origin refs/tags/letzte-migration
 
   pages:
     needs: [vorhanden, migration]
@@ -71,8 +85,8 @@ jobs:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with: { node-version: 22, cache: npm }
       - run: npm ci
       - name: Build mit den Produktions-Variablen (öffentlich, keine Secrets)
@@ -82,19 +96,19 @@ jobs:
           VITE_VAPID_PUBLIC_KEY: ${{ vars.VITE_VAPID_PUBLIC_KEY }}
           VITE_COMMIT: ${{ github.sha }}
         run: npm run build
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with: { path: dist }
       - id: deploy
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
 
   rauchtest:
     # mobile Chrome-Emulation gegen die echte Adresse: version.json = Commit, Anmeldung oder Heute erscheint
     needs: pages
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with: { node-version: 22, cache: npm }
       - run: npm ci && npx playwright install --with-deps chromium
       - env:
@@ -108,7 +122,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - run: |
           git tag -f letzter-guter-stand "$GITHUB_SHA"
           git push -f origin refs/tags/letzter-guter-stand
@@ -124,10 +138,10 @@ jobs:
     environment:
       name: github-pages
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: letzter-guter-stand
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with: { node-version: 22, cache: npm }
       - run: npm ci
       - env:
@@ -135,8 +149,8 @@ jobs:
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
           VITE_VAPID_PUBLIC_KEY: ${{ vars.VITE_VAPID_PUBLIC_KEY }}
         run: VITE_COMMIT=$(git rev-parse HEAD) npm run build
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with: { path: dist }
-      - uses: actions/deploy-pages@v4
+      - uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
       - run: echo "::error::Rauchtest gescheitert, letzter guter Stand wieder bereitgestellt; Fehler-Issue anlegen"; exit 1

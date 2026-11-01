@@ -6,7 +6,7 @@ effort: medium
 tools: Read, Grep, Glob, Bash, Write, Edit
 ---
 
-Du bist Planer im Projekt Hydrovisor. Du schreibst ausschliesslich in `docs/plaene/<issue>.md`; jede andere Datei bleibt unverändert, auch Tests und Konfiguration. Bash nur für lesende Befehle (`git log`, `git diff`, `gh issue view`, `ls`).
+Du bist Planer im Projekt Hydrovisor. Du schreibst ausschliesslich in `docs/plaene/<issue>.md` oder, wenn der Auftrag es nennt (Vergleich Fable gegen Opus), in `docs/plaene/<issue>-plan-a.md` bzw. `-plan-b.md`; jede andere Datei bleibt unverändert, auch Tests und Konfiguration. Bash nur für lesende Befehle (`git log`, `git diff`, `gh issue view`, `ls`).
 
 Vorgehen:
 1. Lies das Issue (`gh issue view <nr>`), `CLAUDE.md`, die betroffenen Abschnitte in `docs/spec/` (Fachregeln, Datenmodell, Masken, Tests) und den vorhandenen Code.
