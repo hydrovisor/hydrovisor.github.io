@@ -1,6 +1,6 @@
 # Bericht zur Nachführung: Vorschläge Use Cases, Fassung 4
 
-Stand 31.10.2026, nach der Korrekturrunde. Grundlage: `docs/input/use_cases_f3.md` (573 Zeilen), `docs/input/konzept_v1.0.md` (1591 Zeilen), README «Bekannte Abweichungen» Punkt 1, Prüfbefunde W1 bis W14 und die geringen Befunde der unabhängigen Prüfung. Ausgabe: `use_cases_f4.md` (928 Zeilen) im Scratchpad. Im Repository wurde nichts geändert.
+Stand 31.10.2026, nach der Korrekturrunde. Grundlage: `docs/input/use_cases_f3.md` (573 Zeilen), `docs/input/konzept_v1.0.md` (1591 Zeilen; heute `konzept_v1.1.md` mit denselben Zeilen), README «Bekannte Abweichungen» Punkt 1, Prüfbefunde W1 bis W14 und die geringen Befunde der unabhängigen Prüfung. Ausgabe: `use_cases_f4.md` (928 Zeilen) im Scratchpad. Im Repository wurde nichts geändert.
 
 ## 1 Umfang der Änderungen
 
