@@ -11,7 +11,7 @@ Stand 1.11.2026 · Grundlage Konzept v1.2 Kapitel 13.6 · Durchsicht wöchentlic
 | RR5 | Hardware verspätet oder defekt | Hardware-Vollständigkeit nicht bis 15.11. geprüft oder Wareneingang nicht bis 30.11. | Ersatzbestellung sofort, Lieferung bis spätestens 1.1.; sonst Minimal-Regal mit Ebene 4 und 3.1 | beobachten (Termine 15.11., 30.11.) |
 | RR6 | Keimversagen oder Pflanzenausfall | Keimrate unter 0.5 in einem Satz | Reservesorte, 20 % Saatreserve, Folgesatz nach 2 Wochen, Keimtemperatur prüfen | ruhend |
 | RR7 | Fehler im KI-Code bleiben unentdeckt | keiner | Referenzdatei, AK-Abdeckung, Mutationstest, Prüfer mit Plan-Code-Abgleich | ruhend |
-| RR8 | Kosten ohne Dach | Monatsrechnung über dem Dach | Kostendach: Supabase Pro mit `hydrovisor` und `hydrovisor-dev` rund 35 USD pro Monat (Entscheid W4); Claude API mit Ausgabenlimit im Anthropic-Konto (Betrag legt Tim fest, Kosten je Tüte unter 0.05 USD, höchstens 30 Aufrufe pro Tag); Resend Gratisstufe; Cloudflare Pages und GitHub Pages kostenlos; Claude-Abo nach Tims Vertrag | beobachten |
+| RR8 | Kosten ohne Dach | Monatsrechnung über dem Dach | Kostendach: Supabase Pro mit `hydrovisor` und `hydrovisor-dev` rund 35 USD pro Monat (Entscheid W4); Claude API im Arbeitsbereich «hydrovisor» der Claude Console mit Ausgabenlimit 15 USD pro Monat (Kosten je Tüte unter 0.05 USD, höchstens 30 Aufrufe pro Tag); Resend Gratisstufe; Cloudflare Pages und GitHub Pages kostenlos; Claude-Abo nach Tims Vertrag | beobachten |
 | RR9 | Referent verlangt Änderungen | Rückmeldung nach der Freigabe | am 31.10. als Freigabe ohne Änderungen eingetreten (Z3, E5); Umfang in der ersten Woche anpassen | eingetreten, erledigt |
 | RR10 | Testbetrieb liefert zu wenig Daten | erste Aussaat nach 20.1. oder M1 nach 31.1. | Kapitel 6 der Arbeit auf Messgüte, Rechnergüte, Termintreue, EK6 umstellen (14.4) | ruhend |
 | RR11 | Fehldosis, Kalibrierfehler, falscher Sollwert | Endmessung über ECSoll_ist + 0.3; Frischwasser ausserhalb 0.2 bis 1.0; Validator-Konflikt | harte Grenzen R4.4, Gegenprobe, Validator; Rücksetzablauf R4.7 | ruhend |
@@ -23,3 +23,4 @@ Stand 1.11.2026 · Grundlage Konzept v1.2 Kapitel 13.6 · Durchsicht wöchentlic
 | Datum | Änderung |
 |---|---|
 | 1.11.2026 | Register aus Konzept 13.6 angelegt; Kostendach RR8 nach Entscheid W4 |
+| 1.11.2026 | RR8: Ausgabenlimit 15 USD pro Monat im Arbeitsbereich «hydrovisor» (von Tim eingerichtet) |
