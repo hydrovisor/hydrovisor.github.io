@@ -37,6 +37,6 @@ Alle Befunde behoben im Commit nach `d566af6` (Zweig `auftrag-3-arbeitsweise`):
 
 **Stand:** keine offenen Befunde. Die Behebungen sind lokal geprüft (Hook-Tests 57 von 57, YAML gültig); `pr.yml` läuft im Pull Request selbst. Ein zweiter Prüferdurchgang fand nicht statt.
 
-## Offen bei Tim
+## `.claude/settings.json`
 
-`.claude/settings.json` hat der Agent nicht anlegen dürfen (Sicherheitsprüfung des Auto-Modus gegen Selbständerung); Tim legt die Datei aus dem vorbereiteten Entwurf an.
+Die Sicherheitsprüfung des Auto-Modus verweigerte dem Agenten das Anlegen zunächst (Selbständerung); auf Tims ausdrückliche Anweisung hat der Agent die Datei unverändert aus dem geprüften Entwurf angelegt (Commit 413c6ae).
