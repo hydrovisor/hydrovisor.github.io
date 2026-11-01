@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(gh pr merge *)",
+      "PowerShell(gh pr merge *)",
+      "Bash(gh pr view *)",
+      "Bash(gh pr list *)",
+      "Bash(gh issue view *)",
+      "Bash(git status)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(npm run *)",
+      "Bash(npm ci)",
+      "Bash(supabase start)",
+      "Bash(supabase status)",
+      "Bash(supabase db reset)",
+      "Bash(supabase test db)",
+      "Bash(deno test *)",
+      "Bash(node --test .claude/hooks/sperre.test.mjs)"
+    ],
+    "deny": [
+      "Bash(git push origin main)",
+      "Bash(git push origin main *)",
+      "Bash(git push origin HEAD:main *)",
+      "Bash(git push --force *)",
+      "Bash(git push -f *)",
+      "Bash(git push * --force *)",
+      "Bash(git push * -f *)",
+      "Bash(git push --force-with-lease *)",
+      "Bash(git push --all *)",
+      "Bash(supabase db push)",
+      "Bash(supabase db push *)",
+      "Bash(supabase link *)",
+      "Bash(npx supabase db push *)",
+      "Bash(npx supabase link *)",
+      "Bash(gh workflow run *)",
+      "PowerShell(git push origin main)",
+      "PowerShell(git push origin main *)",
+      "PowerShell(git push origin HEAD:main *)",
+      "PowerShell(git push --force *)",
+      "PowerShell(git push -f *)",
+      "PowerShell(git push * --force *)",
+      "PowerShell(git push * -f *)",
+      "PowerShell(git push --force-with-lease *)",
+      "PowerShell(git push --all *)",
+      "PowerShell(supabase db push)",
+      "PowerShell(supabase db push *)",
+      "PowerShell(supabase link *)",
+      "PowerShell(npx supabase db push *)",
+      "PowerShell(npx supabase link *)",
+      "PowerShell(gh workflow run *)",
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./supabase/.env)",
+      "Read(./supabase/.env.*)",
+      "Edit(./.claude/settings.json)",
+      "Write(./.claude/settings.json)",
+      "Edit(./.claude/hooks/**)",
+      "Write(./.claude/hooks/**)",
+      "Edit(./.mcp.json)",
+      "Write(./.mcp.json)",
+      "Edit(./tests/golden/**)",
+      "Write(./tests/golden/**)",
+      "Edit(./data/eval/**)",
+      "Write(./data/eval/**)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|PowerShell|mcp__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/sperre.mjs\""
+          }
+        ]
+      }
+    ]
+  }
+}

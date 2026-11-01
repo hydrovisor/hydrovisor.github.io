@@ -1,0 +1,45 @@
+name: Fehler
+description: Fehler aus Abnahme oder Testbetrieb, mit Verweis auf das verursachende Paket (Konzept 12.7)
+title: "Fehler: <Kurzbeschreibung>"
+labels: ["bug"]
+body:
+  - type: input
+    id: paket
+    attributes:
+      label: Verursachendes Paket (Issue oder Paket-ID)
+    validations:
+      required: true
+  - type: dropdown
+    id: quelle
+    attributes:
+      label: Gefunden bei
+      options:
+        - Abnahme 1 (Vorschau)
+        - Abnahme 2 (installierte App)
+        - Regal (offen-regal)
+        - Testbetrieb
+        - Abweichung von der Referenzdatei (Fachlogik mit Planfreigabe, Konzept 12.6)
+    validations:
+      required: true
+  - type: textarea
+    id: beobachtung
+    attributes:
+      label: Beobachtung und Erwartung
+      description: Was geschah, was hätte geschehen sollen; AK-Nummer, falls betroffen.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: App-Version (Info-Seite) und Gerät
+    validations:
+      required: true
+  - type: dropdown
+    id: prioritaet
+    attributes:
+      label: Priorität
+      options:
+        - vor dem nächsten Paket (Regal betroffen)
+        - im nächsten passenden Paket
+    validations:
+      required: true

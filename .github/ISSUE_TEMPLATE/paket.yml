@@ -1,0 +1,83 @@
+name: Arbeitspaket
+description: Paket aus docs/plaene/pakete.md (Konzept 12.3, Pflichtfelder 12.7)
+title: "<Paket-ID> <Kurztitel>"
+body:
+  - type: input
+    id: paket
+    attributes:
+      label: Paket-ID und Inkrement
+      description: wie in docs/plaene/pakete.md, z. B. I1a-04
+    validations:
+      required: true
+  - type: dropdown
+    id: klasse
+    attributes:
+      label: Paketklasse
+      options:
+        - Routine (keine Planfreigabe)
+        - Fachlogik ohne Migration (keine Planfreigabe)
+        - Fachlogik mit Migration (Planfreigabe)
+        - Kern (Planfreigabe immer)
+    validations:
+      required: true
+  - type: dropdown
+    id: migration
+    attributes:
+      label: Migration
+      options:
+        - nein
+        - ja
+    validations:
+      required: true
+  - type: textarea
+    id: ziel
+    attributes:
+      label: Ziel
+      description: Was nach dem Paket am Gerät möglich ist.
+    validations:
+      required: true
+  - type: textarea
+    id: ak
+    attributes:
+      label: AK mit Prüfart
+      description: Eine Zeile je AK, z. B. «UC7-AK1 [Unit]». Das AK-Abdeckungsskript liest diese Liste.
+    validations:
+      required: true
+  - type: input
+    id: schaetzung
+    attributes:
+      label: Schätzung in PT (eingefroren 13.11.2026)
+    validations:
+      required: true
+  - type: input
+    id: termin
+    attributes:
+      label: Zieltermin
+    validations:
+      required: true
+  - type: input
+    id: minuten_plan
+    attributes:
+      label: Tims Minuten (Plan)
+      description: Routine rund 45, mit Planfreigabe rund 75 (Konzept 13.3)
+    validations:
+      required: true
+  - type: input
+    id: modell
+    attributes:
+      label: Modell und Denkstufe je Rolle
+      description: z. B. Lead Opus 5.5 mittel; Planer Fable 5.1 mittel; Prüfer Opus 5.5 hoch
+    validations:
+      required: true
+  - type: textarea
+    id: ist
+    attributes:
+      label: Ist (füllt der Lead am Ende)
+      value: |
+        - Tims Minuten (Plan, Abnahme, Rückfragen):
+        - Nachbesserungsrunden:
+        - Prüferbefunde bestätigt / verworfen:
+        - Mängel bei der Abnahme am Gerät:
+        - Verbrauch in % des Wochenkontingents:
+    validations:
+      required: false
