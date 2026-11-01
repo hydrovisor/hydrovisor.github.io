@@ -32,6 +32,19 @@
 --        geprüft.
 --   (A5) v_zielbereich liefert nur den Zweck «Bewertung heute»; die übrigen
 --        Zwecke aus R2.2 rechnet src/domain (reine Funktionen, Konzept 7).
+--   (A6) Statt v_leitkultur(gefaess_id) gibt es v_leitkultur_gewaehlt (Tims
+--        Wahl bei Gleichstand); die Leitkultur selbst rechnet src/domain (R2.3).
+--   (A7) Caches (8.1 Regel 2): gefaess.status und messung.unsicher entfallen,
+--        die Sichten v_gefaess_status und v_messung_unsicher genügen bei einem
+--        Nutzer. satz.saatdatum und reservierung.umsetzen_geplant_am bleiben
+--        Cache und werden nach dem Einfügen nur von cache_aus_ereignis()
+--        geändert (Trigger cache_geschuetzt verhindert direkte Änderungen).
+--   (A8) Backup über die Rolle backup_leser mit BYPASSRLS und nur SELECT;
+--        backup_status schreibt sie über backup_status_melden() (11.7).
+--        Erlaubt Supabase BYPASSRLS für eigene Rollen nicht, gilt der
+--        Rückfall in 04_architektur.md Abschnitt 9 (Risikotest I0).
+--   (A9) Ein Tausch zweier Töpfe sind zwei Ereignisse typ tausch, je eines
+--        je Topf, mit gemeinsamer daten.vorgang_id.
 -- =====================================================================
 
 -- ---------------------------------------------------------------------
@@ -256,7 +269,6 @@ create table public.gefaess (
   intervall_nachfuellen_d smallint check (intervall_nachfuellen_d between 1 and 60),
   intervall_wechseln_d smallint check (intervall_wechseln_d between 1 and 60),
   naechster_wechsel_am date,
-  status public.gefaess_status not null default 'in_pruefung',
   gueltig_von timestamptz not null default now(),
   gueltig_bis timestamptz,
   erfasst_am timestamptz not null default now(),
@@ -267,7 +279,7 @@ create table public.gefaess (
 );
 create unique index gefaess_aktiv_je_platz on public.gefaess (platz_id) where gueltig_bis is null and storniert_am is null;
 comment on table public.gefaess is
-  'Belegung eines Platzes (8.2). Änderungen an Betriebsart oder Volumen schliessen die Zeile (gueltig_bis) und legen eine neue an. status ist Cache von v_gefaess_status, geschrieben nur von gefaess_status_nachfuehren(). Stationen = feste_dosis (8.1 Regel 10). Luftpumpe für das Mitmarkieren bei Kurzprüfung-Abweichung (5.3, E6).';
+  'Belegung eines Platzes (8.2). Änderungen an Betriebsart oder Volumen schliessen die Zeile (gueltig_bis) und legen eine neue an, ohne den Prüfstatus zurückzusetzen. Der Prüfstatus ist v_gefaess_status (A7). Stationen = feste_dosis (8.1 Regel 10). Luftpumpe für das Mitmarkieren bei Kurzprüfung-Abweichung (5.3, E6).';
 
 create table public.anzuchtort (
   id uuid primary key default gen_random_uuid(),
@@ -376,9 +388,9 @@ create table public.kulturgruppe (
 comment on table public.kulturgruppe is 'Sechs Gruppen mit Leitkultur (R1.3; Vorschlag in 03_import_w0.md 4.2.1).';
 
 -- Versionsspalten der sieben Wissenstabellen (8.1 Regel 4): quelldatei, zeile_id,
--- commit, freigegeben_am, gueltig_ab, gueltig_bis; profilwert, sorte, saatempfehlung,
--- duengerschema und wissenseintrag tragen die Herkunft in der Zeile, art und
--- art_kulturform je Feld in herkunft.
+-- commit, freigegeben_am, gueltig_ab, gueltig_bis; profilwert, saatempfehlung,
+-- duengerschema und wissenseintrag tragen die Herkunft in der Zeile, art,
+-- art_kulturform und die Katalogwerte der sorte je Feld in herkunft.
 
 create table public.art (
   id uuid primary key default gen_random_uuid(),
@@ -626,7 +638,10 @@ create table public.duengerschema (
   ec_richtwert_max numeric(4,2),
   ec_basis public.ec_basis not null default 'unbekannt',
   herkunft public.herkunft_duenger not null,
-  quelle text not null,
+  quelle_id text not null references public.quelle (quelle_id),
+  fundstelle text not null,
+  kurzzitat text not null check (length(kurzzitat) <= 200),
+  evidenzklasse public.evidenzklasse not null default 'B2',
   mischregeln text,
   quelldatei text not null,
   zeile_id text not null,
@@ -652,6 +667,8 @@ create table public.wissenseintrag (
   text text not null check (length(text) <= 600 and text !~* '(kcl|lagerlösung)'),
   quelle_id text not null references public.quelle (quelle_id),
   fundstelle text not null,
+  kurzzitat text not null check (length(kurzzitat) <= 200),
+  evidenzklasse public.evidenzklasse not null,
   quelldatei text not null,
   zeile_id text not null,
   commit text not null,
@@ -718,13 +735,13 @@ create table public.satz (
   sorte_id uuid not null references public.sorte_schluessel (id),
   saatgut_id uuid references public.saatgut (id),
   kulturform public.kulturform not null,
-  anzuchtort_platz_id uuid references public.platz (id),
-  direktsaat_platz_id uuid references public.platz (id),
+  anzuchtort_platz_id uuid references public.platz (id) on delete cascade,
+  direktsaat_platz_id uuid references public.platz (id) on delete cascade,
   anzahl_schwaemme smallint not null check (anzahl_schwaemme between 1 and 100),
   samen_je_schwamm smallint not null check (samen_je_schwamm >= 1),
   schwaemme_vorschlag smallint,
   samen_vorschlag smallint,
-  kopiert_von uuid references public.satz (id),
+  kopiert_von uuid references public.satz (id) on delete set null,
   saatdatum date not null,
   gilt_ab timestamptz not null,
   client_zeit timestamptz,
@@ -733,7 +750,7 @@ create table public.satz (
   app_version text not null,
   storniert_am timestamptz,
   storno_grund public.storno_grund,
-  ersetzt_id uuid references public.satz (id),
+  ersetzt_id uuid references public.satz (id) on delete set null,
   check ((anzuchtort_platz_id is null) <> (direktsaat_platz_id is null))
 );
 comment on table public.satz is
@@ -742,8 +759,8 @@ comment on table public.satz is
 create table public.pflanzung (
   id uuid primary key default gen_random_uuid(),
   client_id uuid not null unique,
-  satz_id uuid not null references public.satz (id),
-  pflanzvorgang_id uuid references public.pflanzvorgang (id),
+  satz_id uuid not null references public.satz (id) on delete cascade,
+  pflanzvorgang_id uuid references public.pflanzvorgang (id) on delete set null,
   rang smallint,
   einstufung public.einstufung,
   gruende text[] not null default '{}',
@@ -754,7 +771,7 @@ create table public.pflanzung (
   app_version text not null,
   storniert_am timestamptz,
   storno_grund public.storno_grund,
-  ersetzt_id uuid references public.pflanzung (id)
+  ersetzt_id uuid references public.pflanzung (id) on delete set null
 );
 comment on table public.pflanzung is
   'Ein Schwamm vom Säen bis zum Endzustand (R8.1). Einstufung, Rang und Gründe-Codes aus R3.2 beim Setzen (leer bis I2-4). Netztopf, Platz, Phase und Status sind v_pflanzung_zustand.';
@@ -762,8 +779,8 @@ comment on table public.pflanzung is
 create table public.reservierung (
   id uuid primary key default gen_random_uuid(),
   client_id uuid not null unique,
-  pflanzung_id uuid not null references public.pflanzung (id),
-  netztopf_id uuid not null references public.netztopf (id),
+  pflanzung_id uuid not null references public.pflanzung (id) on delete cascade,
+  netztopf_id uuid not null references public.netztopf (id) on delete cascade,
   umsetzen_geplant_am date not null,
   gilt_ab timestamptz not null,
   client_zeit timestamptz,
@@ -772,7 +789,7 @@ create table public.reservierung (
   app_version text not null,
   storniert_am timestamptz,
   storno_grund public.storno_grund,
-  ersetzt_id uuid references public.reservierung (id)
+  ersetzt_id uuid references public.reservierung (id) on delete set null
 );
 comment on table public.reservierung is
   'Einzige Stelle, an der ein Ziel gespeichert ist (8.2). umsetzen_geplant_am ist Cache des letzten Ereignisses umsetzdatum_geaendert (Vorgabe Saat + Umsetzen ab; Direktsaat Saattag). Ende über v_reservierung_aktiv; höchstens eine Nachfolge-Reservierung je Netztopf (R11.2, geprüft in src/domain und pgTAP).';
@@ -780,7 +797,7 @@ comment on table public.reservierung is
 create table public.messung (
   id uuid primary key default gen_random_uuid(),
   client_id uuid not null unique,
-  platz_id uuid references public.platz (id),
+  platz_id uuid references public.platz (id) on delete cascade,
   messgeraet_id uuid not null references public.messgeraet (id),
   messart public.messart not null,
   ph numeric(4,2) check (ph between 0 and 14),
@@ -794,7 +811,6 @@ create table public.messung (
   bewertung_ec public.bewertung,
   bewertung_temp public.bewertung,
   schnappschuss jsonb not null default '{}',
-  unsicher boolean not null default false,
   ansatz_id uuid,
   war_faellig_am date,
   aufgabe_schluessel text,
@@ -806,15 +822,15 @@ create table public.messung (
   app_version text not null,
   storniert_am timestamptz,
   storno_grund public.storno_grund,
-  ersetzt_id uuid references public.messung (id),
+  ersetzt_id uuid references public.messung (id) on delete set null,
   check ((messart = 'ph_kontrolle') = (platz_id is null)),
   check (ph is not null or ec is not null or temperatur is not null),
-  check (messart not in ('rundgang', 'aufgabe')
+  check (messart not in ('rundgang', 'aufgabe', 'kontrolle_folgetag', 'nachmessen')
          or coalesce(schnappschuss ->> 'betriebsart', '') not in ('kratky', 'kratky_belueftet')
          or fuellstand is not null)
 );
 comment on table public.messung is
-  'Messung am Ort (UC9). schnappschuss = {zielbereich: {ph_min, ph_max, ec_min, ec_max, temp_min, temp_max}, betriebsart, u_ec, u_ph} zum Zeitpunkt der Bewertung (R2.5). unsicher ist Cache von v_messung_unsicher. Füllstand Pflicht bei Kratky (R4.10).';
+  'Messung am Ort (UC9). schnappschuss = {zielbereich: {ph_min, ph_max, ec_min, ec_max, temp_min, temp_max}, betriebsart, u_ec, u_ph} zum Zeitpunkt der Bewertung (R2.5). «unsicher» ist v_messung_unsicher (A7). Füllstand Pflicht bei Kratky für alle Messarten am Gefäss ausser Kontroll- und Endmessung im Ansatz (R4.10).';
 
 create table public.kalibrierung (
   id uuid primary key default gen_random_uuid(),
@@ -835,14 +851,14 @@ create table public.kalibrierung (
   app_version text not null,
   storniert_am timestamptz,
   storno_grund public.storno_grund,
-  ersetzt_id uuid references public.kalibrierung (id)
+  ersetzt_id uuid references public.kalibrierung (id) on delete set null
 );
 comment on table public.kalibrierung is 'Zweipunkt pH und EC 1413 mit Gegenprobe (5.6); Fälligkeit in v_kalibrierung_faellig.';
 
 create table public.naehrloesungsansatz (
   id uuid primary key default gen_random_uuid(),
   client_id uuid not null unique,
-  platz_id uuid not null references public.platz (id),
+  platz_id uuid not null references public.platz (id) on delete cascade,
   typ public.ansatz_typ not null,
   status public.ansatz_status not null default 'laufend',
   begonnen_am timestamptz not null,
@@ -871,8 +887,8 @@ create table public.naehrloesungsansatz (
   ph_nachher numeric(4,2),
   ist_ersteinstellung boolean not null default false,
   ueber_herstellerdosis_bestaetigt boolean not null default false,
-  kontrollmessung_id uuid references public.messung (id),
-  endmessung_id uuid references public.messung (id),
+  kontrollmessung_id uuid references public.messung (id) on delete set null,
+  endmessung_id uuid references public.messung (id) on delete set null,
   war_faellig_am date,
   aufgabe_schluessel text,
   dauer_s integer,
@@ -883,17 +899,17 @@ create table public.naehrloesungsansatz (
   app_version text not null,
   storniert_am timestamptz,
   storno_grund public.storno_grund,
-  ersetzt_id uuid references public.naehrloesungsansatz (id),
+  ersetzt_id uuid references public.naehrloesungsansatz (id) on delete set null,
   check (typ <> 'nachfuellen' or nachgefuellt_l > 0)
 );
-alter table public.messung add constraint messung_ansatz_fk foreign key (ansatz_id) references public.naehrloesungsansatz (id);
+alter table public.messung add constraint messung_ansatz_fk foreign key (ansatz_id) references public.naehrloesungsansatz (id) on delete set null;
 comment on table public.naehrloesungsansatz is
   'Neuansatz, Nachfüllen, pH-Korrektur, Teilwechsel (R4). Speichert Zielbereich als Schnappschuss, Leitkultur, Mischentscheid und gerechnet_fuer (Pflanzungen) (R2.4). Nachfüllsumme ist v_nachfuellsumme.';
 
 create table public.ansatz_position (
   id uuid primary key default gen_random_uuid(),
   client_id uuid not null unique,
-  ansatz_id uuid not null references public.naehrloesungsansatz (id),
+  ansatz_id uuid not null references public.naehrloesungsansatz (id) on delete cascade,
   produkt_id text not null references public.produkt (produkt_id),
   soll_ml numeric(6,2) not null check (soll_ml >= 0),
   ist_ml numeric(6,2) check (ist_ml >= 0),
@@ -907,7 +923,7 @@ comment on table public.ansatz_position is 'Dünger und pH-Minus je Ansatz mit S
 create table public.ansatz_schritt (
   id uuid primary key default gen_random_uuid(),
   client_id uuid not null unique,
-  ansatz_id uuid not null references public.naehrloesungsansatz (id),
+  ansatz_id uuid not null references public.naehrloesungsansatz (id) on delete cascade,
   nr smallint not null check (nr between 0 and 17),
   schritt public.ansatz_schritt_typ not null,
   erledigt_am timestamptz,
@@ -926,11 +942,11 @@ create table public.ereignis (
   client_id uuid not null unique,
   typ public.ereignis_typ not null,
   anlage_id uuid references public.anlage (id) on delete cascade,
-  bereich_id uuid references public.bereich (id),
-  platz_id uuid references public.platz (id),
-  satz_id uuid references public.satz (id),
-  pflanzung_id uuid references public.pflanzung (id),
-  netztopf_id uuid references public.netztopf (id),
+  bereich_id uuid references public.bereich (id) on delete cascade,
+  platz_id uuid references public.platz (id) on delete cascade,
+  satz_id uuid references public.satz (id) on delete cascade,
+  pflanzung_id uuid references public.pflanzung (id) on delete cascade,
+  netztopf_id uuid references public.netztopf (id) on delete cascade,
   messgeraet_id uuid references public.messgeraet (id),
   art_id text references public.art_schluessel (art_id),
   sorte_id uuid references public.sorte_schluessel (id),
@@ -945,12 +961,12 @@ create table public.ereignis (
   app_version text not null,
   storniert_am timestamptz,
   storno_grund public.storno_grund,
-  ersetzt_id uuid references public.ereignis (id),
+  ersetzt_id uuid references public.ereignis (id) on delete set null,
   check (num_nonnulls(anlage_id, bereich_id, platz_id, satz_id, pflanzung_id, netztopf_id, messgeraet_id, art_id, sorte_id) >= 1)
 );
 create index ereignis_typ_gilt on public.ereignis (typ, gilt_ab) where storniert_am is null;
 comment on table public.ereignis is
-  'Genau ein Typ je Handlung (8.1 Regel 2). (A4) daten je Typ: keimung {samen_gesaet, samen_gekeimt, keimtemp_eingehalten, vorherige_pruefung_am}; phase_antwort {phase, antwort: ja|noch_nicht|problem, erwartet_am, nachgefuehrt}; verschieben, umsetzen, tausch {von_platz_id, von_loch_nr, nach_platz_id, nach_loch_nr}; umsetzdatum_geaendert {von, nach, grund: morgen|in_station_lassen|ziel_spaeter}; neu_beschriften {von_kennung, nach_kennung}; ernte {art: teil|ab}; kultur_entscheid {entscheid: beenden|verlaengern, tage}; abschluss {grund: geerntet|ausfall|keimt_nicht|ueberzaehlig, text}; wiederherstellen {ereignis_id}; kurzpruefung {punkt: pumpe|luftzone|loesung_topfboden|wurzeln|licht|luefter|wuerfel_feucht, ok, ausnahmen}; gefaesspruefung {schritt: 1..4, ok, volumen_gezaehlt_l}; ruhe {gesetzt}; als_unsicher_markiert {seit_kalibrierung_id}; stromausfall {beginn, ende}; aufgabe_erledigt {aufgabe_schluessel}; messung_umgehaengt {messung_id, nach_platz_id}; sollwert_geaendert {profilwert_zeile_id}; beobachtung {kategorie: tipburn|mehltau|schossen|wurzeln|sonstiges, text ≤ 200}; leitkultur_gewaehlt {art_id}.';
+  'Genau ein Typ je Handlung (8.1 Regel 2). (A4) daten je Typ: keimung {samen_gesaet, samen_gekeimt, keimtemp_eingehalten, vorherige_pruefung_am}; phase_antwort {phase, antwort: ja|noch_nicht|problem, erwartet_am, nachgefuehrt}; verschieben, umsetzen {von_platz_id, von_loch_nr, nach_platz_id, nach_loch_nr}; tausch dasselbe plus vorgang_id, je Topf ein Ereignis (A9); phase_antwort am Satz (pflanzung_id leer) gilt für alle Pflanzungen des Satzes; umsetzdatum_geaendert {von, nach, grund: morgen|in_station_lassen|ziel_spaeter}; neu_beschriften {von_kennung, nach_kennung}; ernte {art: teil|ab} (ab schliesst die Pflanzung mit Grund geerntet ab); kultur_entscheid {entscheid: beenden|verlaengern, tage}; abschluss {grund: geerntet|ausfall|keimt_nicht|ueberzaehlig, text}; wiederherstellen {ereignis_id}; kurzpruefung {punkt: pumpe|luftzone|loesung_topfboden|wurzeln|licht|luefter|wuerfel_feucht, ok, ausnahmen}; gefaesspruefung {schritt: 1..4, ok, volumen_gezaehlt_l}; ruhe {gesetzt}; als_unsicher_markiert {seit_kalibrierung_id}; stromausfall {beginn, ende}; aufgabe_erledigt {aufgabe_schluessel}; messung_umgehaengt {messung_id, nach_platz_id}; sollwert_geaendert {profilwert_zeile_id}; beobachtung {kategorie: tipburn|mehltau|schossen|wurzeln|sonstiges, text ≤ 200}; leitkultur_gewaehlt {art_id}.';
 
 create table public.aufschub (
   id uuid primary key default gen_random_uuid(),
@@ -965,7 +981,7 @@ create table public.aufschub (
   app_version text not null,
   storniert_am timestamptz,
   storno_grund public.storno_grund,
-  ersetzt_id uuid references public.aufschub (id)
+  ersetzt_id uuid references public.aufschub (id) on delete set null
 );
 comment on table public.aufschub is 'Morgen, Überspringen, Pegel ok (gilt einen Tag, keine Erledigung) je Aufgabenschlüssel typ|bezug|fällig am (R5.1, R5.3).';
 
@@ -974,7 +990,7 @@ create table public.aufgabe_tagesliste (
   tag date not null,
   aufgabe_schluessel text not null,
   typ text not null,
-  platz_id uuid references public.platz (id),
+  platz_id uuid references public.platz (id) on delete cascade,
   faellig_am date not null,
   erfasst_am timestamptz not null default now(),
   app_version text not null,
@@ -1002,6 +1018,8 @@ create table public.push_versand (
   kanal public.push_kanal not null,
   art public.push_art not null,
   datum_lokal date not null,
+  bezug_id uuid,
+  timer_ende timestamptz,
   gesendet_am timestamptz,
   status public.push_status not null default 'geplant',
   anzahl_aufgaben smallint,
@@ -1010,13 +1028,26 @@ create table public.push_versand (
   geoeffnet_am timestamptz,
   erfasst_am timestamptz not null default now(),
   app_version text not null,
-  check ((kanal = 'push') = (abo_id is not null))
+  check ((kanal = 'push') = (abo_id is not null)),
+  check ((art = 'timer') = (bezug_id is not null and timer_ende is not null))
 );
+create unique index push_versand_einmal_timer on public.push_versand (abo_id, bezug_id, timer_ende)
+  where art = 'timer';
 create unique index push_versand_einmal_push on public.push_versand (abo_id, datum_lokal, art)
   where kanal = 'push' and art in ('sammel', 'kurzpruefung_20');
 create unique index push_versand_einmal_email on public.push_versand (datum_lokal, art)
   where kanal = 'email' and art in ('sammel', 'kurzpruefung_20');
-comment on table public.push_versand is 'Versandprotokoll; Unique je Abo, Tag und Art verhindert Doppelversand (TP1). E-Mail nur ohne gültiges Abo (E6).';
+comment on table public.push_versand is 'Versandprotokoll; Unique je Abo, Tag und Art verhindert Doppelversand (TP1); Timer-Push je Abo, Ansatz (bezug_id) und Timerende genau einmal (TP5). E-Mail nur ohne gültiges Abo (E6).';
+
+create table public.ki_aufruf (
+  id uuid primary key default gen_random_uuid(),
+  modell text not null,
+  status text not null check (status in ('gestartet', 'ok', 'ausweichmodell', 'fehler', 'zeitueberschreitung')),
+  dauer_ms integer,
+  erfasst_am timestamptz not null default now(),
+  app_version text not null
+);
+comment on table public.ki_aufruf is 'Jeder Aufruf von ki-tuete, geschrieben vor dem API-Request; Grundlage der Grenze 30 Aufrufe je Tag (11.1).';
 
 create table public.etikett_aufruf (
   id uuid primary key default gen_random_uuid(),
@@ -1128,6 +1159,64 @@ begin
   update public.netztopf set kennung = ka, heim_platz_id = pa, heim_loch_nr = la where id = b;
 end $$;
 
+-- Caches satz.saatdatum und reservierung.umsetzen_geplant_am (8.1 Regel 2, A7):
+-- genau diese Funktion rechnet sie aus den Ereignissen nach.
+create or replace function public.cache_aus_ereignis()
+returns trigger language plpgsql security definer set search_path = '' as $$
+begin
+  if new.typ = 'aussaat' and new.satz_id is not null then
+    update public.satz s
+       set saatdatum = coalesce((select coalesce((e.daten ->> 'saatdatum')::date, public.kalendertag(e.gilt_ab))
+                                   from public.ereignis e
+                                  where e.satz_id = new.satz_id and e.typ = 'aussaat' and e.storniert_am is null
+                                  order by e.gilt_ab desc, e.erfasst_am desc limit 1), s.saatdatum)
+     where s.id = new.satz_id;
+  elsif new.typ = 'umsetzdatum_geaendert' and new.pflanzung_id is not null then
+    update public.reservierung r
+       set umsetzen_geplant_am = coalesce((select (e.daten ->> 'nach')::date
+                                             from public.ereignis e
+                                            where e.pflanzung_id = new.pflanzung_id and e.typ = 'umsetzdatum_geaendert'
+                                              and e.storniert_am is null
+                                            order by e.gilt_ab desc, e.erfasst_am desc limit 1), r.umsetzen_geplant_am)
+     where r.pflanzung_id = new.pflanzung_id and r.storniert_am is null;
+  end if;
+  return null;
+end $$;
+create trigger ereignis_cache after insert or update of storniert_am on public.ereignis
+  for each row execute function public.cache_aus_ereignis();
+
+create or replace function public.cache_geschuetzt()
+returns trigger language plpgsql as $$
+begin
+  if pg_trigger_depth() < 2 then
+    if tg_table_name = 'satz' then
+      if new.saatdatum is distinct from old.saatdatum then
+        raise exception 'Cache-Feld wird nur aus Ereignissen nachgeführt (8.1 Regel 2)';
+      end if;
+    elsif new.umsetzen_geplant_am is distinct from old.umsetzen_geplant_am then
+      raise exception 'Cache-Feld wird nur aus Ereignissen nachgeführt (8.1 Regel 2)';
+    end if;
+  end if;
+  return new;
+end $$;
+create trigger satz_cache_geschuetzt before update on public.satz
+  for each row execute function public.cache_geschuetzt();
+create trigger reservierung_cache_geschuetzt before update on public.reservierung
+  for each row execute function public.cache_geschuetzt();
+
+-- Backup (11.7, A8). In Produktion legt Tim die Rolle an; das Passwort steht nur im Secret
+-- SUPABASE_DB_URL_BACKUP:
+--   create role backup_leser login bypassrls password '…';
+--   grant usage on schema public to backup_leser;
+--   grant select on all tables in schema public to backup_leser;
+--   grant execute on function public.backup_status_melden(bigint) to backup_leser;
+create or replace function public.backup_status_melden(groesse bigint)
+returns void language sql security definer set search_path = '' as $$
+  insert into public.backup_status (letztes_backup_am, groesse_bytes, app_version)
+  values (now(), groesse, 'backup.yml')
+$$;
+revoke all on function public.backup_status_melden(bigint) from public;
+
 -- Gesamt-EC zur Laufzeit (8.3, DM-04).
 create or replace function public.ec_gesamt(wert numeric, basis public.ec_basis, ec_wasser numeric)
 returns numeric language sql immutable parallel safe as $$
@@ -1149,21 +1238,31 @@ begin
   case aktion
   when 'sorte_neu' then
     insert into public.sorte_schluessel (sorte_key) values ('app-' || gen_random_uuid()) returning id into neue_id;
-    insert into public.sorte (sorte_id, name, art_id, kulturtyp, wuchshoehe_max_mm, wuchsform, shop_link,
-                              quelldatei, zeile_id, commit, app_version)
+    insert into public.sorte (sorte_id, name, art_id, kulturtyp, wuchshoehe_max_mm, wuchsform,
+                              fruehzeitigkeit_relativ_d, shop_link, quelldatei, zeile_id, commit, app_version)
     values (neue_id, daten ->> 'name', daten ->> 'art_id', (daten ->> 'kulturtyp')::public.kulturtyp,
             (daten ->> 'wuchshoehe_max_mm')::smallint, (daten ->> 'wuchsform')::public.wuchsform,
+            (daten ->> 'fruehzeitigkeit_relativ_d')::smallint,
             daten ->> 'shop_link', 'app', 'app-' || neue_id, version, version);
+    -- Katalogwerte mit Herkunft (Klasse C, Vermerk katalog), nur wenn eine Katalogquelle angegeben ist
+    insert into public.herkunft (tabelle, zeile_id, feld, quelle_id, fundstelle, kurzzitat, evidenzklasse, vermerk, app_version)
+    select 'sorte', 'app-' || neue_id, f.feld, daten ->> 'katalog_quelle_id', coalesce(daten ->> 'katalog_fundstelle', 'Katalog'),
+           coalesce(daten ->> 'katalog_kurzzitat', 'Katalog'), 'C', 'katalog', version
+      from (values ('wuchshoehe_max_mm'), ('wuchsform'), ('fruehzeitigkeit_relativ_d')) f(feld)
+     where daten ->> 'katalog_quelle_id' is not null and daten ->> f.feld is not null;
   when 'tuetenwert' then
     insert into public.quelle (quelle_id, titel, link, klasse, anbaumethode, app_version)
-    values ('tuete-' || (daten ->> 'sorte_id'), 'Saattüte', 'app', 'tuete', 'keine', version)
+    select 'tuete-' || sk.sorte_key, 'Saattüte ' || sk.sorte_key, 'app', 'tuete', 'keine', version
+      from public.sorte_schluessel sk where sk.id = (daten ->> 'sorte_id')::uuid
     on conflict (quelle_id) do nothing;
     insert into public.profilwert (ebene, sorte_id, phase, groesse, wert_min, wert_typ, wert_max, text_wert,
                                    quelle_id, fundstelle, kurzzitat, evidenzklasse, vermerk,
                                    quelldatei, zeile_id, commit, app_version)
     values ('sorte', (daten ->> 'sorte_id')::uuid, 'keimung', (daten ->> 'groesse')::public.groesse,
             (daten ->> 'wert_min')::numeric, (daten ->> 'wert_typ')::numeric, (daten ->> 'wert_max')::numeric,
-            daten ->> 'text_wert', 'tuete-' || (daten ->> 'sorte_id'), 'Tüte', coalesce(daten ->> 'kurzzitat', 'Tüte'),
+            daten ->> 'text_wert',
+            'tuete-' || (select sk.sorte_key from public.sorte_schluessel sk where sk.id = (daten ->> 'sorte_id')::uuid),
+            'Tüte', coalesce(daten ->> 'kurzzitat', 'Tüte'),
             'C', 'tuete', 'app', 'pw.' || (daten ->> 'sorte_id') || '.keimung.' || (daten ->> 'groesse'), version, version)
     returning id into neue_id;
   when 'saatempfehlung_bestaetigen' then
@@ -1275,17 +1374,17 @@ comment on view public.v_vollstaendigkeit is 'R1.4 und EK1: Pflichtgrössen je a
 
 create view public.v_fuellzustand with (security_invoker = true) as
 select p.id as platz_id,
-       case when n.letzter_ansatz is not null and (g.letztes_geleert is null or n.letzter_ansatz > g.letztes_geleert)
+       case when n.letzter_ansatz is not null and (g.leer_seit is null or n.letzter_ansatz > g.leer_seit)
             then 'loesung' else 'leer' end as fuellzustand,
        n.letzter_ansatz
   from public.platz p
   left join lateral (select max(a.begonnen_am) as letzter_ansatz from public.naehrloesungsansatz a
                       where a.platz_id = p.id and a.typ = 'neuansatz' and a.storniert_am is null
                         and a.status <> 'abgebrochen') n on true
-  left join lateral (select max(e.gilt_ab) as letztes_geleert from public.ereignis e
-                      where e.platz_id = p.id and e.typ = 'geleert' and e.storniert_am is null) g on true
+  left join lateral (select max(e.gilt_ab) as leer_seit from public.ereignis e
+                      where e.platz_id = p.id and e.typ in ('geleert', 'gefaess_erfasst') and e.storniert_am is null) g on true
  where p.rolle = 'gefaess';
-comment on view public.v_fuellzustand is 'leer oder loesung aus Ansätzen und Ereignis geleert (R5.4).';
+comment on view public.v_fuellzustand is 'leer oder loesung: leer seit dem letzten Ereignis geleert oder gefaess_erfasst, Lösung nach einem späteren Neuansatz (R5.4).';
 
 create view public.v_nachfuellsumme with (security_invoker = true) as
 select p.id as platz_id, coalesce(sum(a.nachgefuellt_l), 0) as liter
@@ -1299,23 +1398,30 @@ select p.id as platz_id, coalesce(sum(a.nachgefuellt_l), 0) as liter
 comment on view public.v_nachfuellsumme is 'Nachfüllwasser seit dem letzten Neuansatz; erreicht es das Betriebsvolumen, ist der Wechsel fällig (R5.2).';
 
 create view public.v_gefaess_status with (security_invoker = true) as
-with ev as (
-  select g.id as gefaess_id, g.platz_id, g.gueltig_von,
+with basis as (
+  select g.id as gefaess_id, g.platz_id,
          (select max(e.gilt_ab) from public.ereignis e where e.platz_id = g.platz_id and e.storniert_am is null
-            and e.typ = 'box_deckel_tausch') as letzter_tausch,
-         (select e.gilt_ab from public.ereignis e where e.platz_id = g.platz_id and e.storniert_am is null
-            and e.typ = 'entfernt' order by e.gilt_ab desc limit 1) as entfernt_am,
-         (select (e.daten ->> 'gesetzt')::boolean from public.ereignis e where e.platz_id = g.platz_id
-            and e.storniert_am is null and e.typ = 'ruhe' order by e.gilt_ab desc limit 1) as ruht
+            and e.typ = 'gefaess_erfasst') as erfasst_am
     from public.gefaess g
    where g.storniert_am is null and g.gueltig_bis is null),
+ev as (
+  select b.gefaess_id, b.platz_id,
+         greatest(b.erfasst_am,
+                  (select max(e.gilt_ab) from public.ereignis e where e.platz_id = b.platz_id and e.storniert_am is null
+                     and e.typ = 'box_deckel_tausch' and e.gilt_ab >= b.erfasst_am)) as anker,
+         (select e.gilt_ab from public.ereignis e where e.platz_id = b.platz_id and e.storniert_am is null
+            and e.typ = 'entfernt' and e.gilt_ab >= b.erfasst_am order by e.gilt_ab desc limit 1) as entfernt_am,
+         (select (e.daten ->> 'gesetzt')::boolean from public.ereignis e where e.platz_id = b.platz_id
+            and e.storniert_am is null and e.typ = 'ruhe' and e.gilt_ab >= b.erfasst_am
+          order by e.gilt_ab desc limit 1) as ruht
+    from basis b),
 pr as (
   select ev.gefaess_id,
          count(distinct (e.daten ->> 'schritt')) filter (where (e.daten ->> 'schritt')::int between 1 and 3
                                                            and (e.daten ->> 'ok')::boolean) as schritte_1_3,
          bool_or((e.daten ->> 'schritt')::int = 4 and (e.daten ->> 'ok')::boolean) as schritt_4
     from ev left join public.ereignis e on e.platz_id = ev.platz_id and e.typ = 'gefaesspruefung'
-         and e.storniert_am is null and e.gilt_ab >= coalesce(ev.letzter_tausch, ev.gueltig_von)
+         and e.storniert_am is null and e.gilt_ab >= ev.anker
    group by ev.gefaess_id)
 select ev.gefaess_id,
        case when ev.entfernt_am is not null then 'entfernt'
@@ -1324,10 +1430,10 @@ select ev.gefaess_id,
             when pr.schritte_1_3 = 3 then 'in_betrieb_volumen_offen'
             else 'in_pruefung' end::public.gefaess_status as status
   from ev join pr on pr.gefaess_id = ev.gefaess_id;
-comment on view public.v_gefaess_status is 'Prüfstatus aus Ereignissen (R5.4, R9.3); nach Box- oder Deckeltausch wieder in_pruefung.';
+comment on view public.v_gefaess_status is 'Prüfstatus aus Ereignissen (R5.4, R9.3). Anker ist das letzte Ereignis gefaess_erfasst am Platz bzw. ein späterer Box- oder Deckeltausch; neue Belegungen bei Volumen- oder Betriebsartänderung setzen nicht zurück, ein entferntes Vorgängergefäss zählt nicht (A7).';
 
 create view public.v_kalibrierung_faellig with (security_invoker = true) as
-select mg.id as messgeraet_id, k.letzte,
+select mg.id as messgeraet_id, d.datenart, k.letzte,
        least(public.kalendertag(k.letzte) + 30,
              (select min(t) from public.einstellung es, unnest(es.feste_kalibriertermine) t
                where t > public.kalendertag(k.letzte)),
@@ -1335,11 +1441,18 @@ select mg.id as messgeraet_id, k.letzte,
                where e.typ = 'sonde_gereinigt' and e.messgeraet_id = mg.id and e.storniert_am is null
                  and e.gilt_ab > k.letzte)) as faellig_am
   from public.messgeraet mg
+  cross join unnest(enum_range(null::public.datenart)) d(datenart)
   left join lateral (select max(gilt_ab) as letzte from public.kalibrierung kb
-                      where kb.messgeraet_id = mg.id and kb.storniert_am is null and kb.datenart = 'echt') k on true;
-comment on view public.v_kalibrierung_faellig is 'Fälligkeit: +30 Tage, feste Termine (einstellung), sofort nach Sonde gereinigt (R5.2). faellig_am null = noch nie kalibriert (Erstkalibrierung).';
+                      where kb.messgeraet_id = mg.id and kb.storniert_am is null and kb.datenart = d.datenart) k on true;
+comment on view public.v_kalibrierung_faellig is 'Fälligkeit je Datenart (8.1 Regel 7): +30 Tage, feste Termine (einstellung), sofort nach Sonde gereinigt (R5.2). faellig_am null = noch nie kalibriert (Erstkalibrierung). Aufgabe und Push nutzen nur echt.';
 
 create view public.v_messung_unsicher with (security_invoker = true) as
+with m as (
+  select m.*, coalesce(a.datenart, 'echt') as datenart
+    from public.messung m
+    left join public.platz p on p.id = m.platz_id
+    left join public.anlage a on a.id = p.anlage_id
+   where m.storniert_am is null)
 select m.id as messung_id,
        (k.letzte is null
         or public.kalendertag(m.gilt_ab) > least(
@@ -1348,15 +1461,19 @@ select m.id as messung_id,
                where t > public.kalendertag(k.letzte)))
         or exists (select 1 from public.ereignis e where e.typ = 'sonde_gereinigt' and e.messgeraet_id = m.messgeraet_id
                      and e.storniert_am is null and e.gilt_ab > k.letzte and e.gilt_ab < m.gilt_ab)
-        or exists (select 1 from public.ereignis e where e.typ = 'als_unsicher_markiert' and e.storniert_am is null
-                     and m.gilt_ab >= (select kb.gilt_ab from public.kalibrierung kb
-                                        where kb.id = (e.daten ->> 'seit_kalibrierung_id')::uuid))
+        or exists (select 1 from public.ereignis e
+                     join public.kalibrierung x on x.id = (e.daten ->> 'seit_kalibrierung_id')::uuid
+                    where e.typ = 'als_unsicher_markiert' and e.storniert_am is null
+                      and m.gilt_ab >= x.gilt_ab
+                      and m.gilt_ab < coalesce((select min(n.gilt_ab) from public.kalibrierung n
+                                                 where n.messgeraet_id = x.messgeraet_id and n.datenart = x.datenart
+                                                   and n.storniert_am is null and n.gilt_ab > x.gilt_ab), e.gilt_ab))
        ) as unsicher
-  from public.messung m
+  from m
   left join lateral (select max(kb.gilt_ab) as letzte from public.kalibrierung kb
-                      where kb.messgeraet_id = m.messgeraet_id and kb.storniert_am is null and kb.gilt_ab <= m.gilt_ab) k on true
- where m.storniert_am is null;
-comment on view public.v_messung_unsicher is 'unsicher: fehlende oder überfällige Kalibrierung (Tag 31 nach 30-Tage-Regel, TZ1 bis TZ4), Sonde gereinigt ohne neue Kalibrierung, oder Ereignis als_unsicher_markiert (R10.3).';
+                      where kb.messgeraet_id = m.messgeraet_id and kb.storniert_am is null
+                        and kb.datenart = m.datenart and kb.gilt_ab <= m.gilt_ab) k on true;
+comment on view public.v_messung_unsicher is 'unsicher: fehlende oder überfällige Kalibrierung derselben Datenart (Tag 31 nach 30-Tage-Regel, TZ1 bis TZ4), Sonde gereinigt ohne neue Kalibrierung, oder Ereignis als_unsicher_markiert für Messungen zwischen Kalibrierung X und der nächsten Kalibrierung (R10.3, R4.7). Messungen ohne Platz (pH-Kontrolle) gelten als echt.';
 
 create view public.v_reservierung_aktiv with (security_invoker = true) as
 select r.*
@@ -1391,10 +1508,13 @@ select pf.id as pflanzung_id, pf.satz_id,
        ort.netztopf_id, ort.platz_id, ort.loch_nr
   from public.pflanzung pf
   left join lateral (select e.daten, e.gilt_ab from public.ereignis e
-                      where e.pflanzung_id = pf.id and e.typ = 'phase_antwort' and e.daten ->> 'antwort' = 'ja'
+                      where (e.pflanzung_id = pf.id or (e.pflanzung_id is null and e.satz_id = pf.satz_id))
+                        and e.typ = 'phase_antwort' and e.daten ->> 'antwort' = 'ja'
                         and e.storniert_am is null order by e.gilt_ab desc limit 1) ph on true
-  left join lateral (select e.daten from public.ereignis e
-                      where e.pflanzung_id = pf.id and e.typ = 'abschluss' and e.storniert_am is null
+  left join lateral (select case when e.typ = 'ernte' then jsonb_build_object('grund', 'geerntet') else e.daten end as daten
+                       from public.ereignis e
+                      where e.pflanzung_id = pf.id and e.storniert_am is null
+                        and (e.typ = 'abschluss' or (e.typ = 'ernte' and e.daten ->> 'art' = 'ab'))
                         and not exists (select 1 from public.ereignis w where w.typ = 'wiederherstellen'
                                           and w.storniert_am is null and (w.daten ->> 'ereignis_id')::uuid = e.id)
                       order by e.gilt_ab desc limit 1) ab on true
@@ -1404,7 +1524,7 @@ select pf.id as pflanzung_id, pf.satz_id,
                       where e.pflanzung_id = pf.id and e.typ in ('verschieben', 'umsetzen', 'tausch')
                         and e.storniert_am is null order by e.gilt_ab desc limit 1) ort on true
  where pf.storniert_am is null;
-comment on view public.v_pflanzung_zustand is 'Phase aus der letzten bestätigten Phasenantwort (Start keimung), Status aus Abschluss ohne Wiederherstellen, Ort aus Ortsereignissen; ohne Ortsereignis steht die Pflanzung am Anzuchtort des Satzes.';
+comment on view public.v_pflanzung_zustand is 'Phase aus der letzten bestätigten Phasenantwort der Pflanzung oder ihres Satzes (gebündelte Antwort am Satz gilt für alle Pflanzungen, Ausnahmen als eigene Antwort je Pflanzung; Start keimung). Status aus Abschluss oder Ernte {art: ab} (= geerntet) ohne Wiederherstellen. Ort aus Ortsereignissen; ohne Ortsereignis steht die Pflanzung am Anzuchtort bzw. im Direktsaat-Gefäss.';
 
 create view public.v_keimrate with (security_invoker = true) as
 with k as (
@@ -1569,8 +1689,8 @@ create view public.v_phasenprognose with (security_invoker = true) as
 select s.sorte_id, s.kulturform, e.daten ->> 'phase' as phase,
        public.kalendertag(e.gilt_ab) - (e.daten ->> 'erwartet_am')::date as abweichung_tage
   from public.ereignis e
-  join public.pflanzung pf on pf.id = e.pflanzung_id
-  join public.satz s on s.id = pf.satz_id
+  join public.satz s on s.id = coalesce(e.satz_id, (select pf.satz_id from public.pflanzung pf where pf.id = e.pflanzung_id))
+  join public.v_auswertung_platz ap on ap.platz_id = coalesce(s.anzuchtort_platz_id, s.direktsaat_platz_id)
   join public.auswertung_fenster f on f.name = 'testbetrieb' and e.gilt_ab between f.von and f.bis
  where e.typ = 'phase_antwort' and e.daten ->> 'antwort' = 'ja' and e.storniert_am is null
    and not coalesce((e.daten ->> 'nachgefuehrt')::boolean, false);
@@ -1582,56 +1702,77 @@ select s.sorte_id, s.saatdatum,
   from public.ereignis e
   join public.pflanzung pf on pf.id = e.pflanzung_id
   join public.satz s on s.id = pf.satz_id
+  join public.v_auswertung_platz ap on ap.platz_id = coalesce(s.anzuchtort_platz_id, s.direktsaat_platz_id)
   join public.auswertung_fenster f on f.name = 'testbetrieb' and e.gilt_ab between f.von and f.bis
  where e.typ = 'keimung' and e.storniert_am is null and (e.daten ->> 'samen_gekeimt')::int > 0;
 
 create view public.v_ki_guete with (security_invoker = true) as
-select feld, bewertung_eval, count(*) as anzahl
-  from public.ki_feldprotokoll where storniert_am is null and bewertung_eval is not null
+select k.feld, k.bewertung_eval, count(*) as anzahl
+  from public.ki_feldprotokoll k
+  join public.auswertung_fenster f on f.name = 'testbetrieb' and k.erfasst_am between f.von and f.bis
+ where k.storniert_am is null and k.bewertung_eval is not null
  group by 1, 2;
+comment on view public.v_ki_guete is 'KI-Felder der Saattüten (UC4); KI-Erfassungen gibt es nur in der echten Anlage, deshalb nur das Fenster als Filter (A).';
 
 create view public.v_uebersteuerungen with (security_invoker = true) as
-select 'stadium' as art, count(*) as anzahl from public.naehrloesungsansatz
- where stadium_gewaehlt is distinct from stadium_vorschlag and stadium_gewaehlt is not null and storniert_am is null
-union all
-select 'ziel_ec', count(*) from public.naehrloesungsansatz
- where ziel_ec_gewaehlt is distinct from ziel_ec_vorschlag and ziel_ec_gewaehlt is not null and storniert_am is null
-union all
-select 'mischentscheid', count(*) from public.naehrloesungsansatz where mischentscheid <> 'keiner' and storniert_am is null
-union all
-select 'k_uebernommen', count(*) from public.naehrloesungsansatz where k_uebernommen and storniert_am is null
-union all
-select 'schwaemme_oder_samen', count(*) from public.satz
- where (anzahl_schwaemme <> schwaemme_vorschlag or samen_je_schwamm <> samen_vorschlag) and storniert_am is null
-union all
-select 'nicht_empfohlen_gewaehlt', count(*) from public.pflanzung where einstufung = 'nicht_empfohlen' and storniert_am is null
-union all
-select 'ki_feld_korrigiert', count(*) from public.ki_feldprotokoll where status = 'geaendert' and storniert_am is null;
-comment on view public.v_uebersteuerungen is 'Zählt Übersteuerungen (14.5); Filter auf Datenart und Fenster im Auswertungsskript beim Einfrieren (A).';
+with f as (select von, bis from public.auswertung_fenster where name = 'testbetrieb'),
+an as (select a.* from public.naehrloesungsansatz a join public.v_auswertung_platz ap on ap.platz_id = a.platz_id, f
+        where a.storniert_am is null and a.gilt_ab between f.von and f.bis),
+sz as (select s.* from public.satz s join public.v_auswertung_platz ap on ap.platz_id = coalesce(s.anzuchtort_platz_id, s.direktsaat_platz_id), f
+        where s.storniert_am is null and s.gilt_ab between f.von and f.bis)
+select 'stadium' as art, count(*) as anzahl from an where stadium_gewaehlt is distinct from stadium_vorschlag and stadium_gewaehlt is not null
+union all select 'ziel_ec', count(*) from an where ziel_ec_gewaehlt is distinct from ziel_ec_vorschlag and ziel_ec_gewaehlt is not null
+union all select 'mischentscheid', count(*) from an where mischentscheid <> 'keiner'
+union all select 'k_uebernommen', count(*) from an where k_uebernommen
+union all select 'schwaemme_oder_samen', count(*) from sz where anzahl_schwaemme <> schwaemme_vorschlag or samen_je_schwamm <> samen_vorschlag
+union all select 'nicht_empfohlen_gewaehlt', count(*) from public.pflanzung pf join sz on sz.id = pf.satz_id
+          where pf.einstufung = 'nicht_empfohlen' and pf.storniert_am is null
+union all select 'ki_feld_korrigiert', count(*) from public.ki_feldprotokoll k, f
+          where k.status = 'geaendert' and k.storniert_am is null and k.erfasst_am between f.von and f.bis;
+comment on view public.v_uebersteuerungen is 'Übersteuerungen (14.5), nur Datenart echt im Fenster testbetrieb (C4-AK3).';
 
 create view public.v_etikett_scans with (security_invoker = true) as
-select date_trunc('week', public.kalendertag(aufgerufen_am)) as woche, ergebnis, count(*) as anzahl
-  from public.etikett_aufruf group by 1, 2;
+select date_trunc('week', public.kalendertag(ea.aufgerufen_am)) as woche, ea.ergebnis, count(*) as anzahl
+  from public.etikett_aufruf ea
+  join public.anlage a on a.kuerzel = split_part(ea.code, '-', 1) and a.datenart = 'echt' and a.storniert_am is null
+  join public.auswertung_fenster f on f.name = 'testbetrieb' and ea.aufgerufen_am between f.von and f.bis
+ group by 1, 2;
 
 create view public.v_klima with (security_invoker = true) as
 select distinct on (m.platz_id, public.kalendertag(m.gilt_ab))
        m.platz_id, public.kalendertag(m.gilt_ab) as tag, m.temperatur
   from public.messung m
   join public.v_auswertung_platz ap on ap.platz_id = m.platz_id
+  join public.auswertung_fenster f on f.name = 'testbetrieb' and m.gilt_ab between f.von and f.bis
  where m.storniert_am is null and m.temperatur is not null
    and (m.gilt_ab at time zone 'Europe/Zurich')::time between '18:00' and '21:30'
  order by m.platz_id, public.kalendertag(m.gilt_ab), m.gilt_ab desc;
-comment on view public.v_klima is 'Wassertemperatur am Ende der Lichtphase: letzte Messung 18:00 bis 21:30 Ortszeit je Gefäss und Tag (E6, Entscheid R12).';
+comment on view public.v_klima is 'Wassertemperatur am Ende der Lichtphase: letzte Messung 18:00 bis 21:30 Ortszeit je Gefäss und Tag (E6, Entscheid R12); nur echt im Fenster.';
 
 create view public.v_pflegezeit with (security_invoker = true) as
-select date_trunc('week', tag) as woche, sum(sekunden) / 3600.0 as stunden
-  from (select public.kalendertag(gilt_ab) as tag, erfassungsdauer_s as sekunden from public.messung where storniert_am is null
-        union all select public.kalendertag(gilt_ab), dauer_s from public.naehrloesungsansatz where storniert_am is null
-        union all select public.kalendertag(gilt_ab), dauer_s from public.ereignis where storniert_am is null
-        union all select public.kalendertag(gilt_ab), dauer_s from public.kalibrierung where storniert_am is null
-        union all select public.kalendertag(gespeichert_am), dauer_s from public.pflanzvorgang where storniert_am is null) x
- where sekunden is not null
+with f as (select von, bis from public.auswertung_fenster where name = 'testbetrieb')
+select date_trunc('week', public.kalendertag(x.zeit)) as woche, sum(x.sekunden) / 3600.0 as stunden
+  from (select m.gilt_ab as zeit, m.erfassungsdauer_s as sekunden from public.messung m
+          join public.v_auswertung_platz ap on ap.platz_id = m.platz_id where m.storniert_am is null
+        union all
+        select a.gilt_ab, a.dauer_s from public.naehrloesungsansatz a
+          join public.v_auswertung_platz ap on ap.platz_id = a.platz_id where a.storniert_am is null
+        union all
+        select e.gilt_ab, e.dauer_s from public.ereignis e
+          left join public.platz p on p.id = e.platz_id
+          join public.anlage an on an.id = coalesce(e.anlage_id, p.anlage_id) and an.datenart = 'echt'
+         where e.storniert_am is null
+        union all
+        select k.gilt_ab, k.dauer_s from public.kalibrierung k where k.storniert_am is null and k.datenart = 'echt'
+        union all
+        select pv.gespeichert_am, pv.dauer_s from public.pflanzvorgang pv
+         where pv.storniert_am is null and exists (
+               select 1 from public.pflanzung pf join public.satz s on s.id = pf.satz_id
+                 join public.v_auswertung_platz ap on ap.platz_id = coalesce(s.anzuchtort_platz_id, s.direktsaat_platz_id)
+                where pf.pflanzvorgang_id = pv.id)) x, f
+ where x.sekunden is not null and x.zeit between f.von and f.bis
  group by 1;
+comment on view public.v_pflegezeit is 'Ist-Stunden am Regal je Woche aus Erfassungs- und Arbeitsdauern (14.5); nur echt im Fenster. Ereignisse ohne Platz oder Anlage zählen nicht (A).';
 
 -- ---------------------------------------------------------------------
 -- 8 Zugriff: RLS auf jeder Tabelle (8.1 Regel 6, 11.6)
@@ -1645,18 +1786,22 @@ declare
   t text;
   wissen text[] := array['quelle', 'art_schluessel', 'kulturgruppe', 'art', 'art_kulturform', 'kulturform_profilende',
                          'herkunft', 'sorte_schluessel', 'sorte', 'profilwert', 'pflichtgroesse', 'saatempfehlung',
-                         'produkt', 'duengerschema', 'wissenseintrag', 'messgeraet', 'auswertung_fenster',
-                         'aufgabe_tagesliste', 'backup_status', 'zugang'];
+                         'produkt', 'duengerschema', 'wissenseintrag', 'auswertung_fenster',
+                         'aufgabe_tagesliste', 'backup_status', 'zugang', 'ki_aufruf'];
+  nur_aendern text[] := array['messgeraet'];
 begin
   for t in select tablename from pg_tables where schemaname = 'public' loop
     execute format('alter table public.%I enable row level security', t);
     execute format('create policy tim_lesen on public.%I for select to authenticated using (public.ist_tim())', t);
-    if not t = any (wissen) then
+    if not t = any (wissen) and not t = any (nur_aendern) then
       execute format('create policy tim_einfuegen on public.%I for insert to authenticated with check (public.ist_tim())', t);
+    end if;
+    if not t = any (wissen) then
       execute format('create policy tim_aendern on public.%I for update to authenticated using (public.ist_tim()) with check (public.ist_tim())', t);
     end if;
   end loop;
 end $$;
+-- messgeraet: Tim ändert u_ec und u_ph aus der Geräteprüfung (UC0 Einstellungen), legt aber keine Geräte an.
 
 -- ---------------------------------------------------------------------
 -- 9 Storage (nur in Supabase; Konzept 11.6 Punkt 3)

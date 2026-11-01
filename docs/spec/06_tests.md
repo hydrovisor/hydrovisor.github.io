@@ -18,7 +18,7 @@ Stand 1.11.2026 · Auftrag 2 «Spezifikation» · Grundlage: Konzept v1.1 Kapite
 
 ## 2 Namensregel und AK-Abdeckung
 
-- Jeder Test, der ein AK prüft, trägt die AK-Nummer am Anfang seines Namens: `it('UC7-AK1 Neuansatz 2.3 skaliert auf 1.2', …)`, `-- UC0-AK2 …` in pgTAP; Randfälle zusätzlich mit ihrer ID (`RF10`, `TZ5`, `TO2`, `TP1`, `TK1`).
+- Jeder Test, der ein AK prüft, trägt die AK-Nummer am Anfang seines Namens: `it('UC7-AK1 Neuansatz 2.3 skaliert auf 1.2', …)`, `-- UC0-AK2 …` in pgTAP; Randfälle zusätzlich mit ihrer ID (`RF10`, `TZ5`, `TO2`, `TP1`, `TK1`). AK der Abläufe tragen das Präfix des Ablaufs: `Inbetriebnahme-AK2`, `Rundgang-AK1a`, `Loesungswechsel-AK5`, `Anzucht-AK1`, `C4-AK1`.
 - `scripts/ak-abdeckung.ts` liest die AK-Nummern aus dem Issue des Pakets und die Testnamen aus den Berichten von Vitest, Deno test, pgTAP und Playwright; fehlt eine [Unit]-, [SQL]- oder [E2E]-Nummer, bricht es ab. [Gerät]-Nummern müssen im Abnahmekommentar stehen, [Eval] im Issue.
 - Testdatei-Wächter: Änderungen an Testdateien aus dem Commit des Testentwicklers meldet CI im Pull Request; der Prüfer gibt sie mit Begründung frei.
 
@@ -123,7 +123,8 @@ Zusätzlich [Unit]: UC8-AK1 bis AK6, AK10, AK12, AK13; R5.6 (vier fällige Ansä
 | TP2 | Push-Antwort 410 | Abo inaktiv, Status abgemeldet (UC0-AK5) |
 | TP3 | Demo-Gefäss mit fälligen Aufgaben | nicht im Titel gezählt (UC8-AK11) |
 | TP4 | feste Uhr 27., 28., 29.3.2027, Gerätezeitzone ≠ Zürich | je genau ein Versand zur Ortszeit |
-| TP5 (A) | Timer-Lauf jede Minute, timer_ende erreicht | genau eine Timer-Push je Ansatz und Timer |
+| TP5 (A) | Timer-Lauf jede Minute, timer_ende erreicht; danach neuer Timer im selben Ansatz | genau eine Timer-Push je (Abo, Ansatz, timer_ende); der neue Timer erhält eine eigene |
+| TP7 (A) | Kurzprüfung heute nur an der Demo-Anlage | Push «Kurzprüfung offen» um 20:00 wird trotzdem gesendet |
 | TP6 (A) | kein aktives Abo, `email_rueckfall` an | genau eine Sammel-Mail je Tag |
 | TK1 | Antwort mit Feld «ph: 6.0» | verworfen, Feldprotokoll «leer» |
 | TK2 | ungültiges JSON | Eingaben bleiben, «von Hand» |
@@ -136,9 +137,13 @@ Zusätzlich [Unit]: UC8-AK1 bis AK6, AK10, AK12, AK13; R5.6 (vier fällige Ansä
 - **Checks:** Topfgrösse 50/80, Volumen < L × B × H (UC3-AK2), Standardprofil nur pH, Wassertemperatur, Lichtstunden, Validator 9.4, Überschreiben einer Wissenszeile scheitert.
 - **Sichten:** `v_sollwert` (Vererbung und Klasse D), `v_vollstaendigkeit` (UC4-AK4), `v_messung_unsicher` und `v_kalibrierung_faellig` (TZ1 bis TZ4), `v_fuellzustand` (UC3-AK9), `v_gefaess_status` (UC3-AK5), `v_reservierung_aktiv` (UC6-AK9), `v_keimrate` (nur echt, nur eingehaltene Keimtemperatur), `v_klima` (Fenster 18:00 bis 21:30), Auswertungssichten nur echt im Fenster (C4-AK1, C4-AK3).
 - **Ereignisreihenfolge:** dieselben Ereignisse in vertauschter Erfassungsreihenfolge ergeben denselben Zustand (8.1 Regel 2).
+- **Zustände und Caches:** neues Gefäss am Platz eines entfernten startet «in Prüfung», nach Schritten 1 bis 3 «in Betrieb (Volumen offen)»; Volumenkorrektur nach Schritt 4 (neue Belegung) bleibt «in Betrieb»; neu erfasstes Gefäss ist «leer»; Messung nach der neuen Kalibrierung ist trotz «als unsicher markiert» nicht unsicher (R4.7); Demo-Messung zählt nur Demo-Kalibrierungen (8.1 Regel 7); gebündelte Phasenantwort am Satz gilt für alle Pflanzungen; `ernte {art: ab}` setzt «geerntet»; Tausch setzt beide Töpfe um (zwei Ereignisse); direkte Änderung von `satz.saatdatum` oder `reservierung.umsetzen_geplant_am` scheitert, das Ereignis führt sie nach; `messgeraet` für Tim änderbar, nicht einfügbar.
+- **Demo löschen:** `delete from anlage where datenart = 'demo'` hinterlässt 0 Zeilen der Anlage X in allen Betriebstabellen (Konzept 8.5).
+- **Push und KI:** Timer-Push einmal je (Abo, Ansatz, timer_ende); `ki_aufruf` zählt jeden Aufruf; `backup_status_melden` ist der einzige Schreibweg der Backup-Rolle.
+- **Abläufe:** Inbetriebnahme-AK2 (13 Gefässe «in Betrieb (Volumen offen)» oder «in Betrieb», 84 Löcher, 4 Anzuchtboxen mit Etikett-Code) gegen S1; UC8-AK7 [SQL]: Protokoll mit injizierter Uhr an 14 von 14 Tagen höchstens 5 min nach der Push-Zeit.
 - **Seed:** Zähltest, Idempotenz, Versionierung, Teilfreigabe, Abbruch bei unbekannter Spalte (`03_import_w0.md` Abschnitt 10).
 
-**Bereits geprüft am 1.11.2026** (Entwurf `02_datenmodell.sql` gegen PostgreSQL 17 mit Stubs für `auth.users`, `auth.uid()` und die Rollen): Migration ohne Fehler (48 Tabellen, 30 Sichten, RLS auf allen); Vererbung Art und Standard mit Klasse D; Standardprofil mit EC abgelehnt; Überschreiben abgelehnt; TZ1 bis TZ4 gegen `v_messung_unsicher`; fremdes Konto sieht 0 Zeilen und darf nicht einfügen; Wissen für Tim nur lesbar.
+**Bereits geprüft am 1.11.2026** (Entwurf `02_datenmodell.sql` gegen PostgreSQL 17 mit Stubs für `auth.users`, `auth.uid()` und die Rollen, zweimal: vor und nach der Prüferrunde): Migration ohne Fehler (49 Tabellen, 30 Sichten, RLS auf allen); Vererbung Art und Standard mit Klasse D; Standardprofil mit EC abgelehnt; Überschreiben abgelehnt; TZ1 bis TZ4 gegen `v_messung_unsicher`; fremdes Konto sieht 0 Zeilen und darf nicht einfügen; Wissen für Tim nur lesbar; dazu alle Fälle unter «Zustände und Caches» ausser Tausch und Messgerät, Demo löschen, Timer-Push einmal, `backup_status_melden`.
 
 ## 10 Demo-Szenarien S1 bis S9 (Fixtures, Anlage X, Daten relativ zu «heute»)
 
@@ -160,6 +165,6 @@ Die Demo-Sorten und -Sollwerte stammen aus einem kleinen Test-Wissensstand `test
 
 ## 11 Gerät und Eval
 
-- [Gerät]: Push bei gesperrtem Gerät (M0 5 Tage), QR-Link öffnet die installierte App, Druck auf den Epson, Wake Lock, Systemschrift 130 % (UC9-AK1), Lesbarkeit aus 80 cm (UC9-AK13), EK6 am Regal (UC9-AK9), Probe «Gerät neu» unter 20 min (UC0-AK8), Inbetriebnahme rund 2 + 2 Stunden.
+- [Gerät]: UC8-AK8 Push bei gesperrtem Gerät (M0 5 Tage, EK5 14 Tage), QR-Link öffnet die installierte App, Druck auf den Epson mit Einzug des Etikettenbogens (Papierfach 50 bis 80 g/m², A, E-F4-6), Wake Lock, Systemschrift 130 % (UC9-AK1), Lesbarkeit aus 80 cm (UC9-AK13), EK6 am Regal (UC9-AK9), Probe «Gerät neu» unter 20 min (UC0-AK8), Inbetriebnahme-AK1 (rund 2 + 2 Stunden).
 - Regaltest A bis D (Konzept 2.3): 20 vorgegebene Werte je Variante (darunter 1.12, 22.2, Sprung 6.1 → 7.4), wechselnde Reihenfolge, Ebenen 1, 2, 4, nasse Finger und Handschuhe; gezählt werden unbemerkte Fehler, Korrekturen, Fehltipps; Wahl nach den wenigsten unbemerkten Fehlern, bei Gleichstand die schnellere (A, E-F4-6).
 - [Eval] UC4-AK3: 22 Tüten gegen `tueten_referenz.csv`, mindestens 80 % richtig je Feld; M0: Name, Art, Keimart bei 3 von 3.
