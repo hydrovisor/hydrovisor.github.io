@@ -52,7 +52,7 @@ insert into messung (client_id, platz_id, messgeraet_id, messart, ec, gilt_ab, a
     from r23, messgeraet m, unnest(array['2027-01-10 10:00+01', '2027-01-20 10:00+01']::timestamptz[]) d;
 insert into kalibrierung (client_id, messgeraet_id, gilt_ab, app_version) select gen_random_uuid(), id, '2027-01-15 09:00+01', 't' from messgeraet;
 insert into ereignis (client_id, typ, messgeraet_id, daten, gilt_ab, app_version)
-  select gen_random_uuid(), 'als_unsicher_markiert', m.id, jsonb_build_object('seit_kalibrierung_id', k.id), '2027-01-15 09:05+01', 't'
+  select gen_random_uuid(), 'als_unsicher_markiert', m.id, jsonb_build_object('seit_kalibrierung_id', k.id, 'datenart', 'echt'), '2027-01-15 09:05+01', 't'
     from messgeraet m, kalibrierung k where k.gilt_ab = '2027-01-01 09:00+01';
 select 'unsicher, erwartet 10.1 true und 20.1 false' as test, kalendertag(m.gilt_ab)::text || ' ' || u.unsicher as wert
   from messung m join v_messung_unsicher u on u.messung_id = m.id order by 2;

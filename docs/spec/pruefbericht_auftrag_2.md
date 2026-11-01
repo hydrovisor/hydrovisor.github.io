@@ -1,6 +1,6 @@
 # Prüfbericht Auftrag 2 (Spezifikation)
 
-Prüfer-Subagent mit frischem Kontext, nur lesen. Massstab: `docs/input/konzept_v1.1.md`, danach Use Cases F4, Düngeplan, W0; Entscheide in `00_rueckfragen.md` sind keine Befunde.
+Prüfer-Subagent mit frischem Kontext, nur lesen. Massstab: `docs/input/konzept_v1.2.md`, danach Use Cases F4, Düngeplan, W0; Entscheide in `00_rueckfragen.md` sind keine Befunde.
 
 ## Durchgang 1 (Stand 0714302): nachbessern, 1 hoch, 13 mittel, 11 gering
 

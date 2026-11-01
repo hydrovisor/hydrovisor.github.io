@@ -200,7 +200,7 @@ Langform: eine Zeile je Ebene, Bezug, Phase und Grösse (Konzept 8.2 `profilwert
 | `keimart` | `text_wert` = `licht`, `dunkel`, `indifferent` | nur Phase `keimung`; `indifferent` belegt die Box der Lichtkeimer vor (A) |
 | `keimtemp` | `wert_min`, `wert_typ`, `wert_max` in °C | nur Phase `keimung` |
 
-**4.4.2 Mindestzeilen je Kulturgruppe.** Damit eine neue Art aus UC4 (nur Artmerkmale, Sollwerte vererbt als Klasse D, 8.1 Regel 6) Phasen, Termine und Sollbereiche hat, trägt jede Kulturgruppe für jede der fünf Phasen `anwendbar` und für jede anwendbare Phase `dauer`, `bbch`, `wechselmerkmal`, `ph` und `ec`; Quelle ist in der Regel die Leitkultur der Gruppe mit ihrer Fundstelle. Der Validator prüft das (V13). In der App zeigen diese Werte immer «Prüfauftrag» (Klasse D, R1.3).
+**4.4.2 Mindestzeilen je Kulturgruppe.** Damit eine neue Art aus UC4 (nur Artmerkmale, Sollwerte vererbt als Klasse D, 8.1 Regel 6) Phasen, Termine und Sollbereiche hat, trägt jede Kulturgruppe für jede der fünf Phasen `anwendbar` und für jede anwendbare Phase `dauer`, `bbch` und `wechselmerkmal`, ausser in `keimung` auch `ph` und `ec`; in `keimung` gibt es auf Ebene Kulturgruppe weder `ph` noch `ec`, damit bei Direktsaat die Bewertung gegen den Schnappschuss des Ansatzes greift (`01_fachregeln.md` R2.2, Abschnitt 9). Quelle ist in der Regel die Leitkultur der Gruppe mit ihrer Fundstelle. Der Validator prüft das (V13). In der App zeigen diese Werte immer «Prüfauftrag» (Klasse D, R1.3). Die Artmerkmale einer neuen Art übernimmt `wissen_app_schreiben('art_neu')` von der Leitkultur der Gruppe: `kulturformen_erlaubt`, `kulturform_vorgabe`, `umsetzen_ab_d`, `umsetzen_bis_d`, `systemeignung`, `standard_keimfaehigkeit` und alle gültigen `art_kulturform`-Zeilen, mit Herkunft der Leitkultur und Vermerk `leitkultur` («Prüfauftrag»). Die Saatempfehlung einer neuen Sorte legt `saatempfehlung_neu` an (Klasse C aus der Tüte mit Quelle `tuete-<sorte_key>` oder D ohne Quelle, R12.3); Tim bestätigt sie in der Maske Sorten.
 
 Die Keimdauer ist die Grösse `dauer` der Phase `keimung` (Konzept 8.2 `art`). Für Ebene `standard` sind nur `ph`, `wassertemp` und `licht_h` erlaubt (R1.3, Check-Constraint). Phasenwerte für Licht, Luftfeuchte, Lufttemperatur und DLI gibt es nicht (Erratum E1).
 
@@ -236,7 +236,7 @@ Spalten wie die Datei vom 31.10.2026: `zeile_id, name, art, kulturtyp, shop_link
 | `katalog_quelle` | `quelle_id` aus `quelle.csv` |
 | `kaufdatum`, `keimfaehigkeit_packung`, `bestand_korn` | eine Zeile `saatgut` je Sorte |
 
-Leere Felder werden nicht geladen; dann gilt die Art (Konzept 8.4, Entscheid R9). `kulturtyp` von Mangold und Randen ist `blatt` (Entscheid W6); das I0-Seed-Paket trägt es in `sorten.csv` nach, weil `sorte.kulturtyp` Pflicht ist (UC4-AK4).
+Leere Felder werden nicht geladen; dann gilt die Art (Konzept 8.4, Entscheid R9). Sorten aus UC4 haben keine Zeile in der Datei: Der Client erzeugt die `sorte_id`, `sorte_neu` übernimmt sie als `sorte_schluessel.id` und setzt `sorte_key` = `zeile_id` = `app-<sorte_id>`; die Tüten-Quelle heisst dann `tuete-app-<sorte_id>`. `kulturtyp` von Mangold und Randen ist `blatt` (Entscheid W6); das I0-Seed-Paket trägt es in `sorten.csv` nach, weil `sorte.kulturtyp` Pflicht ist (UC4-AK4).
 
 ### 4.7 `data/stammdaten/duengerschema.csv`
 
@@ -288,7 +288,7 @@ Der Validator läuft vor jedem Laden und als eigener Befehl ohne Datenbank (`npm
 | V10 | `wechselmerkmal` höchstens 120 Zeichen; `wissenseintrag.text` höchstens 600 Zeichen ohne «KCl» und «Lagerlösung» | R1.1, R7.2 |
 | V11 | `kulturform_vorgabe` liegt in `kulturformen_erlaubt`; `ernteintervall_d` und `schnitte_max` nur bei `mehrfach` | R1.2 |
 | V12 | Aufzählungswerte nach Abschnitt 5 | 8.2 |
-| V13 | Jede Kulturgruppe hat die Mindestzeilen nach 4.4.2 | 8.1 Regel 6, R1.3 |
+| V13 | Jede Kulturgruppe hat die Mindestzeilen nach 4.4.2; `ph` und `ec` der Ebene Kulturgruppe in Phase `keimung` brechen ab | 8.1 Regel 6, R1.3, R2.2 |
 
 **Gegenprobe (Konflikt statt Abbruch, Konzept 9.4).** Weicht die Bandmitte eines freigegebenen EC-Werts einer Art der ersten Runde, als Gesamt-EC mit ECWasser 0.5 gerechnet, um mehr als 0.4 mS/cm von der Ziel-EC des Düngeplans V1.6 Abschnitt 4 ab, meldet der Validator einen Konflikt für Tim und lädt trotzdem. Vergleichswerte (A, aus dem Düngeplan; Phase `anzucht` gegen «1. echte Blätter» bzw. «Jungpflanze»):
 

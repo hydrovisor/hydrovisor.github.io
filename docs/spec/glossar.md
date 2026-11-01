@@ -1,6 +1,6 @@
 # Glossar: Fachbegriff und Name im Code
 
-Stand 1.11.2026 · Auftrag 2 «Spezifikation». Bedeutungen stehen in Konzept v1.1 Kapitel 19; hier steht, wie ein Begriff im Code heisst. Regel (Konzept 11.2): fachliche Namen deutsch ohne Umlaute (ae, oe, ue, ss), in SQL `snake_case`, in TypeScript `camelCase` (Typen `PascalCase`); technische Namen englisch.
+Stand 1.11.2026 · Auftrag 2 «Spezifikation». Bedeutungen stehen in Konzept v1.2 Kapitel 19; hier steht, wie ein Begriff im Code heisst. Regel (Konzept 11.2): fachliche Namen deutsch ohne Umlaute (ae, oe, ue, ss), in SQL `snake_case`, in TypeScript `camelCase` (Typen `PascalCase`); technische Namen englisch.
 
 | Fachbegriff | SQL | TypeScript |
 |---|---|---|
@@ -45,7 +45,8 @@ Stand 1.11.2026 · Auftrag 2 «Spezifikation». Bedeutungen stehen in Konzept v1
 | Satz, Folgesatz | `satz`, `v_folgesatz` | `Satz`, `istFolgesatz()` |
 | Pflanzung, Schwamm | `pflanzung` | `Pflanzung` |
 | Pflanzvorgang | `pflanzvorgang` | `Pflanzvorgang` |
-| Reservierung, geplantes Umsetzdatum | `reservierung`, `umsetzen_geplant_am` | `Reservierung`, `umsetzenGeplantAm` |
+| Reservierung, geplantes Umsetzdatum, Vorgabe | `reservierung`, `umsetzen_geplant_am`, `umsetzen_vorgabe_am` | `Reservierung`, `umsetzenGeplantAm`, `umsetzenVorgabeAm` |
+| Demo- oder Testdaten löschen | `datenart_loeschen()` | `datenartLoeschen` (nur Skript) |
 | Direktsaat | `satz.direktsaat_platz_id` | `istDirektsaat()` |
 | Passungs-Empfehlung, Einstufung | `pflanzung.einstufung`, `gruende` | `passung()`, `Einstufung` |
 | Zielbereich, Schnittmenge | `v_zielbereich`, Schnappschuss in `schnappschuss` | `zielbereich()` |
