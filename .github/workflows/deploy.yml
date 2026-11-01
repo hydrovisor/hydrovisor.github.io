@@ -46,6 +46,13 @@ jobs:
           if ! git rev-parse -q --verify refs/tags/letzte-migration > /dev/null; then echo db=true >> "$GITHUB_OUTPUT"; exit 0; fi
           if git diff --name-only refs/tags/letzte-migration "$GITHUB_SHA" | grep -E '^(supabase/|data/|scripts/seed)' > /dev/null; then
             echo db=true >> "$GITHUB_OUTPUT"; else echo db=false >> "$GITHUB_OUTPUT"; fi
+      - name: Rückfall-Probe nur, wenn letzter-guter-stand der laufende Stand ist (sonst ein echter Rückfall)
+        if: inputs.rueckfall_probe
+        run: |
+          tag=$(git rev-parse -q --verify 'refs/tags/letzter-guter-stand^{commit}' || true)
+          if [ "$tag" != "$GITHUB_SHA" ]; then
+            echo "::error::Rückfall-Probe nur, wenn letzter-guter-stand = $GITHUB_SHA (Tag: ${tag:-fehlt})"; exit 1
+          fi
 
   migration:
     needs: vorhanden
@@ -81,7 +88,7 @@ jobs:
 
   pages:
     needs: [vorhanden, migration]
-    if: always() && needs.vorhanden.outputs.app == 'true' && (needs.migration.result == 'success' || needs.migration.result == 'skipped')
+    if: always() && needs.vorhanden.result == 'success' && needs.vorhanden.outputs.app == 'true' && (needs.migration.result == 'success' || needs.migration.result == 'skipped')
     runs-on: ubuntu-latest
     permissions:
       pages: write
@@ -109,10 +116,10 @@ jobs:
 
   rauchtest:
     # mobile Chrome-Emulation gegen die echte Adresse: version.json = Commit, Heute oder Anmeldung erscheint.
-    # always(): ohne Statusfunktion gibt GitHub «skipped» der übersprungenen migration weiter (Befund I0-01).
+    # !cancelled(): ohne Statusfunktion gibt GitHub «skipped» der übersprungenen migration weiter (Befund I0-01).
     # Rückfall-Probe (Tims Handgriff): erwartet absichtlich einen falschen Commit und scheitert nach 20 s.
     needs: pages
-    if: always() && needs.pages.result == 'success'
+    if: ${{ !cancelled() && needs.pages.result == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -130,7 +137,7 @@ jobs:
 
   tag-nachziehen:
     needs: rauchtest
-    if: always() && needs.rauchtest.result == 'success'
+    if: ${{ !cancelled() && needs.rauchtest.result == 'success' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -143,7 +150,7 @@ jobs:
   rueckfall:
     # Rauchtest gescheitert: Stand des Tags letzter-guter-stand neu bauen und bereitstellen
     needs: rauchtest
-    if: always() && needs.rauchtest.result == 'failure'
+    if: ${{ !cancelled() && needs.rauchtest.result == 'failure' }}
     runs-on: ubuntu-latest
     permissions:
       pages: write
