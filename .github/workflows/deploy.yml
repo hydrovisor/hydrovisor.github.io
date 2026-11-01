@@ -117,7 +117,7 @@ jobs:
   rauchtest:
     # mobile Chrome-Emulation gegen die echte Adresse: version.json = Commit, Heute oder Anmeldung erscheint.
     # !cancelled(): ohne Statusfunktion gibt GitHub «skipped» der übersprungenen migration weiter (Befund I0-01).
-    # Rückfall-Probe (Tims Handgriff): erwartet absichtlich einen falschen Commit und scheitert nach 20 s.
+    # Rückfall-Probe (workflow_dispatch, Entscheid 0005): erwartet absichtlich einen falschen Commit und scheitert nach 20 s.
     needs: pages
     if: ${{ !cancelled() && needs.pages.result == 'success' }}
     runs-on: ubuntu-latest
