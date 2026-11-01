@@ -2,9 +2,9 @@
 
 Stand 1.11.2026 · Lead-Entwickler (Claude Code) an Tim · Grundlage: alle Dateien in `docs/input/`, `data/stammdaten/sorten.csv` und `design-system/`, vollständig gelesen.
 
-**Lesehilfe.** «Z. n» ist die Zeile in der genannten Datei. «Konzept» ist `docs/input/konzept_v1.0.md`, «UC» ist `docs/input/use_cases_f4.md`, «Bericht» ist `docs/input/use_cases_f4_bericht.md`, «Beipackzettel» ist `docs/input/README.md`. Nicht gestellt sind: die Punkte unter «Bekannte Abweichungen» im Beipackzettel (entschieden, es gilt das Konzept), die Fragen aus Konzept 16.4 (deren Defaults gelten als deine Antwort) und die am 31.10.2026 entschiedenen E-F4-1, E-F4-2 und E-F4-8.
+**Lesehilfe.** «Z. n» ist die Zeile in der genannten Datei. «Konzept» ist `docs/input/konzept_v1.1.md` (gleiche Zeilen wie v1.0), «UC» ist `docs/input/use_cases_f4.md`, «Bericht» ist `docs/input/use_cases_f4_bericht.md`, «Beipackzettel» ist `docs/input/README.md`. Nicht gestellt sind: die Punkte unter «Bekannte Abweichungen» im Beipackzettel (entschieden, es gilt das Konzept), die Fragen aus Konzept 16.4 (deren Defaults gelten als deine Antwort) und die am 31.10.2026 entschiedenen E-F4-1, E-F4-2 und E-F4-8.
 
-**So antwortest du.** Je Nummer genügt «ok» (Default gilt) oder deine Abweichung. Was bis zum Start von Auftrag 2 unbeantwortet bleibt, behandle ich als Default.
+**Stand 1.11.2026: entschieden.** Tim hat alle Defaults aus Teil 1 und alle Vorschläge aus Teil 2 angenommen. Was das Konzept betrifft, steht seit 1.11.2026 im Text von Konzept v1.1 (Erratum E6, Anhang B.2); `konzept_v1.0.md` ist ersetzt und liegt im Git-Verlauf. Die übrigen Entscheide gelten so, wie sie hier stehen, und gehen in Auftrag 2 und 3 ein.
 
 ## Teil 1: Rückfragen, die die Spezifikation verändern
 
@@ -72,7 +72,7 @@ Stand 1.11.2026 · Lead-Entwickler (Claude Code) an Tim · Grundlage: alle Datei
 - **Fundstelle:** Konzept 5.4 Z. 234 («gehört zum Gefäss») gegen Z. 234 (gleicher Absatz), 8.2 Z. 646 und R9.1 Z. 607 (Kennung am Platz); Enum `'70x42'` in Z. 646 gegen 70 × 42.3 mm in Z. 16, 607, 829; Bericht Z. 39 bis 40.
 - **Frage:** Gilt der Wortlaut «Kennung am Platz, Etikett physisch am Gefäss», und wie heisst der Enum-Wert?
 - **Warum blockiert:** `02_datenmodell.sql` legt den Enum fest; nach dem ersten Druck ist eine Umbenennung nur noch zweistufig möglich (Konzept 11.4).
-- **Default:** Wortlaut wie oben; `etikett.format enum('70x42_3','55x25')`. Du trägst beides zusammen mit E-F4-8 (W2) als Erratum E6 im Original ein; ich führe danach die Kopie in `docs/input/konzept_v1.0.md` per Pull Request nach.
+- **Default:** Wortlaut wie oben; `etikett.format enum('70x42_3','55x25')`. Umgesetzt mit E-F4-8 (W2) in Konzept v1.1 (Erratum E6).
 
 ### R6 Rundung der erwarteten Teil-EC (E-F4-9)
 
@@ -93,7 +93,7 @@ Stand 1.11.2026 · Lead-Entwickler (Claude Code) an Tim · Grundlage: alle Datei
 - **Fundstelle:** Konzept R4.12 Z. 490 und 12.6 Z. 974; Düngeplan Z. 44 bis 68; Beipackzettel Z. 62 (offene Rückfrage zu 4.1 bis 4.3).
 - **Frage:** Welche Zeilen aus Düngeplan Abschnitt 4 kommen in `tests/golden/duengerrechner_referenz.csv`, und mit welchen Eingaben?
 - **Warum blockiert:** Die Datei ist das Orakel des Rechners, du legst sie bis 30.11. selbst an, und ich muss in `06_tests.md` ihr Format festlegen. Zwei Lücken: (a) Die Zeilen 4.1 «Basilikum + Pourpre, Kratky 7 l» und 4.3 «Mangold + Randen» beschreiben Gefässe, die es nach Erratum E2 nicht mehr gibt. (b) Der Düngeplan nennt je Zeile nur eine Ziel-EC und Handstadien wie «Jungpflanze (Woche 1)»; der Rechner braucht einen Zielbereich, ein Herstellerstadium, das Volumen, ECWasser, k und den Stand der Teil-Dosis. Der Satz in Z. 490 («2.1 auf die Mitte 1.2, 3.2 und 3.3 nicht skaliert») setzt Zielbereiche voraus, die nirgends stehen; für 3.3 (Babyleaf, Düngeplan-Ziel 1.0) passt «nicht skaliert» nur bei einem Zielbereich um 1.4 bis 1.8.
-- **Default:** 17 Düngeplan-Zeilen plus RF1 bis RF12. 4.1 und 4.3 entfallen; 4.2 wird zur Zeile «Station 4.1, 3 l, feste Dosis 0.5 ml/L» (gleich UC7-AK7). «Jungpflanze (Woche 1)» entspricht «1. echte Blätter». Rahmenwerte wie in R4.12: Wasser 0.5, k 0.3, Teil-Dosis aus. Den Zielbereich je Zeile trägst du ein; wo du keinen einträgst, gilt Ziel-EC des Düngeplans ± 0.2. Weicht das Ergebnis vom Satz in Z. 490 ab, gilt deine Datei, und der Satz wird ein Erratum. Spalten: `zeile_id, quelle, gefaess, volumen_l, stadium, zielbereich_ec_min, zielbereich_ec_max, ec_wasser, k, teil_dosis, grow_ml, micro_ml, bloom_ml, ec_ziel, skaliert, hinweis`.
+- **Default:** 17 Düngeplan-Zeilen plus RF1 bis RF12. 4.1 und 4.3 entfallen; 4.2 wird zur Zeile «Station 4.1, 3 l, feste Dosis 0.5 ml/L» (gleich UC7-AK7). «Jungpflanze (Woche 1)» entspricht «1. echte Blätter». Rahmenwerte wie in R4.12: Wasser 0.5, k 0.3, Teil-Dosis aus. Den Zielbereich je Zeile trägst du ein; wo du keinen einträgst, gilt Ziel-EC des Düngeplans ± 0.2. Z. 490 ist in Konzept v1.1 so gefasst. Spalten: `zeile_id, quelle, gefaess, volumen_l, stadium, zielbereich_ec_min, zielbereich_ec_max, ec_wasser, k, teil_dosis, grow_ml, micro_ml, bloom_ml, ec_ziel, skaliert, hinweis`.
 
 ### R9 Sortenmerkmale in `sorten.csv` bewusst leer
 
@@ -134,7 +134,7 @@ Stand 1.11.2026 · Lead-Entwickler (Claude Code) an Tim · Grundlage: alle Datei
 
 | Nr. | Widerspruch | Fundstellen | Vorschlag |
 |---|---|---|---|
-| W1 | Merge auf `main`: Das Konzept lässt nur dich zusammenführen und verbietet `gh pr merge` per Deny-Regel; deine Arbeitsregel (c) vom 31.10. lässt mich nach deiner Bestätigung zusammenführen. Im Repository steht dieser Entscheid noch nirgends. | Konzept 12.1 Z. 907, 12.2 Z. 915, 12.3 Z. 939, 12.4 Z. 947 und 949, 12.5 Z. 956, 16.3 Z. 1175, Glossar Z. 1309 | Arbeitsregel (c) gilt. Auftrag 3: Regel in `CLAUDE.md` («Merge nach deiner Bestätigung der Kurzzusammenfassung»), `gh pr merge` aus `permissions.deny` nehmen, der Hook sperrt weiter Push auf `main` und die Produktions-Referenz; Entscheiddatei in `docs/entscheide/`; als Erratum vermerken. |
+| W1 | Merge auf `main`: Das Konzept lässt nur dich zusammenführen und verbietet `gh pr merge` per Deny-Regel; deine Arbeitsregel (c) vom 31.10. lässt mich nach deiner Bestätigung zusammenführen. Im Repository steht dieser Entscheid noch nirgends. | Konzept 12.1 Z. 907, 12.2 Z. 915, 12.3 Z. 939, 12.4 Z. 947 und 949, 12.5 Z. 956, 16.3 Z. 1175, Glossar Z. 1309 | Arbeitsregel (c) gilt. Auftrag 3: Regel in `CLAUDE.md` («Merge nach deiner Bestätigung der Kurzzusammenfassung»), `gh pr merge` aus `permissions.deny` nehmen, der Hook sperrt weiter Push auf `main` und die Produktions-Referenz; Entscheiddatei in `docs/entscheide/`. Im Konzept umgesetzt mit v1.1 (E6: 12.1 bis 12.5, 16.3, Glossar). |
 | W2 | Kurzprüfung-Abweichung markiert «die Gefässe derselben Pumpe» gegen «den Bereich» (E-F4-8, entschieden: Pumpe). | Konzept 5.3 Z. 206 gegen R5.2 Z. 513 und R10.5 Z. 573; UC Z. 361 und 367 | Spezifikation nach Pumpe (`gefaess.luftpumpe`); R5.2 und R10.5 als Erratum E6 (mit R5). |
 | W3 | Name des Code-Repositorys: «hydrovisor» gegen `hydrovisor.github.io`. | Konzept 11.1 Z. 852 und 11.2 Z. 858 gegen 11.1 Z. 846 und Erratum E4 Z. 1557 | `hydrovisor/hydrovisor.github.io` (Ist-Zustand, E4); die Supabase-Projekte heissen `hydrovisor` und `hydrovisor-dev`. |
 | W4 | Entwicklungsprojekt «Gratisplan oder lokal, rund 25 USD pro Monat» gegen Ist-Zustand: `hydrovisor-dev` in der Pro-Organisation, rund 35 USD. | Konzept 11.1 Z. 848; Risikoregister RR8 Z. 1050 | Ist-Zustand gilt; Kostendach im Risikoregister (Auftrag 3) mit 35 USD. |
@@ -152,7 +152,7 @@ Stand 1.11.2026 · Lead-Entwickler (Claude Code) an Tim · Grundlage: alle Datei
 ## Teil 3: Annahmen
 
 1. **Auftrag.** Deine Nachricht «Auftrag 1 «Lesen und fragen»» lese ich als den Wortlaut aus Konzept 16.1 mit den Arbeitsregeln (a) bis (e) aus der Übergabe vom 31.10.2026. Fakten habe ich nur aus dem Repository genommen; die Übergabe lieferte nur die Arbeitsregeln und den Stand der Einrichtung.
-2. **Rangfolge.** Konzept v1.0 vor Use Cases Fassung 4 vor Düngeplan V1.6 vor W0; die «Bekannten Abweichungen» im Beipackzettel sind entschieden.
+2. **Rangfolge.** Konzept v1.1 vor Use Cases Fassung 4 vor Düngeplan V1.6 vor W0; die «Bekannten Abweichungen» im Beipackzettel sind entschieden.
 3. **Entschieden am 31.10.2026:** E-F4-1 (Ebene 4 in drei Gruppen), E-F4-2 (Sorte zuerst, Passung beim Umsetzen), E-F4-8 (Pumpe). Die Spezifikation setzt sie so um.
 4. **Stand der Einrichtung (Strang 0)** gilt als erfüllt: Organisation, Repositorys, Pages über Actions mit der Adresse `https://hydrovisor.github.io/`, Ruleset, Umgebung `production` mit zwei Secrets, Supabase-Projekte `hydrovisor` und `hydrovisor-dev` in Frankfurt mit gesperrter Registrierung, Cloudflare-Projekt `hydrovisor-vorschau`. Die Bedingung «Adresse bestätigt» (Konzept 13.1, 16.4, 17) erfüllt der QR-Test im Gerätetest.
 5. **Noch nicht eingerichtet** und von dir in I0 zu setzen (ich bereite vor): Umgebung `backup` mit ihren vier Secrets und einer lesenden Datenbankrolle, Anthropic- und VAPID-Schlüssel als Supabase-Secrets, Umgebungsvariablen der Vorschau in Cloudflare, Statuschecks im Ruleset (erst wenn `pr.yml` existiert). Die `.mcp.json` mit fester Referenz auf `hydrovisor-dev` kommt in Auftrag 3; für Auftrag 2 brauche ich keinen Supabase-Zugang.
@@ -165,5 +165,5 @@ Stand 1.11.2026 · Lead-Entwickler (Claude Code) an Tim · Grundlage: alle Datei
 12. **Personendaten.** Telefonnummer (Vertretungsblatt, Konzept 11.7) und E-Mail-Adresse liegen nur in der Datenbank (`einstellung`) oder als Secret, nie im Repository, in Fixtures oder in Testdaten.
 13. **Werte mit (A)** bleiben Annahmen; die Spezifikation kennzeichnet sie und nennt den Messzeitpunkt aus Konzept 17.
 14. **Honor-Viewport** 360 × 780 dp bis zum Gerätetest (Konzept 17 Z. 1215); E2E läuft mit 360 × 640 dp.
-15. **Errata.** Die Spezifikation ändert das Konzept nicht. Erratum-Vorschläge (R5, R8, W1, W2) sammle ich in Auftrag 2 in einem eigenen Abschnitt; du trägst sie ins Original ein, ich ziehe die Kopie in `docs/input/` nach.
+15. **Konzeptänderungen.** Nach deinem Auftrag vom 1.11.2026 kommen Entscheide, die das Konzept betreffen, direkt in den Konzepttext (neue Fassung wie v1.1, Zeilennummern möglichst unverändert, Eintrag in Anhang B.2) und nicht nur als Erratum-Zeile. Das Konzept im Repository ist die massgebende Fassung; die Originale im Drive-Ordner bleiben v1.0.
 16. **Arbeitsweise.** Jede Änderung geht über einen Zweig mit höchstens 28 Zeichen und einen Pull Request; vor jedem Merge erhältst du eine Kurzzusammenfassung und führst nach deiner Bestätigung erst ich zusammen. In Auftrag 1 keine Subagents und kein Agent Team.

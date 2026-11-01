@@ -1,12 +1,12 @@
 # Beilagen für Auftrag 1 (Stand 31.10.2026)
 
-Der Agent liest nur, was im Repository liegt (Konzept Kapitel 16). Fakten stehen nur in diesen Dateien. Bei Widerspruch gilt die Rangfolge der Geltungsregel (Konzept Zeile 5): (1) Konzept v1.0, (2) Use Cases Fassung 4, (3) Düngeplan TriPart V1.6, (4) Vorgehen Wissensbasis W0 mit der Datenvorlage aus Kapitel 9. Was unten unter «Bekannte Abweichungen» steht, ist bereits entschieden: Es gilt das Konzept; diese Punkte sind keine Rückfragen.
+Der Agent liest nur, was im Repository liegt (Konzept Kapitel 16). Fakten stehen nur in diesen Dateien. Bei Widerspruch gilt die Rangfolge der Geltungsregel (Konzept Zeile 5): (1) Konzept v1.1, (2) Use Cases Fassung 4, (3) Düngeplan TriPart V1.6, (4) Vorgehen Wissensbasis W0 mit der Datenvorlage aus Kapitel 9. Was unten unter «Bekannte Abweichungen» steht, ist bereits entschieden: Es gilt das Konzept; diese Punkte sind keine Rückfragen.
 
 ## Dateien und Herkunft
 
 | Datei | Quelle | Stand der Quelle | Übernahme |
 |---|---|---|---|
-| `konzept_v1.0.md` | «Hydrovisor – Definitives Fachkonzept v1.0.md» | Kopf 29.10.2026, Errata E1 bis E5 bis 31.10.2026 | 1:1 bis auf die Anonymisierung (siehe unten) |
+| `konzept_v1.1.md` | «Hydrovisor – Definitives Fachkonzept v1.0.md», im Repository zu v1.1 fortgeschrieben | Kopf 29.10.2026, Errata E1 bis E5 bis 31.10.2026; v1.1 mit Erratum E6 vom 1.11.2026 | v1.0 1:1 bis auf die Anonymisierung (siehe unten); v1.1 mit Tims Entscheiden vom 1.11.2026 in Text und Anhang B.2, Zeilennummern wie v1.0; v1.0 liegt im Git-Verlauf |
 | `use_cases_f4.md` | aus Fassung 3 (Google Doc, 23.10.2026, Nachträge bis 28.10.2026) auf Konzept v1.0 nachgeführt | 31.10.2026 | von einem Agenten nachgeführt und unabhängig geprüft; jede Änderung mit Beleg im Konzept (Tabelle «Änderungen gegenüber Fassung 3»). **10 offene Entscheide** sind im Text als «Entscheid Tim offen» (E-F4-1 bis E-F4-10) markiert |
 | `use_cases_f4_bericht.md` | Bericht zur Nachführung | 31.10.2026 | Umfang der Änderungen, Status der Prüfbefunde, Unsicherheiten im Konzept selbst (mit Zeilen), Liste der Entscheide E-F4-1 bis E-F4-10. Verweist auf Fassung 3; diese liegt nur noch im Git-Verlauf (Commit 9e6cecc) |
 | `duengeplan_v1.6.md` | «Düngeplan TriPart V1.6.md» | 29.10.2026 | 1:1 bis auf die Anonymisierung (siehe unten) |
@@ -19,7 +19,7 @@ Der Agent liest nur, was im Repository liegt (Konzept Kapitel 16). Fakten stehen
 
 ## Anonymisierung (öffentliches Repository)
 
-In `konzept_v1.0.md` und `duengeplan_v1.6.md` sind Nachname, Wohngemeinde und Name des Wasserversorgers ersetzt («Tim», «am Wohnort», «Wasserversorger»); sonst sind beide Dateien unverändert. Die Wasserwerte (Calcium, Magnesium, Härte) bleiben, weil der Düngerrechner sie braucht. Die Originale liegen bei Tim.
+In `konzept_v1.1.md` und `duengeplan_v1.6.md` sind Nachname, Wohngemeinde und Name des Wasserversorgers ersetzt («Tim», «am Wohnort», «Wasserversorger»); sonst sind beide Dateien unverändert. Die Wasserwerte (Calcium, Magnesium, Härte) bleiben, weil der Düngerrechner sie braucht. Die Originale liegen bei Tim.
 
 ## Bewusst nicht übernommen
 
@@ -35,11 +35,11 @@ In `konzept_v1.0.md` und `duengeplan_v1.6.md` sind Nachname, Wohngemeinde und Na
 | Hardware: Artefakt «Hardware 3D-Modell» V12.10, Aufbauplan, Einkaufsliste | verbindlich übertragen in Konzept Kapitel 5 (Erratum E2) |
 | Visualisierungen, Filme, Hologramm, Grafiken, «Belege CI» | keine Fachinhalte; Logos und App-Icons folgen mit dem Manifest-Paket aus dem Artefakt «Hydrovisor – CI», nicht aus «Belege CI» (ältere Dateien) |
 
-## Bekannte Abweichungen (entschieden: es gilt das Konzept v1.0)
+## Bekannte Abweichungen (entschieden: es gilt das Konzept v1.1)
 
 ### 1 Use Cases Fassung 4 (`use_cases_f4.md`)
 
-Fassung 4 ist auf Konzept v1.0 nachgeführt; ihre Geltungsregel entspricht der Rangfolge oben. Wo das Konzept selbst offen oder widersprüchlich ist, steht «Entscheid Tim offen» mit einer Nummer E-F4-1 bis E-F4-10 (Liste im Bericht, Abschnitt «Entscheide für Tim»). Diese Punkte sind Rückfragen für Auftrag 1, nicht entschieden. Werte mit (A) sind Annahmen aus Fassung 3 ohne Beleg im Konzept.
+Fassung 4 ist auf Konzept v1.0 nachgeführt; ihre Geltungsregel entspricht der Rangfolge oben. Wo das Konzept selbst offen oder widersprüchlich ist, steht «Entscheid Tim offen» mit einer Nummer E-F4-1 bis E-F4-10 (Liste im Bericht, Abschnitt «Entscheide für Tim»). Diese Punkte sind entschieden: E-F4-1, E-F4-2 und E-F4-8 am 31.10.2026, die übrigen am 1.11.2026 nach `docs/spec/00_rueckfragen.md`. Werte mit (A) sind Annahmen aus Fassung 3 ohne Beleg im Konzept.
 
 ### 2 W0-Vorgehen (`w0_vorgehen.md`, 27.10.)
 
@@ -59,7 +59,7 @@ Gilt nur mit den Änderungen aus Konzept Kapitel 9.
 - Pflegerhythmus (Zeilen 85–87): massgebend sind 5.3 und 5.7 (u. a. Kratky belüftet ohne Wechsel).
 - Messmittel (Zeile 42: Spritzen 5, 20, 60 ml): Konzept 1, 5, 20, 60 ml (5.6).
 - EC-Basis der Herstellertabelle (Abschnitt 2 «Zuwachs über dem Ausgangswasser»): nach 5.6 nicht belegt; Hydrovisor rechnet mit gemessenem k. R4.5 verwendet für die Stationen trotzdem Bänder «Leitungswasser + 0.3 bis 0.6» und «+ 0.8 bis 1.2»; das ist eine Festlegung des Konzepts, kein Widerspruch zur CSV.
-- **Offene Rückfrage für Auftrag 1:** R4.12 nimmt «die 19 Zeilen aus Düngeplan V1.6, Abschnitt 4» in die Referenzdatei des Düngerrechners auf; die Zeilen 4.1 bis 4.3 beschreiben die Hardware vor E2. Ob sie in die Referenzdatei gehören, entscheidet Tim.
+- **Entschieden 1.11.2026:** Die Referenzdatei des Düngerrechners nimmt 17 Zeilen aus Düngeplan V1.6, Abschnitt 4 auf (ohne 4.1 und 4.3, 4.2 als Station 4.1), je mit Tims Zielbereich (Konzept v1.1, R4.12).
 
 ### 4 Design System (`design-system/`)
 
