@@ -73,7 +73,8 @@ Die Skripte stehen seit Paket I0-01 (Grundgerüst) in `package.json`; ihre Namen
 | Edge Functions | `deno test supabase/functions` |
 | Seed | `npm run seed -- --ziel lokal` oder `--ziel dev` (nie Produktion von Hand) |
 | Demo-Daten | `npm run demo -- --laden` / `--loeschen` (lokal, dev) |
-| AK-Abdeckung | `node scripts/ak-abdeckung.ts --issue <nr> --berichte reports` |
+| AK-Abdeckung | `node scripts/ak-abdeckung.ts --issue <nr> [--pr <nr>] --berichte reports` (ohne `--pr` warnen [Gerät] und [Eval] nur) |
+| Rauchtest | `BASIS_URL=<adresse> ERWARTETER_COMMIT=<sha> npx playwright test -c playwright.rauchtest.config.ts` (in `deploy.yml` nach jedem Deploy; Rückfall-Probe über «Run workflow» ist Tims Handgriff) |
 | Entwurf Datenmodell prüfen | `bash docs/spec/pruefung/lauf.sh` (Docker, PostgreSQL 17) |
 | Sperr-Hook testen | `node --test .claude/hooks/sperre.test.mjs` |
 

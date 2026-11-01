@@ -225,13 +225,14 @@ jobs:
       - env:
           GH_TOKEN: ${{ github.token }}
           ISSUE: ${{ needs.vorhanden.outputs.issue }}
+          NR: ${{ github.event.pull_request.number }}
           BASIS: ${{ github.event.pull_request.base.sha }}
         run: |
           if [ ! -f scripts/ak-abdeckung.ts ]; then
             if git cat-file -e "$BASIS:scripts/ak-abdeckung.ts" 2>/dev/null; then echo "::error::scripts/ak-abdeckung.ts wurde entfernt"; exit 1; fi
             echo "::warning::scripts/ak-abdeckung.ts fehlt noch (folgt mit I0-02)"; exit 0
           fi
-          node scripts/ak-abdeckung.ts --issue "$ISSUE" --berichte reports
+          node scripts/ak-abdeckung.ts --issue "$ISSUE" --pr "$NR" --berichte reports
 
   testdatei-waechter:
     # Geschützt sind alle Dateien, die der Testentwickler angelegt hat: tests/testentwickler.txt auf main
