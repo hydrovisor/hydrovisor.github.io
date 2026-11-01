@@ -168,6 +168,36 @@ exception when raise_exception then
   raise notice 'ok  C6 Vorgabe unveränderlich';
 end $$;
 
+-- D2 Korrektur der Reservierung nach «Morgen» behält das verschobene Datum
+update reservierung set storniert_am = now(), storno_grund = 'korrektur'
+ where netztopf_id = (select id from netztopf where kennung = 'T1') and storniert_am is null;
+insert into reservierung (client_id, pflanzung_id, netztopf_id, umsetzen_vorgabe_am, umsetzen_geplant_am, gilt_ab, ersetzt_id, app_version)
+  select 'd2000000-0000-0000-0000-000000000001', r.pflanzung_id, r.netztopf_id, r.umsetzen_vorgabe_am, '2027-01-20', '2027-01-20 12:00+01', r.id, 't'
+    from reservierung r join netztopf t on t.id = r.netztopf_id where t.kennung = 'T1';
+select pg_temp.pruefe('D2 Korrektur nach Morgen: Datum aus dem Satz-Ereignis, nicht Vorgabe oder Client-Wert',
+  (select umsetzen_geplant_am::text from reservierung where client_id = 'd2000000-0000-0000-0000-000000000001'), '2027-01-25');
+
+-- D3 Füllzustand eines neuen Gefässes am Platz eines entfernten ohne gefaess_erfasst
+insert into platz (anlage_id, kennung, rolle, app_version) select id, '2.6', 'gefaess', 't' from anlage where kuerzel = 'R';
+insert into gefaess (platz_id, gefaessmodell_id, deckeltyp_id, betriebsart, betriebsvolumen_l, intervall_messen_d, intervall_wechseln_d, gueltig_von, gueltig_bis, app_version)
+  select pl.id, gm.id, d.id, 'dwc', 9, 2, 14, '2027-01-01', '2027-01-03', 't' from pl, gefaessmodell gm, deckeltyp d where pl.code = 'R-2.6';
+insert into naehrloesungsansatz (client_id, platz_id, typ, begonnen_am, volumen_l, gilt_ab, app_version)
+  select gen_random_uuid(), pl.id, 'neuansatz', '2027-01-02', 9, '2027-01-02', 't' from pl where pl.code = 'R-2.6';
+insert into ereignis (client_id, typ, platz_id, gilt_ab, app_version) select gen_random_uuid(), 'entfernt', pl.id, '2027-01-03', 't' from pl where pl.code = 'R-2.6';
+insert into gefaess (platz_id, gefaessmodell_id, deckeltyp_id, betriebsart, betriebsvolumen_l, intervall_messen_d, intervall_wechseln_d, gueltig_von, app_version)
+  select pl.id, gm.id, d.id, 'dwc', 9, 2, 14, '2027-01-04', 't' from pl, gefaessmodell gm, deckeltyp d where pl.code = 'R-2.6';
+select pg_temp.pruefe('D3 neues Gefäss nach entfernt ohne Ereignis: leer', (select fuellzustand from v_fuellzustand f join pl on pl.id = f.platz_id where pl.code = 'R-2.6'), 'leer');
+insert into naehrloesungsansatz (client_id, platz_id, typ, begonnen_am, volumen_l, gilt_ab, app_version)
+  select gen_random_uuid(), pl.id, 'neuansatz', '2027-01-05', 9, '2027-01-05', 't' from pl where pl.code = 'R-2.6';
+select pg_temp.pruefe('D3 nach Neuansatz: Lösung', (select fuellzustand from v_fuellzustand f join pl on pl.id = f.platz_id where pl.code = 'R-2.6'), 'loesung');
+
+-- D5 Phasenantwort nur am Satz
+do $$ begin
+  insert into ereignis (client_id, typ, satz_id, pflanzung_id, daten, gilt_ab, app_version)
+    select gen_random_uuid(), 'phase_antwort', pf.satz_id, pf.id, '{"phase":"wachstum","antwort":"ja"}', now(), 't' from pflanzung pf limit 1;
+  raise exception 'FEHLER D5: Phasenantwort an der Pflanzung angenommen';
+exception when check_violation then raise notice 'ok  D5 Phasenantwort an der Pflanzung abgelehnt'; end $$;
+
 -- C5, C9, C10 Schreibweg der App (als Tim)
 set role authenticated;
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000000a', false);
@@ -244,6 +274,32 @@ insert into push_abo (geraet, endpoint, p256dh, auth_schluessel, datenart, app_v
   ('Honor', 'https://echt', 'p', 'a', 'echt', 't'), ('Demo', 'https://demo', 'p', 'a', 'demo', 't');
 insert into push_versand (abo_id, kanal, art, datum_lokal, app_version) select id, 'push', 'sammel', '2027-01-10', 't' from push_abo;
 insert into etikett_aufruf (code, ergebnis, app_version) values ('X-2.3', 'gefunden', 't'), ('R-2.3', 'gefunden', 't');
+-- D4 pH-Kontrolle ohne Platz und Aufschub tragen die Datenart
+insert into messung (client_id, messgeraet_id, messart, ph, datenart, gilt_ab, app_version)
+  select gen_random_uuid(), id, 'ph_kontrolle', 6.9, 'demo', '2027-01-10 10:00+01', 't' from mg where modell = 'P160';
+insert into aufschub (client_id, aufgabe_schluessel, art, gesetzt_am, datenart, gilt_ab, app_version) values
+  (gen_random_uuid(), 'messen|x|2027-01-10', 'morgen', '2027-01-10', 'demo', '2027-01-10', 't'),
+  (gen_random_uuid(), 'messen|r|2027-01-10', 'morgen', '2027-01-10', 'echt', '2027-01-10', 't');
+do $$ begin
+  insert into messung (client_id, messgeraet_id, messart, ph, gilt_ab, app_version) select gen_random_uuid(), id, 'ph_kontrolle', 6.9, now(), 't' from messgeraet limit 1;
+  raise exception 'FEHLER D4: pH-Kontrolle ohne Datenart angenommen';
+exception when check_violation then raise notice 'ok  D4 pH-Kontrolle ohne Datenart abgelehnt'; end $$;
+-- D1 security-definer-Funktionen trotz Default-Privileges nicht für anon und authenticated
+do $$ declare r text; begin
+  foreach r in array array['anon', 'authenticated'] loop
+    begin
+      execute format('set local role %I', r);
+      perform datenart_loeschen('demo');
+      raise exception 'FEHLER D1: % darf datenart_loeschen', r;
+    exception when insufficient_privilege then raise notice 'ok  D1 % darf datenart_loeschen nicht', r; end;
+    begin
+      execute format('set local role %I', r);
+      perform backup_status_melden(1);
+      raise exception 'FEHLER D1: % darf backup_status_melden', r;
+    exception when insufficient_privilege then raise notice 'ok  D1 % darf backup_status_melden nicht', r; end;
+  end loop;
+  reset role;
+end $$;
 do $$ begin
   set local role authenticated;
   perform datenart_loeschen('demo');
@@ -263,8 +319,8 @@ select pg_temp.pruefe('C7 nach Demo löschen: Anlagen, Kalibrierungen, Abos, Ver
   concat_ws(' ', (select count(*) from anlage), (select count(*) from kalibrierung), (select count(*) from push_abo),
             (select count(*) from push_versand), (select count(*) from pflanzvorgang),
             (select count(*) from ereignis where daten ->> 'datenart' = 'demo'), (select count(*) from etikett_aufruf),
-            (select count(*) from messung)),
-  '1 2 1 1 1 0 1 1');
+            (select count(*) from messung), (select count(*) from aufschub)),
+  '1 2 1 1 1 0 1 1 1');
 
 -- C11 Rückfall Backup: Lese-Policies für backup_leser, Dump mit Zeilensicherheit (pg_dump in lauf.sh)
 grant usage on schema public to backup_leser;

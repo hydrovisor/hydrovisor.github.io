@@ -8,3 +8,5 @@ do $$ begin
   if not exists (select 1 from pg_roles where rolname = 'service_role') then create role service_role nologin bypassrls; end if;
   if not exists (select 1 from pg_roles where rolname = 'backup_leser') then create role backup_leser login password 'test'; end if;
 end $$;
+-- wie Supabase: EXECUTE auf neue Funktionen im Schema public direkt an die API-Rollen (Befund D1)
+alter default privileges in schema public grant all on functions to anon, authenticated, service_role;

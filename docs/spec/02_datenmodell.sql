@@ -800,7 +800,7 @@ create table public.reservierung (
   ersetzt_id uuid references public.reservierung (id) on delete set null
 );
 comment on table public.reservierung is
-  'Einzige Stelle, an der ein Ziel gespeichert ist (8.2). umsetzen_vorgabe_am ist die unveränderliche Vorgabe beim Anlegen (Saat + Umsetzen ab; Direktsaat Saattag); umsetzen_geplant_am ist Cache des letzten Ereignisses umsetzdatum_geaendert der Pflanzung oder ihres Satzes, ohne solches die Vorgabe (beim Einfügen leer = Vorgabe). Ende über v_reservierung_aktiv; höchstens eine Nachfolge-Reservierung je Netztopf (R11.2, geprüft in src/domain und pgTAP).';
+  'Einzige Stelle, an der ein Ziel gespeichert ist (8.2). umsetzen_vorgabe_am ist die unveränderliche Vorgabe beim Anlegen (Saat + Umsetzen ab; Direktsaat Saattag); umsetzen_geplant_am ist Cache des letzten Ereignisses umsetzdatum_geaendert der Pflanzung oder ihres Satzes, ohne solches die Vorgabe; auch beim Einfügen (Korrektur, neuer Zieltopf) rechnet reservierung_vorbelegen() bestehende Ereignisse ein. Ende über v_reservierung_aktiv; höchstens eine Nachfolge-Reservierung je Netztopf (R11.2, geprüft in src/domain und pgTAP).';
 
 create table public.messung (
   id uuid primary key default gen_random_uuid(),
@@ -831,14 +831,16 @@ create table public.messung (
   storniert_am timestamptz,
   storno_grund public.storno_grund,
   ersetzt_id uuid references public.messung (id) on delete set null,
+  datenart public.datenart,
   check ((messart = 'ph_kontrolle') = (platz_id is null)),
+  check ((messart = 'ph_kontrolle') = (datenart is not null)),
   check (ph is not null or ec is not null or temperatur is not null),
   check (messart not in ('rundgang', 'aufgabe', 'kontrolle_folgetag', 'nachmessen')
          or coalesce(schnappschuss ->> 'betriebsart', '') not in ('kratky', 'kratky_belueftet')
          or fuellstand is not null)
 );
 comment on table public.messung is
-  'Messung am Ort (UC9). schnappschuss = {zielbereich: {ph_min, ph_max, ec_min, ec_max, temp_min, temp_max}, betriebsart, u_ec, u_ph} zum Zeitpunkt der Bewertung (R2.5). «unsicher» ist v_messung_unsicher (A7). Füllstand Pflicht bei Kratky für alle Messarten am Gefäss ausser Kontroll- und Endmessung im Ansatz (R4.10).';
+  'Messung am Ort (UC9). schnappschuss = {zielbereich: {ph_min, ph_max, ec_min, ec_max, temp_min, temp_max}, betriebsart, u_ec, u_ph} zum Zeitpunkt der Bewertung (R2.5). «unsicher» ist v_messung_unsicher (A7). datenart nur bei der pH-Kontrolle ohne Platz (Datenart der gewählten Anlage, 8.1 Regel 7); sonst folgt sie aus dem Platz. Die Fälligkeit «Kalibrierung oder Kontrolle + 7» (R5.2) zählt nur echte Kontrollen. Füllstand Pflicht bei Kratky für alle Messarten am Gefäss ausser Kontroll- und Endmessung im Ansatz (R4.10).';
 
 create table public.kalibrierung (
   id uuid primary key default gen_random_uuid(),
@@ -971,17 +973,19 @@ create table public.ereignis (
   storno_grund public.storno_grund,
   ersetzt_id uuid references public.ereignis (id) on delete set null,
   check (num_nonnulls(anlage_id, bereich_id, platz_id, satz_id, pflanzung_id, netztopf_id, messgeraet_id, art_id, sorte_id) >= 1),
-  check (typ not in ('sonde_gereinigt', 'als_unsicher_markiert') or coalesce(daten ->> 'datenart', '') in ('echt', 'demo', 'test'))
+  check (typ not in ('sonde_gereinigt', 'als_unsicher_markiert') or coalesce(daten ->> 'datenart', '') in ('echt', 'demo', 'test')),
+  check (typ <> 'phase_antwort' or (satz_id is not null and pflanzung_id is null))
 );
 create index ereignis_typ_gilt on public.ereignis (typ, gilt_ab) where storniert_am is null;
 comment on table public.ereignis is
-  'Genau ein Typ je Handlung (8.1 Regel 2). (A4) daten je Typ: aussaat {saatdatum} (Korrektur des Saatdatums); keimung {samen_gesaet, samen_gekeimt, keimtemp_eingehalten, vorherige_pruefung_am}; phase_antwort {phase, antwort: ja|noch_nicht|problem, erwartet_am, nachgefuehrt, ausloesende_pflanzung_id}; verschieben, umsetzen {von_platz_id, von_loch_nr, nach_platz_id, nach_loch_nr}; tausch dasselbe plus vorgang_id, je Topf ein Ereignis (A9); phase_antwort am Satz (pflanzung_id leer) gilt für alle Pflanzungen des Satzes, bei Fruchtgemüse mit ausloesende_pflanzung_id (R1.5); an der Pflanzung nur Ausnahmen; umsetzdatum_geaendert {von, nach, grund: morgen|in_station_lassen|ziel_spaeter} an der Pflanzung oder am Satz (dann für alle Pflanzungen des Satzes); neu_beschriften {von_kennung, nach_kennung}; ernte {art: teil|ab} (ab schliesst die Pflanzung mit Grund geerntet ab); kultur_entscheid {entscheid: beenden|verlaengern, tage}; abschluss {grund: geerntet|ausfall|keimt_nicht|ueberzaehlig, text}; wiederherstellen {ereignis_id}; kurzpruefung {punkt: pumpe|luftzone|loesung_topfboden|wurzeln|licht|luefter|wuerfel_feucht, ok, ausnahmen}; gefaesspruefung {schritt: 1..4, ok, volumen_gezaehlt_l}; ruhe {gesetzt}; gefaess_erfasst {} beim Speichern im Assistenten «Gefäss erfassen» (R9.3); sonde_gereinigt {datenart}; als_unsicher_markiert {seit_kalibrierung_id, datenart} (Datenart der gewählten Anlage, Check); stromausfall {beginn, ende}; aufgabe_erledigt {aufgabe_schluessel}; messung_umgehaengt {messung_id, nach_platz_id}; sollwert_geaendert {profilwert_zeile_id}; beobachtung {kategorie: tipburn|mehltau|schossen|wurzeln|sonstiges, text ≤ 200}; leitkultur_gewaehlt {art_id}.';
+  'Genau ein Typ je Handlung (8.1 Regel 2). (A4) daten je Typ: aussaat {saatdatum} (Korrektur des Saatdatums); keimung {samen_gesaet, samen_gekeimt, keimtemp_eingehalten, vorherige_pruefung_am}; phase_antwort {phase, antwort: ja|noch_nicht|problem, erwartet_am, nachgefuehrt, ausloesende_pflanzung_id}; verschieben, umsetzen {von_platz_id, von_loch_nr, nach_platz_id, nach_loch_nr}; tausch dasselbe plus vorgang_id, je Topf ein Ereignis (A9); phase_antwort nur am Satz (Check) und gilt für alle Pflanzungen des Satzes; eine Ausnahme in der gebündelten Karte ist eine eigene Antwort für diesen Satz, bei Fruchtgemüse mit ausloesende_pflanzung_id (R1.5); umsetzdatum_geaendert {von, nach, grund: morgen|in_station_lassen|ziel_spaeter} an der Pflanzung oder am Satz (dann für alle Pflanzungen des Satzes); neu_beschriften {von_kennung, nach_kennung}; ernte {art: teil|ab} (ab schliesst die Pflanzung mit Grund geerntet ab); kultur_entscheid {entscheid: beenden|verlaengern, tage}; abschluss {grund: geerntet|ausfall|keimt_nicht|ueberzaehlig, text}; wiederherstellen {ereignis_id}; kurzpruefung {punkt: pumpe|luftzone|loesung_topfboden|wurzeln|licht|luefter|wuerfel_feucht, ok, ausnahmen}; gefaesspruefung {schritt: 1..4, ok, volumen_gezaehlt_l}; ruhe {gesetzt}; gefaess_erfasst {} beim Speichern im Assistenten «Gefäss erfassen» (R9.3); sonde_gereinigt {datenart}; als_unsicher_markiert {seit_kalibrierung_id, datenart} (Datenart der gewählten Anlage, Check); stromausfall {beginn, ende}; aufgabe_erledigt {aufgabe_schluessel}; messung_umgehaengt {messung_id, nach_platz_id}; sollwert_geaendert {profilwert_zeile_id}; beobachtung {kategorie: tipburn|mehltau|schossen|wurzeln|sonstiges, text ≤ 200}; leitkultur_gewaehlt {art_id}.';
 
 create table public.aufschub (
   id uuid primary key default gen_random_uuid(),
   client_id uuid not null unique,
   aufgabe_schluessel text not null,
   art public.aufschub_art not null,
+  datenart public.datenart not null default 'echt',
   gesetzt_am date not null,
   gilt_ab timestamptz not null,
   client_zeit timestamptz,
@@ -992,7 +996,7 @@ create table public.aufschub (
   storno_grund public.storno_grund,
   ersetzt_id uuid references public.aufschub (id) on delete set null
 );
-comment on table public.aufschub is 'Morgen, Überspringen, Pegel ok (gilt einen Tag, keine Erledigung) je Aufgabenschlüssel typ|bezug|fällig am (R5.1, R5.3).';
+comment on table public.aufschub is 'Morgen, Überspringen, Pegel ok (gilt einen Tag, keine Erledigung) je Aufgabenschlüssel typ|bezug|fällig am (R5.1, R5.3). datenart = Datenart der gewählten Anlage (8.1 Regel 7, datenart_loeschen).';
 
 create table public.aufgabe_tagesliste (
   id uuid primary key default gen_random_uuid(),
@@ -1226,10 +1230,18 @@ create trigger satz_cache_geschuetzt before update on public.satz
 create trigger reservierung_cache_geschuetzt before update on public.reservierung
   for each row execute function public.cache_geschuetzt();
 
+-- Neue Reservierung (auch Korrektur oder neuer Zieltopf): Cache aus dem letzten gültigen Ereignis
+-- der Pflanzung oder ihres Satzes, sonst die Vorgabe; ein Wert des Clients wird überschrieben (D2).
 create or replace function public.reservierung_vorbelegen()
-returns trigger language plpgsql as $$
+returns trigger language plpgsql security definer set search_path = '' as $$
 begin
-  new.umsetzen_geplant_am := coalesce(new.umsetzen_geplant_am, new.umsetzen_vorgabe_am);
+  new.umsetzen_geplant_am := coalesce((select (e.daten ->> 'nach')::date
+                                         from public.ereignis e
+                                         join public.pflanzung pf on pf.id = new.pflanzung_id
+                                        where e.typ = 'umsetzdatum_geaendert' and e.storniert_am is null
+                                          and (e.pflanzung_id = new.pflanzung_id
+                                               or (e.pflanzung_id is null and e.satz_id = pf.satz_id))
+                                        order by e.gilt_ab desc, e.erfasst_am desc limit 1), new.umsetzen_vorgabe_am);
   return new;
 end $$;
 create trigger reservierung_vorbelegen before insert on public.reservierung
@@ -1251,20 +1263,27 @@ create trigger pflanzung_geloescht after delete on public.pflanzung
 create or replace function public.datenart_loeschen(art public.datenart)
 returns void language plpgsql security definer set search_path = '' as $$
 begin
-  if art = 'echt' then
+  -- Rolle prüfen (D1): PostgREST setzt role = service_role; direkte Verbindung als postgres (lokal, Seed)
+  if not (current_setting('role') = 'service_role'
+          or (current_setting('role') = 'none' and session_user in ('postgres', 'supabase_admin'))) then
+    raise exception 'nur mit der Service-Rolle';
+  end if;
+  if datenart_loeschen.art = 'echt' then
     raise exception 'echte Daten werden nie gelöscht';
   end if;
   delete from public.etikett_aufruf ea
-   where split_part(ea.code, '-', 1) in (select a.kuerzel from public.anlage a where a.datenart = art);
-  delete from public.ereignis e where e.daten ->> 'datenart' = art::text;
-  delete from public.kalibrierung k where k.datenart = art;
-  delete from public.push_abo pa where pa.datenart = art;
-  delete from public.anlage a where a.datenart = art;
+   where split_part(ea.code, '-', 1) in (select a.kuerzel from public.anlage a where a.datenart = datenart_loeschen.art);
+  delete from public.ereignis e where e.daten ->> 'datenart' = datenart_loeschen.art::text;
+  delete from public.kalibrierung k where k.datenart = datenart_loeschen.art;
+  delete from public.messung m where m.datenart = datenart_loeschen.art;
+  delete from public.aufschub au where au.datenart = datenart_loeschen.art;
+  delete from public.push_abo pa where pa.datenart = datenart_loeschen.art;
+  delete from public.anlage a where a.datenart = datenart_loeschen.art;
 end $$;
-revoke all on function public.datenart_loeschen(public.datenart) from public;
+revoke all on function public.datenart_loeschen(public.datenart) from public, anon, authenticated;
 grant execute on function public.datenart_loeschen(public.datenart) to service_role;
 comment on function public.datenart_loeschen(public.datenart) is
-  'Löscht alle Zeilen der Datenart demo oder test: Anlage mit Kaskaden (Plätze, Gefässe, Sätze, Pflanzungen, Messungen, Ansätze, Ereignisse), Pflanzvorgänge über pflanzung_geloescht, Kalibrierungen, Push-Abos mit Versand, Ereignisse mit daten.datenart, Etikett-Scans des Kürzels.';
+  'Löscht alle Zeilen der Datenart demo oder test: Anlage mit Kaskaden (Plätze, Gefässe, Sätze, Pflanzungen, Messungen, Ansätze, Ereignisse), Pflanzvorgänge über pflanzung_geloescht, Kalibrierungen, pH-Kontrollen ohne Platz und Aufschübe derselben Datenart, Push-Abos mit Versand, Ereignisse mit daten.datenart, Etikett-Scans des Kürzels. Nur Service-Rolle (Rechte und Rollenprüfung).';
 
 -- Backup (11.7, A8). In Produktion legt Tim die Rolle an; das Passwort steht nur im Secret
 -- SUPABASE_DB_URL_BACKUP:
@@ -1285,7 +1304,9 @@ returns void language sql security definer set search_path = '' as $$
   insert into public.backup_status (letztes_backup_am, groesse_bytes, app_version)
   values (now(), groesse, 'backup.yml')
 $$;
-revoke all on function public.backup_status_melden(bigint) from public;
+-- Supabase vergibt EXECUTE auf neue Funktionen über Default-Privileges direkt an anon,
+-- authenticated und service_role; deshalb ausdrücklich entziehen (D1).
+revoke all on function public.backup_status_melden(bigint) from public, anon, authenticated, service_role;
 
 -- Gesamt-EC zur Laufzeit (8.3, DM-04).
 create or replace function public.ec_gesamt(wert numeric, basis public.ec_basis, ec_wasser numeric)
@@ -1546,10 +1567,17 @@ select p.id as platz_id,
   left join lateral (select max(a.begonnen_am) as letzter_ansatz from public.naehrloesungsansatz a
                       where a.platz_id = p.id and a.typ = 'neuansatz' and a.storniert_am is null
                         and a.status <> 'abgebrochen') n on true
-  left join lateral (select max(e.gilt_ab) as leer_seit from public.ereignis e
-                      where e.platz_id = p.id and e.typ in ('geleert', 'gefaess_erfasst') and e.storniert_am is null) g on true
+  left join lateral (select max(e.gilt_ab) filter (where e.typ in ('geleert', 'gefaess_erfasst', 'entfernt')) as leer_ev,
+                            max(e.gilt_ab) filter (where e.typ = 'entfernt') as entfernt_am
+                       from public.ereignis e
+                      where e.platz_id = p.id and e.storniert_am is null
+                        and e.typ in ('geleert', 'gefaess_erfasst', 'entfernt')) ev on true
+  left join lateral (select greatest(ev.leer_ev,
+                                     (select min(g2.gueltig_von) from public.gefaess g2
+                                       where g2.platz_id = p.id and g2.storniert_am is null
+                                         and (ev.entfernt_am is null or g2.gueltig_von > ev.entfernt_am))) as leer_seit) g on true
  where p.rolle = 'gefaess';
-comment on view public.v_fuellzustand is 'leer oder loesung: leer seit dem letzten Ereignis geleert oder gefaess_erfasst, Lösung nach einem späteren Neuansatz (R5.4).';
+comment on view public.v_fuellzustand is 'leer oder loesung: leer seit dem letzten Ereignis geleert, gefaess_erfasst oder entfernt bzw. seit der ersten Belegung nach dem letzten «entfernt» (Rückfall wie v_gefaess_status), Lösung nach einem späteren Neuansatz (R5.4).';
 
 create view public.v_nachfuellsumme with (security_invoker = true) as
 select p.id as platz_id, coalesce(sum(a.nachgefuellt_l), 0) as liter
@@ -1623,7 +1651,7 @@ comment on view public.v_kalibrierung_faellig is 'Fälligkeit je Datenart (8.1 R
 
 create view public.v_messung_unsicher with (security_invoker = true) as
 with m as (
-  select m.*, coalesce(a.datenart, 'echt') as datenart
+  select m.id, m.messgeraet_id, m.gilt_ab, coalesce(a.datenart, m.datenart, 'echt') as datenart
     from public.messung m
     left join public.platz p on p.id = m.platz_id
     left join public.anlage a on a.id = p.anlage_id
@@ -1651,7 +1679,7 @@ select m.id as messung_id,
   left join lateral (select max(kb.gilt_ab) as letzte from public.kalibrierung kb
                       where kb.messgeraet_id = m.messgeraet_id and kb.storniert_am is null
                         and kb.datenart = m.datenart and kb.gilt_ab <= m.gilt_ab) k on true;
-comment on view public.v_messung_unsicher is 'unsicher: fehlende oder überfällige Kalibrierung derselben Datenart (Tag 31 nach 30-Tage-Regel, TZ1 bis TZ4), Sonde gereinigt ohne neue Kalibrierung, oder Ereignis als_unsicher_markiert für Messungen zwischen Kalibrierung X und der nächsten Kalibrierung; Ereignisse und Kalibrierung X zählen nur für Messungen desselben Messgeräts und derselben Datenart (R10.3, R4.7, 8.1 Regel 7). Messungen ohne Platz (pH-Kontrolle) gelten als echt.';
+comment on view public.v_messung_unsicher is 'unsicher: fehlende oder überfällige Kalibrierung derselben Datenart (Tag 31 nach 30-Tage-Regel, TZ1 bis TZ4), Sonde gereinigt ohne neue Kalibrierung, oder Ereignis als_unsicher_markiert für Messungen zwischen Kalibrierung X und der nächsten Kalibrierung; Ereignisse und Kalibrierung X zählen nur für Messungen desselben Messgeräts und derselben Datenart (R10.3, R4.7, 8.1 Regel 7). Messungen ohne Platz (pH-Kontrolle) tragen ihre Datenart selbst.';
 
 create view public.v_reservierung_aktiv with (security_invoker = true) as
 select r.*
@@ -1686,7 +1714,7 @@ select pf.id as pflanzung_id, pf.satz_id,
        ort.netztopf_id, ort.platz_id, ort.loch_nr
   from public.pflanzung pf
   left join lateral (select e.daten, e.gilt_ab from public.ereignis e
-                      where (e.pflanzung_id = pf.id or (e.pflanzung_id is null and e.satz_id = pf.satz_id))
+                      where e.satz_id = pf.satz_id
                         and e.typ = 'phase_antwort' and e.daten ->> 'antwort' = 'ja'
                         and e.storniert_am is null order by e.gilt_ab desc limit 1) ph on true
   left join lateral (select case when e.typ = 'ernte' then jsonb_build_object('grund', 'geerntet') else e.daten end as daten
@@ -1702,7 +1730,7 @@ select pf.id as pflanzung_id, pf.satz_id,
                       where e.pflanzung_id = pf.id and e.typ in ('verschieben', 'umsetzen', 'tausch')
                         and e.storniert_am is null order by e.gilt_ab desc limit 1) ort on true
  where pf.storniert_am is null;
-comment on view public.v_pflanzung_zustand is 'Phase aus der letzten bestätigten Phasenantwort der Pflanzung oder ihres Satzes (gebündelte Antwort am Satz gilt für alle Pflanzungen, Ausnahmen als eigene Antwort je Pflanzung; Start keimung). Status aus Abschluss oder Ernte {art: ab} (= geerntet) ohne Wiederherstellen. Ort aus Ortsereignissen; ohne Ortsereignis steht die Pflanzung am Anzuchtort bzw. im Direktsaat-Gefäss.';
+comment on view public.v_pflanzung_zustand is 'Phase aus der letzten bestätigten Phasenantwort ihres Satzes (Antworten stehen nur am Satz und gelten für alle Pflanzungen; Ausnahme je Satz; Start keimung). Status aus Abschluss oder Ernte {art: ab} (= geerntet) ohne Wiederherstellen. Ort aus Ortsereignissen; ohne Ortsereignis steht die Pflanzung am Anzuchtort bzw. im Direktsaat-Gefäss.';
 
 create view public.v_keimrate with (security_invoker = true) as
 with k as (
