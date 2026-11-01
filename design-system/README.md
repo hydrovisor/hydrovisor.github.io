@@ -88,5 +88,5 @@ Dieses System ist die verbindliche Ausgangslage für die App. Werte, Namen und B
 
 - Quelle: claude.ai-Artefakt «Hydrovisor – CI» (Typ Design System), letzte Änderung 23.10.2026; exportiert am 31.10.2026 für Auftrag 1, weil der Coding-Agent im Terminal keine claude.ai-Artefakte liest (Konzept Kapitel 10).
 - `tokens.css` ist aus `tokens.json` generiert (helles Thema in `:root`, dunkles Thema unter `[data-theme="dark"]`); `components/bundle.css` und die Baustein-Beschreibungen `components/*.md` sind unverändert übernommen.
-- Noch nicht exportiert: die Dateien der Gruppen **Logos** und **App-Icons** (SVG und PNG); sie folgen mit dem Paket, das Manifest und Logo einbaut.
+- Die Dateien der Gruppen **Logos** und **App-Icons** (SVG und PNG) liegen unverändert in `assets/Logos/` und `assets/App-Icons/`, je mit `README.md`; exportiert am 1.11.2026 mit I0-01 (Manifest und Logo). Die App liefert die Icons unter `/icons/` aus, ohne Kopie im Repository.
 - Die Ergänzungen aus Konzept Kapitel 10 (Dichte «regal», LabelSheet 70 × 42.3 mm, Notfallblatt, NumPad, Checklist, Tile) sind im Design System noch offen (Termin vor I1a). Bis dahin gilt bei Abweichungen das Konzept v1.0 (Rangfolge Kapitel 16).
