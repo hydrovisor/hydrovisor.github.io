@@ -1,0 +1,54 @@
+/* Seitenrahmen der App, nur mit Tokens des Design Systems (Konzept 10) */
+html,
+body {
+  margin: 0;
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-sans);
+}
+
+.hv-seite {
+  box-sizing: border-box;
+  max-width: var(--size-content);
+  margin: 0 auto;
+  min-height: 100dvh;
+  padding: calc(var(--space-4) + env(safe-area-inset-top)) calc(var(--space-4) + env(safe-area-inset-right))
+    calc(var(--space-4) + env(safe-area-inset-bottom)) calc(var(--space-4) + env(safe-area-inset-left));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.hv-seite-kopf {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.hv-seite-titel {
+  margin: 0;
+  font-size: var(--text-title-size);
+  line-height: var(--text-title-line);
+  font-weight: var(--text-title-weight);
+}
+
+.hv-angaben {
+  margin: 0;
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--space-2) var(--space-4);
+}
+
+.hv-angaben dt {
+  color: var(--ink-muted);
+}
+
+.hv-angaben dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.hv-seite p {
+  margin: 0;
+}

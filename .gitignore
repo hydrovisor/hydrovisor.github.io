@@ -154,3 +154,6 @@ reports/
 supabase/.temp/
 supabase/.branches/
 seed-bericht.md
+test-results/
+playwright-report/
+.stryker-tmp/
