@@ -56,7 +56,7 @@ Fakten nur aus dem Repository. Was nicht im Repository steht, fragst du Tim, sta
 
 ## Befehle
 
-Die Skripte entstehen mit Paket I0-01 (Grundgerüst); ihre Namen sind der Vertrag für `pr.yml`.
+Die Skripte stehen seit Paket I0-01 (Grundgerüst) in `package.json`; ihre Namen sind der Vertrag für `pr.yml`. `seed` und `demo` sind bis I0-05 und I0-10 Platzhalter, `test:mutation` endet mit Warnung, solange die Kernmodule fehlen.
 
 | Zweck | Befehl |
 |---|---|

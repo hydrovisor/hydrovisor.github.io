@@ -103,21 +103,36 @@ jobs:
         uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
 
   rauchtest:
-    # mobile Chrome-Emulation gegen die echte Adresse: version.json = Commit, Anmeldung oder Heute erscheint
+    # mobile Chrome-Emulation gegen die echte Adresse: version.json = Commit, Anmeldung oder Heute erscheint.
+    # Bis I0-02 die Konfiguration liefert: Warnung, kein Rauchtest und deshalb kein Tag (docs/entscheide/0004).
     needs: pages
     runs-on: ubuntu-latest
+    outputs:
+      gelaufen: ${{ steps.lauf.outputs.gelaufen }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - id: konfig
+        run: |
+          if [ -f playwright.rauchtest.config.ts ]; then echo da=true >> "$GITHUB_OUTPUT"; else
+            echo "::warning::playwright.rauchtest.config.ts fehlt noch (folgt mit I0-02): kein Rauchtest, kein Tag letzter-guter-stand"
+            echo da=false >> "$GITHUB_OUTPUT"; fi
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        if: steps.konfig.outputs.da == 'true'
         with: { node-version: 22, cache: npm }
-      - run: npm ci && npx playwright install --with-deps chromium
-      - env:
+      - if: steps.konfig.outputs.da == 'true'
+        run: npm ci && npx playwright install --with-deps chromium
+      - id: lauf
+        if: steps.konfig.outputs.da == 'true'
+        env:
           BASIS_URL: https://hydrovisor.github.io/
           ERWARTETER_COMMIT: ${{ github.sha }}
-        run: npx playwright test -c playwright.rauchtest.config.ts
+        run: |
+          npx playwright test -c playwright.rauchtest.config.ts
+          echo gelaufen=true >> "$GITHUB_OUTPUT"
 
   tag-nachziehen:
     needs: rauchtest
+    if: needs.rauchtest.outputs.gelaufen == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: write

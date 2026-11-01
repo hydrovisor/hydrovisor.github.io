@@ -1,0 +1,11 @@
+{
+  "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
+  "testRunner": "vitest",
+  "plugins": ["@stryker-mutator/vitest-runner"],
+  "mutate": ["src/domain/rechner*.ts", "src/domain/zielbereich*.ts", "src/domain/aufgaben*.ts"],
+  "thresholds": { "high": 90, "low": 80, "break": 80 },
+  "reporters": ["clear-text", "progress", "json"],
+  "jsonReporter": { "fileName": "reports/mutation.json" },
+  "tempDirName": ".stryker-tmp",
+  "cleanTempDir": "always"
+}
