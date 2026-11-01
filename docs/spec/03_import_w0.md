@@ -18,7 +18,7 @@ Stand 1.11.2026 · Teil von Auftrag 2 «Spezifikation», vorab geliefert, damit 
 | `data/stammdaten/duengerschema.csv` | Tim (aus `docs/input/TriPart_hydro_coco.csv`) | duengerschema | ja |
 | `data/wissen/wissenseintrag.csv` | Tim, erste Einträge aus dem Düngeplan (W8) | wissenseintrag | ja |
 
-Es bleibt bei den fünf freigegebenen W0-Dateien aus Konzept 9.2. Artmerkmale, Kulturformen und die Herkunft je Feld stehen gemeinsam in `art.csv` (Langform, Abschnitt 4.3); Kulturgruppen- und Standardwerte stehen in `profilwert.csv` mit der Spalte `ebene`.
+Es bleibt bei den fünf freigegebenen W0-Dateien aus Konzept 9.2. Artmerkmale, Kulturformen und die Herkunft je Feld stehen gemeinsam in `art.csv` (Langform, Abschnitt 4.3); Kulturgruppen- und Standardwerte stehen in `profilwert.csv` mit der Spalte `ebene`. (A) Das weicht vom Wortlaut des Defaults R10(a) ab, der eigene Vorlagen für art_kulturform, herkunft und standard nannte; Konzept 9.2 legt die fünf Dateien fest, und die Langform deckt alle Inhalte ab.
 
 ## 2 Gemeinsame Regeln für alle Dateien
 
@@ -200,6 +200,8 @@ Langform: eine Zeile je Ebene, Bezug, Phase und Grösse (Konzept 8.2 `profilwert
 | `keimart` | `text_wert` = `licht`, `dunkel`, `indifferent` | nur Phase `keimung`; `indifferent` belegt die Box der Lichtkeimer vor (A) |
 | `keimtemp` | `wert_min`, `wert_typ`, `wert_max` in °C | nur Phase `keimung` |
 
+**4.4.2 Mindestzeilen je Kulturgruppe.** Damit eine neue Art aus UC4 (nur Artmerkmale, Sollwerte vererbt als Klasse D, 8.1 Regel 6) Phasen, Termine und Sollbereiche hat, trägt jede Kulturgruppe für jede der fünf Phasen `anwendbar` und für jede anwendbare Phase `dauer`, `bbch` und `wechselmerkmal`, ausser in `keimung` auch `ph` und `ec`; in `keimung` gibt es auf Ebene Kulturgruppe weder `ph` noch `ec`, damit bei Direktsaat die Bewertung gegen den Schnappschuss des Ansatzes greift (`01_fachregeln.md` R2.2, Abschnitt 9). Quelle ist in der Regel die Leitkultur der Gruppe mit ihrer Fundstelle. Der Validator prüft das (V13). In der App zeigen diese Werte immer «Prüfauftrag» (Klasse D, R1.3). Die Artmerkmale einer neuen Art übernimmt `wissen_app_schreiben('art_neu')` von der Leitkultur der Gruppe: `kulturformen_erlaubt`, `kulturform_vorgabe`, `umsetzen_ab_d`, `umsetzen_bis_d`, `systemeignung`, `standard_keimfaehigkeit` und alle gültigen `art_kulturform`-Zeilen, mit Herkunft der Leitkultur und Vermerk `leitkultur` («Prüfauftrag»). Die Saatempfehlung einer neuen Sorte legt `saatempfehlung_neu` an (Klasse C aus der Tüte mit Quelle `tuete-<sorte_key>` oder D ohne Quelle, R12.3); Tim bestätigt sie in der Maske Sorten.
+
 Die Keimdauer ist die Grösse `dauer` der Phase `keimung` (Konzept 8.2 `art`). Für Ebene `standard` sind nur `ph`, `wassertemp` und `licht_h` erlaubt (R1.3, Check-Constraint). Phasenwerte für Licht, Luftfeuchte, Lufttemperatur und DLI gibt es nicht (Erratum E1).
 
 ### 4.5 `saatempfehlung.csv`
@@ -230,15 +232,15 @@ Spalten wie die Datei vom 31.10.2026: `zeile_id, name, art, kulturtyp, shop_link
 | `zeile_id`, `name`, `shop_link`, `kulturtyp` | `sorte` |
 | `art` | `sorte.art_id` über `art.name_de`; unbekannter Name bricht ab |
 | `wuchshoehe_max_mm`, `wuchsform`, `fruehzeitigkeit_relativ` | `sorte`, Herkunft `katalog_quelle` (Klasse C, Vermerk `katalog`) |
-| `keimart_tuete` (`licht`, `dunkel`, `indifferent`), `keimtemperatur_tuete` (`min-max` in °C) | `profilwert` Ebene `sorte`, Phase `keimung`, Klasse C, Vermerk `tuete`; Quelle `tuete-<zeile_id>` legt der Seed an |
+| `keimart_tuete` (`licht`, `dunkel`, `indifferent`), `keimtemperatur_tuete` (`min-max` in °C) | `profilwert` Ebene `sorte`, Phase `keimung`, Klasse C, Vermerk `tuete`; Quelle `tuete-<sorte_key>` (= `zeile_id` der Sorte) legt der Seed an, gleich wie `wissen_app_schreiben()` |
 | `katalog_quelle` | `quelle_id` aus `quelle.csv` |
 | `kaufdatum`, `keimfaehigkeit_packung`, `bestand_korn` | eine Zeile `saatgut` je Sorte |
 
-Leere Felder werden nicht geladen; dann gilt die Art (Konzept 8.4, Entscheid R9). `kulturtyp` von Mangold und Randen ist `blatt` (Entscheid W6); das I0-Seed-Paket trägt es in `sorten.csv` nach, weil `sorte.kulturtyp` Pflicht ist (UC4-AK4).
+Leere Felder werden nicht geladen; dann gilt die Art (Konzept 8.4, Entscheid R9). Sorten aus UC4 haben keine Zeile in der Datei: Der Client erzeugt die `sorte_id`, `sorte_neu` übernimmt sie als `sorte_schluessel.id` und setzt `sorte_key` = `zeile_id` = `app-<sorte_id>`; die Tüten-Quelle heisst dann `tuete-app-<sorte_id>`. `kulturtyp` von Mangold und Randen ist `blatt` (Entscheid W6); das I0-Seed-Paket trägt es in `sorten.csv` nach, weil `sorte.kulturtyp` Pflicht ist (UC4-AK4).
 
 ### 4.7 `data/stammdaten/duengerschema.csv`
 
-Spalten wie `docs/input/TriPart_hydro_coco.csv`: `zeile_id, stadium, grow_ml_l, micro_ml_l, bloom_ml_l, summe_ml_l, ec_richtwert_min_ms_cm, ec_richtwert_max_ms_cm, ec_basis, herkunft, quelle`. Tim übernimmt die Datei geprüft (Konzept 8.2). Die Zuordnung Phase zu Stadium (R4.3) mit der Einwurzel-Dauer 7 Tage und die vier Produkte (Grow 3-1-6, Micro Hard Water 5-0-1, Bloom 0-5-4, pH-Minus TA pH Down mit Konzentration leer) sind Seed-Konstanten. Der Seed prüft `summe_ml_l` gegen die Summe der drei Dosen (±0.01).
+Spalten wie `docs/input/TriPart_hydro_coco.csv` (`zeile_id, stadium, grow_ml_l, micro_ml_l, bloom_ml_l, summe_ml_l, ec_richtwert_min_ms_cm, ec_richtwert_max_ms_cm, ec_basis, herkunft`), dazu nach 8.1 Regel 4 `quelle_id` (Eintrag in `quelle.csv`, z. B. `terra-aquatica-tripart-2022`, Klasse `hersteller`), `fundstelle` («Tabelle Hydro/Coco»), `kurzzitat` und `evidenzklasse` (`B2`); die bisherige Freitextspalte `quelle` entfällt. Tim übernimmt die Datei geprüft (Konzept 8.2). Zuordnung der Spalte `stadium` zum Enum: «1. Wurzeln / Keimung» → `wurzeln_keimung`, «1. echte Blätter» → `echte_blaetter`, «Wachstum» → `wachstum`, «Vorblüte» → `vorbluete`, «Blüte / Frucht» → `bluete_frucht`, «Reife» → `reife`; ein anderer Wert bricht ab. Die Zuordnung Phase zu Stadium (R4.3) mit der Einwurzel-Dauer 7 Tage und die vier Produkte (Grow 3-1-6, Micro Hard Water 5-0-1, Bloom 0-5-4, pH-Minus TA pH Down mit Konzentration leer) sind Seed-Konstanten. Der Seed prüft `summe_ml_l` gegen die Summe der drei Dosen (±0.01).
 
 ### 4.8 `data/wissen/wissenseintrag.csv`
 
@@ -250,7 +252,8 @@ Spalten wie `docs/input/TriPart_hydro_coco.csv`: `zeile_id, stadium, grow_ml_l, 
 | `phase` | nein | Aufzählung `phase` |
 | `typ` | ja | Aufzählung `wissenseintrag_typ` (Konzept 8.2) |
 | `text` | ja | höchstens 600 Zeichen; keine Erwähnung von KCl oder Lagerlösung |
-| `quelle_id`, `fundstelle` | ja | |
+| `quelle_id`, `fundstelle`, `kurzzitat` | ja | nach 8.1 Regel 4 |
+| `evidenzklasse` | ja | `A`, `B1`, `B2`, `C` |
 
 ## 5 Aufzählungen
 
@@ -285,6 +288,7 @@ Der Validator läuft vor jedem Laden und als eigener Befehl ohne Datenbank (`npm
 | V10 | `wechselmerkmal` höchstens 120 Zeichen; `wissenseintrag.text` höchstens 600 Zeichen ohne «KCl» und «Lagerlösung» | R1.1, R7.2 |
 | V11 | `kulturform_vorgabe` liegt in `kulturformen_erlaubt`; `ernteintervall_d` und `schnitte_max` nur bei `mehrfach` | R1.2 |
 | V12 | Aufzählungswerte nach Abschnitt 5 | 8.2 |
+| V13 | Jede Kulturgruppe hat die Mindestzeilen nach 4.4.2; `ph` und `ec` der Ebene Kulturgruppe in Phase `keimung` brechen ab | 8.1 Regel 6, R1.3, R2.2 |
 
 **Gegenprobe (Konflikt statt Abbruch, Konzept 9.4).** Weicht die Bandmitte eines freigegebenen EC-Werts einer Art der ersten Runde, als Gesamt-EC mit ECWasser 0.5 gerechnet, um mehr als 0.4 mS/cm von der Ziel-EC des Düngeplans V1.6 Abschnitt 4 ab, meldet der Validator einen Konflikt für Tim und lädt trotzdem. Vergleichswerte (A, aus dem Düngeplan; Phase `anzucht` gegen «1. echte Blätter» bzw. «Jungpflanze»):
 
@@ -318,11 +322,11 @@ R1.4 nennt die Tabelle, aber nicht ihren Inhalt. Vorschlag:
 | `anzucht` | `anwendbar`, `dauer`, `bbch`, `ph`, `ec`, `wechselmerkmal` | `dauer`, `ph`, `ec` |
 | `wachstum`, `bluete`, `fruchtbildung_reife` | `anwendbar`, `dauer`, `bbch`, `ph`, `ec`, `wechselmerkmal` | `dauer`, `ph`, `ec` |
 
-`wechselmerkmal` entfällt in der letzten anwendbaren Phase einer Art. `wassertemp` und `licht_h` sind keine Pflichtgrössen, weil das Standardprofil sie liefert; ohne Wert auf Sorte, Art oder Kulturgruppe zählen sie als Prüfauftrag. In der Phase `keimung` gibt es keine pH- und EC-Pflicht, weil die Würfel nur angefeuchtet werden (R4.3) und Direktsaat mit der Phase Wachstum rechnet (R2.2).
+`wechselmerkmal` entfällt in der letzten anwendbaren Phase einer Art. `wassertemp` und `licht_h` sind keine Pflichtgrössen, weil das Standardprofil sie liefert; ohne Wert auf Sorte oder Art zählen sie als Prüfauftrag (R1.4). In der Phase `keimung` gibt es keine pH- und EC-Pflicht, weil die Würfel nur angefeuchtet werden (R4.3) und der Neuansatz bei Direktsaat mit der Phase Wachstum rechnet (R2.2); die Bewertung von Messungen bei Direktsaat vor der Bestätigung «anzucht» läuft gegen den Schnappschuss des Ansatzes (`01_fachregeln.md` R2.2, A).
 
 ## 10 Tests (Auszug für `06_tests.md`)
 
-- [Unit] Validator: je Regel V1 bis V12 ein Fall, der abbricht, und einer, der durchgeht; Gegenprobe Tomate Wachstum Bandmitte 2.0 gesamt → Konflikt, 1.8 → kein Konflikt.
+- [Unit] Validator: je Regel V1 bis V13 ein Fall, der abbricht, und einer, der durchgeht; Gegenprobe Tomate Wachstum Bandmitte 2.0 gesamt → Konflikt, 1.8 → kein Konflikt.
 - [Unit] Umrechnung: 1400 µS/cm → 1.400; 700 ppm500 → 1.400; 980 ppm700 → 1.400; CF 14 → 1.400.
 - [SQL] Zähltest und Idempotenz: zweiter Lauf mit unveränderten Dateien ändert keine Zeile; geänderter Wert erzeugt genau eine geschlossene und eine neue Fassung und ein Ereignis `sollwert_geaendert`.
 - [SQL] Teilfreigabe: Art mit fehlender Phase `bluete` lädt nur Artmerkmale und Keimungswerte; `v_sollwert` vererbt die übrigen Werte über Kulturgruppe oder Standard mit Evidenzklasse D.

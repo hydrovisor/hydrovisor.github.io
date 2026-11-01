@@ -2,9 +2,9 @@
 
 Stand 1.11.2026 · Lead-Entwickler (Claude Code) an Tim · Grundlage: alle Dateien in `docs/input/`, `data/stammdaten/sorten.csv` und `design-system/`, vollständig gelesen.
 
-**Lesehilfe.** «Z. n» ist die Zeile in der genannten Datei. «Konzept» ist `docs/input/konzept_v1.1.md` (gleiche Zeilen wie v1.0), «UC» ist `docs/input/use_cases_f4.md`, «Bericht» ist `docs/input/use_cases_f4_bericht.md`, «Beipackzettel» ist `docs/input/README.md`. Nicht gestellt sind: die Punkte unter «Bekannte Abweichungen» im Beipackzettel (entschieden, es gilt das Konzept), die Fragen aus Konzept 16.4 (deren Defaults gelten als deine Antwort) und die am 31.10.2026 entschiedenen E-F4-1, E-F4-2 und E-F4-8.
+**Lesehilfe.** «Z. n» ist die Zeile in der genannten Datei. «Konzept» ist `docs/input/konzept_v1.2.md` (gleiche Zeilen wie v1.0), «UC» ist `docs/input/use_cases_f4.md`, «Bericht» ist `docs/input/use_cases_f4_bericht.md`, «Beipackzettel» ist `docs/input/README.md`. Nicht gestellt sind: die Punkte unter «Bekannte Abweichungen» im Beipackzettel (entschieden, es gilt das Konzept), die Fragen aus Konzept 16.4 (deren Defaults gelten als deine Antwort) und die am 31.10.2026 entschiedenen E-F4-1, E-F4-2 und E-F4-8.
 
-**Stand 1.11.2026: entschieden.** Tim hat alle Defaults aus Teil 1 und alle Vorschläge aus Teil 2 angenommen. Was das Konzept betrifft, steht seit 1.11.2026 im Text von Konzept v1.1 (Erratum E6, Anhang B.2); `konzept_v1.0.md` ist ersetzt und liegt im Git-Verlauf. Die übrigen Entscheide gelten so, wie sie hier stehen, und gehen in Auftrag 2 und 3 ein.
+**Stand 1.11.2026: entschieden.** Tim hat alle Defaults aus Teil 1 und alle Vorschläge aus Teil 2 angenommen. Was das Konzept betrifft, steht seit 1.11.2026 im Text von Konzept v1.1 (Erratum E6, Anhang B.2); `konzept_v1.0.md` ist ersetzt und liegt im Git-Verlauf. Seit Prüferdurchgang 2 zur Spezifikation gilt Konzept v1.2 (Erratum E7: Saatempfehlung und neue Art aus UC4, Rückfall der Backup-Rolle); die Zeilen sind unverändert. Die übrigen Entscheide gelten so, wie sie hier stehen, und gehen in Auftrag 2 und 3 ein.
 
 ## Teil 1: Rückfragen, die die Spezifikation verändern
 
