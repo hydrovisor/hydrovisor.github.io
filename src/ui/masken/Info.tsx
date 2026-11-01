@@ -10,7 +10,7 @@ export function Info() {
     <main className="hv-seite">
       <header className="hv-seite-kopf">
         <h1 className="hv-seite-titel">Info</h1>
-        <a className="hv-btn hv-btn-ghost hv-btn-compact" href={hashZu({ name: 'heute' })}>
+        <a className="hv-btn hv-btn-ghost" href={hashZu({ name: 'heute' })}>
           Heute öffnen
         </a>
       </header>
