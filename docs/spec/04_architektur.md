@@ -149,9 +149,12 @@ Rundgang, Abhakliste, Gefässprüfung und Timer speichern nach jedem Tipp ihren 
 | GitHub-Umgebung `production` | `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_URL_POOLER` | Migration, Seed, Functions (gesetzt) |
 | GitHub-Umgebung `backup` | `SUPABASE_DB_URL_BACKUP`, `SUPABASE_STORAGE_TOKEN_BACKUP`, `BACKUP_AGE_PUBLIC_KEY`, `BACKUP_REPO_TOKEN` | Backup (Tim, I0) |
 | GitHub-Repository-Variablen | `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `VITE_VAPID_PUBLIC_KEY` | Produktions-Build (öffentlich) |
+| GitHub-Repository-Variable | `SUPABASE_PROJECT_REF_PROD` | Produktions-Referenz für `deploy.yml`, nie im Repository (Entscheid 0004) |
 | Cloudflare-Projekt | dieselben drei Variablen für `hydrovisor-dev` | Vorschau |
-| Supabase-Secrets (je Projekt) | `ANTHROPIC_API_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`, `RESEND_API_KEY`, `EMAIL_EMPFAENGER`, `PUSH_QUITTUNG_SCHLUESSEL` | Functions (Tim) |
+| Supabase-Secrets (je Projekt) | `ANTHROPIC_API_KEY`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`, `RESEND_API_KEY`, `EMAIL_EMPFAENGER`, `PUSH_QUITTUNG_SCHLUESSEL` | Functions (Tim) |
 | Supabase Vault | `cron_geheimnis` | pg_cron → Function |
+
+Das VAPID-Paar ist in `hydrovisor-dev` und in der Produktion dasselbe (nie neu erzeugen); der öffentliche Teil steht zusätzlich als `VITE_VAPID_PUBLIC_KEY` in GitHub und Cloudflare. Der Anthropic-Schlüssel stammt aus dem Arbeitsbereich «hydrovisor» der Claude Console (Ausgabenlimit RR8); in `hydrovisor-dev` ist es der Schlüssel «hydrovisor-dev-2», die Produktion erhält ihren eigenen Schlüssel vor I2-05.
 
 Keine Repository-Secrets (damit `pr.yml` keine erreicht), keine Schlüssel im Code, im Repository oder in Testdaten. Tim setzt alle Secrets selbst; der Agent bereitet die Namen vor.
 
