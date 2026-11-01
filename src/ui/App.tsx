@@ -1,21 +1,29 @@
 import { DienstAnbieter, useNeueVersion } from './dienst.tsx';
+import { Anmeldung } from './masken/Anmeldung.tsx';
 import { Heute } from './masken/Heute.tsx';
 import { Info } from './masken/Info.tsx';
-import { useRoute } from './router.ts';
+import { maskeFuer, useRoute } from './router.ts';
+import { SitzungAnbieter, useSitzung } from './sitzung.tsx';
 
 function Masken() {
   const route = useRoute();
+  const { zustand } = useSitzung();
   const { wartet } = useNeueVersion();
+  const maske = maskeFuer(route, zustand);
   // data-neue-version macht den Zustand für die E2E-Tests sichtbar (TO7), ohne ihn anzuzeigen
   return (
-    <div data-neue-version={wartet ? 'wartet' : 'keine'}>{route.name === 'info' ? <Info /> : <Heute />}</div>
+    <div data-neue-version={wartet ? 'wartet' : 'keine'} data-sitzung={zustand}>
+      {maske.name === 'info' ? <Info /> : maske.name === 'anmelden' ? <Anmeldung /> : <Heute />}
+    </div>
   );
 }
 
 export function App() {
   return (
     <DienstAnbieter>
-      <Masken />
+      <SitzungAnbieter>
+        <Masken />
+      </SitzungAnbieter>
     </DienstAnbieter>
   );
 }

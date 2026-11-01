@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { authNachbilden, sitzungSpeichern } from './hilfen.ts';
 
 test('Info-Seite zeigt Commit aus version.json', async ({ page, request }) => {
   const antwort = await request.get('/version.json');
@@ -42,6 +43,8 @@ test('Manifest im Hochformat mit den App-Icons aus dem Design System', async ({ 
 });
 
 test('unbekannte Route führt nach Heute', async ({ page }) => {
+  await sitzungSpeichern(page);
+  await authNachbilden(page);
   await page.goto('/#/gibt-es-nicht');
   await expect(page.getByRole('heading', { name: 'Heute', level: 1 })).toBeVisible();
   await expect(page.locator('main[data-density="regal"]')).toBeVisible();
