@@ -38,7 +38,6 @@ const gesperrt = [
   `supabase secrets list --project-ref '${FREMD}'`,
   'supabase db reset --linked',
   'supabase migration up --linked',
-  'gh workflow run deploy.yml --ref paket/12-messung',
   'supabase --debug db push',
   'npx supabase@latest link',
 ];
@@ -49,6 +48,8 @@ const erlaubt = [
   'git log main..HEAD',
   'git diff origin/main...HEAD',
   'gh pr merge 5 --squash',
+  // Entscheid 0005: Workflows startet der Lead selbst
+  'gh workflow run deploy.yml --ref main -f rueckfall_probe=true',
   `curl https://${DEV}.supabase.co/rest/v1/messung`,
   `supabase functions deploy --project-ref ${DEV}`,
   'npm run lint',

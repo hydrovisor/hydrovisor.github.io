@@ -72,9 +72,6 @@ function pruefeTeil(teil, zweig) {
         return 'supabase db push, link oder --linked (Produktion nur über deploy.yml)';
       }
     }
-    if (/^(.*[\\/])?gh(\.exe)?$/i.test(w[i]) && w[i + 1] === 'workflow' && w[i + 2] === 'run') {
-      return 'gh workflow run (Workflows starten nur über Merge oder durch Tim)';
-    }
   }
   return null;
 }
