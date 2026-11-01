@@ -62,7 +62,12 @@ describe('Fehlertext der Anmeldung', () => {
   it('zu viele Versuche und Unbekanntes ohne Ausrufezeichen', () => {
     expect(anmeldeFehlerText({ status: 429, message: 'rate limit' })).toMatch(/^Zu viele Versuche/);
     const text = anmeldeFehlerText({ status: 500, message: 'Database error' });
-    expect(text).toBe('Anmeldung nicht möglich: Database error');
+    // deutscher Satz, englische Servermeldung nicht im Text, nur der Code
+    expect(text).toBe('Anmeldung nicht möglich. Versuche es später erneut. (HTTP 500)');
     expect(text).not.toContain('!');
+    expect(anmeldeFehlerText({ status: 422, code: 'weak_password', message: 'x' })).toBe(
+      'Anmeldung nicht möglich. Versuche es später erneut. (weak_password)',
+    );
+    expect(anmeldeFehlerText({})).toBe('Anmeldung nicht möglich. Versuche es später erneut.');
   });
 });

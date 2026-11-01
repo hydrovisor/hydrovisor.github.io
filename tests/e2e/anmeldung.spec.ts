@@ -90,6 +90,17 @@ test('UC0-AK7 Vorstufe: abgelaufene Sitzung ohne Netz öffnet Heute ohne Anmeldu
   });
   await page.clock.runFor(40_000);
   await ohneSitzungGemeldet;
+  // die Warnung folgt dem Callback; React rendert über eine MessageChannel-Aufgabe (nicht von der Uhr gefälscht),
+  // eine eigene Nachricht danach kommt erst nach diesem Rendern an (Prüferbefund 3)
+  await page.clock.runFor(100);
+  await page.evaluate(
+    () =>
+      new Promise((fertig) => {
+        const kanal = new MessageChannel();
+        kanal.port1.onmessage = () => fertig(null);
+        kanal.port2.postMessage(0);
+      }),
+  );
   expect(erneuerung).toBeGreaterThan(1);
   // nach der gescheiterten Erneuerung weiter angemeldet, Sitzung bleibt gespeichert
   await expect(page.locator('[data-sitzung="angemeldet"]')).toBeAttached();

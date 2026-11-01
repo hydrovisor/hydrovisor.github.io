@@ -84,8 +84,9 @@ export function SitzungAnbieter({ children }: { children: ReactNode }) {
 
   const installieren = angebot
     ? async () => {
-        await angebot.prompt();
-        if ((await angebot.userChoice).outcome === 'accepted') setAngebot(undefined);
+        // Chrome lässt prompt() je Ereignis nur einmal zu; ein späteres Angebot kommt als neues Ereignis
+        setAngebot(undefined);
+        await angebot.prompt().catch(() => undefined);
       }
     : undefined;
 

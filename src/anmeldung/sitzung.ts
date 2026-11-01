@@ -67,5 +67,6 @@ export function anmeldeFehlerText(fehler: {
   if (fehler.name === 'AuthRetryableFetchError' || fehler.status === 0)
     return 'Kein Netz, nicht angemeldet. Versuche es erneut, sobald Netz da ist.';
   if (fehler.status === 429) return 'Zu viele Versuche. Warte einige Minuten und versuche es dann erneut.';
-  return `Anmeldung nicht möglich: ${fehler.message ?? 'unbekannter Fehler'}`;
+  const code = fehler.code ?? (fehler.status ? `HTTP ${fehler.status}` : undefined);
+  return `Anmeldung nicht möglich. Versuche es später erneut.${code ? ` (${code})` : ''}`;
 }
