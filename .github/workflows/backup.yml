@@ -1,0 +1,77 @@
+# Verschlüsseltes Backup (Konzept 11.7, docs/spec/04_architektur.md Abschnitt 9), täglich 03:00 UTC.
+# Umgebung backup ohne Freigabe; Secrets setzt Tim in I0. Ohne Secrets endet der Lauf mit einer Warnung.
+# Rückfall ohne BYPASSRLS (Erratum E7): Repository-Variable BACKUP_MIT_RLS = true → pg_dump --enable-row-security.
+name: backup
+
+on:
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    environment: backup
+    env:
+      DB_URL: ${{ secrets.SUPABASE_DB_URL_BACKUP }}
+      STORAGE_TOKEN: ${{ secrets.SUPABASE_STORAGE_TOKEN_BACKUP }}
+      AGE_SCHLUESSEL: ${{ secrets.BACKUP_AGE_PUBLIC_KEY }}
+      GH_TOKEN: ${{ secrets.BACKUP_REPO_TOKEN }}
+      SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+      MIT_RLS: ${{ vars.BACKUP_MIT_RLS }}
+    steps:
+      - id: bereit
+        run: |
+          if [ -z "$DB_URL" ] || [ -z "$AGE_SCHLUESSEL" ] || [ -z "$GH_TOKEN" ]; then
+            echo "::warning::Umgebung backup ist noch nicht eingerichtet (Tim, I0); kein Backup"
+            echo ok=false >> "$GITHUB_OUTPUT"
+          else
+            echo ok=true >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@v4
+        if: steps.bereit.outputs.ok == 'true'
+      - uses: supabase/setup-cli@v1
+        if: steps.bereit.outputs.ok == 'true'
+        with: { version: latest }
+      - name: Datenbank (Schema und Daten getrennt)
+        if: steps.bereit.outputs.ok == 'true'
+        run: |
+          mkdir -p sicherung
+          supabase db dump --db-url "$DB_URL" -f sicherung/schema.sql
+          if [ "$MIT_RLS" = "true" ]; then
+            docker run --rm --network host -v "$PWD/sicherung:/aus" postgres:17-alpine pg_dump "$DB_URL" -n public -a --enable-row-security -f /aus/daten.sql
+          else
+            supabase db dump --db-url "$DB_URL" --data-only -f sicherung/daten.sql
+          fi
+      - name: Storage-Bucket saattueten (nur lesend)
+        if: steps.bereit.outputs.ok == 'true'
+        run: |
+          if [ -f scripts/backup-storage.mjs ] && [ -n "$STORAGE_TOKEN" ]; then
+            node scripts/backup-storage.mjs --ziel sicherung/storage
+          else
+            echo "::warning::Storage-Kopie fehlt (Skript folgt mit Paket I0-11 oder Token nicht gesetzt)"
+          fi
+      - name: Verschlüsseln und ablegen (30 Stände)
+        if: steps.bereit.outputs.ok == 'true'
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq age
+          stand="backup-$(date -u +%Y-%m-%d)"
+          tar -czf "$stand.tar.gz" sicherung
+          age -r "$AGE_SCHLUESSEL" -o "$stand.tar.gz.age" "$stand.tar.gz"
+          rm -rf sicherung "$stand.tar.gz"
+          gh release create "$stand" "$stand.tar.gz.age" --repo hydrovisor/hydrovisor-backup --title "$stand" --notes "Automatisches Backup"
+          gh release list --repo hydrovisor/hydrovisor-backup --limit 200 --json tagName,createdAt \
+            --jq 'sort_by(.createdAt) | reverse | .[30:] | .[].tagName' |
+            while read -r alt; do gh release delete "$alt" --repo hydrovisor/hydrovisor-backup --cleanup-tag -y; done
+          echo "GROESSE=$(stat -c %s "$stand.tar.gz.age")" >> "$GITHUB_ENV"
+      - name: backup_status melden (einziger Schreibweg der Rolle backup_leser)
+        if: steps.bereit.outputs.ok == 'true'
+        run: |
+          docker run --rm --network host postgres:17-alpine psql "$DB_URL" -v ON_ERROR_STOP=1 -c "select public.backup_status_melden($GROESSE)"

@@ -1,0 +1,271 @@
+# Prüftor (Konzept 12.6, docs/spec/06_tests.md Abschnitt 1). Pflichtcheck im Ruleset: Job «pruefstor».
+# Jobs, die App-Code, Datenbank oder Edge Functions brauchen, laufen erst, wenn die Dateien existieren
+# (Paket I0-01 Grundgerüst, I0-03 Datenmodell); bis dahin werden sie übersprungen (docs/entscheide/0004).
+name: pr
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, labeled, unlabeled, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: read
+  issues: read
+
+concurrency:
+  group: pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  vorhanden:
+    runs-on: ubuntu-latest
+    outputs:
+      app: ${{ steps.f.outputs.app }}
+      db: ${{ steps.f.outputs.db }}
+      edge: ${{ steps.f.outputs.edge }}
+      issue: ${{ steps.f.outputs.issue }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: f
+        env:
+          ZWEIG: ${{ github.head_ref }}
+        run: |
+          [ -f package.json ] && echo app=true >> "$GITHUB_OUTPUT" || echo app=false >> "$GITHUB_OUTPUT"
+          [ -f supabase/config.toml ] && echo db=true >> "$GITHUB_OUTPUT" || echo db=false >> "$GITHUB_OUTPUT"
+          if [ -d supabase/functions ] && [ -n "$(ls -A supabase/functions 2>/dev/null)" ]; then echo edge=true >> "$GITHUB_OUTPUT"; else echo edge=false >> "$GITHUB_OUTPUT"; fi
+          if [[ "$ZWEIG" =~ ^paket/([0-9]+)- ]]; then echo "issue=${BASH_REMATCH[1]}" >> "$GITHUB_OUTPUT"; else echo issue= >> "$GITHUB_OUTPUT"; fi
+
+  regeln:
+    # test.only, test.skip und neue Schnappschüsse lassen das Prüftor scheitern (Konzept 12.4)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: test.only und test.skip
+        run: |
+          ziele=$(ls -d src tests supabase/tests supabase/functions 2>/dev/null || true)
+          [ -z "$ziele" ] && exit 0
+          if grep -rnE '\b(it|test|describe)\.(only|skip)\(' $ziele; then
+            echo "::error::test.only oder test.skip gefunden"; exit 1
+          fi
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Tests des Sperr-Hooks (.claude/hooks/sperre.mjs)
+        run: node --test .claude/hooks/sperre.test.mjs
+      - name: neue Schnappschüsse
+        run: |
+          neu=$(git diff --name-only --diff-filter=A "${{ github.event.pull_request.base.sha }}"...HEAD | grep -E '(__snapshots__/|\.snap$|-snapshots/)' || true)
+          if [ -n "$neu" ]; then echo "::error::neue Schnappschüsse: $neu"; exit 1; fi
+
+  lint:
+    needs: vorhanden
+    if: needs.vorhanden.outputs.app == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npm run lint
+
+  typecheck:
+    needs: vorhanden
+    if: needs.vorhanden.outputs.app == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npm run typecheck
+
+  unit:
+    needs: vorhanden
+    if: needs.vorhanden.outputs.app == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npm run test:unit
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: bericht-unit, path: reports/, if-no-files-found: ignore }
+
+  mutation:
+    # nur Kern-Pakete (Label kern), Module rechner, zielbereich, aufgaben, Mindestwert 80 %
+    needs: vorhanden
+    if: needs.vorhanden.outputs.app == 'true' && contains(github.event.pull_request.labels.*.name, 'kern')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npm run test:mutation
+
+  db:
+    # supabase start, db reset, pgTAP, Typen-Abgleich (E6), Seed-Zähltest mit Demo-Daten
+    needs: vorhanden
+    if: needs.vorhanden.outputs.db == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with: { version: latest }
+      - uses: actions/setup-node@v4
+        if: needs.vorhanden.outputs.app == 'true'
+        with: { node-version: 22, cache: npm }
+      - run: supabase start
+      - run: supabase db reset
+      - run: mkdir -p reports && supabase test db | tee reports/pgtap.txt
+      - name: Typen-Abgleich
+        if: needs.vorhanden.outputs.app == 'true'
+        run: |
+          supabase gen types typescript --local > /tmp/datenbank.types.ts
+          diff -u src/daten/datenbank.types.ts /tmp/datenbank.types.ts || { echo "::error::Typen weichen ab: neu erzeugen und im Zweig committen"; exit 1; }
+      - name: Seed-Zähltest
+        if: needs.vorhanden.outputs.app == 'true'
+        run: npm ci && npm run seed -- --ziel lokal --demo
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: bericht-db, path: reports/, if-no-files-found: ignore }
+
+  edge:
+    needs: vorhanden
+    if: needs.vorhanden.outputs.edge == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with: { deno-version: v2.x }
+      - run: mkdir -p reports && deno test --allow-read --allow-env --reporter=junit supabase/functions > reports/deno.xml
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: bericht-edge, path: reports/, if-no-files-found: ignore }
+
+  e2e:
+    needs: vorhanden
+    if: needs.vorhanden.outputs.app == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run build
+      - run: npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: bericht-e2e, path: reports/, if-no-files-found: ignore }
+
+  build:
+    needs: vorhanden
+    if: needs.vorhanden.outputs.app == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npm run build
+
+  ak-abdeckung:
+    # liest die AK aus dem Issue des Pakets und die Testnamen aus allen Berichten (06_tests.md Abschnitt 2)
+    needs: [vorhanden, unit, db, edge, e2e]
+    if: always() && needs.vorhanden.outputs.issue != '' && needs.vorhanden.outputs.app == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: { path: reports, pattern: bericht-*, merge-multiple: true }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ ! -f scripts/ak-abdeckung.mjs ]; then echo "::warning::scripts/ak-abdeckung.mjs fehlt (folgt mit I0-02)"; exit 0; fi
+          node scripts/ak-abdeckung.mjs --issue "${{ needs.vorhanden.outputs.issue }}" --berichte reports
+
+  testdatei-waechter:
+    # Änderungen an Testdateien aus einem «Tests:»-Commit des Testentwicklers brauchen die Freigabe
+    # des Prüfers (Label tests-freigegeben, Konzept 12.4)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - env:
+          FREIGEGEBEN: ${{ contains(github.event.pull_request.labels.*.name, 'tests-freigegeben') }}
+        run: |
+          declare -A geschuetzt; gemeldet=()
+          for c in $(git rev-list --reverse "${{ github.event.pull_request.base.sha }}"..HEAD); do
+            betreff=$(git log -1 --format=%s "$c")
+            dateien=$(git diff-tree --no-commit-id --name-only -r "$c")
+            if [[ "$betreff" == Tests:* ]]; then
+              for f in $dateien; do geschuetzt["$f"]=1; done
+            else
+              for f in $dateien; do [ -n "${geschuetzt[$f]:-}" ] && gemeldet+=("$(git log -1 --format=%h "$c") $f"); done
+            fi
+          done
+          if [ ${#gemeldet[@]} -gt 0 ]; then
+            { echo "### Geänderte Testdateien des Testentwicklers"; printf -- '- %s\n' "${gemeldet[@]}"; } >> "$GITHUB_STEP_SUMMARY"
+            if [ "$FREIGEGEBEN" != "true" ]; then echo "::error::Testdateien nach dem Tests-Commit geändert; Prüfer gibt mit Label tests-freigegeben frei"; exit 1; fi
+          fi
+
+  referenz-hash:
+    # Orakel (Konzept 12.6): Hash gegen die Repository-Variablen, die Tim setzt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - env:
+          HASH_RECHNER: ${{ vars.REFERENZ_HASH_RECHNER }}
+          HASH_TUETEN: ${{ vars.REFERENZ_HASH_TUETEN }}
+        run: |
+          fehler=0
+          pruefe() {
+            local datei=$1 soll=$2 name=$3
+            [ -f "$datei" ] || return 0
+            local ist; ist=$(sha256sum "$datei" | cut -d' ' -f1)
+            if [ -z "$soll" ]; then echo "::error::$datei liegt vor, die Repository-Variable $name fehlt (Tim setzt sie)"; fehler=1
+            elif [ "$ist" != "$soll" ]; then echo "::error::$datei weicht vom Hash in $name ab"; fehler=1; fi
+          }
+          pruefe tests/golden/duengerrechner_referenz.csv "$HASH_RECHNER" REFERENZ_HASH_RECHNER
+          pruefe data/eval/tueten_referenz.csv "$HASH_TUETEN" REFERENZ_HASH_TUETEN
+          exit $fehler
+
+  db-lock:
+    # höchstens ein offener Pull Request mit Änderungen in supabase/migrations (Konzept 12.3)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          HAT_LABEL: ${{ contains(github.event.pull_request.labels.*.name, 'db-lock') }}
+          NR: ${{ github.event.pull_request.number }}
+        run: |
+          geaendert=$(git diff --name-only "${{ github.event.pull_request.base.sha }}"...HEAD -- supabase/migrations | wc -l)
+          [ "$geaendert" -eq 0 ] && exit 0
+          [ "$HAT_LABEL" = "true" ] || { echo "::error::Migration geändert: Label db-lock setzen"; exit 1; }
+          andere=$(gh pr list --repo "$GITHUB_REPOSITORY" --state open --label db-lock --json number --jq "map(select(.number != $NR)) | length")
+          [ "$andere" -eq 0 ] || { echo "::error::Ein anderer offener Pull Request trägt db-lock"; exit 1; }
+
+  pruefstor:
+    # einziger Pflichtcheck: scheitert, wenn ein Job fehlschlägt oder abbricht; übersprungene Jobs zählen als bestanden
+    needs: [vorhanden, regeln, lint, typecheck, unit, mutation, db, edge, e2e, build, ak-abdeckung, testdatei-waechter, referenz-hash, db-lock]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          ERGEBNISSE: ${{ toJSON(needs) }}
+        run: |
+          echo "$ERGEBNISSE" | jq -r 'to_entries[] | "\(.key): \(.value.result)"'
+          if echo "$ERGEBNISSE" | jq -e 'to_entries | any(.value.result == "failure" or .value.result == "cancelled")' > /dev/null; then
+            echo "::error::Prüftor nicht bestanden"; exit 1
+          fi

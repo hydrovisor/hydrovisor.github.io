@@ -1,0 +1,142 @@
+# Auslieferung (Konzept 11.1, 12.6; docs/spec/04_architektur.md Abschnitt 9). Nur main.
+# Migration, Seed und Edge Functions nur bei Änderungen unter supabase/, data/ oder scripts/seed*
+# und nur nach Tims Freigabe in der Umgebung production. Pages erst, wenn die App existiert.
+name: deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  vorhanden:
+    runs-on: ubuntu-latest
+    outputs:
+      app: ${{ steps.f.outputs.app }}
+      db: ${{ steps.f.outputs.db }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: f
+        env:
+          VORHER: ${{ github.event.before }}
+        run: |
+          [ -f package.json ] && echo app=true >> "$GITHUB_OUTPUT" || echo app=false >> "$GITHUB_OUTPUT"
+          if [ ! -f supabase/config.toml ]; then echo db=false >> "$GITHUB_OUTPUT"; exit 0; fi
+          if [ "${{ github.event_name }}" = workflow_dispatch ] || ! git cat-file -e "$VORHER" 2>/dev/null; then echo db=true >> "$GITHUB_OUTPUT"; exit 0; fi
+          if git diff --name-only "$VORHER" "$GITHUB_SHA" | grep -qE '^(supabase/|data/|scripts/seed)'; then echo db=true >> "$GITHUB_OUTPUT"; else echo db=false >> "$GITHUB_OUTPUT"; fi
+
+  migration:
+    needs: vorhanden
+    if: needs.vorhanden.outputs.db == 'true'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with: { version: latest }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - name: Migration
+        env:
+          DB_URL: ${{ secrets.SUPABASE_DB_URL_POOLER }}
+        run: supabase db push --db-url "$DB_URL"
+      - name: Seed (Wissen, Sortenstamm, Konstanten; keine Demo-Daten)
+        env:
+          SEED_DB_URL: ${{ secrets.SUPABASE_DB_URL_POOLER }}
+        run: npm ci && npm run seed -- --ziel produktion
+      - name: Edge Functions
+        if: hashFiles('supabase/functions/**') != ''
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          PROJEKT: ${{ vars.SUPABASE_PROJECT_REF_PROD }}
+        run: supabase functions deploy --project-ref "$PROJEKT"
+
+  pages:
+    needs: [vorhanden, migration]
+    if: always() && needs.vorhanden.outputs.app == 'true' && (needs.migration.result == 'success' || needs.migration.result == 'skipped')
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - name: Build mit den Produktions-Variablen (öffentlich, keine Secrets)
+        env:
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
+          VITE_VAPID_PUBLIC_KEY: ${{ vars.VITE_VAPID_PUBLIC_KEY }}
+          VITE_COMMIT: ${{ github.sha }}
+        run: npm run build
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with: { path: dist }
+      - id: deploy
+        uses: actions/deploy-pages@v4
+
+  rauchtest:
+    # mobile Chrome-Emulation gegen die echte Adresse: version.json = Commit, Anmeldung oder Heute erscheint
+    needs: pages
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci && npx playwright install --with-deps chromium
+      - env:
+          BASIS_URL: https://hydrovisor.github.io/
+          ERWARTETER_COMMIT: ${{ github.sha }}
+        run: npx playwright test -c playwright.rauchtest.config.ts
+
+  tag-nachziehen:
+    needs: rauchtest
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          git tag -f letzter-guter-stand "$GITHUB_SHA"
+          git push -f origin refs/tags/letzter-guter-stand
+
+  rueckfall:
+    # Rauchtest gescheitert: Stand des Tags letzter-guter-stand neu bauen und bereitstellen
+    needs: rauchtest
+    if: failure() && needs.rauchtest.result == 'failure'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: letzter-guter-stand
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - env:
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
+          VITE_VAPID_PUBLIC_KEY: ${{ vars.VITE_VAPID_PUBLIC_KEY }}
+        run: VITE_COMMIT=$(git rev-parse HEAD) npm run build
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with: { path: dist }
+      - uses: actions/deploy-pages@v4
+      - run: echo "::error::Rauchtest gescheitert, letzter guter Stand wieder bereitgestellt; Fehler-Issue anlegen"; exit 1

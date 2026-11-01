@@ -147,3 +147,10 @@ vite.config.ts.timestamp-*
 
 # Turbo Repo
 .turbo
+
+# Hydrovisor
+.claude/settings.local.json
+reports/
+supabase/.temp/
+supabase/.branches/
+seed-bericht.md
