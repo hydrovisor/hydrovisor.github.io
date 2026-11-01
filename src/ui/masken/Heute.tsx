@@ -28,7 +28,7 @@ export function Heute() {
     <main className="hv-seite" data-density="regal" data-ablauf={ablauf}>
       <header className="hv-seite-kopf">
         <Logo height={32} />
-        <a className="hv-btn hv-btn-ghost hv-btn-compact" href={hashZu({ name: 'info' })}>
+        <a className="hv-btn hv-btn-ghost" href={hashZu({ name: 'info' })}>
           Info öffnen
         </a>
       </header>

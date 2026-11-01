@@ -1,4 +1,4 @@
-// Statussymbole aus dem Design System (components/bundle.js, StatusIcon); Kreis, Dreieck und Quadrat je Ton
+// Statussymbole aus design-system/components/bundle.js (Funktion StatusIcon), Pfade unverändert; Kreis, Dreieck, Quadrat
 export type Ton = 'ok' | 'warn' | 'danger' | 'info';
 
 export function StatusIcon({ ton }: { ton: Ton }) {
