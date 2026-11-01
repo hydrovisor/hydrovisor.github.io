@@ -170,9 +170,11 @@ jobs:
           VITE_VAPID_PUBLIC_KEY: ${{ vars.VITE_VAPID_PUBLIC_KEY }}
         run: VITE_COMMIT=$(git rev-parse HEAD) npm run build
       - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+      # eigener Artefaktname: pages hat im selben Lauf schon «github-pages» hochgeladen (Rückfall-Probe 1.11.2026)
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
-        with: { path: dist }
+        with: { path: dist, name: github-pages-rueckfall }
       - uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
+        with: { artifact_name: github-pages-rueckfall }
       - env:
           PROBE: ${{ inputs.rueckfall_probe }}
         run: |
