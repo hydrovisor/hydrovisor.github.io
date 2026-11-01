@@ -1,19 +1,20 @@
 # Beilagen für Auftrag 1 (Stand 31.10.2026)
 
-Der Agent liest nur, was im Repository liegt (Konzept Kapitel 16). Fakten stehen nur in diesen Dateien. Bei Widerspruch gilt die Rangfolge der Geltungsregel (Konzept Zeile 5): (1) Konzept v1.0, (2) Use Cases (Fassung 4, bis dahin Fassung 3), (3) Düngeplan TriPart V1.6, (4) Vorgehen Wissensbasis W0 mit der Datenvorlage aus Kapitel 9. Was unten unter «Bekannte Abweichungen» steht, ist bereits entschieden: Es gilt das Konzept; diese Punkte sind keine Rückfragen.
+Der Agent liest nur, was im Repository liegt (Konzept Kapitel 16). Fakten stehen nur in diesen Dateien. Bei Widerspruch gilt die Rangfolge der Geltungsregel (Konzept Zeile 5): (1) Konzept v1.0, (2) Use Cases Fassung 4, (3) Düngeplan TriPart V1.6, (4) Vorgehen Wissensbasis W0 mit der Datenvorlage aus Kapitel 9. Was unten unter «Bekannte Abweichungen» steht, ist bereits entschieden: Es gilt das Konzept; diese Punkte sind keine Rückfragen.
 
 ## Dateien und Herkunft
 
 | Datei | Quelle | Stand der Quelle | Übernahme |
 |---|---|---|---|
 | `konzept_v1.0.md` | «Hydrovisor – Definitives Fachkonzept v1.0.md» | Kopf 29.10.2026, Errata E1 bis E5 bis 31.10.2026 | 1:1 bis auf die Anonymisierung (siehe unten) |
-| `use_cases_f3.md` | Google Doc «Hydrovisor – Vorschläge Use Cases, Fassung 3» | 23.10.2026, Nachträge bis 28.10.2026 | 1:1 als Markdown exportiert |
+| `use_cases_f4.md` | aus Fassung 3 (Google Doc, 23.10.2026, Nachträge bis 28.10.2026) auf Konzept v1.0 nachgeführt | 31.10.2026 | von einem Agenten nachgeführt und unabhängig geprüft; jede Änderung mit Beleg im Konzept (Tabelle «Änderungen gegenüber Fassung 3»). **10 offene Entscheide** sind im Text als «Entscheid Tim offen» (E-F4-1 bis E-F4-10) markiert |
+| `use_cases_f4_bericht.md` | Bericht zur Nachführung | 31.10.2026 | Umfang der Änderungen, Status der Prüfbefunde, Unsicherheiten im Konzept selbst (mit Zeilen), Liste der Entscheide E-F4-1 bis E-F4-10. Verweist auf Fassung 3; diese liegt nur noch im Git-Verlauf (Commit 9e6cecc) |
 | `duengeplan_v1.6.md` | «Düngeplan TriPart V1.6.md» | 29.10.2026 | 1:1 bis auf die Anonymisierung (siehe unten) |
 | `w0_vorgehen.md` | Google Doc «Hydrovisor – Vorgehen Wissensbasis W0» | 27.10.2026 | 1:1 als Markdown exportiert |
 | `w0_datenvorlage.csv` | abgeleitet aus Konzept Kapitel 9.2 | 31.10.2026 | Entwurf, **nur die profilwert-Kandidatenzeile** (eine Zeile je Grösse, inkl. `text_wert`) mit zwei Beispielzeilen **ohne Werte**; die Vorlagen für Artmerkmale, Kulturform, Saatempfehlung, Kulturgruppe/Standard und Quelle (9.2) fehlen noch und entstehen mit Schritt 1 in 9.5. Die Schreibweise `art_id` (wissenschaftlich, wie `solanum_lycopersicum` in 8.2) ist ein Vorschlag |
 | `TriPart_hydro_coco.csv` | Düngeplan V1.6 Abschnitt 2 | 29.10.2026 | Zahlen 1:1; `zeile_id` ergänzt; Herkunft «abgeleitet» bei «Reife» (R4.3), sonst «hersteller»; EC-Basis «unbekannt» (5.6) |
-| `../../data/stammdaten/sorten.csv` | Konzept 5.5 | 31.10.2026 | Entwurf, nur Spalten der Tabelle sorte (8.2, 9.2) plus `zeile_id`: 22 Sorten mit Name, Art (deutscher Name; die Zuordnung zu `art_id` erfolgt in W0) und Kulturtyp (abgeleitet aus der Kulturform in 5.5; Mangold und Randen offen). Tüten- und Katalogwerte leer, von Tim bis 15.11. (13.1) |
-| `sorten_notizen.csv` | Konzept 5.5, Errata E2 und E3 | 31.10.2026 | **Arbeitshilfe, wird nicht geladen:** erste Runde (18 ja, Balconi Yellow Reserve, 3 nein), Gefäss der ersten Runde, Hinweise. Die Belegung gehört nach 8.2 zu Satz und Reservierung, nicht zur Sorte |
+| `../../data/stammdaten/sorten.csv` | Konzept 5.5; Bestellung bei Botanik Sämereien AG (saemereien.ch) vom 17.10.2026 | 31.10.2026 | Spalten der Tabelle sorte (8.2, 9.2) plus `zeile_id`: 22 Sorten mit Name, Art (deutscher Name; Zuordnung zu `art_id` in W0), Kulturtyp (abgeleitet aus der Kulturform in 5.5; Mangold und Randen offen), Shop-Link (21 von 22, je an Artikelnummer und Produkttitel geprüft; Schnittlauch Twiggy wird vom Shop nicht mehr geführt) und Kaufdatum. **Bewusst leer** (Entscheid Tim 31.10.2026): Keimart und Keimtemperatur laut Tüte, Wuchshöhe, Wuchsform, Frühzeitigkeit, Keimfähigkeit und Bestand; Angaben auf Tüten und Shopseiten beziehen sich meist auf Erde, nicht auf Hydroponik. Sie kommen aus W0 mit Hydroponik-Quellen oder werden im Testbetrieb erfasst |
+| `sorten_notizen.csv` | Konzept 5.5, Errata E2 und E3, 3D-Modell V12.10, Bestellung 17.10.2026 | 31.10.2026 | **Arbeitshilfe, wird nicht geladen:** botanischer Name und Artikelnummer laut Shop, Anzahl Packungen, erste Runde (18 ja, Balconi Yellow Reserve, 3 nein), Gefäss der ersten Runde (mit dem 3D-Modell V12.10 abgeglichen), Hinweise. Die Belegung gehört nach 8.2 zu Satz und Reservierung, nicht zur Sorte |
 | `../../design-system/` | Artefakt «Hydrovisor – CI» | 23.10.2026 | Export, siehe `design-system/README.md`; `fonts/OFL.txt` ist die Lizenz der Schrift Manrope (SIL OFL 1.1) |
 
 ## Anonymisierung (öffentliches Repository)
@@ -25,7 +26,7 @@ In `konzept_v1.0.md` und `duengeplan_v1.6.md` sind Nachname, Wohngemeinde und Na
 | Unterlage | Grund |
 |---|---|
 | Konzept v0.2 und v0.3, Kapiteldateien `00_Kopf.md` bis `18_Quellen_Glossar.md`, `A1`, `A2` | durch Konzept v1.0 ersetzt; die Kapiteldateien sind Teile von v1.0 und dort vollständig enthalten |
-| Use Cases Fassung 1 und 2 | durch Fassung 3 ersetzt |
+| Use Cases Fassung 1, 2 und 3 | durch Fassung 4 ersetzt; Fassung 3 bleibt im Git-Verlauf |
 | Düngeplan TriPart (ohne Version) und V1.5 | durch V1.6 ersetzt |
 | Recherche Saatgut- und Hydroponikdaten (18.10.2026), Ordner «wissenschaftliche Artikel» | Vorarbeiten auf Stand Konzept v0.2; die verwendeten Quellen stehen in Konzept Kapitel 18 und werden in W0 je Wert neu belegt |
 | Lösungsvorschlag Phasenmodell, Vorschlag Anlagen und QR-Etiketten, Marktvergleich, Projektteam, Projektmemory, Übergabe-Entwürfe, Archiv (u. a. Dispositiv) | Vorarbeiten; ihre Entscheide stehen im Konzept v1.0 (Anhang A und B) |
@@ -36,20 +37,9 @@ In `konzept_v1.0.md` und `duengeplan_v1.6.md` sind Nachname, Wohngemeinde und Na
 
 ## Bekannte Abweichungen (entschieden: es gilt das Konzept v1.0)
 
-### 1 Use Cases Fassung 3 (`use_cases_f3.md`)
+### 1 Use Cases Fassung 4 (`use_cases_f4.md`)
 
-Fassung 4 fehlt; nach Kapitel 17 gilt Fassung 3 mit dem Konzept als Rangfolge 1. Fassung 3 beruht auf Konzept v0.3.
-
-- Ihre eigene Geltungsregel «Bei Widerspruch gilt das Konzept v0.3» (Zeile 5 und Nachtrag Zeile 559) ist **aufgehoben**; es gilt die Rangfolge oben.
-- Zahlen in Akzeptanzkriterien aus Fassung 3 gelten nur, wenn das Konzept nicht widerspricht. Bekannt sind:
-  - UC0 «Einrichtung und Einstellungen» fehlt; UC10, UC11 und UC13 sind beschrieben, entfallen aber in Etappe A (Konzept 6).
-  - «11 Gefässe» und «3 Anzuchtorte» (Zeilen 158, 172, 329, 332, 565): Konzept 13 Gefässe, Stationen 4.1 bis 4.5, Anzuchtboxen A1 bis A4 (5.3, Erratum E2).
-  - Anzuchtbox A und B, Zusatzbox R-Z, Jungpflanzenstation 4.2 mit Deckel D6 (Zeilen 190, 219): entfallen mit E2.
-  - Teil-Dosis «zuerst 85 %», «zwei bis drei Ansätze» (Zeilen 23, 242, 248, 256): Konzept 75 % bis zum Becherversuch, danach 85 % bis k stabil; stabil = drei Ansätze (R4.7, 5.6).
-  - Etikett 70 × 42 mm und 62-mm-Band (Zeilen 309, 315): Konzept 70 × 42.3 mm, Band gestrichen (UC14, Kapitel 10).
-  - QR-Adresse `<konto>.github.io/hydrovisor/` (Zeile 313): Konzept `https://hydrovisor.github.io/` (E4).
-  - «22 Tabellen» (Zeile 381): massgebend ist das Datenmodell in Konzept 8.
-  - Gerätetest «im Dezember» (Zeilen 11, 100): Konzept 14. und 15.11. (13.1); Zeitplan Z2 statt Z3 (E5).
+Fassung 4 ist auf Konzept v1.0 nachgeführt; ihre Geltungsregel entspricht der Rangfolge oben. Wo das Konzept selbst offen oder widersprüchlich ist, steht «Entscheid Tim offen» mit einer Nummer E-F4-1 bis E-F4-10 (Liste im Bericht, Abschnitt «Entscheide für Tim»). Diese Punkte sind Rückfragen für Auftrag 1, nicht entschieden. Werte mit (A) sind Annahmen aus Fassung 3 ohne Beleg im Konzept.
 
 ### 2 W0-Vorgehen (`w0_vorgehen.md`, 27.10.)
 
@@ -79,5 +69,4 @@ Gilt nur mit den Änderungen aus Konzept Kapitel 9.
 
 ### 5 Weiteres
 
-- Dateiname: Kapitel 16 nennt `use_cases_f4.md`; bis zur Nachführung liegt `use_cases_f3.md` vor.
 - Links auf Google Docs, Drive und claude.ai in den Beilagen sind privat und für den Agenten nicht erreichbar; massgebend ist nur der Inhalt im Repository.
