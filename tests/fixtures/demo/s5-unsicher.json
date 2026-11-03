@@ -1,0 +1,6 @@
+{
+  "kommentar": "S5 unsicher: Demo-Kalibrierung vor 31 Tagen (UC8-AK6, UC9-AK6)",
+  "zeilen": [
+    {"tabelle":"kalibrierung","ref":"X-s5-kalibrierung","felder":{"messgeraet_id":"?messgeraet","gegenprobe_ec":1.41,"loesung_geoeffnet_am":"heute-60","datenart":"demo","gilt_ab":"jetzt-31d 09:00"}}
+  ]
+}
