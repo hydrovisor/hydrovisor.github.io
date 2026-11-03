@@ -1,0 +1,12 @@
+# Testdateien des Testentwicklers (Grundlage des Testdatei-Wächters in .github/workflows/pr.yml).
+# Ein Pfad je Zeile, relativ zum Repository; Zeilen mit # sind Kommentare.
+# Änderungen an diesen Dateien brauchen die Freigabe des Prüfers (Label tests-freigegeben, Konzept 12.4).
+# I0-03 Datenmodell mit Zugriffsregeln (#9)
+supabase/tests/database/00_zugriff.test.sql
+supabase/tests/database/01_eindeutigkeit.test.sql
+supabase/tests/database/02_checks.test.sql
+supabase/tests/database/03_zustaende.test.sql
+supabase/tests/database/04_schreibweg_app.test.sql
+supabase/tests/database/05_auswertung.test.sql
+supabase/tests/database/06_demo_loeschen.test.sql
+supabase/tests/database/07_speicher.test.sql
