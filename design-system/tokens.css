@@ -1,6 +1,6 @@
 /* Hydrovisor Design System – Tokens.
-   Generiert aus tokens.json des Artefakts «Hydrovisor – CI» (Stand 23.10.2026).
-   Nicht von Hand ändern: Ergänzungen zuerst im Design System, dann neu exportieren (Konzept Kapitel 10). */
+   Generiert aus tokens.json mit `npm run tokens` (scripts/tokens.ts).
+   Nicht von Hand ändern: Ergänzungen in tokens.json, dann neu erzeugen (Konzept Kapitel 10, Entscheid R11). */
 
 @font-face {
   font-family: "Manrope";
@@ -92,6 +92,16 @@
   --text-unit-size: 14px;
   --text-unit-line: 20px;
   --text-unit-weight: 500;
+  --text-value-regal-size: 40px;
+  --text-value-regal-line: 44px;
+  --text-value-regal-weight: 700;
+  --text-value-regal-tracking: -0.02em;
+  --text-status-regal-size: 28px;
+  --text-status-regal-line: 34px;
+  --text-status-regal-weight: 700;
+  --text-text-regal-size: 21px;
+  --text-text-regal-line: 28px;
+  --text-text-regal-weight: 400;
 
   /* spacing – 4px-Raster. */
   --space-1: 4px; /* Abstand Symbol zu Text. */
@@ -116,6 +126,30 @@
   --size-icon: 24px; /* Symbole in Navigation und Buttons. */
   --size-icon-sm: 16px; /* Symbole in Badges und Hinweisen. */
   --size-content: 720px; /* Maximale Inhaltsbreite am Tablet. */
+  --size-touch-regal: 68px; /* Tippfläche in Regal-Masken (data-density="regal"): Tasten des Ziffernblocks, Haken der Abhakliste, Aktionsknöpfe. Ersetzt dort size-touch und size-touch-compact. */
+  --icon-status-regal: 32px; /* Statussymbol in den Kacheln der Messmaske. */
+  --size-tile-min-width: 72px; /* Mindestbreite einer Ortskachel (Tile) in der Anlagenübersicht. */
+  --size-tile-min-height: 80px; /* Mindesthöhe einer Ortskachel (Tile) in der Anlagenübersicht. */
+  --size-loch: 48px; /* Mindestdurchmesser eines Lochs in der Deckelgrafik (Tippfläche, Vorlagen und Säen). */
+
+  /* Druck – Masse für Druckvorlagen in Millimetern; Etikettenbogen 3 × 7 (Avery Zweckform 3652 oder gleichwertig), Konzept 10 und R9.1. */
+  --label-width: 70mm; /* Breite eines Etiketts und eines Felds im Bogen. */
+  --label-height: 42.3mm; /* Höhe eines Etiketts und eines Felds im Bogen. */
+  --label-padding-x: 4mm; /* Innenabstand links und rechts; Tintenstrahldrucker drucken nicht bis an den Rand. */
+  --label-padding-y: 3mm; /* Innenabstand oben und unten. */
+  --label-qr: 30mm; /* Kantenlänge des QR-Codes einschliesslich Ruhezone. */
+  --label-id-width: 32mm; /* Breite der Kennung rechts vom QR-Code; die Schriftgrösse wird aus dieser Breite berechnet. */
+  --label-id-max: 20mm; /* Grösste Schriftgrösse der Kennung (kurze Kennungen wie «A»). */
+  --label-small-width: 55mm; /* Breite des zugeschnittenen Etiketts für Anzuchtboxen. */
+  --label-small-height: 25mm; /* Höhe des zugeschnittenen Etiketts für Anzuchtboxen. */
+  --label-small-qr: 19mm; /* QR-Code des Anzuchtbox-Etiketts einschliesslich Ruhezone. */
+  --sheet-columns: 3; /* Spalten des Etikettenbogens. */
+  --sheet-rows: 7; /* Zeilen des Etikettenbogens. */
+  --sheet-margin-top: 0.45mm; /* Rand oben: (297 mm − 7 × 42.3 mm) / 2. */
+  --sheet-margin-left: 0mm; /* Rand links: 3 × 70 mm füllen die A4-Breite. */
+  --sheet-gap-x: 0mm; /* Abstand zwischen den Spalten. */
+  --sheet-gap-y: 0mm; /* Abstand zwischen den Zeilen. */
+  --page-margin: 12mm; /* Seitenrand von Notfallblatt und Vertretungsblatt. */
 
   /* Schatten – Zurückhaltend; im dunklen Thema trennt der Flächenton, nicht der Schatten. */
   --shadow-sm: 0 1px 2px #10242b0f, 0 1px 3px #10242b14; /* Karten im Ruhezustand. */
@@ -150,4 +184,10 @@
   --shadow-sm: 0 1px 2px #00000066;
   --shadow-lg: 0 16px 32px -4px #000000b3;
   --focus-ring: 0 0 0 2px #11191C, 0 0 0 4px #7FD0CC;
+}
+
+/* Dichte «regal» – Regal-Masken mit data-density="regal": jede Tippfläche 68 dp; Standarddichte 48 dp für den Kontext «Schreibtisch» (Konzept 6.3 und 10). */
+[data-density="regal"] {
+  --size-touch: var(--size-touch-regal);
+  --size-touch-compact: var(--size-touch-regal);
 }

@@ -1,5 +1,6 @@
-// Statussymbole aus design-system/components/bundle.js (Funktion StatusIcon), Pfade unverändert; Kreis, Dreieck, Quadrat
-export type Ton = 'ok' | 'warn' | 'danger' | 'info';
+// Statussymbole aus design-system/components/bundle.js (Funktion StatusIcon), Pfade unverändert; Kreis, Dreieck, Quadrat;
+// Kennzeichen «veraltet» (Uhr) und «unsicher» (Fragezeichen) im Kreis
+export type Ton = 'ok' | 'warn' | 'danger' | 'info' | 'stale' | 'uncertain';
 
 export function StatusIcon({ ton }: { ton: Ton }) {
   const strich = { stroke: 'currentColor', strokeLinecap: 'round' as const };
@@ -36,6 +37,19 @@ export function StatusIcon({ ton }: { ton: Ton }) {
       </>
     ) : ton === 'danger' ? (
       <path d="M5.5 5.5l5 5M10.5 5.5l-5 5" {...strich} strokeWidth={2} />
+    ) : ton === 'stale' ? (
+      <path d="M8 4.6V8l2.4 1.6" fill="none" {...strich} strokeWidth={1.8} strokeLinejoin="round" />
+    ) : ton === 'uncertain' ? (
+      <>
+        <path
+          d="M6.1 6.2a2 2 0 0 1 3.8.7c0 1.4-1.9 1.6-1.9 2.8"
+          fill="none"
+          {...strich}
+          strokeWidth={1.6}
+          strokeLinejoin="round"
+        />
+        <circle cx={8} cy={11.9} r={1} fill="currentColor" />
+      </>
     ) : (
       <>
         <path d="M8 7.5v4" {...strich} strokeWidth={2} />
