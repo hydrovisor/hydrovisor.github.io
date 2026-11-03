@@ -29,3 +29,13 @@ tests/fixtures/wissen/data/wissensbasis/freigegeben/kulturgruppe.csv
 tests/fixtures/wissen/data/wissensbasis/freigegeben/profilwert.csv
 tests/fixtures/wissen/data/wissensbasis/freigegeben/quelle.csv
 tests/fixtures/wissen/data/wissensbasis/freigegeben/saatempfehlung.csv
+# I0-04 Datenpfad (#11)
+tests/unit/zeit.test.ts
+tests/unit/datenpfad-erfassung.test.ts
+tests/unit/datenpfad-ereignisdaten.test.ts
+tests/unit/datenpfad-fehler.test.ts
+tests/unit/datenpfad-buendel.test.ts
+tests/unit/schreiben.test.ts
+tests/unit/buendel-laden.test.ts
+tests/e2e/datenpfad.spec.ts
+tests/e2e/konto.ts
