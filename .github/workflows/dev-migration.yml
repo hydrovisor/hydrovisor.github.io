@@ -1,7 +1,8 @@
 # Migrationen nach hydrovisor-dev (Entscheid 0006). Nur von Hand (gh workflow run), nur von main,
 # Ziel fest hydrovisor-dev; die Produktion migriert weiterhin nur deploy.yml.
 # Das Access-Token liegt nur in der Umgebung production; deren Freigabe gilt auch für diesen Lauf.
-# Eingabe zweig: Stand, dessen supabase/migrations eingespielt wird (für Abnahme 1 vor dem Merge).
+# Eingabe zweig: Zweig, dessen supabase/migrations eingespielt wird (für Abnahme 1 vor dem Merge).
+# Konfiguration und CLI-Einstellungen kommen immer aus main; aus dem Zweig nur die Migrationsdateien.
 # Aktionen per Commit angeheftet (Version im Kommentar).
 name: dev-migration
 
@@ -9,7 +10,7 @@ on:
   workflow_dispatch:
     inputs:
       zweig:
-        description: Zweig oder Commit mit den Migrationen
+        description: Zweig mit den Migrationen (main oder paket/<issue>-<kurz>)
         required: true
         default: main
       trockenlauf:
@@ -35,10 +36,24 @@ jobs:
     environment: production
     env:
       DEV_PROJEKT: jalvmzgvxvidgmoxuglp # hydrovisor-dev, fest wie in .mcp.json
+      ZWEIG: ${{ inputs.zweig }}
     steps:
+      - name: Zweig prüfen (nur main oder Paketzweige dieses Repositorys, keine Refs oder Commits)
+        run: |
+          [[ "$ZWEIG" == "main" || "$ZWEIG" =~ ^paket/[0-9]+-[a-z0-9-]+$ ]] || { echo "::error::Zweig nicht erlaubt: $ZWEIG"; exit 1; }
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ inputs.zweig }}
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Migrationen aus dem Zweig übernehmen
+        run: |
+          git ls-remote --exit-code --heads "https://github.com/${GITHUB_REPOSITORY}.git" "refs/heads/$ZWEIG" > /dev/null || { echo "::error::Zweig fehlt: $ZWEIG"; exit 1; }
+          git fetch --no-tags --depth=1 "https://github.com/${GITHUB_REPOSITORY}.git" "refs/heads/$ZWEIG"
+          rm -rf supabase/migrations
+          git checkout FETCH_HEAD -- supabase/migrations
+          if compgen -G 'supabase/.env*' > /dev/null || [ -e supabase/.temp ]; then echo "::error::supabase/.env oder .temp vorhanden"; exit 1; fi
+          ls supabase/migrations
       - uses: supabase/setup-cli@45a513f8c64c0bc8e0e3dfe572b5c95be85f6359 # v3.0.1
         with: { version: 3.0.0 } # fest wie pr.yml und deploy.yml (I0-03)
       - name: Migration nach hydrovisor-dev
