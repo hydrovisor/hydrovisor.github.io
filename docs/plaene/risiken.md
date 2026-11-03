@@ -17,6 +17,7 @@ Stand 1.11.2026 · Grundlage Konzept v1.2 Kapitel 13.6 · Durchsicht wöchentlic
 | RR11 | Fehldosis, Kalibrierfehler, falscher Sollwert | Endmessung über ECSoll_ist + 0.3; Frischwasser ausserhalb 0.2 bis 1.0; Validator-Konflikt | harte Grenzen R4.4, Gegenprobe, Validator; Rücksetzablauf R4.7 | ruhend |
 | RR12 | Strom-, Pumpen-, Lüfterausfall; Hitze | Melder, Kurzprüfung, Wassertemperatur | Checkliste «Nach Stromausfall», Wärmesperre, «Wärme prüfen» | ruhend |
 | RR13 | Z3 verdichtet zu stark (Tims Stunden, Kontingent, Planfreigaben während der Reise) | Prüfpunkt 30.11. verfehlt; später Ist-Zeit über 120 % in zwei Wochen in Folge | Rückfall auf Z2 am 30.11.; danach Streichreihenfolge (13.5); Abnahmen an zwei festen Tagen je Woche bündeln | beobachten (Prüfpunkt 30.11.) |
+| RR15 | Demo ohne echte Sorten | W0 in `hydrovisor-dev` geladen, `npm run demo` bricht ab («Wissen enthält andere Sorten») | Folgepaket nach der W0-Teilfreigabe: Fixtures `tests/fixtures/demo` auf echte Sorten umstellen (Plan 15 A5); bis dahin Demo nur lokal und in dev vor W0 | beobachten (W0) |
 | RR14 | Testdaten setzen Fälligkeiten zurück | pH-Kontrollen der Schreibprobe (`datenart = test`, echtes Messgerät) zählen in einer Fälligkeit | Fälligkeit R5.2 «Kalibrierung oder Kontrolle + 7» und jede Regel auf `messung` filtern `datenart = echt` (8.1 Regel 7, Kommentar der Tabelle `messung`); Testfall im I1b-Plan (Prüferbefund I0-04, Sicherheit 4) | beobachten (I1b) |
 
 ## Protokoll der Durchsichten
@@ -25,3 +26,4 @@ Stand 1.11.2026 · Grundlage Konzept v1.2 Kapitel 13.6 · Durchsicht wöchentlic
 |---|---|
 | 1.11.2026 | Register aus Konzept 13.6 angelegt; Kostendach RR8 nach Entscheid W4 |
 | 1.11.2026 | RR8: Ausgabenlimit 15 USD pro Monat im Arbeitsbereich «hydrovisor» (von Tim eingerichtet) |
+| 3.11.2026 | RR15 Demo ohne echte Sorten (I0-10, Prüferbefund 2) |

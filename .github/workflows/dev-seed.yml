@@ -69,12 +69,12 @@ jobs:
           TROCKEN: ${{ inputs.trockenlauf }}
         run: |
           if [ "$TROCKEN" = "true" ]; then npm run seed -- --ziel dev --trocken; else npm run seed -- --ziel dev; fi
-      - name: Demo-Daten in hydrovisor-dev (Plan 15; nie im Trockenlauf)
+      - name: Demo-Daten in hydrovisor-dev (Plan 15; Laden nie im Trockenlauf)
         if: inputs.demo != 'nein'
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           TROCKEN: ${{ inputs.trockenlauf }}
           DEMO: ${{ inputs.demo }}
         run: |
-          [ "$TROCKEN" = "false" ] || { echo "::error::Demo nur mit trockenlauf=false"; exit 1; }
+          [ "$DEMO" = "loeschen" ] || [ "$TROCKEN" = "false" ] || { echo "::error::Demo laden nur mit trockenlauf=false"; exit 1; }
           npm run demo -- --$DEMO --ziel dev
