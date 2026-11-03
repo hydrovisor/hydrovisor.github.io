@@ -3,6 +3,8 @@ import { Anmeldung } from './masken/Anmeldung.tsx';
 import { Heute } from './masken/Heute.tsx';
 import { Info } from './masken/Info.tsx';
 import { Muster } from './masken/Muster.tsx';
+import { Schreibprobe } from './masken/Schreibprobe.tsx';
+import { BuendelAnbieter } from './buendel.tsx';
 import { maskeFuer, useRoute } from './router.ts';
 import { SitzungAnbieter, useSitzung } from './sitzung.tsx';
 
@@ -18,6 +20,8 @@ function Masken() {
         <Info />
       ) : maske.name === 'muster' ? (
         <Muster />
+      ) : maske.name === 'schreibprobe' ? (
+        <Schreibprobe />
       ) : maske.name === 'anmelden' ? (
         <Anmeldung />
       ) : (
@@ -31,7 +35,9 @@ export function App() {
   return (
     <DienstAnbieter>
       <SitzungAnbieter>
-        <Masken />
+        <BuendelAnbieter>
+          <Masken />
+        </BuendelAnbieter>
       </SitzungAnbieter>
     </DienstAnbieter>
   );

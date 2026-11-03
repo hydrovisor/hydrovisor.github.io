@@ -39,6 +39,16 @@ export function sitzungGespeichert(wert: string | null): boolean {
 }
 
 /**
+ * Nutzer-ID der gespeicherten Sitzung, auch wenn das Zugriffstoken abgelaufen ist: getSession() liefert dann ohne Netz
+ * keine Sitzung, das Bündel des Nutzers muss trotzdem lesbar bleiben (Plan 11, Runde 2 Befund N1).
+ */
+export function gespeicherteNutzerId(wert: string | null): string | undefined {
+  if (!sitzungGespeichert(wert)) return undefined;
+  const s = JSON.parse(wert as string) as { user?: { id?: unknown } };
+  return typeof s.user?.id === 'string' && s.user.id !== '' ? s.user.id : undefined;
+}
+
+/**
  * Zustand nach einem Auth-Ereignis. Abgemeldet nur bei `SIGNED_OUT` oder wenn keine Sitzung mehr gespeichert ist:
  * Ohne Netz meldet supabase-js beim Start einer abgelaufenen Sitzung `INITIAL_SESSION` ohne Sitzung, lässt sie
  * aber im Speicher (Erneuerung scheitert nur vorübergehend). Diese Sitzung bleibt angemeldet.
