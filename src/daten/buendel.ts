@@ -5,7 +5,7 @@ import type { Zeitkontext } from '../domain/datenpfad/erfassung.ts';
 import { fehlerEinordnen, type RohFehler, type Schreibfehler } from '../domain/datenpfad/fehler.ts';
 import { APP_VERSION } from '../konstanten.ts';
 import { lokalOeffnen, SPEICHER_BUENDEL } from './lokal.ts';
-import { ZEITLIMIT_MS, type Antwort } from './schreiben.ts';
+import { mitStatus, ZEITLIMIT_MS, type Antwort } from './schreiben.ts';
 import { supabase } from './supabase.ts';
 
 export interface Buendelteil {
@@ -114,8 +114,8 @@ async function abrufen(anfrage: (signal: AbortSignal) => Promise<Antwort>): Prom
   const steuerung = new AbortController();
   const uhr = setTimeout(() => steuerung.abort(), ZEITLIMIT_MS);
   try {
-    const { data, error } = await anfrage(steuerung.signal);
-    if (error) throw new Ladefehler(error);
+    const { data, error, status } = await anfrage(steuerung.signal);
+    if (error) throw new Ladefehler(mitStatus(error, status));
     return data;
   } catch (fehler) {
     throw fehler instanceof Ladefehler ? fehler : new Ladefehler(fehler);
@@ -128,6 +128,8 @@ export function erstelleBuendelLaden(
   adapter: Buendeladapter,
   speicher: Buendelspeicher,
   bindung: { appVersion: string; nutzerId: string },
+  /** gilt die Sitzung noch für bindung.nutzerId? Sonst wird nichts gespeichert (Runde 1, Befund S2) */
+  nochGueltig: () => Promise<boolean> = async () => true,
 ): (kontext: Zeitkontext) => Promise<Ladeergebnis> {
   return async (kontext) => {
     // stand ist der Beginn des Ladens: was danach geschrieben wird, gilt als nicht enthalten
@@ -154,6 +156,10 @@ export function erstelleBuendelLaden(
       const ansaetze = teile['naehrloesungsansatz'] as
         { platz_id: string | null; begonnen_am: string }[] | undefined;
       if (ansaetze) teile['naehrloesungsansatz'] = letzterJeOrt(ansaetze);
+      // v_messung_unsicher hat kein gilt_ab: auf die Messungen im Fenster beschränken (Runde 1, Befund 9)
+      const imFenster = new Set((teile['messung'] as { id: string }[] | undefined)?.map((m) => m.id));
+      const unsicher = teile['v_messung_unsicher'] as { messung_id: string }[] | undefined;
+      if (unsicher) teile['v_messung_unsicher'] = unsicher.filter((u) => imFenster.has(u.messung_id));
       const buendel: Buendel = {
         id: 'aktuell',
         format: 1,
@@ -162,6 +168,7 @@ export function erstelleBuendelLaden(
         nutzerId: bindung.nutzerId,
         teile,
       };
+      if (!(await nochGueltig())) return { status: 'kein_zugang' };
       await speicher.ersetzen(buendel);
       return { status: 'geladen', buendel };
     } catch (fehler) {
@@ -250,8 +257,11 @@ export async function buendelLaden(kontext: Zeitkontext): Promise<Ladeergebnis> 
   const { data } = await supabase.auth.getSession();
   const nutzerId = data.session?.user.id;
   if (!nutzerId) return { status: 'kein_zugang' };
-  return erstelleBuendelLaden(supabaseBuendeladapter, indexedDbBuendelspeicher, {
-    appVersion: APP_VERSION,
-    nutzerId,
-  })(kontext);
+  const gleicherNutzer = async () => (await supabase.auth.getSession()).data.session?.user.id === nutzerId;
+  return erstelleBuendelLaden(
+    supabaseBuendeladapter,
+    indexedDbBuendelspeicher,
+    { appVersion: APP_VERSION, nutzerId },
+    gleicherNutzer,
+  )(kontext);
 }

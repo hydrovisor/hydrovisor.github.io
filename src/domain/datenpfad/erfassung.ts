@@ -45,6 +45,15 @@ export const MIT_ZEITACHSE: ReadonlySet<Erfassungstabelle> = new Set<Erfassungst
   'aufschub',
 ]);
 
+/** Tabellen mit gilt_ab: die mit Zeitachse und k_faktor (ohne client_zeit; Runde 1, Befund 3) */
+export const MIT_GILT_AB: ReadonlySet<Erfassungstabelle> = new Set<Erfassungstabelle>([
+  ...MIT_ZEITACHSE,
+  'k_faktor',
+]);
+
+/** Tabellen ohne storniert_am: ein Storno ist dort nicht möglich */
+const OHNE_STORNO: ReadonlySet<Erfassungstabelle> = new Set<Erfassungstabelle>(['etikett_aufruf']);
+
 export type StornoGrund = 'rueckgaengig' | 'korrektur' | 'fehleingabe';
 
 export type Schritt =
@@ -70,15 +79,13 @@ export function zeileVorbereiten(
     Object.entries(schritt.felder).filter(([feld]) => !(SERVERFELDER as readonly string[]).includes(feld)),
   );
   zeile['app_version'] = appVersion;
-  if (MIT_ZEITACHSE.has(schritt.tabelle)) {
-    const jetzt = kontext.jetzt.toISOString();
-    zeile['client_zeit'] = jetzt;
+  const jetzt = kontext.jetzt.toISOString();
+  if (MIT_ZEITACHSE.has(schritt.tabelle)) zeile['client_zeit'] = jetzt;
+  else delete zeile['client_zeit'];
+  if (MIT_GILT_AB.has(schritt.tabelle)) {
     // eine Nacherfassung bringt ihr gilt_ab mit (8.1 Regel 3)
     if (zeile['gilt_ab'] === undefined || zeile['gilt_ab'] === null) zeile['gilt_ab'] = jetzt;
-  } else {
-    delete zeile['client_zeit'];
-    delete zeile['gilt_ab'];
-  }
+  } else delete zeile['gilt_ab'];
   return zeile;
 }
 
@@ -91,6 +98,8 @@ export function vorgangPruefen(vorgang: Vorgang): Verstoss[] {
     const wo = `Schritt ${i + 1} (${schritt.tabelle})`;
     if (schritt.art === 'storno') {
       if (leer(schritt.clientId)) verstoesse.push({ feld: 'client_id', grund: `${wo}: client_id fehlt` });
+      if (OHNE_STORNO.has(schritt.tabelle))
+        verstoesse.push({ feld: 'storniert_am', grund: `${wo}: kann nicht storniert werden` });
       return;
     }
     if (leer(schritt.felder.client_id))
@@ -98,9 +107,11 @@ export function vorgangPruefen(vorgang: Vorgang): Verstoss[] {
     if (schritt.tabelle === 'ereignis') {
       const daten = schritt.felder['daten'];
       const typ = schritt.felder['typ'] as EreignisTyp;
-      const objekt = daten && typeof daten === 'object' && !Array.isArray(daten) ? daten : {};
-      for (const v of ereignisDatenPruefen(typ, objekt as Record<string, unknown>))
-        verstoesse.push({ ...v, grund: `${wo}: ${v.grund}` });
+      if (!daten || typeof daten !== 'object' || Array.isArray(daten))
+        verstoesse.push({ feld: 'daten', grund: `${wo}: daten muss ein Objekt sein` });
+      else
+        for (const v of ereignisDatenPruefen(typ, daten as Record<string, unknown>))
+          verstoesse.push({ ...v, grund: `${wo}: ${v.grund}` });
     }
   });
   return verstoesse;

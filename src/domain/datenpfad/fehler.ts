@@ -25,6 +25,7 @@ const GRUND: Readonly<Record<string, string>> = {
   '42501': 'kein Zugang für dieses Konto',
   '23505': 'ein gleicher Eintrag ist schon gespeichert',
   '23503': 'ein verknüpfter Eintrag fehlt',
+  '23502': 'ein Pflichtwert fehlt',
   '23514': 'ein Wert verletzt eine Regel der Datenbank',
   '22P02': 'ein Wert hat das falsche Format',
 };

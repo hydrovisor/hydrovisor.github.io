@@ -22,7 +22,7 @@ export function Heute() {
   const [jetzt] = useState(() => Date.now());
   const ablaufOffen = useAblaufOffen();
   const { wartet } = useNeueVersion();
-  const { buendel, frisch, keinZugang, liest } = useBuendel();
+  const { buendel, frisch, keinZugang, liest, blockiert } = useBuendel();
   // «Stand: hh:mm» nur, solange in dieser Sitzung kein frisches Laden gelungen ist (Plan 11 D3, TO6)
   const anzeige = liest ? {} : standAnzeige({ buendel, frisch }, new Date(jetzt), ZEITZONE);
   const zeigen = hinweisNeueVersionZeigen({
@@ -45,6 +45,11 @@ export function Heute() {
         <p className="hv-num" data-buendel-stand={buendel.stand} hidden={!anzeige.stand}>
           {anzeige.stand}
         </p>
+      ) : null}
+      {blockiert ? (
+        <Notice tone="warn" title="App neu laden">
+          Eine ältere Ansicht hält die lokale Datenbank offen. Schliesse sie und lade die App neu.
+        </Notice>
       ) : null}
       {keinZugang ? <Notice tone="warn" title="Kein Zugang für dieses Konto" /> : null}
       {!keinZugang && anzeige.hinweis ? <Notice title={anzeige.hinweis} /> : null}

@@ -98,7 +98,13 @@ const SCHEMA: Readonly<Record<EreignisTyp, Schema>> = {
     },
   },
   gefaess_erfasst: { schluessel: {} },
-  gefaesspruefung: { schluessel: { schritt: undefined, ok: undefined, volumen_gezaehlt_l: undefined } },
+  gefaesspruefung: {
+    schluessel: {
+      schritt: (wert) => Number.isInteger(wert) && (wert as number) >= 1 && (wert as number) <= 4,
+      ok: undefined,
+      volumen_gezaehlt_l: undefined,
+    },
+  },
   box_deckel_tausch: { schluessel: {} },
   ruhe: { schluessel: { gesetzt: undefined } },
   entfernt: { schluessel: {} },

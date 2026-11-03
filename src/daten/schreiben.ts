@@ -2,6 +2,7 @@
 // Überschreiben auf client_id (on conflict do nothing); eine Wiederholung ergibt nie eine zweite Zeile (TO2).
 // Die client_id hält die Maske, gebunden an den Eingabe-Schnappschuss (Plan 11 Ü1).
 import {
+  MIT_ZEITACHSE,
   vorgangPruefen,
   zeileVorbereiten,
   type Erfassungstabelle,
@@ -24,6 +25,8 @@ export type Schreibergebnis =
 export interface Antwort {
   data: unknown;
   error: RohFehler | null;
+  /** HTTP-Status; supabase-js legt ihn auf die Antwort, nicht auf `error` (Runde 1, Befund 2) */
+  status?: number;
 }
 
 export interface Schreibadapter {
@@ -36,7 +39,7 @@ export interface Schreibadapter {
   stornieren(
     tabelle: Erfassungstabelle,
     clientId: string,
-    felder: { storniert_am: string; storno_grund: StornoGrund },
+    felder: { storniert_am: string; storno_grund?: StornoGrund },
     signal: AbortSignal,
   ): Promise<Antwort>;
 }
@@ -72,7 +75,21 @@ function gleicherWert(gesendet: unknown, vorhanden: unknown): boolean {
     // Zeitpunkte: gleich, wenn derselbe Zeitpunkt (Server schreibt +00:00 statt Z)
     return /^\d{4}-\d{2}-\d{2}T/.test(gesendet) && !Number.isNaN(a) && a === b;
   }
-  return JSON.stringify(gesendet) === JSON.stringify(vorhanden);
+  if (Array.isArray(gesendet) || Array.isArray(vorhanden))
+    return (
+      Array.isArray(gesendet) &&
+      Array.isArray(vorhanden) &&
+      gesendet.length === vorhanden.length &&
+      gesendet.every((w, i) => gleicherWert(w, vorhanden[i]))
+    );
+  if (typeof gesendet === 'object' && typeof vorhanden === 'object') {
+    // jsonb ordnet Schlüssel um: tief und ohne Reihenfolge vergleichen (Runde 1, Befund 1)
+    const a = gesendet as Record<string, unknown>;
+    const b = vorhanden as Record<string, unknown>;
+    const schluessel = new Set([...Object.keys(a), ...Object.keys(b)]);
+    return [...schluessel].every((k) => gleicherWert(a[k], b[k]));
+  }
+  return false;
 }
 
 function gleicherInhalt(gesendet: Record<string, unknown>, vorhanden: Record<string, unknown>): boolean {
@@ -86,6 +103,14 @@ function alsRoh(fehler: unknown): RohFehler {
   return { message: String(fehler) };
 }
 
+/** Status der Antwort in den Rohfehler, falls der Fehler selbst keinen trägt */
+export function mitStatus(roh: RohFehler, status: number | undefined): RohFehler {
+  return roh.status === undefined && status !== undefined ? { ...roh, status } : roh;
+}
+
+export const TEXT_NICHT_GEFUNDEN =
+  'Nicht gespeichert: Eintrag nicht gefunden oder kein Zugang für dieses Konto';
+
 class Abbruch {
   readonly fehler: Schreibfehler;
   constructor(fehler: Schreibfehler) {
@@ -98,8 +123,8 @@ async function mitZeitlimit(anfrage: (signal: AbortSignal) => Promise<Antwort>):
   const steuerung = new AbortController();
   const uhr = setTimeout(() => steuerung.abort(), ZEITLIMIT_MS);
   try {
-    const { data, error } = await anfrage(steuerung.signal);
-    if (error) throw new Abbruch(fehlerEinordnen(alsRoh(error)));
+    const { data, error, status } = await anfrage(steuerung.signal);
+    if (error) throw new Abbruch(fehlerEinordnen(mitStatus(alsRoh(error), status)));
     return data;
   } catch (fehler) {
     if (fehler instanceof Abbruch) throw fehler;
@@ -131,9 +156,22 @@ export function erstelleSchreiben(
     for (const schritt of vorgang) {
       try {
         if (schritt.art === 'storno') {
-          // nur ändern, wenn noch nicht storniert: eine Wiederholung bleibt ohne Wirkung
-          const felder = { storniert_am: kontext.jetzt.toISOString(), storno_grund: schritt.grund };
-          await mitZeitlimit((s) => adapter.stornieren(schritt.tabelle, schritt.clientId, felder, s));
+          // nur ändern, wenn noch nicht storniert: eine Wiederholung bleibt ohne Wirkung;
+          // storno_grund gibt es nur in den Tabellen mit Zeitachse (Runde 1, Befund 4)
+          const felder = MIT_ZEITACHSE.has(schritt.tabelle)
+            ? { storniert_am: kontext.jetzt.toISOString(), storno_grund: schritt.grund }
+            : { storniert_am: kontext.jetzt.toISOString() };
+          const geaendert = zeilenAus(
+            await mitZeitlimit((s) => adapter.stornieren(schritt.tabelle, schritt.clientId, felder, s)),
+          );
+          if (geaendert.length === 0) {
+            // RLS filtert UPDATE still: 0 Zeilen heisst schon storniert, nicht vorhanden oder kein Zugang
+            const [vorhanden] = zeilenAus(
+              await mitZeitlimit((s) => adapter.lesen(schritt.tabelle, schritt.clientId, s)),
+            );
+            if (!vorhanden || vorhanden['storniert_am'] === null || vorhanden['storniert_am'] === undefined)
+              throw new Abbruch({ art: 'abgelehnt', wiederholbar: false, text: TEXT_NICHT_GEFUNDEN });
+          }
           clientIds.push(schritt.clientId);
           continue;
         }

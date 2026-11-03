@@ -16,9 +16,12 @@ interface Erfassung {
   eingabe: string;
 }
 
+/** pH mit höchstens 2 Dezimalen wie numeric(4,2), sonst rundete die Datenbank und eine Wiederholung wiche ab (Runde 1, Befund 5) */
 function phLesen(text: string): number | undefined {
-  const wert = Number(text.trim().replace(',', '.'));
-  return text.trim() !== '' && Number.isFinite(wert) && wert >= 0 && wert <= 14 ? wert : undefined;
+  const t = text.trim().replace(',', '.');
+  if (!/^\d{1,2}(\.\d{1,2})?$/.test(t)) return undefined;
+  const wert = Number(t);
+  return wert >= 0 && wert <= 14 ? wert : undefined;
 }
 
 function alsText(felder: Record<string, unknown>): string {
@@ -80,8 +83,10 @@ export function Schreibprobe() {
           label="pH"
           inputMode="decimal"
           value={eingabe}
-          hint="Wert zwischen 0 und 14"
-          error={ungueltig ? 'Bitte einen Wert zwischen 0 und 14 eingeben.' : undefined}
+          hint="Wert zwischen 0 und 14, höchstens 2 Dezimalen"
+          error={
+            ungueltig ? 'Bitte einen Wert zwischen 0 und 14 mit höchstens 2 Dezimalen eingeben.' : undefined
+          }
           onChange={(e) => {
             setEingabe(e.target.value);
             setErgebnis(undefined);

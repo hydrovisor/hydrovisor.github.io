@@ -4,6 +4,8 @@ export const LOKAL_NAME = 'hydrovisor';
 export const LOKAL_VERSION = 2;
 export const SPEICHER_ABLAEUFE = 'ablaeufe';
 export const SPEICHER_BUENDEL = 'buendel';
+/** Ereignis an window, wenn das Upgrade blockiert ist; Heute zeigt «App neu laden» */
+export const LOKAL_BLOCKIERT = 'hydrovisor-lokal-blockiert';
 
 export function lokalOeffnen(): Promise<IDBDatabase> {
   return new Promise((erfuellen, ablehnen) => {
@@ -21,8 +23,8 @@ export function lokalOeffnen(): Promise<IDBDatabase> {
       db.onversionchange = () => db.close();
       erfuellen(db);
     };
-    anfrage.onblocked = () =>
-      ablehnen(new Error('App neu laden: eine ältere Ansicht hält die lokale Datenbank offen'));
+    // eine ältere Ansicht hält die Datenbank offen: melden und weiter auf onsuccess warten (Runde 1, Befund 12)
+    anfrage.onblocked = () => window.dispatchEvent(new Event(LOKAL_BLOCKIERT));
     anfrage.onerror = () => ablehnen(anfrage.error ?? new Error('IndexedDB nicht verfügbar'));
   });
 }
