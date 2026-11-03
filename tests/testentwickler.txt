@@ -37,5 +37,6 @@ tests/unit/datenpfad-fehler.test.ts
 tests/unit/datenpfad-buendel.test.ts
 tests/unit/schreiben.test.ts
 tests/unit/buendel-laden.test.ts
+tests/unit/datenpfad-runde1.test.ts
 tests/e2e/datenpfad.spec.ts
 tests/e2e/konto.ts
