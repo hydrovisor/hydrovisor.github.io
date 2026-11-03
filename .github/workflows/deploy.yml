@@ -70,7 +70,8 @@ jobs:
       - name: Migration
         env:
           DB_URL: ${{ secrets.SUPABASE_DB_URL_POOLER }}
-        run: supabase db push --db-url "$DB_URL"
+        # --yes: CLI 3.0.0 fragt ohne Terminal nach und bricht sonst ohne Änderung ab (Lauf 41645672298)
+        run: supabase db push --yes --db-url "$DB_URL"
       - name: Seed (Wissen, Sortenstamm, Konstanten; keine Demo-Daten)
         env:
           SEED_DB_URL: ${{ secrets.SUPABASE_DB_URL_POOLER }}
