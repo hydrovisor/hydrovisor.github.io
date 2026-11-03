@@ -18,6 +18,8 @@
 --   Ä5 Bucket saattueten: eigene Datei 20261103140100_saattueten.sql.
 --   Ä6 Trigger etikett_code_fest: etikett.code nach dem Einfügen unveränderlich.
 --   Ä7 etikett_aufruf.client_id uuid unique (nullable).
+--   Ä8 TRUNCATE für anon und authenticated entzogen, auch in den Default-Privileges der Rolle
+--      postgres in public (Befund Sicherheit 1, Runde 1; TRUNCATE umgeht RLS, 8.1 Regel 3).
 -- Kein create extension pgtap (die Tests laden pgTAP selbst).
 -- =====================================================================
 
@@ -2016,3 +2018,13 @@ begin
   end loop;
 end $$;
 -- messgeraet: Tim ändert u_ec und u_ph aus der Geräteprüfung (UC0 Einstellungen), legt aber keine Geräte an.
+
+-- Befund Sicherheit 1, Runde 1: Supabase vergibt über Default-Privileges alle Tabellenrechte
+-- (arwdDxtm) an anon und authenticated, also auch TRUNCATE. TRUNCATE umgeht RLS und widerspräche
+-- 8.1 Regel 3 («die App löscht nie»); deshalb entziehen, auf den bestehenden Tabellen und für
+-- künftige Tabellen der Rolle postgres (Migrationen laufen als postgres). Die Default-Privileges
+-- von supabase_admin in public kann postgres nicht ändern (keine Mitgliedschaft); supabase_admin
+-- legt in public keine Tabellen dieses Projekts an. Die übrigen Grants bleiben, damit RLS
+-- «0 Zeilen» statt «keine Berechtigung» liefert.
+revoke truncate on all tables in schema public from anon, authenticated;
+alter default privileges for role postgres in schema public revoke truncate on tables from anon, authenticated;

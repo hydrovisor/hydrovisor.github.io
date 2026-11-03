@@ -7,13 +7,16 @@
 --      für authenticated mit bucket_id = 'saattueten' and (select public.ist_tim()); keine
 --      Delete-Policy (die App löscht nie, 8.1 Regel 3; Fotos belegen ki_feldprotokoll.fotopfad).
 -- Eigene Datei, damit ein Fehler in storage das Schema in public nicht mitreisst.
--- Idempotent: Bucket mit on conflict do nothing, Policies mit drop policy if exists.
+-- Idempotent: Bucket mit on conflict do update (privat, JPEG und 2 MB auch bei bestehendem
+-- Bucket erzwungen, Befund Sicherheit 2, Runde 1), Policies mit drop policy if exists.
 -- Pfad saattueten/{sorte_id}/{uuid}.jpg; Anzeige über signierte Links (60 s).
 -- =====================================================================
 
 insert into storage.buckets (id, name, public, allowed_mime_types, file_size_limit)
 values ('saattueten', 'saattueten', false, array['image/jpeg'], 2097152)
-on conflict (id) do nothing;
+on conflict (id) do update set public = false,
+  allowed_mime_types = excluded.allowed_mime_types,
+  file_size_limit = excluded.file_size_limit;
 
 drop policy if exists saattueten_lesen on storage.objects;
 create policy saattueten_lesen on storage.objects for select to authenticated
