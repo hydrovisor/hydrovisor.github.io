@@ -2,7 +2,7 @@
 import { useSyncExternalStore } from 'react';
 import type { Sitzungszustand } from '../anmeldung/sitzung.ts';
 
-export type Route = { name: 'heute' } | { name: 'info' } | { name: 'anmelden' };
+export type Route = { name: 'heute' } | { name: 'info' } | { name: 'anmelden' } | { name: 'muster' };
 
 /** Unbekannte oder leere Route → Heute */
 export function routeAusHash(hash: string): Route {
@@ -12,6 +12,8 @@ export function routeAusHash(hash: string): Route {
       return { name: 'info' };
     case '/anmelden':
       return { name: 'anmelden' };
+    case '/muster':
+      return { name: 'muster' };
     default:
       return { name: 'heute' };
   }
@@ -22,11 +24,13 @@ export function hashZu(route: Route): string {
 }
 
 /**
- * Welche Maske erscheint? Ohne Sitzung jede Route ausser Info → Anmeldung (Info zeigt keine Daten, Plan 8 A2);
+ * Welche Maske erscheint? Ohne Sitzung jede Route ausser Info und Musterseite → Anmeldung (beide zeigen keine Daten,
+ * Plan 8 A2, Plan 17 A3);
  * mit Sitzung führt die Anmeldung nach Heute.
  */
 export function maskeFuer(route: Route, sitzung: Sitzungszustand): Route {
-  if (sitzung === 'abgemeldet') return route.name === 'info' ? route : { name: 'anmelden' };
+  if (sitzung === 'abgemeldet')
+    return route.name === 'info' || route.name === 'muster' ? route : { name: 'anmelden' };
   return route.name === 'anmelden' ? { name: 'heute' } : route;
 }
 

@@ -60,6 +60,7 @@ Dieses System ist die verbindliche Ausgangslage für die App. Werte, Namen und B
 
 - 4px-Raster: `space-1` bis `space-12`. Seitlicher Rand `space-4` am Handy, `space-6` am Tablet; Inhalt höchstens `size-content` breit.
 - Tippflächen mindestens `size-touch` (48px), kompakt `size-touch-compact` (40px), nie kleiner.
+- **Dichte «regal»:** Regal-Masken (Heute, Rundgang, Gefäss, Messen, Ansatz, Säen, Keimung, Umsetzen, Pflanze, Gefäss prüfen) tragen `data-density="regal"`. Dort gilt für jede Tippfläche `size-touch-regal` (68px), Text `text-regal` (21px), Messwerte `value-regal` (40px), Statuswort und Kennung in Kacheln `status-regal` (28px), Statussymbol `icon-status-regal` (32px). Keine Systemtastatur, keine Wischgesten. Schreibtisch-Masken (Anmeldung, Vorlagen, Etiketten, Einstellungen, Info) bleiben in der Standarddichte mit 48px.
 - Radien: `radius-md` für Buttons und Felder, `radius-lg` für Karten und Hinweise, `radius-xl` für grosse Flächen, `radius-full` für Pillen. Die weichen Ecken nehmen die runden Enden der Skalenbögen auf.
 - Schatten sparsam: `shadow-sm` für Karten, `shadow-lg` nur für schwebende Elemente. Karten haben zusätzlich einen Rand in `line`.
 - Fokus: `focus-ring`, 2px Abstand im Seitengrund und 2px `focus`, mindestens 3:1 auf allen Flächen.
@@ -67,8 +68,8 @@ Dieses System ist die verbindliche Ausgangslage für die App. Werte, Namen und B
 
 ## Bausteine
 
-- `Logo`, `Button`, `Card`, `StatusBadge`, `Notice`, `Gauge` (Messanzeige), `TextField` und `Label` (Etikett mit `LabelSheet` für den A4-Bogen). Jede Komponente hat Richtlinien und eine Vorschau.
-- Das **Etikett** (`Label`, 70 × 42 mm) trägt den QR-Code (30 mm), die Kennung in Manrope 700 mit 20 mm Schriftgrösse und ein bis zwei kleine Zeilen. Es ist schwarz auf weiss und zeigt die Kennung gleich geschrieben wie die Maske «Gefäss».
+- `Logo`, `Button`, `Card`, `StatusBadge`, `Notice`, `Gauge` (Messanzeige), `TextField`, `Label` (Etikett) und `LabelSheet` (A4-Bogen), `Notfallblatt` (Stand je Gefäss, Vertretungsblatt), `NumPad` (Ziffernblock mit Prellfilter), `Tile` (Kachel für Messwert und Ort), `Checklist` (Abhakliste mit Timer) und `Deckel` (Deckelgrafik mit Löchern). Jede Komponente hat Richtlinien; die Musterseite `#/muster` der App zeigt alle in beiden Themen.
+- Das **Etikett** (`Label`, 70 × 42.3 mm) trägt den QR-Code (30 mm mit Ruhezone), die Kennung in Manrope 700 auf 32 mm Breite (Schriftgrösse aus der Breite, höchstens 20 mm) und ein bis zwei kleine Zeilen. Es ist schwarz auf weiss und zeigt die Kennung gleich geschrieben wie die Maske «Gefäss».
 - Die Bausteine sind zuerst CSS-Klassen (`hv-btn`, `hv-card` usw. in `components/bundle.css`) und deshalb für jeden Technik-Stack nutzbar. `components/bundle.js` liefert dazu React-Komponenten unter `window.Hydrovisor`. Wird die App nicht mit React gebaut, werden sie mit denselben Klassen nachgebaut.
 - Die **Messanzeige** ist das Herzstück: dieselbe Skala wie die Bildmarke, der Sollbereich ist der grüne Bereich, der Tropfen-Blatt-Zeiger zeigt auf den Messwert und nimmt die Statusfarbe an.
 
@@ -87,7 +88,7 @@ Dieses System ist die verbindliche Ausgangslage für die App. Werte, Namen und B
 ## Export ins Repository
 
 - Quelle: claude.ai-Artefakt «Hydrovisor – CI» (Typ Design System), letzte Änderung 23.10.2026; exportiert am 31.10.2026 für Auftrag 1, weil der Coding-Agent im Terminal keine claude.ai-Artefakte liest (Konzept Kapitel 10).
-- `tokens.css` ist aus `tokens.json` generiert (helles Thema in `:root`, dunkles Thema unter `[data-theme="dark"]`); `components/bundle.css` und die Baustein-Beschreibungen `components/*.md` sind unverändert übernommen.
+- `tokens.css` ist aus `tokens.json` generiert (helles Thema in `:root`, dunkles Thema unter `[data-theme="dark"]`, Dichte unter `[data-density="regal"]`); seit DS-01 mit `npm run tokens` (`scripts/tokens.ts`), ein Unit-Test prüft im Prüftor, dass beide übereinstimmen. `components/bundle.css` und die Baustein-Beschreibungen `components/*.md` sind beim Export unverändert übernommen und seit DS-01 im Repository ergänzt.
 - Die Dateien der Gruppen **Logos** und **App-Icons** (SVG und PNG) liegen unverändert in `assets/Logos/` und `assets/App-Icons/`, je mit `README.md`; exportiert am 1.11.2026 mit I0-01 (Manifest und Logo). Die App liefert die Icons unter `/icons/` aus, ohne Kopie im Repository.
 - `components/bundle.js` (React-Bausteine unter `window.Hydrovisor`, Stand 23.10.2026) ist mit I0-01 unverändert übernommen, als Quelle für die Nachbauten in `src/ui/bausteine/` (Markup, Klassen, Statussymbole). Die App lädt die Datei nicht.
-- Die Ergänzungen aus Konzept Kapitel 10 (Dichte «regal», LabelSheet 70 × 42.3 mm, Notfallblatt, NumPad, Checklist, Tile) sind im Design System noch offen (Termin vor I1a). Bis dahin gilt bei Abweichungen das Konzept v1.0 (Rangfolge Kapitel 16).
+- Seit Entscheid R11 (1.11.2026) ist `design-system/` im Repository die Quelle; das claude.ai-Artefakt wird nicht mehr nachgeführt. Paket DS-01 (#17) hat die Ergänzungen aus Konzept Kapitel 10 nachgetragen: Dichte «regal», Druckmasse (Gruppe `print`), LabelSheet 70 × 42.3 mm, Notfallblatt, NumPad, Checklist, Tile, Deckel, `Label` und `StatusBadge` nachgeführt (W11).

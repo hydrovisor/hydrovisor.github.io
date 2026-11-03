@@ -22,6 +22,12 @@ describe('Hash-Router', () => {
     expect(routeAusHash(hashZu({ name: 'heute' }))).toEqual({ name: 'heute' });
   });
 
+  it('DS-01 erkennt #/muster, ohne Sitzung erreichbar wie Info', () => {
+    expect(routeAusHash('#/muster')).toEqual({ name: 'muster' });
+    expect(maskeFuer({ name: 'muster' }, 'abgemeldet')).toEqual({ name: 'muster' });
+    expect(maskeFuer({ name: 'muster' }, 'angemeldet')).toEqual({ name: 'muster' });
+  });
+
   it('erkennt #/anmelden', () => {
     expect(routeAusHash('#/anmelden')).toEqual({ name: 'anmelden' });
     expect(hashZu({ name: 'anmelden' })).toBe('#/anmelden');
