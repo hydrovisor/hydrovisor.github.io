@@ -3,6 +3,7 @@
 import { buendelPruefen, fensterBeginn, letzterJeOrt, type Buendel } from '../domain/datenpfad/buendel.ts';
 import type { Zeitkontext } from '../domain/datenpfad/erfassung.ts';
 import { fehlerEinordnen, type RohFehler, type Schreibfehler } from '../domain/datenpfad/fehler.ts';
+import { gespeicherteNutzerId, SITZUNG_SCHLUESSEL } from '../anmeldung/sitzung.ts';
 import { APP_VERSION } from '../konstanten.ts';
 import { lokalOeffnen, SPEICHER_BUENDEL } from './lokal.ts';
 import { mitStatus, ZEITLIMIT_MS, type Antwort } from './schreiben.ts';
@@ -252,12 +253,21 @@ export async function buendelLeeren(): Promise<void> {
   await mitSpeicher('readwrite', (s) => s.delete(SCHLUESSEL));
 }
 
+/** Nutzer-ID der im localStorage gespeicherten Sitzung, ohne Netz und ohne Erneuerung des Tokens */
+export function nutzerIdGespeichert(): string | undefined {
+  try {
+    return gespeicherteNutzerId(window.localStorage.getItem(SITZUNG_SCHLUESSEL));
+  } catch {
+    return undefined;
+  }
+}
+
 /** lädt das Bündel für den angemeldeten Nutzer (Sitzung aus dem localStorage, ohne Netz) */
 export async function buendelLaden(kontext: Zeitkontext): Promise<Ladeergebnis> {
-  const { data } = await supabase.auth.getSession();
-  const nutzerId = data.session?.user.id;
+  const nutzerId = nutzerIdGespeichert();
   if (!nutzerId) return { status: 'kein_zugang' };
-  const gleicherNutzer = async () => (await supabase.auth.getSession()).data.session?.user.id === nutzerId;
+  // ohne Netz und mit abgelaufenem Token liefert getSession() nichts; die gespeicherte Sitzung zählt (Runde 2, N1)
+  const gleicherNutzer = async () => nutzerIdGespeichert() === nutzerId;
   return erstelleBuendelLaden(
     supabaseBuendeladapter,
     indexedDbBuendelspeicher,

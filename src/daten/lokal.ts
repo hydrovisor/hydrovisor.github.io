@@ -6,6 +6,14 @@ export const SPEICHER_ABLAEUFE = 'ablaeufe';
 export const SPEICHER_BUENDEL = 'buendel';
 /** Ereignis an window, wenn das Upgrade blockiert ist; Heute zeigt «App neu laden» */
 export const LOKAL_BLOCKIERT = 'hydrovisor-lokal-blockiert';
+/** Ereignis an window, wenn das Öffnen nach einer Blockade doch gelingt */
+export const LOKAL_FREI = 'hydrovisor-lokal-frei';
+
+let blockiert = false;
+/** für Hörer, die sich erst nach einem onblocked anmelden (Runde 2, Befund N4) */
+export function lokalBlockiert(): boolean {
+  return blockiert;
+}
 
 export function lokalOeffnen(): Promise<IDBDatabase> {
   return new Promise((erfuellen, ablehnen) => {
@@ -21,10 +29,17 @@ export function lokalOeffnen(): Promise<IDBDatabase> {
       const db = anfrage.result;
       // eine neuere Version in einem anderen Tab soll nicht blockiert werden (Plan 11, Risiko «Upgrade blockiert»)
       db.onversionchange = () => db.close();
+      if (blockiert) {
+        blockiert = false;
+        window.dispatchEvent(new Event(LOKAL_FREI));
+      }
       erfuellen(db);
     };
     // eine ältere Ansicht hält die Datenbank offen: melden und weiter auf onsuccess warten (Runde 1, Befund 12)
-    anfrage.onblocked = () => window.dispatchEvent(new Event(LOKAL_BLOCKIERT));
+    anfrage.onblocked = () => {
+      blockiert = true;
+      window.dispatchEvent(new Event(LOKAL_BLOCKIERT));
+    };
     anfrage.onerror = () => ablehnen(anfrage.error ?? new Error('IndexedDB nicht verfügbar'));
   });
 }
