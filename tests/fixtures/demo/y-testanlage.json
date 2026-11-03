@@ -1,0 +1,13 @@
+{
+  "kommentar": "Testanlage Y (Datenart test), identisch mit tests/e2e/orte.ts: Y-2.3 DWC, Y-3.1 Kratky belüftet, Y-W; ohne Kalibrierung und ohne gefaess_erfasst wie die E2E-Fixture",
+  "zeilen": [
+    {"tabelle":"anlage","ref":"Y","felder":{"name":"Testanlage Y","kuerzel":"Y","datenart":"test"}},
+    {"tabelle":"gefaessmodell","ref":"e2e-modell-y","einmal":"name","felder":{"name":"E2E Box Y","form":"rechteckig","innen_l_mm":400,"innen_b_mm":300,"innen_h_mm":200,"betriebsvolumen_l":15}},
+    {"tabelle":"deckeltyp","ref":"e2e-deckel-y","einmal":"name","felder":{"name":"E2E Deckel Y","topfdurchmesser_mm":50,"loecher_je_reihe":[3,3]}},
+    {"tabelle":"platz","ref":"Y-2.3","felder":{"anlage_id":"@Y","kennung":"2.3","rolle":"gefaess"}},
+    {"tabelle":"platz","ref":"Y-3.1","felder":{"anlage_id":"@Y","kennung":"3.1","rolle":"gefaess"}},
+    {"tabelle":"platz","ref":"Y-W","felder":{"anlage_id":"@Y","kennung":"W","rolle":"messstelle"}},
+    {"tabelle":"gefaess","ref":"Y-g2.3","felder":{"platz_id":"@Y-2.3","gefaessmodell_id":"@e2e-modell-y","deckeltyp_id":"@e2e-deckel-y","betriebsvolumen_l":15,"betriebsart":"dwc","intervall_messen_d":2,"intervall_wechseln_d":14}},
+    {"tabelle":"gefaess","ref":"Y-g3.1","felder":{"platz_id":"@Y-3.1","gefaessmodell_id":"@e2e-modell-y","deckeltyp_id":"@e2e-deckel-y","betriebsvolumen_l":15,"betriebsart":"kratky_belueftet","intervall_messen_d":7}}
+  ]
+}
