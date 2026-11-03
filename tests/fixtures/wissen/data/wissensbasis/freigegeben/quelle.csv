@@ -1,0 +1,2 @@
+zeile_id,quelle_id,titel,autoren,jahr,link,klasse,anbaumethode,abgerufen_am,freigegeben_am
+test-fixture,test-fixture,"Testquelle für Fixtures, erfunden",,2026,https://example.invalid/test-fixture,praxis,dwc,2026-11-01,2026-11-02

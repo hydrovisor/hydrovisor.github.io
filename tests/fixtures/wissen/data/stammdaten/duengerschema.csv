@@ -1,0 +1,7 @@
+zeile_id,stadium,grow_ml_l,micro_ml_l,bloom_ml_l,summe_ml_l,ec_richtwert_min_ms_cm,ec_richtwert_max_ms_cm,ec_basis,herkunft,quelle_id,fundstelle,kurzzitat,evidenzklasse
+test-ds-1,1. Wurzeln / Keimung,0.5,0.5,0.5,1.5,0.3,0.6,unbekannt,hersteller,test-fixture,Tabelle 3,Erfundene Dosierung,B2
+test-ds-2,1. echte Blätter,1,1,1,3,0.8,1.2,unbekannt,hersteller,test-fixture,Tabelle 3,Erfundene Dosierung,B2
+test-ds-3,Wachstum,1.5,1,0.5,3,1.2,1.6,unbekannt,hersteller,test-fixture,Tabelle 3,Erfundene Dosierung,B2
+test-ds-4,Vorblüte,1.5,1.5,1,4,1.6,1.9,unbekannt,hersteller,test-fixture,Tabelle 3,Erfundene Dosierung,B2
+test-ds-5,Blüte / Frucht,0.5,1.5,2,4,1.4,2.0,unbekannt,hersteller,test-fixture,Tabelle 3,Erfundene Dosierung,B2
+test-ds-6,Reife,0.5,1.5,2,4,1.4,2.2,unbekannt,abgeleitet,test-fixture,Tabelle 3,Erfundene Dosierung,B2

@@ -1,0 +1,4 @@
+zeile_id,ebene,bezug,phase,typ,text,quelle_id,fundstelle,kurzzitat,evidenzklasse
+we.test_art_a.wachstum.1,art,test_art_a,wachstum,ernte,"Testhinweis zur Ernte, erfunden.",test-fixture,Abschnitt 4,Erfundener Hinweis,C
+we.test_frucht.bluete.1,kulturgruppe,test_frucht,bluete,bestaeubung,"Testhinweis zur Bestäubung, erfunden.",test-fixture,Abschnitt 4,Erfundener Hinweis,C
+we.allgemein.sondenpflege.1,allgemein,allgemein,,sondenpflege,"Testhinweis zur Sonde, erfunden.",test-fixture,Abschnitt 4,Erfundener Hinweis,C

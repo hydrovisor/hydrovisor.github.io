@@ -1,0 +1,45 @@
+zeile_id,art_id,kulturform,feld,wert,quelle_id,fundstelle,kurzzitat,evidenzklasse,vermerk,freigegeben_am
+art.solanum_lycopersicum.name_de,solanum_lycopersicum,,name_de,Tomate,test-fixture,Artseite,Erfundener Stammeintrag,C,keine,2026-11-02
+art.solanum_lycopersicum.name_wiss,solanum_lycopersicum,,name_wiss,Solanum lycopersicum,test-fixture,Artseite,Erfundener Stammeintrag,C,keine,2026-11-02
+art.solanum_lycopersicum.gbif_key,solanum_lycopersicum,,gbif_key,9100001,test-fixture,Artseite,Erfundener Stammeintrag,C,keine,2026-11-02
+art.solanum_lycopersicum.kulturgruppe_id,solanum_lycopersicum,,kulturgruppe_id,fruchtgemuese,test-fixture,Artseite,Erfundener Stammeintrag,C,keine,2026-11-02
+art.capsicum_annuum.name_de,capsicum_annuum,,name_de,Chili,test-fixture,Artseite,Erfundener Stammeintrag,C,keine,2026-11-02
+art.capsicum_annuum.name_wiss,capsicum_annuum,,name_wiss,Capsicum annuum,test-fixture,Artseite,Erfundener Stammeintrag,C,keine,2026-11-02
+art.capsicum_annuum.gbif_key,capsicum_annuum,,gbif_key,9100002,test-fixture,Artseite,Erfundener Stammeintrag,C,keine,2026-11-02
+art.capsicum_annuum.kulturgruppe_id,capsicum_annuum,,kulturgruppe_id,fruchtgemuese,test-fixture,Artseite,Erfundener Stammeintrag,C,keine,2026-11-02
+art.ocimum_basilicum.name_de,ocimum_basilicum,,name_de,Basilikum,test-fixture,Artseite,Erfundener Stammeintrag,C,keine,2026-11-02
+art.ocimum_basilicum.name_wiss,ocimum_basilicum,,name_wiss,Ocimum basilicum,test-fixture,Artseite,Erfundener Stammeintrag,C,keine,2026-11-02
+art.ocimum_basilicum.gbif_key,ocimum_basilicum,,gbif_key,9100003,test-fixture,Artseite,Erfundener Stammeintrag,C,keine,2026-11-02
+art.ocimum_basilicum.kulturgruppe_id,ocimum_basilicum,,kulturgruppe_id,kraut_einjaehrig,test-fixture,Artseite,Erfundener Stammeintrag,C,keine,2026-11-02
+art.brassica_rapa_chinensis.name_de,brassica_rapa_chinensis,,name_de,Pak Choi,test-fixture,Artseite,Erfundener Stammeintrag,C,keine,2026-11-02
+art.brassica_rapa_chinensis.name_wiss,brassica_rapa_chinensis,,name_wiss,Brassica rapa subsp. chinensis,test-fixture,Artseite,Erfundener Stammeintrag,C,keine,2026-11-02
+art.brassica_rapa_chinensis.gbif_key,brassica_rapa_chinensis,,gbif_key,9100004,test-fixture,Artseite,Erfundener Stammeintrag,C,keine,2026-11-02
+art.brassica_rapa_chinensis.kulturgruppe_id,brassica_rapa_chinensis,,kulturgruppe_id,kohl,test-fixture,Artseite,Erfundener Stammeintrag,C,keine,2026-11-02
+art.petroselinum_crispum.name_de,petroselinum_crispum,,name_de,Petersilie,test-fixture,Artseite,Erfundener Stammeintrag,C,keine,2026-11-02
+art.petroselinum_crispum.name_wiss,petroselinum_crispum,,name_wiss,Petroselinum crispum,test-fixture,Artseite,Erfundener Stammeintrag,C,keine,2026-11-02
+art.petroselinum_crispum.gbif_key,petroselinum_crispum,,gbif_key,9100005,test-fixture,Artseite,Erfundener Stammeintrag,C,keine,2026-11-02
+art.petroselinum_crispum.kulturgruppe_id,petroselinum_crispum,,kulturgruppe_id,kraut_ausdauernd,test-fixture,Artseite,Erfundener Stammeintrag,C,keine,2026-11-02
+art.allium_schoenoprasum.name_de,allium_schoenoprasum,,name_de,Schnittlauch,test-fixture,Artseite,Erfundener Stammeintrag,C,keine,2026-11-02
+art.allium_schoenoprasum.name_wiss,allium_schoenoprasum,,name_wiss,Allium schoenoprasum,test-fixture,Artseite,Erfundener Stammeintrag,C,keine,2026-11-02
+art.allium_schoenoprasum.gbif_key,allium_schoenoprasum,,gbif_key,9100006,test-fixture,Artseite,Erfundener Stammeintrag,C,keine,2026-11-02
+art.allium_schoenoprasum.kulturgruppe_id,allium_schoenoprasum,,kulturgruppe_id,kraut_ausdauernd,test-fixture,Artseite,Erfundener Stammeintrag,C,keine,2026-11-02
+art.lactuca_sativa.name_de,lactuca_sativa,,name_de,Salat,test-fixture,Artseite,Erfundener Stammeintrag,C,keine,2026-11-02
+art.lactuca_sativa.name_wiss,lactuca_sativa,,name_wiss,Lactuca sativa,test-fixture,Artseite,Erfundener Stammeintrag,C,keine,2026-11-02
+art.lactuca_sativa.gbif_key,lactuca_sativa,,gbif_key,9100007,test-fixture,Artseite,Erfundener Stammeintrag,C,keine,2026-11-02
+art.lactuca_sativa.kulturgruppe_id,lactuca_sativa,,kulturgruppe_id,blattsalat,test-fixture,Artseite,Erfundener Stammeintrag,C,keine,2026-11-02
+art.valerianella_locusta.name_de,valerianella_locusta,,name_de,Nüsslisalat,test-fixture,Artseite,Erfundener Stammeintrag,C,keine,2026-11-02
+art.valerianella_locusta.name_wiss,valerianella_locusta,,name_wiss,Valerianella locusta,test-fixture,Artseite,Erfundener Stammeintrag,C,keine,2026-11-02
+art.valerianella_locusta.gbif_key,valerianella_locusta,,gbif_key,9100008,test-fixture,Artseite,Erfundener Stammeintrag,C,keine,2026-11-02
+art.valerianella_locusta.kulturgruppe_id,valerianella_locusta,,kulturgruppe_id,blattsalat,test-fixture,Artseite,Erfundener Stammeintrag,C,keine,2026-11-02
+art.spinacia_oleracea.name_de,spinacia_oleracea,,name_de,Spinat,test-fixture,Artseite,Erfundener Stammeintrag,C,keine,2026-11-02
+art.spinacia_oleracea.name_wiss,spinacia_oleracea,,name_wiss,Spinacia oleracea,test-fixture,Artseite,Erfundener Stammeintrag,C,keine,2026-11-02
+art.spinacia_oleracea.gbif_key,spinacia_oleracea,,gbif_key,9100009,test-fixture,Artseite,Erfundener Stammeintrag,C,keine,2026-11-02
+art.spinacia_oleracea.kulturgruppe_id,spinacia_oleracea,,kulturgruppe_id,fuchsschwanz,test-fixture,Artseite,Erfundener Stammeintrag,C,keine,2026-11-02
+art.beta_vulgaris_cicla.name_de,beta_vulgaris_cicla,,name_de,Mangold,test-fixture,Artseite,Erfundener Stammeintrag,C,keine,2026-11-02
+art.beta_vulgaris_cicla.name_wiss,beta_vulgaris_cicla,,name_wiss,Beta vulgaris subsp. vulgaris var. cicla,test-fixture,Artseite,Erfundener Stammeintrag,C,keine,2026-11-02
+art.beta_vulgaris_cicla.gbif_key,beta_vulgaris_cicla,,gbif_key,9100010,test-fixture,Artseite,Erfundener Stammeintrag,C,keine,2026-11-02
+art.beta_vulgaris_cicla.kulturgruppe_id,beta_vulgaris_cicla,,kulturgruppe_id,fuchsschwanz,test-fixture,Artseite,Erfundener Stammeintrag,C,keine,2026-11-02
+art.beta_vulgaris_conditiva.name_de,beta_vulgaris_conditiva,,name_de,Randen,test-fixture,Artseite,Erfundener Stammeintrag,C,keine,2026-11-02
+art.beta_vulgaris_conditiva.name_wiss,beta_vulgaris_conditiva,,name_wiss,Beta vulgaris subsp. vulgaris var. conditiva,test-fixture,Artseite,Erfundener Stammeintrag,C,keine,2026-11-02
+art.beta_vulgaris_conditiva.gbif_key,beta_vulgaris_conditiva,,gbif_key,9100011,test-fixture,Artseite,Erfundener Stammeintrag,C,keine,2026-11-02
+art.beta_vulgaris_conditiva.kulturgruppe_id,beta_vulgaris_conditiva,,kulturgruppe_id,fuchsschwanz,test-fixture,Artseite,Erfundener Stammeintrag,C,keine,2026-11-02

@@ -1,0 +1,5 @@
+zeile_id,name,art,kulturtyp,shop_link,keimart_tuete,keimtemperatur_tuete,wuchshoehe_max_mm,wuchsform,fruehzeitigkeit_relativ,katalog_quelle,kaufdatum,keimfaehigkeit_packung,bestand_korn
+sorte-test-a-eins,Eins,Testart A,frucht,https://example.invalid/sorte-a,dunkel,18-24,600,buschig,,test-fixture,2026-10-17,0.85,20
+sorte-test-b-zwei,Zwei,Testart B,blatt,,,,,,,,2026-10-17,,
+sorte-test-c-drei,Drei,Testart C,blatt,https://example.invalid/sorte-c,,,,,,,2026-10-17,,100
+sorte-test-d-vier,Vier,Testart D,blatt,,,,,,,,2026-10-17,,
