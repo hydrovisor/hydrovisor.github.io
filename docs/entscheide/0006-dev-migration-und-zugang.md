@@ -14,6 +14,8 @@ Datum 3.11.2026 · Entscheid des Lead im Auftrag von Tim (Chat: «Löse das Prob
 
 **Nachtrag 3.11.2026.** Der erste Lauf scheiterte: `supabase db push --remote=<ref>` verbindet direkt über IPv6, das GitHub-Runner nicht haben, und verlangt sonst die Pooler-Adresse mit Passwort. Der Workflow spielt deshalb über die Management-API ein (`scripts/dev-migration.mjs`, `POST /v1/projects/{ref}/database/query`, je Datei eine Transaktion mit dem Eintrag in `supabase_migrations.schema_migrations`); Skript und Ziel kommen aus `main`.
 
+**Nachtrag 2.** Das Token der Umgebung `production` hat keine Rechte für `hydrovisor-dev` (Management-API 403, Lauf 41655308167). Der Workflow nutzt deshalb die eigene Umgebung `dev` (nur `main`, ohne Pflicht-Reviewer) mit dem Secret `SUPABASE_ACCESS_TOKEN` für dev, das Tim einmal anlegt; Freigaben für dev und Produktion sind damit getrennt.
+
 **Verworfen.** Kontoweiter Supabase-Connector (erreicht die Produktion, Regel 4); eigenes Secret für die dev-Datenbank (Tims Handgriff, den er vermeiden will); Trigger «erstes Konto wird Tim» (dauerhafte Regel, ein versehentliches Konto würde Eigentümer).
 
 **Umsetzung.** Pull Request zu #9 mit Workflow, Migration, pgTAP `08_zugang_migration.test.sql` und Nachführung von `CLAUDE.md`.

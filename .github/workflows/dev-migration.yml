@@ -1,6 +1,6 @@
 # Migrationen nach hydrovisor-dev (Entscheid 0006). Nur von Hand (gh workflow run), nur von main,
 # Ziel fest hydrovisor-dev; die Produktion migriert weiterhin nur deploy.yml.
-# Das Access-Token liegt nur in der Umgebung production; deren Freigabe gilt auch für diesen Lauf.
+# Access-Token nur für hydrovisor-dev in der eigenen Umgebung dev (nur main, Befund Sicherheit 3); getrennt von production.
 # Eingabe zweig: Zweig, dessen supabase/migrations eingespielt wird (für Abnahme 1 vor dem Merge).
 # Konfiguration und CLI-Einstellungen kommen immer aus main; aus dem Zweig nur die Migrationsdateien.
 # Aktionen per Commit angeheftet (Version im Kommentar).
@@ -33,7 +33,7 @@ jobs:
   migration:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    environment: production
+    environment: dev
     env:
       DEV_PROJEKT: jalvmzgvxvidgmoxuglp # hydrovisor-dev, fest wie in .mcp.json
       ZWEIG: ${{ inputs.zweig }}
