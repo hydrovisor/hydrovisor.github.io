@@ -15,6 +15,7 @@
     "test:mutation": "node scripts/mutation.mjs",
     "test:e2e": "playwright test",
     "build": "vite build",
+    "tokens": "node scripts/tokens.ts",
     "preview": "vite preview",
     "seed": "node scripts/seed.ts",
     "w0:pruefen": "node scripts/w0-pruefen.ts",
