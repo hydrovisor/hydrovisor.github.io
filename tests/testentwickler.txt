@@ -41,3 +41,12 @@ tests/unit/datenpfad-runde1.test.ts
 tests/e2e/datenpfad.spec.ts
 tests/e2e/konto.ts
 tests/e2e/datenpfad-runde2.spec.ts
+# I0-07 Einfache Messung (#12)
+tests/unit/messung-kalibrierung.test.ts
+tests/unit/messung-faelligkeit.test.ts
+tests/unit/messung-eingabe.test.ts
+tests/unit/messung-erfassung.test.ts
+tests/unit/messung-ort-route.test.ts
+tests/unit/messung-buendel.test.ts
+tests/e2e/messung.spec.ts
+tests/e2e/orte.ts
