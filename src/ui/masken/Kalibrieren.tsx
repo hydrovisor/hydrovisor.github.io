@@ -1,6 +1,7 @@
 // Messgerät kalibrieren (Regal, Plan 12; Konzept 5.6, R5.2, R10.3): Gegenprobe EC über den Ziffernblock,
 // ausserhalb von u_EC kein Speichern (A9). Datenart echt, aus der Route demo oder test.
 import { useRef, useState } from 'react';
+import type { Schritt } from '../../domain/datenpfad/erfassung.ts';
 import { neueClientId, schreiben, type Schreibergebnis } from '../../daten/schreiben.ts';
 import { gegenprobeOk, GEGENPROBE_SOLL, kalibrierungVorgang } from '../../domain/kalibrierung/erfassung.ts';
 import { kalibrierStand, type Datenart } from '../../domain/kalibrierung/stand.ts';
@@ -25,6 +26,8 @@ export function Kalibrieren({ datenart = 'echt' }: { datenart?: Datenart }) {
   const [fertig, setFertig] = useState<{ clientId: string; gueltigBis: string }>();
   const [rueckgaengig, setRueckgaengig] = useState(false);
   const bindung = useRef<Erfassungsbindung | undefined>(undefined);
+  // der Vorgang bleibt bei jeder Wiederholung gleich, auch die Dauer (TO2, Runde 1 Befund 1)
+  const vorgangFuer = useRef<{ schluessel: string; schritt: Schritt } | undefined>(undefined);
   const [geoeffnet] = useState(() => Date.now());
 
   const gegenprobe = messwerte(eingabe).ec;
@@ -35,26 +38,26 @@ export function Kalibrieren({ datenart = 'echt' }: { datenart?: Datenart }) {
   async function speichern() {
     if (!geraet || gegenprobe === null || !ok) return;
     const jetzt = jetztZeit();
-    bindung.current = erfassungBinden(
-      bindung.current,
-      JSON.stringify({ gegenprobe, nachReinigung }),
-      neueClientId,
-      jetzt,
-    );
+    const schluessel = JSON.stringify({ gegenprobe, nachReinigung });
+    bindung.current = erfassungBinden(bindung.current, schluessel, neueClientId, jetzt);
     const vorher = kalibrierStand(daten, { messgeraetId: geraet.id, datenart }, jetzt, ZEITZONE);
-    const vorgang = kalibrierungVorgang(
-      {
-        messgeraetId: geraet.id,
-        datenart,
-        gegenprobeEc: gegenprobe,
-        nachReinigung,
-        ...(vorher.art === 'faellig' || vorher.art === 'ueberfaellig'
-          ? { warFaelligAm: vorher.faelligAm }
-          : {}),
-        dauerS: Math.round((jetzt.getTime() - geoeffnet) / 1000),
-      },
-      bindung.current,
-    );
+    const vorgang =
+      vorgangFuer.current?.schluessel === schluessel
+        ? vorgangFuer.current.schritt
+        : kalibrierungVorgang(
+            {
+              messgeraetId: geraet.id,
+              datenart,
+              gegenprobeEc: gegenprobe,
+              nachReinigung,
+              ...(vorher.art === 'faellig' || vorher.art === 'ueberfaellig'
+                ? { warFaelligAm: vorher.faelligAm }
+                : {}),
+              dauerS: Math.round((jetzt.getTime() - geoeffnet) / 1000),
+            },
+            bindung.current,
+          );
+    vorgangFuer.current = { schluessel, schritt: vorgang };
     setSendet(true);
     const antwort = await schreiben(vorgang, { jetzt, zeitzone: ZEITZONE });
     setSendet(false);
@@ -114,7 +117,11 @@ export function Kalibrieren({ datenart = 'echt' }: { datenart?: Datenart }) {
         <p className="hv-messen-bestaetigung hv-num">
           {rueckgaengig ? 'Rückgängig gemacht' : `Kalibriert · gültig bis ${tagKurz(fertig.gueltigBis)}`}
         </p>
-        {fehler ? <Notice tone="danger">{fehler.text}</Notice> : null}
+        {fehler ? (
+          <Notice kompakt tone="danger">
+            {fehler.text}
+          </Notice>
+        ) : null}
         {rueckgaengig ? null : (
           <Button variant="secondary" block onClick={() => void zuruecknehmen()}>
             Rückgängig machen
@@ -134,6 +141,7 @@ export function Kalibrieren({ datenart = 'echt' }: { datenart?: Datenart }) {
       {!geraet ? <p>Kein Messgerät erfasst</p> : null}
       {fehler ? (
         <Notice
+          kompakt
           tone="danger"
           action={
             fehler.wiederholbar ? (
@@ -145,13 +153,17 @@ export function Kalibrieren({ datenart = 'echt' }: { datenart?: Datenart }) {
         >
           {fehler.text}
         </Notice>
+      ) : ergebnis?.status === 'abweichend' ? (
+        <Notice kompakt tone="warn">
+          {`Schon gespeichert mit Gegenprobe ${String(ergebnis.vorhanden['gegenprobe_ec'])}; deine Änderung ist nicht übernommen.`}
+        </Notice>
       ) : gegenprobe !== null && !ok ? (
-        <Notice tone="warn">
+        <Notice kompakt tone="warn">
           {`Gegenprobe ${gegenprobe.toFixed(2)} ausserhalb ${min}–${max}: Sonde spülen und neu kalibrieren`}
         </Notice>
       ) : null}
       <div className="hv-messen-kacheln">
-        <MesswertKachel bezeichnung="Gegenprobe EC" wert={eingabe.text.ec} aktiv />
+        <MesswertKachel kompakt bezeichnung="Gegenprobe EC" wert={eingabe.text.ec} aktiv />
       </div>
       <div className="hv-messen-wahl" role="group" aria-label="nach Reinigung">
         <span>nach Reinigung</span>

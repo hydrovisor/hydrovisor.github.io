@@ -2,6 +2,7 @@
 // Bewertung und Ergebniszone folgen mit I1b; hier nur Erfassung, Kennzeichen «unsicher» und Rückgängig.
 import { useRef, useState, type ReactNode } from 'react';
 import { neueClientId, schreiben, type Schreibergebnis } from '../../daten/schreiben.ts';
+import type { Schritt } from '../../domain/datenpfad/erfassung.ts';
 import { istUnsicher, kalibrierStand } from '../../domain/kalibrierung/stand.ts';
 import {
   eingabeStart,
@@ -75,6 +76,8 @@ function Messmaske({ ort }: { ort: Ort }) {
   const [gespeichert, setGespeichert] = useState<{ zeit: string; clientId: string; unsicher: boolean }>();
   const [rueckgaengig, setRueckgaengig] = useState(false);
   const bindung = useRef<Erfassungsbindung | undefined>(undefined);
+  // der Vorgang einer Eingabe bleibt bei jeder Wiederholung gleich, auch Dauer und Fälligkeit (TO2, Runde 1 Befund 1)
+  const vorgangFuer = useRef<{ schluessel: string; schritt: Schritt } | undefined>(undefined);
   const ersterTipp = useRef<number | undefined>(undefined);
 
   const daten = kalibrierdaten(buendel);
@@ -104,6 +107,7 @@ function Messmaske({ ort }: { ort: Ort }) {
     const jetztSenden = new Date(Date.now());
     const schluessel = JSON.stringify({ w: messwerte(eingabe), fuellstand });
     bindung.current = erfassungBinden(bindung.current, schluessel, neueClientId, jetztSenden);
+    const giltAb = new Date(bindung.current.giltAb);
     const faelligkeit = messFaelligkeit(
       {
         platzId: ort.platzId,
@@ -111,34 +115,45 @@ function Messmaske({ ort }: { ort: Ort }) {
         ...zustandVon(buendel, ort.platzId),
       },
       messungenIm(buendel),
-      jetztSenden,
+      giltAb,
       ZEITZONE,
     );
-    const vorgang = messungVorgang(
-      eingabe,
-      {
-        platzId: ort.platzId,
-        messgeraetId: geraet.id,
-        messart: ort.rolle === 'messstelle' ? 'w' : 'aufgabe',
-        ...(ort.betriebsart ? { betriebsart: ort.betriebsart } : {}),
-        ...(fuellstand ? { fuellstand } : {}),
-        uEc: geraet.u_ec,
-        uPh: geraet.u_ph,
-        ...(faelligkeit.art === 'offen' && faelligkeit.faellig
-          ? { warFaelligAm: faelligkeit.faelligAm }
-          : {}),
-        ...(ersterTipp.current !== undefined
-          ? { erfassungsdauerS: Math.round((jetztSenden.getTime() - ersterTipp.current) / 1000) }
-          : {}),
-      },
-      bindung.current,
-    );
+    const vorgang =
+      vorgangFuer.current?.schluessel === schluessel
+        ? vorgangFuer.current.schritt
+        : messungVorgang(
+            eingabe,
+            {
+              platzId: ort.platzId,
+              messgeraetId: geraet.id,
+              messart: ort.rolle === 'messstelle' ? 'w' : 'aufgabe',
+              ...(ort.betriebsart ? { betriebsart: ort.betriebsart } : {}),
+              ...(fuellstand ? { fuellstand } : {}),
+              uEc: geraet.u_ec,
+              uPh: geraet.u_ph,
+              ...(faelligkeit.art === 'offen' && faelligkeit.faellig
+                ? { warFaelligAm: faelligkeit.faelligAm }
+                : {}),
+              ...(ersterTipp.current !== undefined
+                ? { erfassungsdauerS: Math.round((jetztSenden.getTime() - ersterTipp.current) / 1000) }
+                : {}),
+            },
+            bindung.current,
+          );
+    vorgangFuer.current = { schluessel, schritt: vorgang };
     setSendet(true);
     const antwort = await schreiben(vorgang, { jetzt: jetztSenden, zeitzone: ZEITZONE });
     setSendet(false);
     setErgebnis(antwort);
     if (antwort.status === 'gespeichert')
-      setGespeichert({ zeit: uhrzeit(jetztSenden, ZEITZONE), clientId: bindung.current.clientId, unsicher });
+      setGespeichert({
+        zeit: uhrzeit(giltAb, ZEITZONE),
+        clientId: bindung.current.clientId,
+        // «unsicher» zum Zeitpunkt der Messung (gilt_ab), nicht des Öffnens (Runde 1 Befund 2)
+        unsicher: geraet
+          ? istUnsicher({ messgeraetId: geraet.id, datenart: ort.datenart, giltAb }, daten, ZEITZONE)
+          : true,
+      });
   }
 
   async function zuruecknehmen() {
@@ -167,7 +182,11 @@ function Messmaske({ ort }: { ort: Ort }) {
         <p className="hv-messen-bestaetigung hv-num">
           {rueckgaengig ? 'Rückgängig gemacht' : `Gespeichert ${gespeichert.zeit} · ${werte.join(' · ')}`}
         </p>
-        {fehler ? <Notice tone="danger">{fehler.text}</Notice> : null}
+        {fehler ? (
+          <Notice kompakt tone="danger">
+            {fehler.text}
+          </Notice>
+        ) : null}
         {rueckgaengig ? null : (
           <Button variant="secondary" block onClick={() => void zuruecknehmen()}>
             Rückgängig machen
@@ -190,6 +209,7 @@ function Messmaske({ ort }: { ort: Ort }) {
       />
       {fehler ? (
         <Notice
+          kompakt
           tone="danger"
           action={
             fehler.wiederholbar ? (
@@ -202,9 +222,18 @@ function Messmaske({ ort }: { ort: Ort }) {
           {fehler.text}
         </Notice>
       ) : ergebnis?.status === 'abweichend' ? (
-        <Notice tone="warn">Schon gespeichert; deine Änderung ist nicht übernommen.</Notice>
+        <Notice kompakt tone="warn">
+          {`Schon gespeichert mit ${[
+            ergebnis.vorhanden['ph'] != null ? `pH ${String(ergebnis.vorhanden['ph'])}` : '',
+            ergebnis.vorhanden['ec'] != null ? `EC ${String(ergebnis.vorhanden['ec'])}` : '',
+            ergebnis.vorhanden['temperatur'] != null ? `${String(ergebnis.vorhanden['temperatur'])} °C` : '',
+          ]
+            .filter(Boolean)
+            .join(', ')}; deine Änderung ist nicht übernommen.`}
+        </Notice>
       ) : unsicher ? (
         <Notice
+          kompakt
           tone="warn"
           action={
             <a className="hv-btn hv-btn-secondary hv-btn-compact" href={kalibrierLink}>
@@ -223,6 +252,7 @@ function Messmaske({ ort }: { ort: Ort }) {
       >
         {felder.map((g) => (
           <MesswertKachel
+            kompakt
             key={g}
             bezeichnung={BEZEICHNUNG[g]}
             wert={eingabe.text[g]}

@@ -17,7 +17,9 @@ import { NeueVersionHinweis } from '../NeueVersion.tsx';
 import { hashZu } from '../router.ts';
 
 /** Text der Messfälligkeit in der Ortskachel (Übergang bis zu den Karten in I1b) */
-function faelligText(f: Messfaelligkeit): string {
+function faelligText(f: Messfaelligkeit, rolle: string): string {
+  // die Messstelle W hat bis I1b-02 keine eigene Fälligkeit (Runde 1 Befund 9)
+  if (rolle === 'messstelle') return 'Messstelle';
   if (f.art === 'keine')
     return f.grund === 'leer' ? 'leer · bereit' : f.grund === 'ruht' ? 'ruht' : 'kein Gefäss';
   if (!f.faellig) return `nächste Messung ${tagKurz(f.faelligAm)}`;
@@ -118,6 +120,7 @@ function Uebersicht({ jetzt }: { jetzt: Date }) {
                     jetzt,
                     ZEITZONE,
                   ),
+                  o.rolle,
                 ),
               ]}
               onClick={() => {
