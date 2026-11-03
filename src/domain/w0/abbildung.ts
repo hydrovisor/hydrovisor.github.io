@@ -509,6 +509,9 @@ export function ladeplan(dateien: W0Dateien, auswahl: Auswahl, konstanten: SeedK
   // Sortenstamm wartet auf art.csv (A2)
   const mitSorten = hat('sorten') && hat('art');
   if (hat('sorten') && !hat('art')) hinweise.push('Sortenstamm wartet auf art.csv');
+  // A12: ohne profilwert.csv prüft der Validator V13 nicht
+  if (hat('kulturgruppe') && !hat('profilwert'))
+    hinweise.push('Kulturgruppen ohne Mindestzeilen (profilwert.csv nicht geliefert, V13 nicht geprüft)');
   const s = mitSorten
     ? sorten(dateien)
     : { sorte: [], saatgut: [], profilwert: [], herkunft: [], quelle: [] };

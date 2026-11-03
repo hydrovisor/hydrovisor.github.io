@@ -531,7 +531,11 @@ class Pruefung {
     });
   }
 
-  /** V13: Mindestzeilen je Kulturgruppe nach 4.4.2 */
+  /**
+   * V13: Mindestzeilen je Kulturgruppe nach 4.4.2. (A22) wechselmerkmal entfällt in der letzten anwendbaren
+   * Phase wie bei den Pflichtgrössen (Abschnitt 9), obwohl 4.4.2 «für jede anwendbare Phase» sagt: in der
+   * letzten Phase gibt es keinen Wechsel mehr, nach dem gefragt werden könnte.
+   */
   mindestzeilen(): void {
     if (this.kandidaten || !this.vorhanden('profilwert') || !this.vorhanden('kulturgruppe')) return;
     const pw = zeilen(this.d, 'profilwert').filter((z) => wert(z, 'ebene') === 'kulturgruppe');

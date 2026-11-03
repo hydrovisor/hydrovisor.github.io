@@ -18,6 +18,7 @@ export interface SeedKonstanten {
   }[];
   kStartwerte: { produktId: string; wert: number }[];
   messgeraet: { modell: string; dezimalen: number; uEc: number; uPh: number };
+  einstellung: { festeKalibriertermine: string[]; stationsgrenzeAb: string };
   auswertungFenster: { name: string; von: Date; bis: Date };
 }
 
@@ -71,6 +72,11 @@ export const seedKonstanten: SeedKonstanten = {
   ],
   // Q12: fest mS/cm, zwei Dezimalen; Unsicherheit bis zur Geräteprüfung 0.10 (Kapitel 17)
   messgeraet: { modell: 'Aquamaster P160 Pro2', dezimalen: 2, uEc: 0.1, uPh: 0.1 },
+  // UC0, 7.1: feste Kalibriertermine und Grenze der Stationen; legt der Seed nur an, wenn einstellung leer ist (A7)
+  einstellung: {
+    festeKalibriertermine: ['2027-01-01', '2027-01-31', '2027-02-24', '2027-03-24'],
+    stationsgrenzeAb: '2027-02-04',
+  },
   // 14.4: 7.1.2027 00:00 bis 1.4.2027 00:00 Europe/Zurich, halboffen (MEZ bzw. MESZ ab 28.3.2027)
   auswertungFenster: {
     name: 'testbetrieb',

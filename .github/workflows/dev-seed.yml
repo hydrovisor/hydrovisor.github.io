@@ -51,6 +51,8 @@ jobs:
           git fetch --no-tags --depth=1 "https://github.com/${GITHUB_REPOSITORY}.git" "refs/heads/$ZWEIG"
           rm -rf data
           git checkout FETCH_HEAD -- data
+          # Commit der Daten für die Fassungen (8.3): GITHUB_SHA ist main, die Daten stammen aus dem Zweig
+          echo "SEED_DATEN_SHA=$(git rev-parse FETCH_HEAD)" >> "$GITHUB_ENV"
           find data -name '*.csv' | sort
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with: { node-version: 22, cache: npm }

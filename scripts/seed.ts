@@ -36,7 +36,12 @@ function befehl(programm: string, args: string[]): string {
 }
 
 function commit(): string {
-  if (process.env['GITHUB_SHA']) return process.env['GITHUB_SHA'];
+  // dev-seed.yml lädt data/ aus einem Paketzweig: Commit des Laufs und Commit der Daten (8.3, Prüferbefund 5)
+  const daten = process.env['SEED_DATEN_SHA'];
+  if (process.env['GITHUB_SHA'])
+    return daten && daten !== process.env['GITHUB_SHA']
+      ? `${process.env['GITHUB_SHA']}+data@${daten}`
+      : process.env['GITHUB_SHA'];
   const sha = befehl('git', ['rev-parse', 'HEAD']).trim();
   return befehl('git', ['status', '--porcelain', '--', 'data']).trim() ? `${sha}+lokal` : sha;
 }

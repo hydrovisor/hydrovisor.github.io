@@ -253,32 +253,39 @@ class Skript {
     );
   }
 
-  /** Packung je Sorte nur beim ersten Laden (A7) */
+  /** Packung je Sorte nur beim ersten Laden; spätere Dateiänderungen nur als Hinweis (A7) */
   saatgut(): void {
     const daten = this.plan.tabellen.saatgut;
     if (daten.length === 0) return;
-    const id = `md5('seed:saatgut:' || (e ->> 'sorte_key'))::uuid`;
     this.add(
       `-- ${DATEI.sorten} → saatgut (nur beim ersten Laden, A7)`,
+      `drop table if exists pg_temp.hv_saatgut;`,
+      `create temp table hv_saatgut on commit drop as`,
+      `select md5('seed:saatgut:' || (e ->> 'sorte_key'))::uuid as client_id, e ->> 'sorte_key' as sorte_key,`,
+      `       (e ->> 'kaufdatum')::date as kaufdatum, (e ->> 'bestand_korn')::integer as bestand_korn,`,
+      `       (e ->> 'keimfaehigkeit_packung')::numeric as keimfaehigkeit_packung`,
+      `  from jsonb_array_elements(${json(daten)}) e;`,
+      `insert into pg_temp.hv_seed_hinweis (text)`,
+      `select 'Packung ' || s.sorte_key || ' in der Datei geändert, nicht geladen (gehört nach dem ersten Laden Tim)'`,
+      `  from pg_temp.hv_saatgut s join public.saatgut g on g.client_id = s.client_id`,
+      ` where row(s.kaufdatum, s.bestand_korn, s.keimfaehigkeit_packung)`,
+      `       is distinct from row(g.kaufdatum, g.bestand_korn, g.keimfaehigkeit_packung);`,
       `insert into public.saatgut (client_id, sorte_id, kaufdatum, bestand_korn, keimfaehigkeit_packung, app_version)`,
-      `select ${id}, sk.id, (e ->> 'kaufdatum')::date, (e ->> 'bestand_korn')::integer,`,
-      `       (e ->> 'keimfaehigkeit_packung')::numeric, ${this.V}`,
-      `  from jsonb_array_elements(${json(daten)}) e join public.sorte_schluessel sk on sk.sorte_key = e ->> 'sorte_key'`,
+      `select s.client_id, sk.id, s.kaufdatum, s.bestand_korn, s.keimfaehigkeit_packung, ${this.V}`,
+      `  from pg_temp.hv_saatgut s join public.sorte_schluessel sk on sk.sorte_key = s.sorte_key`,
       `on conflict (client_id) do nothing;`,
     );
     const e = this.plan.erwartet.find((x) => x.datei === DATEI.sorten && x.tabelle === 'saatgut');
-    if (e) {
-      const keys = daten.map((x) => `seed:saatgut:${String(x['sorte_key'])}`);
+    // Seed-Packungen ohne Storno-Bedingung: eine von Tim stornierte Packung bleibt gezählt (Prüferbefund 2)
+    if (e)
       this.zaehl.push(
         this.zaehlPruefung(
           e.datei,
           e.tabelle,
           e.anzahl,
-          `(select count(*) from public.saatgut g where g.storniert_am is null and g.client_id in` +
-            ` (select md5(x)::uuid from jsonb_array_elements_text(${json(keys)}) x))`,
+          `(select count(*) from public.saatgut g where g.client_id in (select s.client_id from pg_temp.hv_saatgut s))`,
         ),
       );
-    }
   }
 
   konstanten(): void {
@@ -324,13 +331,33 @@ class Skript {
       ['von', 'bis'],
     );
     const m = k.messgeraet;
+    const ein = k.einstellung;
     this.add(
-      `-- Messgerät und Einstellungen nur, wenn leer; danach gehören sie Tim (A7)`,
+      `-- Messgerät und Einstellungen nur, wenn leer; danach gehören sie Tim, Abweichungen nur als Hinweis (A7)`,
+      `drop table if exists pg_temp.hv_messgeraet;`,
+      `create temp table hv_messgeraet on commit drop as`,
+      `select e ->> 'modell' as modell, (e ->> 'dezimalen')::smallint as dezimalen, (e ->> 'u_ec')::numeric as u_ec,`,
+      `       (e ->> 'u_ph')::numeric as u_ph`,
+      `  from (select ${json({ modell: m.modell, dezimalen: m.dezimalen, u_ec: m.uEc, u_ph: m.uPh })} as e) x;`,
+      `insert into pg_temp.hv_seed_hinweis (text)`,
+      `select 'Messgerät weicht von der Seed-Konstante ab (bleibt, gehört Tim)' where exists (select 1 from public.messgeraet)`,
+      `   and not exists (select 1 from public.messgeraet g join pg_temp.hv_messgeraet s`,
+      `                    on (g.modell, g.dezimalen, g.u_ec, g.u_ph) = (s.modell, s.dezimalen, s.u_ec, s.u_ph));`,
       `insert into public.messgeraet (modell, dezimalen, u_ec, u_ph, app_version)`,
-      `select e ->> 'modell', (e ->> 'dezimalen')::smallint, (e ->> 'u_ec')::numeric, (e ->> 'u_ph')::numeric, ${this.V}`,
-      `  from (select ${json({ modell: m.modell, dezimalen: m.dezimalen, u_ec: m.uEc, u_ph: m.uPh })} as e) x`,
+      `select s.modell, s.dezimalen, s.u_ec, s.u_ph, ${this.V} from pg_temp.hv_messgeraet s`,
       ` where not exists (select 1 from public.messgeraet);`,
-      `insert into public.einstellung (app_version) select ${this.V} where not exists (select 1 from public.einstellung);`,
+      `drop table if exists pg_temp.hv_einstellung;`,
+      `create temp table hv_einstellung on commit drop as`,
+      `select array(select jsonb_array_elements_text(e -> 'feste_kalibriertermine'))::date[] as feste_kalibriertermine,`,
+      `       (e ->> 'stationsgrenze_ab')::date as stationsgrenze_ab`,
+      `  from (select ${json({ feste_kalibriertermine: ein.festeKalibriertermine, stationsgrenze_ab: ein.stationsgrenzeAb })} as e) x;`,
+      `insert into pg_temp.hv_seed_hinweis (text)`,
+      `select 'Einstellungen (feste Kalibriertermine, Stationsgrenze) weichen von der Seed-Konstante ab (bleiben, gehören Tim)'`,
+      `  from public.einstellung g, pg_temp.hv_einstellung s`,
+      ` where (g.feste_kalibriertermine, g.stationsgrenze_ab) is distinct from (s.feste_kalibriertermine, s.stationsgrenze_ab);`,
+      `insert into public.einstellung (feste_kalibriertermine, stationsgrenze_ab, app_version)`,
+      `select s.feste_kalibriertermine, s.stationsgrenze_ab, ${this.V} from pg_temp.hv_einstellung s`,
+      ` where not exists (select 1 from public.einstellung);`,
       `-- k-Startwerte je Komponente (R4.1, G6), feste client_id`,
       `insert into public.k_faktor (client_id, produkt_id, wert, gilt_ab, quelle, app_version)`,
       `select md5('seed:k_faktor:' || (e ->> 'produkt_id'))::uuid, e ->> 'produkt_id', (e ->> 'wert')::numeric,`,
@@ -394,7 +421,8 @@ class Skript {
       `    from pg_temp.hv_seed_bericht b), '[]'::jsonb),`,
       `  'nichtGeladen', ${json(p.nichtGeladen)},`,
       `  'fehlendeDateien', ${json(p.fehlendeDateien)},`,
-      `  'hinweise', ${json(p.hinweise)},`,
+      `  'hinweise', ${json(p.hinweise)} || coalesce((select jsonb_agg(h.text order by h.nr)`,
+      `    from pg_temp.hv_seed_hinweis h), '[]'::jsonb),`,
       `  'konflikte', ${json(gegenprobe)} || coalesce((select jsonb_agg(jsonb_build_object('art', k.art,`,
       `    'zeileId', k.zeile_id, 'text', k.text) order by k.nr) from pg_temp.hv_seed_konflikt k), '[]'::jsonb),`,
       `  'vollstaendigkeit', coalesce((select jsonb_agg(jsonb_build_object('sorte', sk.sorte_key,`,
@@ -458,7 +486,8 @@ export function ladeskript(plan: Ladeplan, lauf: Lauf): Ladeskript {
   const vorbereitung = zeilen(
     `create temp table if not exists hv_seed_bericht (nr serial, datei text, tabelle text, geladen int, geaendert int, geschlossen int);`,
     `create temp table if not exists hv_seed_konflikt (nr serial, art text, zeile_id text, text text);`,
-    `truncate pg_temp.hv_seed_bericht, pg_temp.hv_seed_konflikt;`,
+    `create temp table if not exists hv_seed_hinweis (nr serial, text text);`,
+    `truncate pg_temp.hv_seed_bericht, pg_temp.hv_seed_konflikt, pg_temp.hv_seed_hinweis;`,
   );
   const kern = s.text();
   const berichtAbfrage = `select ${bericht} as bericht;`;
