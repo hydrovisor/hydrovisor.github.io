@@ -21,6 +21,8 @@ export interface Buendelteil {
   gueltig?: boolean;
   /** nur Zeilen mit gilt_ab ab fensterBeginn(jetzt, tage) */
   fensterTage?: number;
+  /** nur diese Werte der Spalte typ (Ereignisse) */
+  typen?: readonly string[];
 }
 
 const tabelle = (
@@ -69,6 +71,8 @@ export const BUENDEL_TEILE: readonly Buendelteil[] = [
   sicht('v_kalibrierung_faellig', ['messgeraet_id', 'datenart']),
   tabelle('messgeraet'),
   tabelle('aufschub', { ohneStorno: true }),
+  // Geräte-Ereignisse für Kalibrierstand und «unsicher» ohne Netz (R10.3, R5.2; Plan 12)
+  tabelle('ereignis', { ohneStorno: true, typen: ['sonde_gereinigt', 'als_unsicher_markiert'] }),
   // ohne telefon_vertretung und email_rueckfall: keine Personendaten im Gerätespeicher, die keine Maske braucht (Ü3)
   {
     name: 'einstellung',
@@ -184,6 +188,7 @@ interface Abfrage extends PromiseLike<Antwort> {
   select(spalten: string): Abfrage;
   is(spalte: string, wert: null): Abfrage;
   gte(spalte: string, wert: string): Abfrage;
+  in(spalte: string, werte: readonly string[]): Abfrage;
   order(spalte: string, optionen: { ascending: boolean }): Abfrage;
   range(von: number, bis: number): Abfrage;
   abortSignal(signal: AbortSignal): Abfrage;
@@ -199,6 +204,7 @@ export const supabaseBuendeladapter: Buendeladapter = {
     let abfrage = ungebunden.from(teil.name).select(teil.spalten);
     if (teil.ohneStorno) abfrage = abfrage.is('storniert_am', null);
     if (teil.gueltig) abfrage = abfrage.is('gueltig_bis', null);
+    if (teil.typen) abfrage = abfrage.in('typ', teil.typen);
     if (teil.fensterTage !== undefined)
       abfrage = abfrage.gte('gilt_ab', fensterBeginn(kontext.jetzt, teil.fensterTage, kontext.zeitzone));
     for (const spalte of teil.ordnung) abfrage = abfrage.order(spalte, { ascending: true });

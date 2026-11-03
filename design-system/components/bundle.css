@@ -208,3 +208,6 @@ button.hv-tile { cursor: pointer; touch-action: manipulation; }
 .hv-loch-reserviert { border-style: dashed; border-color: var(--brand); }
 .hv-loch-gewaehlt { background: var(--brand); border-color: var(--brand); color: var(--on-brand); }
 [data-density="regal"] .hv-loch { width: var(--size-touch-regal); height: var(--size-touch-regal); min-width: var(--size-touch-regal); }
+
+/* Echo des Ziffernblocks nimmt ohne Inhalt keinen Platz ein (Messmaske ohne Scrollen, Plan 12) */
+.hv-numpad-echo:empty { display: none; }
