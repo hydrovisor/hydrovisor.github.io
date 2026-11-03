@@ -5,7 +5,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 -- Die Datenbank läuft in UTC wie in Supabase; alle Zeitpunkte stehen ausdrücklich in Europe/Zurich.
 set local timezone to 'UTC';
-select plan(43);
+select plan(52);
 
 -- ---------------------------------------------------------------------
 -- Fixtures als postgres
@@ -121,6 +121,42 @@ select is(format('unsicher %s, fällig %s', pg_temp.unsicher('f3000000-0000-4000
                             where messgeraet_id = 'f3000000-0000-4000-8000-000000000202' and datenart = 'echt'),
                           'Erstkalibrierung')),
           'unsicher true, fällig Erstkalibrierung', 'TZ4 nie kalibriert: Messung unsicher, Erstkalibrierung');
+
+-- 30-Tage-Regel (R10.3) und fester Termin (R5.2) getrennt; feste Termine aus der Fixture oben:
+-- 1.1., 31.1., 24.2., 24.3. Gerät …206: Kalibrierung 25.3., kein fester Termin danach → 25.3. + 30 = 24.4.
+-- Gerät …207: Kalibrierung 2.2., fester Termin 24.2. vor 2.2. + 30 = 4.3.
+insert into public.messgeraet (id, modell, app_version) values
+  ('f3000000-0000-4000-8000-000000000206', 'TZ-30-Tage', 'pgtap'),
+  ('f3000000-0000-4000-8000-000000000207', 'TZ-Termin', 'pgtap');
+insert into public.kalibrierung (client_id, messgeraet_id, datenart, gilt_ab, app_version) values
+  (gen_random_uuid(), 'f3000000-0000-4000-8000-000000000206', 'echt', '2027-03-25 09:00 Europe/Zurich', 'pgtap'),
+  (gen_random_uuid(), 'f3000000-0000-4000-8000-000000000207', 'echt', '2027-02-02 09:00 Europe/Zurich', 'pgtap');
+insert into public.messung (id, client_id, platz_id, messgeraet_id, messart, ec, gilt_ab, app_version) values
+  ('f3000000-0000-4000-8000-000000000405', gen_random_uuid(), 'f3000000-0000-4000-8000-000000000311',
+   'f3000000-0000-4000-8000-000000000206', 'aufgabe', 1.2, '2027-04-24 23:30 Europe/Zurich', 'pgtap'),
+  ('f3000000-0000-4000-8000-000000000406', gen_random_uuid(), 'f3000000-0000-4000-8000-000000000311',
+   'f3000000-0000-4000-8000-000000000206', 'aufgabe', 1.2, '2027-04-25 00:30 Europe/Zurich', 'pgtap'),
+  ('f3000000-0000-4000-8000-000000000407', gen_random_uuid(), 'f3000000-0000-4000-8000-000000000311',
+   'f3000000-0000-4000-8000-000000000207', 'aufgabe', 1.2, '2027-02-24 23:30 Europe/Zurich', 'pgtap'),
+  ('f3000000-0000-4000-8000-000000000408', gen_random_uuid(), 'f3000000-0000-4000-8000-000000000311',
+   'f3000000-0000-4000-8000-000000000207', 'aufgabe', 1.2, '2027-02-25 00:30 Europe/Zurich', 'pgtap');
+
+select is((select array_to_string(feste_kalibriertermine, ',') from public.einstellung),
+          '2027-01-01,2027-01-31,2027-02-24,2027-03-24', 'R5.2 feste Kalibriertermine der Fixture (Grundlage der Fälle unten)');
+select is((select faellig_am::text from public.v_kalibrierung_faellig
+            where messgeraet_id = 'f3000000-0000-4000-8000-000000000206' and datenart = 'echt'),
+          '2027-04-24', 'R10.3 Kalibrierung 25.3. ohne folgenden festen Termin: fällig 24.4. (30 Tage)');
+select is(pg_temp.unsicher('f3000000-0000-4000-8000-000000000405'), 'false',
+          'R10.3 Kalibrierung 25.3., Messung 24.4. 23:30 (Tag 30) nicht unsicher');
+select is(pg_temp.unsicher('f3000000-0000-4000-8000-000000000406'), 'true',
+          'R10.3 Kalibrierung 25.3., Messung 25.4. 00:30 (Tag 31) unsicher');
+select is((select faellig_am::text from public.v_kalibrierung_faellig
+            where messgeraet_id = 'f3000000-0000-4000-8000-000000000207' and datenart = 'echt'),
+          '2027-02-24', 'R5.2 Kalibrierung 2.2.: fällig am festen Termin 24.2., nicht am 4.3.');
+select is(pg_temp.unsicher('f3000000-0000-4000-8000-000000000407'), 'false',
+          'R5.2 Kalibrierung 2.2., Messung 24.2. 23:30 (fester Termin) nicht unsicher');
+select is(pg_temp.unsicher('f3000000-0000-4000-8000-000000000408'), 'true',
+          'R5.2 Kalibrierung 2.2., Messung 25.2. 00:30 nach dem festen Termin unsicher (vor Tag 30)');
 
 -- ---------------------------------------------------------------------
 -- smoke v_sollwert: Vererbung Sorte → Art → Kulturgruppe → Standard, Klasse D (R1.3)
@@ -457,6 +493,56 @@ select is((select string_agg(kennung || ' Loch ' || loch_nr || ' ausser Heim ' |
              from public.v_netztopf_platz
             where netztopf_id in ('f3000000-0000-4000-8000-000000000931', 'f3000000-0000-4000-8000-000000000932')),
           '2.5.1 Loch 2 ausser Heim true, 2.5.2 Loch 1 ausser Heim true', 'R8.3 Tausch setzt beide Töpfe um');
+
+-- ---------------------------------------------------------------------
+-- v_keimrate nur echt, nur eingehaltene Keimtemperatur (8.1 Regel 7, R12.2; 06_tests.md Abschnitt 9)
+-- Packung …a01 (Keimfähigkeit 0.80). Gezählt: …a21 echt, eingehalten, 10 gesät, 9 gekeimt.
+-- Nicht gezählt: …a22 echt, keimtemp_eingehalten false; …a23 echt, ohne Angabe; …a24 Demo-Anzuchtort, eingehalten.
+-- Erwartet 10/9, geglättet (9 + 10 · 0.80) / (10 + 10) = 0.85.
+-- ---------------------------------------------------------------------
+
+insert into public.platz (id, anlage_id, kennung, rolle, app_version)
+  values ('f3000000-0000-4000-8000-000000000334', 'f3000000-0000-4000-8000-000000000302', 'A1', 'anzuchtort', 'pgtap');
+insert into public.saatgut (id, sorte_id, keimfaehigkeit_packung, app_version)
+  values ('f3000000-0000-4000-8000-000000000a01', 'f3000000-0000-4000-8000-000000000101', 0.80, 'pgtap');
+insert into public.satz (id, client_id, sorte_id, saatgut_id, kulturform, anzuchtort_platz_id, anzahl_schwaemme,
+                         samen_je_schwamm, saatdatum, gilt_ab, app_version) values
+  ('f3000000-0000-4000-8000-000000000a11', gen_random_uuid(), 'f3000000-0000-4000-8000-000000000101',
+   'f3000000-0000-4000-8000-000000000a01', 'schnitt', 'f3000000-0000-4000-8000-000000000322', 3, 10, '2027-02-01',
+   '2027-02-01 09:00 Europe/Zurich', 'pgtap'),
+  ('f3000000-0000-4000-8000-000000000a12', gen_random_uuid(), 'f3000000-0000-4000-8000-000000000101',
+   'f3000000-0000-4000-8000-000000000a01', 'schnitt', 'f3000000-0000-4000-8000-000000000334', 1, 10, '2027-02-01',
+   '2027-02-01 09:00 Europe/Zurich', 'pgtap');
+insert into public.pflanzung (id, client_id, satz_id, gilt_ab, app_version) values
+  ('f3000000-0000-4000-8000-000000000a21', gen_random_uuid(), 'f3000000-0000-4000-8000-000000000a11', '2027-02-01 09:00 Europe/Zurich', 'pgtap'),
+  ('f3000000-0000-4000-8000-000000000a22', gen_random_uuid(), 'f3000000-0000-4000-8000-000000000a11', '2027-02-01 09:00 Europe/Zurich', 'pgtap'),
+  ('f3000000-0000-4000-8000-000000000a23', gen_random_uuid(), 'f3000000-0000-4000-8000-000000000a11', '2027-02-01 09:00 Europe/Zurich', 'pgtap'),
+  ('f3000000-0000-4000-8000-000000000a24', gen_random_uuid(), 'f3000000-0000-4000-8000-000000000a12', '2027-02-01 09:00 Europe/Zurich', 'pgtap');
+insert into public.ereignis (client_id, typ, pflanzung_id, daten, gilt_ab, app_version) values
+  (gen_random_uuid(), 'keimung', 'f3000000-0000-4000-8000-000000000a21',
+   '{"samen_gesaet":10,"samen_gekeimt":9,"keimtemp_eingehalten":true}', '2027-02-08 10:00 Europe/Zurich', 'pgtap'),
+  (gen_random_uuid(), 'keimung', 'f3000000-0000-4000-8000-000000000a22',
+   '{"samen_gesaet":10,"samen_gekeimt":0,"keimtemp_eingehalten":false}', '2027-02-08 10:00 Europe/Zurich', 'pgtap'),
+  (gen_random_uuid(), 'keimung', 'f3000000-0000-4000-8000-000000000a23',
+   '{"samen_gesaet":10,"samen_gekeimt":0}', '2027-02-08 10:00 Europe/Zurich', 'pgtap'),
+  (gen_random_uuid(), 'keimung', 'f3000000-0000-4000-8000-000000000a24',
+   '{"samen_gesaet":10,"samen_gekeimt":0,"keimtemp_eingehalten":true}', '2027-02-08 10:00 Europe/Zurich', 'pgtap');
+select is((select format('gesät %s, gekeimt %s, Rate %s', gesaet, gekeimt, round(rate_geglaettet, 2))
+             from public.v_keimrate where saatgut_id = 'f3000000-0000-4000-8000-000000000a01'),
+          'gesät 10, gekeimt 9, Rate 0.85',
+          '8.1 Regel 7 v_keimrate nur echt, nur eingehaltene Keimtemperatur (Demo und nicht eingehalten nicht gezählt)');
+
+-- ---------------------------------------------------------------------
+-- smoke2 letzter Fall: backup_status_melden(1234) als postgres schreibt genau eine Zeile
+-- ---------------------------------------------------------------------
+
+create temp table backup_vorher as select count(*) as n from public.backup_status;
+select public.backup_status_melden(1234);
+select is((select format('%s neue Zeilen, davon %s mit 1234 Bytes aus backup.yml',
+                         (select count(*) from public.backup_status) - (select n from backup_vorher),
+                         (select count(*) from public.backup_status where groesse_bytes = 1234 and app_version = 'backup.yml'))),
+          '1 neue Zeilen, davon 1 mit 1234 Bytes aus backup.yml',
+          'smoke2 backup_status_melden(1234) als postgres schreibt genau eine Zeile');
 
 select * from finish();
 rollback;

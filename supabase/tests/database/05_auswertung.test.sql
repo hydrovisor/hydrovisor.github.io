@@ -7,7 +7,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 -- Die Datenbank läuft in UTC wie in Supabase; alle Zeitpunkte stehen ausdrücklich in Europe/Zurich.
 set local timezone to 'UTC';
-select plan(27);
+select plan(39);
 
 -- ---------------------------------------------------------------------
 -- Hilfsfunktion: Fixture ausführen, Abfrage lesen, alles zurückrollen
@@ -304,6 +304,135 @@ select is(pg_temp.isoliert($f$
   $f$,
   $q$select string_agg(woche::date || ' ' || round(stunden * 3600), ', ' order by woche) from public.v_pflegezeit$q$),
   '2027-01-04 60', 'C4-AK3 v_pflegezeit zählt echt im Fenster, nicht demo, nicht vor 7.1., nicht ab 1.4. 00:00');
+
+-- ---------------------------------------------------------------------
+-- C4-AK3 Innenseite der Fensterränder: echte Zeile genau am 7.1. 00:00 und am 31.3. 23:59 zählt
+-- (v_termintreue rechnet mit Kalendertagen und ist mit C13 oben abgedeckt; v_klima mit 7.1. 18:00 und 31.3. 21:30)
+-- ---------------------------------------------------------------------
+
+select is(pg_temp.isoliert($f$
+  select pg_temp.messung('f5000000-0000-4000-8000-000000000311', '2027-01-07 00:00 Europe/Zurich', 'aufgabe', 1.2, null, 10, null);
+  select pg_temp.messung('f5000000-0000-4000-8000-000000000311', '2027-03-31 23:59 Europe/Zurich', 'aufgabe', 1.2, null, 20, null);
+  $f$,
+  $q$select string_agg(woche::date || ' ' || anzahl || ' ' || median_s, ', ' order by woche) from public.v_ek6_messdauer$q$),
+  '2027-01-04 1 10, 2027-03-29 1 20', 'C4-AK3 v_ek6_messdauer zählt echt am 7.1. 00:00 und am 31.3. 23:59');
+
+select is(pg_temp.isoliert($f$
+  select pg_temp.messung('f5000000-0000-4000-8000-000000000311', '2027-01-07 00:00 Europe/Zurich', 'aufgabe', 1.2, null, null, 'gruen');
+  select pg_temp.messung('f5000000-0000-4000-8000-000000000311', '2027-03-31 23:59 Europe/Zurich', 'aufgabe', 1.2, null, null, 'knapp');
+  $f$,
+  $q$select string_agg(betriebsart || ' ' || messgroesse || ' ' || bewertung || ' ' || anzahl, ', ' order by bewertung::text)
+       from public.v_sollbereichsquote$q$),
+  'dwc ph gruen 1, dwc ph knapp 1', 'C4-AK3 v_sollbereichsquote zählt echt am 7.1. 00:00 und am 31.3. 23:59');
+
+select is(pg_temp.isoliert($f$
+  insert into public.naehrloesungsansatz (client_id, platz_id, typ, begonnen_am, stadium_vorschlag, ec_erwartet_final, volumen_l,
+                                          endmessung_id, gilt_ab, app_version)
+  select gen_random_uuid(), 'f5000000-0000-4000-8000-000000000311', 'neuansatz', x.gilt, 'wachstum', 1.20, 9,
+         pg_temp.messung('f5000000-0000-4000-8000-000000000311', x.gilt + interval '30 minutes', 'end_ansatz', x.ec, null, null, null),
+         x.gilt, 'pgtap'
+    from (values ('2027-01-07 00:00 Europe/Zurich'::timestamptz, 1.25), ('2027-03-31 23:59 Europe/Zurich', 1.35)) x(gilt, ec);
+  $f$,
+  $q$select string_agg(stadium || ' ' || ansaetze || ' ' || round(mittel_abweichung, 2), ', ' order by stadium)
+       from public.v_rechnerguete$q$),
+  'wachstum 2 0.10', 'C4-AK3 v_rechnerguete zählt echt am 7.1. 00:00 und am 31.3. 23:59');
+
+select is(pg_temp.isoliert($f$
+  select pg_temp.satz('f5000000-0000-4000-8000-000000000501', 'f5000000-0000-4000-8000-000000000511',
+                      'f5000000-0000-4000-8000-000000000312', '2027-01-01', '2027-01-01 09:00 Europe/Zurich');
+  insert into public.ereignis (client_id, typ, satz_id, daten, gilt_ab, app_version) values
+    (gen_random_uuid(), 'phase_antwort', 'f5000000-0000-4000-8000-000000000501',
+     '{"phase":"anzucht","antwort":"ja","erwartet_am":"2027-01-05"}', '2027-01-07 00:00 Europe/Zurich', 'pgtap'),
+    (gen_random_uuid(), 'phase_antwort', 'f5000000-0000-4000-8000-000000000501',
+     '{"phase":"wachstum","antwort":"ja","erwartet_am":"2027-03-28"}', '2027-03-31 23:59 Europe/Zurich', 'pgtap');
+  $f$,
+  $q$select string_agg(phase || ' ' || abweichung_tage, ', ' order by abweichung_tage) from public.v_phasenprognose$q$),
+  'anzucht 2, wachstum 3', 'C4-AK3 v_phasenprognose zählt echt am 7.1. 00:00 und am 31.3. 23:59');
+
+select is(pg_temp.isoliert($f$
+  select pg_temp.satz('f5000000-0000-4000-8000-000000000501', 'f5000000-0000-4000-8000-000000000511',
+                      'f5000000-0000-4000-8000-000000000312', '2027-01-01', '2027-01-01 09:00 Europe/Zurich');
+  insert into public.ereignis (client_id, typ, pflanzung_id, daten, gilt_ab, app_version) values
+    (gen_random_uuid(), 'keimung', 'f5000000-0000-4000-8000-000000000511', '{"samen_gesaet":1,"samen_gekeimt":1}',
+     '2027-01-07 00:00 Europe/Zurich', 'pgtap'),
+    (gen_random_uuid(), 'keimung', 'f5000000-0000-4000-8000-000000000511', '{"samen_gesaet":1,"samen_gekeimt":1}',
+     '2027-03-31 23:59 Europe/Zurich', 'pgtap');
+  $f$,
+  $q$select string_agg(keimdauer_bis_d::text, ', ' order by keimdauer_bis_d) from public.v_keimdauer$q$),
+  '6, 89', 'C4-AK3 v_keimdauer zählt echt am 7.1. 00:00 und am 31.3. 23:59');
+
+select is(pg_temp.isoliert($f$
+  insert into public.ki_feldprotokoll (client_id, sorte_id, feld, status, bewertung_eval, modell, datenart, erfasst_am, app_version) values
+    (gen_random_uuid(), 'f5000000-0000-4000-8000-000000000101', 'name', 'uebernommen', 'richtig', 'testmodell', 'echt',
+     '2027-01-07 00:00 Europe/Zurich', 'pgtap'),
+    (gen_random_uuid(), 'f5000000-0000-4000-8000-000000000101', 'name', 'uebernommen', 'falsch', 'testmodell', 'echt',
+     '2027-03-31 23:59 Europe/Zurich', 'pgtap');
+  $f$,
+  $q$select string_agg(feld || ' ' || bewertung_eval || ' ' || anzahl, ', ' order by bewertung_eval::text) from public.v_ki_guete$q$),
+  'name falsch 1, name richtig 1', 'C4-AK3 Ä4 v_ki_guete zählt echt am 7.1. 00:00 und am 31.3. 23:59');
+
+select is(pg_temp.isoliert($f$
+  insert into public.naehrloesungsansatz (client_id, platz_id, typ, begonnen_am, stadium_vorschlag, stadium_gewaehlt,
+                                          ziel_ec_vorschlag, ziel_ec_gewaehlt, mischentscheid, k_uebernommen, volumen_l, gilt_ab, app_version)
+  select gen_random_uuid(), 'f5000000-0000-4000-8000-000000000311', 'neuansatz', x.gilt, 'wachstum', 'vorbluete', 1.2, 1.3,
+         'leitkultur', true, 9, x.gilt, 'pgtap'
+    from (values ('2027-01-07 00:00 Europe/Zurich'::timestamptz), ('2027-03-31 23:59 Europe/Zurich')) x(gilt);
+  select pg_temp.satz('f5000000-0000-4000-8000-000000000501', 'f5000000-0000-4000-8000-000000000511',
+                      'f5000000-0000-4000-8000-000000000312', '2027-01-07', '2027-01-07 00:00 Europe/Zurich');
+  select pg_temp.satz('f5000000-0000-4000-8000-000000000502', 'f5000000-0000-4000-8000-000000000512',
+                      'f5000000-0000-4000-8000-000000000312', '2027-03-31', '2027-03-31 23:59 Europe/Zurich');
+  $f$,
+  $q$select string_agg(art || ' ' || anzahl, ', ' order by art) from public.v_uebersteuerungen where anzahl > 0$q$),
+  'k_uebernommen 2, mischentscheid 2, nicht_empfohlen_gewaehlt 2, schwaemme_oder_samen 2, stadium 2, ziel_ec 2',
+  'C4-AK3 v_uebersteuerungen zählt Ansätze und Sätze echt am 7.1. 00:00 und am 31.3. 23:59');
+
+select is(pg_temp.isoliert($f$
+  insert into public.ki_feldprotokoll (client_id, sorte_id, feld, status, modell, datenart, erfasst_am, app_version) values
+    (gen_random_uuid(), 'f5000000-0000-4000-8000-000000000101', 'name', 'geaendert', 'testmodell', 'echt',
+     '2027-01-07 00:00 Europe/Zurich', 'pgtap'),
+    (gen_random_uuid(), 'f5000000-0000-4000-8000-000000000101', 'name', 'geaendert', 'testmodell', 'echt',
+     '2027-03-31 23:59 Europe/Zurich', 'pgtap');
+  $f$,
+  $q$select string_agg(art || ' ' || anzahl, ', ' order by art) from public.v_uebersteuerungen where anzahl > 0$q$),
+  'ki_feld_korrigiert 2', 'C4-AK3 Ä4 v_uebersteuerungen zählt korrigierte KI-Felder echt am 7.1. 00:00 und am 31.3. 23:59');
+
+select is(pg_temp.isoliert($f$
+  insert into public.etikett_aufruf (code, aufgerufen_am, ergebnis, app_version) values
+    ('R-2.3', '2027-01-07 00:00 Europe/Zurich', 'gefunden', 'pgtap'),
+    ('R-2.3', '2027-03-31 23:59 Europe/Zurich', 'unbekannt', 'pgtap');
+  $f$,
+  $q$select string_agg(woche::date || ' ' || ergebnis || ' ' || anzahl, ', ' order by woche, ergebnis) from public.v_etikett_scans$q$),
+  '2027-01-04 gefunden 1, 2027-03-29 unbekannt 1', 'C4-AK3 v_etikett_scans zählt echt am 7.1. 00:00 und am 31.3. 23:59');
+
+select is(pg_temp.isoliert($f$
+  select pg_temp.messung('f5000000-0000-4000-8000-000000000311', '2027-01-07 18:00 Europe/Zurich', 'rundgang', 1.2, 19.5, null, null);
+  select pg_temp.messung('f5000000-0000-4000-8000-000000000311', '2027-03-31 21:30 Europe/Zurich', 'rundgang', 1.2, 22.5, null, null);
+  $f$,
+  $q$select string_agg(tag || ' ' || temperatur, ', ' order by tag) from public.v_klima$q$),
+  '2027-01-07 19.5, 2027-03-31 22.5', 'C4-AK3 v_klima zählt echt am 7.1. 18:00 und am 31.3. 21:30');
+
+select is(pg_temp.isoliert($f$
+  select pg_temp.messung('f5000000-0000-4000-8000-000000000311', '2027-01-07 00:00 Europe/Zurich', 'aufgabe', 1.2, null, 60, null);
+  select pg_temp.messung('f5000000-0000-4000-8000-000000000311', '2027-03-31 23:59 Europe/Zurich', 'aufgabe', 1.2, null, 120, null);
+  $f$,
+  $q$select string_agg(woche::date || ' ' || round(stunden * 3600), ', ' order by woche) from public.v_pflegezeit$q$),
+  '2027-01-04 60, 2027-03-29 120', 'C4-AK3 v_pflegezeit zählt echt am 7.1. 00:00 und am 31.3. 23:59');
+
+-- ---------------------------------------------------------------------
+-- C4-AK1 v_klima: nur 18:00 bis 21:30 Ortszeit, je Gefäss und Tag die letzte Messung darin
+-- (06_tests.md Abschnitt 9; Entscheid R12). 11.2.: 17:59, 18:00, 21:30, 21:31 → 21:30; 12.2.: 17:59, 18:00 → 18:00.
+-- ---------------------------------------------------------------------
+
+select is(pg_temp.isoliert($f$
+  select pg_temp.messung('f5000000-0000-4000-8000-000000000311', '2027-02-11 17:59 Europe/Zurich', 'rundgang', 1.2, 20.0, null, null);
+  select pg_temp.messung('f5000000-0000-4000-8000-000000000311', '2027-02-11 18:00 Europe/Zurich', 'rundgang', 1.2, 20.5, null, null);
+  select pg_temp.messung('f5000000-0000-4000-8000-000000000311', '2027-02-11 21:30 Europe/Zurich', 'rundgang', 1.2, 21.0, null, null);
+  select pg_temp.messung('f5000000-0000-4000-8000-000000000311', '2027-02-11 21:31 Europe/Zurich', 'rundgang', 1.2, 22.0, null, null);
+  select pg_temp.messung('f5000000-0000-4000-8000-000000000311', '2027-02-12 17:59 Europe/Zurich', 'rundgang', 1.2, 19.0, null, null);
+  select pg_temp.messung('f5000000-0000-4000-8000-000000000311', '2027-02-12 18:00 Europe/Zurich', 'rundgang', 1.2, 19.5, null, null);
+  $f$,
+  $q$select string_agg(tag || ' ' || temperatur, ', ' order by tag) from public.v_klima$q$),
+  '2027-02-11 21.0, 2027-02-12 19.5', 'C4-AK1 v_klima nur 18:00 bis 21:30, letzte Messung je Tag (21:31 und 17:59 nicht)');
 
 select * from finish();
 rollback;

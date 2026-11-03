@@ -142,7 +142,7 @@ select throws_ok(
 -- Ä6: Trigger etikett_code_fest
 select throws_ok(
   $$update public.etikett set code = 'PK-9.9' where id = 'f1000000-0000-4000-8000-000000000051'$$,
-  null::bpchar, null::text, 'R9.1 Ä6 Etikett-Code unveränderlich');
+  'P0001'::bpchar, null::text, 'R9.1 Ä6 Etikett-Code unveränderlich');
 select is((select code from public.etikett where id = 'f1000000-0000-4000-8000-000000000051'), 'PK-1.1',
           'R9.1 Ä6 Etikett-Code nach dem Versuch unverändert');
 

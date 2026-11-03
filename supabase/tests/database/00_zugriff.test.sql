@@ -89,12 +89,12 @@ insert into wissen values
   ('backup_status'), ('zugang'), ('ki_aufruf');
 
 select plan(
-    6 * (select count(*)::int from tabellen)
+    7 * (select count(*)::int from tabellen)
   + (select count(*)::int from sichten)
   + (select count(*)::int from funktionen where prosecdef)
   + (select count(*)::int from funktionen)
   + (select count(*)::int from wissen)
-  + 11);
+  + 12);
 
 -- ---------------------------------------------------------------------
 -- Fixtures als postgres: mindestens eine Zeile je Tabelle, damit «0 Zeilen» etwas aussagt
@@ -405,6 +405,47 @@ select throws_ok($$select public.datenart_loeschen('demo')$$, '42501'::bpchar, n
 select throws_ok($$select public.backup_status_melden(1)$$, '42501'::bpchar, null::text,
                  'UC0-AK2 smoke3 D1 authenticated darf backup_status_melden nicht');
 reset role;
+
+-- ---------------------------------------------------------------------
+-- TRUNCATE umgeht RLS: anon und authenticated dürfen es auf keiner Tabelle (Prüfer Sicherheit Runde 1)
+-- ---------------------------------------------------------------------
+
+create function pg_temp.truncate_je_tabelle() returns setof text language plpgsql as $$
+declare t text;
+begin
+  for t in select name from tabellen order by name loop
+    return next is(format('anon %s, authenticated %s',
+                          has_table_privilege('anon', format('public.%I', t), 'TRUNCATE')::text,
+                          has_table_privilege('authenticated', format('public.%I', t), 'TRUNCATE')::text),
+                   'anon false, authenticated false', 'UC0-AK2 anon und authenticated ohne TRUNCATE: ' || t);
+  end loop;
+end $$;
+select * from pg_temp.truncate_je_tabelle();
+
+-- Gelingt TRUNCATE, rollt der innere Block es zurück, damit die folgenden Tests ihre Fixtures behalten.
+create function pg_temp.truncate_als(rolle text, sub uuid, tabelle text) returns text language plpgsql as $$
+declare
+  ergebnis text;
+begin
+  perform pg_temp.als(rolle, sub);
+  begin
+    execute format('truncate public.%I', tabelle);
+    raise exception using errcode = 'HV001', message = 'TRUNCATE zurückrollen';
+  exception
+    when sqlstate 'HV001' then ergebnis := 'ok';
+    when others then ergebnis := sqlstate;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
+  return ergebnis;
+end $$;
+-- eigene Anweisung, damit public.zugang beim TRUNCATE nicht in derselben Abfrage offen ist (sonst 55006)
+create temp table truncate_ergebnis as
+  select pg_temp.truncate_als('authenticated', '00000000-0000-4000-8000-00000000000b', 'zugang') as ergebnis;
+select is(
+  format('%s, Zugang danach %s', (select ergebnis from truncate_ergebnis),
+         (select count(*) from public.zugang where user_id = '00000000-0000-4000-8000-00000000000a')),
+  '42501, Zugang danach 1', 'UC0-AK2 fremdes Konto: TRUNCATE public.zugang scheitert');
 
 -- A3: Trigger feuern ohne EXECUTE-Recht des auslösenden Nutzers auf der Triggerfunktion
 select is(

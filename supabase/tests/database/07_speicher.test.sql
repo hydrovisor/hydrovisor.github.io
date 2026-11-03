@@ -5,7 +5,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 -- Die Datenbank läuft in UTC wie in Supabase.
 set local timezone to 'UTC';
-select plan(7);
+select plan(8);
 
 -- ---------------------------------------------------------------------
 -- Hilfsfunktionen
@@ -139,6 +139,37 @@ select is(
     where schemaname = 'storage' and tablename = 'objects' and concat(qual, ' ', with_check) ~ 'saattueten'),
   'INSERT {authenticated} true, SELECT {authenticated} true, UPDATE {authenticated} true',
   'UC4-AK6 Policies select, insert, update nur für Tim, keine Delete-Policy');
+
+-- ---------------------------------------------------------------------
+-- Migration auf bestehendem Bucket (Prüfer Sicherheit Runde 1): Ein Bucket gleichen Namens mit falschen
+-- Einstellungen (z. B. von Hand angelegt) muss nach erneutem Lauf der Migration privat, JPEG, 2 MB sein.
+-- Die Anweisungen der Migration stehen in supabase_migrations.schema_migrations (keine Kopie im Test);
+-- ausgeführt werden die Anweisungen, die storage.buckets betreffen. Am Ende der Datei, weil der Fall den
+-- Bucket in dieser Transaktion verändert.
+-- ---------------------------------------------------------------------
+
+create function pg_temp.migration_auf_bestehendem_bucket() returns text language plpgsql as $$
+declare
+  anweisung text;
+  n integer := 0;
+  ergebnis text;
+begin
+  update storage.buckets set public = true, allowed_mime_types = null, file_size_limit = null where id = 'saattueten';
+  for anweisung in
+    select s from supabase_migrations.schema_migrations m, unnest(m.statements) s
+     where m.name = 'saattueten' and s ~* 'storage\.buckets'
+  loop
+    execute anweisung;
+    n := n + 1;
+  end loop;
+  select format('Anweisungen gefunden %s, public %s, %s, 2 MB %s', (n > 0)::text, public::text,
+                coalesce(allowed_mime_types::text, 'alle Typen'),
+                coalesce((file_size_limit between 2000000 and 2097152)::text, 'ohne Grenze'))
+    into ergebnis from storage.buckets where id = 'saattueten';
+  return ergebnis;
+end $$;
+select is(pg_temp.migration_auf_bestehendem_bucket(), 'Anweisungen gefunden true, public false, {image/jpeg}, 2 MB true',
+          'UC4-AK6 Migration setzt privat, JPEG und 2 MB auch bei bestehendem Bucket');
 
 select * from finish();
 rollback;
