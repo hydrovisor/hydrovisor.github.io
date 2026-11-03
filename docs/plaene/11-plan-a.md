@@ -1,0 +1,331 @@
+# Plan 11: I0-04 Datenpfad `schreiben()` mit Offline-Bündel
+
+Stand 3.11.2026 · Paket I0-04 · Klasse Kern ohne Migration · Planer verdeckt (Vergleich 12.7 a) · Planfreigabe nötig (Label `plan-frei`)
+
+## Ziel
+
+Jede Erfassung der App läuft ab jetzt über ein einziges Modul `schreiben()`: Die Client-UUID (`client_id`) hält die Maske, geschrieben wird per Upsert ohne Überschreiben, eine Wiederholung ergibt nie eine zweite Zeile (TO2). Ohne Netz meldet die App sichtbar «Kein Netz, nicht gespeichert, erneut senden», und die Eingaben bleiben (TO8). Beim Start und nach jedem erfolgreichen Schreiben lädt die App das Offline-Bündel in IndexedDB; ohne Netz zeigt Heute das Bündel mit «Stand: hh:mm» (TO6). Am Gerät sieht Tim das in Heute und in der Schreibtisch-Maske «Schreibweg prüfen» (pH-Kontrolle mit Datenart `test`).
+
+Fundstellen: Konzept 11.1 (Zeile Offline), 11.4 (Punkte 1, 5, 6), 6.3 «Lesen ohne Netz», 8.1 Regeln 2, 3, 6, 7; `docs/spec/04_architektur.md` Abschnitte 4.1, 4.2; Use Cases F4 UC9-AK8 (I0-Teil), Variante «ohne Netz»; `06_tests.md` Abschnitt 7; Plan 9 Antwort F5 (Prüfung der `daten`-Schlüssel je Ereignistyp in `schreiben()`).
+
+**Regel-IDs.** `docs/spec/01_fachregeln.md` hat für den Datenpfad keine eigene Regel-ID. Dieser Plan stützt sich dort nur auf G1 (reine Funktionen, `jetzt` und `zeitzone` als Parameter), G2 (Kalendertag in Europe/Zurich) und G5 (Datenart). Alles Übrige steht in Konzept 11.4 und `04_architektur.md` 4. Das ist eine Lücke in `01_fachregeln.md`, kein Widerspruch zum Konzept.
+
+## Lösungsweg in Kürze
+
+1. **Reine Logik in `src/domain/`** (G1, ohne Browser-API, Importe nur relativ): Zeile vorbereiten (`app_version`, `client_zeit`, `gilt_ab`), Vorgang prüfen samt `daten`-Schlüsseln je Ereignistyp, Fehler einordnen mit Texten, Bündel-Format prüfen, Anzeige «Stand: hh:mm». `jetzt` und `zeitzone` sind immer Parameter.
+2. **`src/daten/schreiben.ts`**: schreibt einen Vorgang Schritt für Schritt in der Reihenfolge der Fremdschlüssel. Jeder Schritt ist ein Upsert mit `onConflict: 'client_id'` und `ignoreDuplicates: true` (SQL `on conflict (client_id) do nothing`), mit Rückgabe der Zeile und 15 s Zeitlimit (A3). Kommt keine Zeile zurück (Duplikat), liest das Modul die vorhandene Zeile über `client_id` zurück und vergleicht sie mit dem Gesendeten.
+3. **`src/daten/buendel.ts`**: Erst `rpc('ist_tim')`, danach alle Teile des Bündels parallel und seitenweise (je 1000 Zeilen, `max_rows` in `supabase/config.toml`). Nur wenn alle Teile vollständig geladen sind, ersetzt das Modul den Eintrag `buendel/aktuell` in einer einzigen IndexedDB-Transaktion; sonst bleibt der alte Stand.
+4. **Oberfläche**: Ein `BuendelAnbieter` zeigt das gespeicherte Bündel sofort und lädt im Hintergrund nach (beim Start, nach jedem Schreiben, beim Ereignis `online`). Heute zeigt «Stand: hh:mm», solange in dieser Sitzung kein frisches Laden gelungen ist. Die neue Maske `#/schreibprobe` schreibt eine pH-Kontrolle (`messung`, `messart = 'ph_kontrolle'`, `datenart = 'test'`) und dient als Prüfstand für TO2 und TO8, bis I0-07 die einfache Messung bringt.
+5. **E2E gegen den Produktions-Build und die lokale Datenbank** (`pr.yml` Job `e2e` startet sie schon): Ein lokales Testkonto ohne Personendaten steht in `zugang`, damit RLS echt greift. TO2 entsteht mit `route.fetch()` und danach `route.abort()`, TO8 mit `context.setOffline(true)`.
+
+## Betroffene Dateien
+
+| Datei | neu / geändert | Inhalt | Rolle |
+|---|---|---|---|
+| `src/domain/zeit.ts` | neu | `kalendertag()` und `uhrzeit()` mit Zeitzone als Parameter (G2) | Lead |
+| `src/domain/datenpfad/erfassung.ts` | neu | Tabellenlisten, `Vorgang`, `zeileVorbereiten()`, `vorgangPruefen()` | Lead |
+| `src/domain/datenpfad/ereignisdaten.ts` | neu | erlaubte `daten`-Schlüssel und Werte je `ereignis_typ` aus dem Tabellenkommentar (A4) in der Migration (Plan 9 F5) | Lead |
+| `src/domain/datenpfad/fehler.ts` | neu | `fehlerEinordnen()`, Fehlerarten, Texte | Lead |
+| `src/domain/datenpfad/buendel.ts` | neu | Format `Buendel`, `buendelPruefen()`, `standAnzeige()`, `letzterJeOrt()`, `fensterBeginn()` | Lead |
+| `src/daten/schreiben.ts` | neu | `schreiben()`, `neueClientId()`, `erstelleSchreiben(adapter)` und Supabase-Adapter | Lead |
+| `src/daten/buendel.ts` | neu | Teile des Bündels (Tabellen und Sichten mit Filter), `buendelLaden()`, `buendelLesen()`, `buendelLeeren()` | Lead |
+| `src/daten/lokal.ts` | geändert | `LOKAL_VERSION = 2`, Speicher `buendel` (keyPath `id`), `onversionchange` schliesst die Verbindung | Lead |
+| `src/daten/supabase.ts` | geändert | `createClient<Database>` (Bindung der Typen, Plan 9 Nicht-Ziele) | Lead |
+| `src/ui/buendel.tsx` | neu | `BuendelAnbieter`, `useBuendel()` | Lead |
+| `src/ui/masken/Heute.tsx` | geändert | Zeile «Stand: hh:mm» oder Hinweis «Noch keine Daten auf dem Gerät», `data-buendel-stand` für E2E | Lead |
+| `src/ui/masken/Schreibprobe.tsx` | neu | Schreibtisch-Maske: Feld pH (TextField), Speichern, Hinweis (Notice), «Als Text kopieren» bei Ablehnung | Lead |
+| `src/ui/router.ts`, `src/ui/App.tsx`, `src/ui/masken/Info.tsx` | geändert | Route `schreibprobe`, Anbieter einhängen, Link «Schreibweg prüfen» | Lead |
+| `src/ui/sitzung.tsx` | geändert | bei `SIGNED_OUT` `buendelLeeren()` (A6) | Lead |
+| `tests/unit/zeit.test.ts`, `tests/unit/datenpfad-erfassung.test.ts`, `tests/unit/datenpfad-ereignisdaten.test.ts`, `tests/unit/datenpfad-fehler.test.ts`, `tests/unit/datenpfad-buendel.test.ts`, `tests/unit/schreiben.test.ts`, `tests/unit/buendel-laden.test.ts` | neu | Unit-Tests (Testliste) | Testentwickler |
+| `tests/e2e/datenpfad.spec.ts` | neu | UC9-AK8 / TO2, UC9-AK8 / TO8, TO6 | Testentwickler |
+| `tests/e2e/konto.ts` | neu | Playwright-Fixture: lokales Testkonto, Zugang, Zählabfragen über `DB_URL` (nur `127.0.0.1` oder `localhost`) | Testentwickler |
+| `tests/testentwickler.txt` | geändert | neue Testdateien eintragen | Testentwickler |
+| `docs/spec/glossar.md` | geändert | Zeilen `Vorgang`, `Schreibergebnis`, `Stand` (Bündel) | Lead |
+
+Keine neue Abhängigkeit: Die Bibliothek `idb` wurde verworfen, weil `lokal.ts` bereits einen kleinen eigenen Zugriff auf IndexedDB hat. `playwright.config.ts`, `pr.yml` und `stryker.config.json` bleiben unverändert.
+
+## Migration
+
+Nein. Gebraucht werden nur `client_id uuid unique` (alle vom Client geschriebenen Tabellen), die Policies `tim_lesen`, `tim_einfuegen` und `tim_aendern` sowie `ist_tim()` (für `authenticated` ausführbar), alles aus I0-03. Kein `db-lock`. Verworfen wurde eine Datenbankfunktion, die einen Vorgang mit mehreren Zeilen atomar schreibt: Sie bräuchte eine Migration, und das Paket ist ohne Migration eingefroren (`pakete.md`).
+
+## Schnittstellen (nur Signaturen)
+
+`src/domain/zeit.ts`
+```ts
+export type Zeitzone = string;               // Standard ZEITZONE = 'Europe/Zurich'
+export function kalendertag(zeitpunkt: Date, zeitzone: Zeitzone): string;   // 'JJJJ-MM-TT'
+export function uhrzeit(zeitpunkt: Date, zeitzone: Zeitzone): string;       // 'hh:mm', 24 h
+```
+
+`src/domain/datenpfad/erfassung.ts`
+```ts
+export type Erfassungstabelle = 'messung' | 'kalibrierung' | 'naehrloesungsansatz' | 'ansatz_position'
+  | 'ansatz_schritt' | 'ereignis' | 'satz' | 'pflanzung' | 'pflanzvorgang' | 'reservierung' | 'aufschub'
+  | 'saatgut' | 'eigene_aufgabe' | 'ki_feldprotokoll' | 'etikett_aufruf' | 'anlage' | 'bereich' | 'platz'
+  | 'etikett' | 'gefaessmodell' | 'deckeltyp' | 'gefaess' | 'anzuchtort' | 'netztopf' | 'k_faktor';
+export const MIT_ZEITACHSE: ReadonlySet<Erfassungstabelle>;   // Tabellen mit gilt_ab und client_zeit (8.1 Regel 3)
+export type StornoGrund = 'rueckgaengig' | 'korrektur' | 'fehleingabe';
+export type Schritt =
+  | { art: 'neu'; tabelle: Erfassungstabelle; felder: Record<string, unknown> & { client_id: string } }
+  | { art: 'storno'; tabelle: Erfassungstabelle; clientId: string; grund: StornoGrund };
+export type Vorgang = readonly Schritt[];
+export interface Zeitkontext { jetzt: Date; zeitzone: Zeitzone }
+export function zeileVorbereiten(schritt: Extract<Schritt, { art: 'neu' }>, kontext: Zeitkontext,
+  appVersion: string): Record<string, unknown>;
+export function vorgangPruefen(vorgang: Vorgang): Verstoss[];   // leere client_id, Serverfelder, Ereignisdaten
+```
+
+`src/domain/datenpfad/ereignisdaten.ts`
+```ts
+export function ereignisDatenPruefen(typ: EreignisTyp, daten: Record<string, unknown>): Verstoss[];
+```
+
+`src/domain/datenpfad/fehler.ts`
+```ts
+export type Fehlerart = 'kein_netz' | 'unklar' | 'server' | 'anmeldung' | 'abgelehnt';
+export interface RohFehler { name?: string; message?: string; status?: number; code?: string }
+export interface Schreibfehler { art: Fehlerart; wiederholbar: boolean; code?: string; text: string }
+export function fehlerEinordnen(roh: RohFehler): Schreibfehler;
+```
+
+`src/domain/datenpfad/buendel.ts`
+```ts
+export const BUENDEL_FORMAT = 1;
+export interface Buendel { id: 'aktuell'; format: 1; stand: string /* ISO, UTC */; appVersion: string;
+  nutzerId: string; teile: Record<string, readonly unknown[]> }
+export function buendelPruefen(wert: unknown, nutzerId: string): Buendel | undefined;
+export function standAnzeige(lage: { buendel?: Buendel; frisch: boolean }, jetzt: Date,
+  zeitzone: Zeitzone): { stand?: string; hinweis?: string };
+export function fensterBeginn(jetzt: Date, tage: number, zeitzone: Zeitzone): string;   // Grenze «14 Tage»
+export function letzterJeOrt<T extends { platz_id: string | null; begonnen_am: string }>(zeilen: readonly T[]): T[];
+```
+
+`src/daten/schreiben.ts`
+```ts
+export type Schreibergebnis =
+  | { status: 'gespeichert'; clientIds: string[] }
+  | { status: 'abweichend'; clientId: string; vorhanden: Record<string, unknown> }
+  | { status: 'nicht_gespeichert'; fehler: Schreibfehler; bestaetigt: number };   // Schritte vor dem Fehler
+export function neueClientId(): string;                                // crypto.randomUUID()
+export function schreiben(vorgang: Vorgang | Schritt, kontext: Zeitkontext): Promise<Schreibergebnis>;
+export interface Schreibadapter {
+  einfuegen(tabelle: Erfassungstabelle, zeile: Record<string, unknown>, signal: AbortSignal): Promise<Antwort>;
+  lesen(tabelle: Erfassungstabelle, clientId: string, signal: AbortSignal): Promise<Antwort>;
+  stornieren(tabelle: Erfassungstabelle, clientId: string, felder: { storniert_am: string; storno_grund: StornoGrund },
+    signal: AbortSignal): Promise<Antwort>;
+}
+export function erstelleSchreiben(adapter: Schreibadapter, bindung: { appVersion: string; nachErfolg: () => void }):
+  typeof schreiben;
+```
+
+`src/daten/buendel.ts`
+```ts
+export type Ladeergebnis = { status: 'geladen'; buendel: Buendel } | { status: 'kein_zugang' }
+  | { status: 'fehler'; fehler: Schreibfehler };
+export function buendelLaden(kontext: Zeitkontext): Promise<Ladeergebnis>;
+export function buendelLesen(nutzerId: string): Promise<Buendel | undefined>;
+export function buendelLeeren(): Promise<void>;
+```
+
+Die Oberfläche ruft `schreiben(vorgang, { jetzt: new Date(Date.now()), zeitzone: ZEITZONE })`: `Date.now()` steht nur in der Oberfläche (CLAUDE.md). `src/daten/` prüft mit einer Typzusicherung, dass `Erfassungstabelle` genau den Tabellen mit Spalte `client_id` in `datenbank.types.ts` entspricht. `src/domain/` darf diese Datei nicht importieren (04 Abschnitt 1).
+
+## Datenfluss
+
+**Online, Erfassen.** Die Maske legt beim Öffnen der Erfassung `neueClientId()` an und behält die ID bis zum Erfolg; erst danach beginnt eine neue Erfassung mit neuer ID. Der Ablauf beim Speichern:
+
+1. `vorgangPruefen()` läuft; ein Verstoss ergibt `abgelehnt` ohne Netzaufruf.
+2. Je Schritt `zeileVorbereiten()`: Das Modul setzt `app_version` (APP_VERSION), `client_zeit = jetzt` und `gilt_ab = jetzt`, wenn kein `gilt_ab` mitkommt (Nacherfassung behält ihren Wert). Diese Felder gelten nur für `MIT_ZEITACHSE`. `erfasst_am`, `nacherfasst` und `storniert_am` werden nie gesendet.
+3. Upsert ohne Überschreiben. Kommt eine Zeile zurück, gilt der Schritt als bestätigt. Kommt keine zurück (Duplikat), liest das Modul die vorhandene Zeile und vergleicht die gesendeten Fachfelder: gleich bedeutet bestätigt, verschieden ergibt `abweichend`.
+4. Nach allen Schritten ist das Ergebnis `gespeichert`, danach lädt `nachErfolg()` das Bündel neu. `schreiben()` wartet nicht auf das Bündel.
+
+**Storno** (8.1 Regel 3, 04 4.1): Die Zeile wird mit `storniert_am = jetzt` und `storno_grund` geändert, nur wenn `storniert_am is null`. Eine Wiederholung bleibt damit ohne Wirkung. Eine Korrektur ist ein Vorgang aus zwei Schritten: zuerst die neue Zeile mit `ersetzt_id`, dann das Storno der alten (A8).
+
+**Offline, Erfassen.** Der Upsert scheitert mit `TypeError` (Fetch), das ergibt `kein_netz`. Die Maske zeigt «Kein Netz, nicht gespeichert, erneut senden» als Notice `danger`; Eingaben und `client_id` bleiben. Ein erneutes Tippen auf «Speichern» schickt denselben Vorgang noch einmal. Es gibt keinen Zwischenspeicher (Warteschlange nach Q14, Nicht-Ziel), und das Modul verlässt sich nicht auf `navigator.onLine`.
+
+**Lesen.** Beim Start mit Sitzung liest `BuendelAnbieter` zuerst `buendelLesen(nutzerId)` und zeigt das Bündel sofort an (`frisch = false`). Danach folgt `buendelLaden()`:
+
+1. `rpc('ist_tim')`; ist das Ergebnis `false`, folgt `kein_zugang`, das Bündel bleibt unverändert, und Heute meldet «Kein Zugang für dieses Konto».
+2. Die Teile werden parallel geladen, jeder Teil seitenweise mit stabiler Sortierung nach `id` bis zur letzten unvollen Seite.
+3. Ein einziges `put` in `buendel` setzt `frisch = true`.
+
+Scheitert ein Teil, bleibt der alte Eintrag stehen, und `frisch` bleibt `false`. Ohne Netz liefert der Service Worker die App-Shell aus dem Precache (I0-01), die Sitzung kommt aus dem localStorage (I0-06), und Heute zeigt das Bündel mit «Stand: hh:mm».
+
+**Teile des Bündels** (04 4.2, Konzept 11.1). Sie stehen als Konstante in `src/daten/buendel.ts`; spätere Pakete ergänzen Teile, ohne Aufrufer zu ändern:
+
+- **Anlage:** `anlage`, `bereich`, `platz`, `etikett`, `gefaess`, `gefaessmodell`, `deckeltyp`, `anzuchtort`, `netztopf`, `v_gefaess_status`, `v_fuellzustand`.
+- **Wissen** (gültige Fassung, `gueltig_bis is null`): `sorte`, `art`, `art_kulturform`, `kulturgruppe`, `v_sollwert`, `saatempfehlung`, `duengerschema`, `produkt`, `wissenseintrag`.
+- **Betrieb:** `satz`, `pflanzung`, `v_pflanzung_zustand`, `v_reservierung_aktiv`, `messung` und `v_messung_unsicher` ab `fensterBeginn(jetzt, 14, zeitzone)`, `naehrloesungsansatz` (im Client mit `letzterJeOrt()` auf den letzten je Ort reduziert), `kalibrierung`, `v_kalibrierung_faellig`, `messgeraet`, `aufschub`, `einstellung`.
+- **Filter:** Alle Betriebszeilen ohne Storno; alle Datenarten, weil die Anlagenauswahl auch Demo und Test zeigt. Der Filter «nur echt» gilt erst in den Regeln (G5, 8.1 Regel 7).
+
+Verworfen: Laufzeit-Caches des Service Workers für API-Antworten, weil 04 Abschnitt 7 keine Laufzeit-Caches für API-Aufrufe vorsieht und Teilstände nicht erkennbar wären.
+
+## Speicherort und Format des Bündels
+
+- IndexedDB `hydrovisor`, Version 2 (bisher 1 mit `ablaeufe`). Das Upgrade legt nur den fehlenden Speicher `buendel` an (keyPath `id`), `ablaeufe` bleibt unberührt. Ein offener alter Tab schliesst seine Verbindung bei `onversionchange` (Risiko «Upgrade blockiert»).
+- Ein Datensatz `{ id: 'aktuell', format: 1, stand, appVersion, nutzerId, teile: { <teil>: Zeile[] } }`. Die Zeilen bleiben in der Form von PostgREST (snake_case wie `datenbank.types.ts`). `stand` ist der Zeitpunkt `jetzt` beim Start des Ladens, als UTC-ISO gespeichert und in Zürich angezeigt.
+- `buendelPruefen()` verwirft ein anderes `format` und eine fremde `nutzerId`. Dann gilt «kein Bündel», und Heute zeigt den Hinweis.
+- Verworfen: ein Datensatz je Teil, weil ein gescheitertes Nachladen sonst Teile verschiedener Stände mischt und «Stand: hh:mm» nicht mehr für alles gälte.
+
+## Idempotenz über Client-UUID und Upsert
+
+- Die `client_id` entsteht im Client (`crypto.randomUUID()`) und wird von der Maske gehalten, nicht von `schreiben()`. Nur so bleibt sie über Wiederholungen gleich (TO2). Später übernimmt die Warteschlange denselben Schlüssel, ohne Aufrufer zu ändern (Konzept 11.4 Punkt 1).
+- Upsert mit `on conflict (client_id) do nothing`: Die erste Zeile gewinnt, `erfasst_am` bleibt das erste Eintreffen, und es feuert kein Update-Trigger (`ereignis_cache` hört auf `update of storniert_am`). Verworfen wurde `do update`: Es überschriebe die erste Zeile, widerspräche «Korrektur = Storno plus neue Zeile» (8.1 Regel 2) und bräuchte bei jeder Wiederholung die Update-Policy.
+- Ein Vorgang mit mehreren Zeilen ist je Zeile idempotent (04 4.1). Nach einem Fehler in Schritt k sendet die Wiederholung den ganzen Vorgang mit denselben IDs, die Schritte 1 bis k−1 laufen als Duplikat durch. Verworfen wurde «nur ab Schritt k senden»: Das bräuchte einen gespeicherten Fortschritt, und der gehört zur Warteschlange.
+
+## Fehler und Konflikte
+
+| Lage | Erkennung (`fehlerEinordnen`) | Art | wiederholbar | Anzeige |
+|---|---|---|---|---|
+| kein Netz | `TypeError` / `Failed to fetch`, Status 0 | `kein_netz` | ja | «Kein Netz, nicht gespeichert, erneut senden» |
+| Antwort verloren, Zeitlimit 15 s (A3) | `AbortError`, Abbruch nach dem Senden | `unklar` | ja | gleicher Text (A4) |
+| Server überlastet | 408, 429, 5xx | `server` | ja | «Server nicht erreichbar, nicht gespeichert, erneut senden» |
+| Token abgelaufen | 401, `PGRST301`, `PGRST303` | `anmeldung` | ja | «Anmeldung wird erneuert, nicht gespeichert, erneut senden»; keine Abmeldung (UC0-AK7) |
+| kein Zugang (RLS) | `42501` | `abgelehnt` | nein | «Nicht gespeichert: kein Zugang für dieses Konto» |
+| Regel der Datenbank verletzt | `23505` (andere Eindeutigkeit), `23503`, `23514`, `22P02`, `PGRST2xx` | `abgelehnt` | nein | «Nicht gespeichert: <Grund in Tims Worten>», Aktion «Als Text kopieren» (Konzept 11.4) |
+| Ereignisdaten falsch | `vorgangPruefen()` vor dem Senden | `abgelehnt` | nein | wie oben; im Betrieb ein Programmfehler |
+| gleiche `client_id`, anderer Inhalt | Rücklesen nach leerer Antwort | `abweichend` | – | «Schon gespeichert mit <Wert>; deine Änderung ist nicht übernommen» (A5) |
+
+- **Nie verwerfen** (11.4): Bei jedem Fehler bleiben Eingaben und `client_id` in der Maske. «Als Text kopieren» legt die Felder als lesbare Zeilen in die Zwischenablage. Die Liste «fehlgeschlagen» in Heute braucht einen dauerhaften Speicher und kommt deshalb mit der Warteschlange (Nicht-Ziel).
+- **Konflikte zwischen Geräten oder Sitzungen** gibt es nicht, weil Tim der einzige Nutzer ist und die App nur einfügt oder storniert, nie Fachfelder ändert. Ein Storno ist mit `storniert_am is null` idempotent.
+- Während eines Sendevorgangs ist «Speichern» gesperrt. Ein doppelter Tipp wäre wegen der Idempotenz ohnehin harmlos.
+
+## Rolle von RLS
+
+- RLS ist die einzige Zugriffsgrenze (8.1 Regel 6, 11.6). Der Client nutzt nur den Publishable Key und Tims Sitzung, nie die Service-Rolle. `schreiben()` prüft keine Berechtigung selbst, sondern ordnet `42501` als `abgelehnt` ein.
+- Upsert mit `do nothing` braucht `tim_einfuegen` und für die Rückgabe sowie das Rücklesen `tim_lesen`, das Storno braucht `tim_aendern`. Alle drei bestehen für die Erfassungstabellen; Wissenstabellen schreibt die App nie über `schreiben()`.
+- `buendelLaden()` ruft zuerst `ist_tim()` auf: Ohne Zugang liefert RLS 0 Zeilen, und ohne diese Prüfung würde ein gültiges, aber leeres Bündel den letzten Stand überschreiben.
+- Die E2E schreiben mit einem echten lokalen Konto in `zugang` gegen echte Policies. Die Nachbildung nur der Auth wurde für TO2 verworfen, weil sie die Eindeutigkeit von `client_id` und die Policies nicht prüfen würde.
+
+## AK
+
+| AK | Prüfart | Fundstelle | Test (Name beginnt mit der AK-Nummer) |
+|---|---|---|---|
+| UC9-AK8 (I0-Teil) | [E2E] | Use Cases F4 UC9 AK8; Konzept 11.4 | `UC9-AK8 TO2 Server speichert, Antwort verworfen, Wiederholung: genau 1 Datensatz` und `UC9-AK8 TO8 Speichern ohne Netz: «nicht gespeichert», Eingaben bleiben` |
+| TO2 | [E2E] | `06_tests.md` 7; Konzept 11.4 | `UC9-AK8 TO2 …` (oben); `scripts/ak-abdeckung-regeln.ts` erkennt die Nummer an jeder Stelle des Namens |
+| TO6 | [E2E] | `06_tests.md` 7; 04 4.2 | `TO6 Heute online geladen, offline neu geladen: Bündel sichtbar mit «Stand: hh:mm»` |
+| TO8 | [E2E] | `06_tests.md` 7; UC9 Varianten | `UC9-AK8 TO8 …` (oben) |
+
+Der Teil «Mit der Warteschlange» von UC9-AK8 (TO1, «fehlgeschlagen») gehört nicht zu diesem Paket. TO7 (I0-01) muss mit IndexedDB Version 2 grün bleiben (Regressionslauf, unveränderte Datei).
+
+## Testliste
+
+**E2E** (`tests/e2e/datenpfad.spec.ts`, Produktions-Build über `vite preview`, lokale Datenbank aus dem Job `e2e`, `workers: 1`):
+
+- `UC9-AK8 TO2 …`: Testkonto angemeldet, `#/schreibprobe`, pH 7.02.
+  - Erster POST auf `/rest/v1/messung`: `route.fetch()` (der Server speichert), danach `route.abort('connectionreset')`.
+  - Die App zeigt «nicht gespeichert», das Feld enthält 7.02, und in der Datenbank steht schon 1 Zeile mit dieser `client_id`.
+  - «Speichern» erneut: Der zweite Request trägt dieselbe `client_id` (aus beiden Request-Bodies gelesen), die App zeigt «Gespeichert», in der Datenbank steht genau 1 Zeile.
+- `UC9-AK8 TO8 …`: pH 7.01, dann `context.setOffline(true)` und «Speichern».
+  - Erwartet: Notice «Kein Netz, nicht gespeichert, erneut senden», Feld unverändert, 0 Zeilen mit der `client_id` aus `data-client-id`.
+  - Danach online und «Speichern»: «Gespeichert», genau 1 Zeile mit derselben `client_id`.
+- `TO6 …`: Heute online laden, warten auf den Service Worker als Steuerung und auf `data-buendel-stand`. Danach offline und neu laden.
+  - Erwartet: Heute erscheint ohne Anmeldung, «Stand: hh:mm» mit der Uhrzeit aus `buendel/aktuell.stand` (im Test unabhängig mit `Intl` in Europe/Zurich formatiert), und Teil `messgeraet` mit 1 Zeile aus dem Seed ist lesbar.
+  - Ein zweites Neuladen offline lässt `stand` unverändert, ein gescheitertes Laden überschreibt also nichts.
+- Fixture `tests/e2e/konto.ts` (worker-weit):
+  - Liest `API_URL`, `DB_URL` und den lokalen Service-Schlüssel aus `supabase status -o env`; bricht ab, wenn der Host nicht `127.0.0.1` oder `localhost` ist.
+  - Legt das Konto `e2e@example.test` über die Admin-API an, falls es fehlt, trägt es mit `on conflict do nothing` in `zugang` ein und legt die echte Sitzung in den localStorage (`hydrovisor-sitzung`).
+  - Fehlt die lokale Datenbank, scheitert der Test sichtbar, er wird nicht übersprungen (`test.skip` ist im Prüftor verboten).
+
+**Unit** (Vitest; feste Uhr über `jetzt`, nie Systemzeit):
+
+- `zeit.test.ts`:
+  - `uhrzeit(2027-03-28T00:30Z)` ergibt «01:30», `uhrzeit(2027-03-28T01:30Z)` ergibt «03:30» (Sommerzeit).
+  - Mit `zeitzone = 'America/New_York'` kommt ein anderes Ergebnis, die Gerätezone zählt also nicht.
+  - `kalendertag(2026-11-24T23:30Z)` ergibt 2026-11-25 (G2).
+- `datenpfad-erfassung.test.ts`:
+  - `client_id` bleibt unverändert; `app_version` wird gesetzt.
+  - `client_zeit` und `gilt_ab` werden nur für `MIT_ZEITACHSE` gesetzt, ein mitgegebenes `gilt_ab` (Nacherfassung) bleibt.
+  - `erfasst_am`, `nacherfasst` und `storniert_am` werden entfernt; eine leere oder fehlende `client_id` ist ein Verstoss.
+- `datenpfad-ereignisdaten.test.ts`:
+  - Je `ereignis_typ` ein gültiger Fall und ein unbekannter Schlüssel als Verstoss.
+  - `sonde_gereinigt` und `als_unsicher_markiert` ohne `datenart` sind Verstösse (wie der Check in der Tabelle).
+  - `phase_antwort.antwort` ausserhalb von ja, noch_nicht, problem ist ein Verstoss, `beobachtung.text` mit 201 Zeichen ebenfalls.
+- `datenpfad-fehler.test.ts`:
+  - Je Zeile der Fehlertabelle ein Fall; alle Texte enthalten «nicht gespeichert» oder «Nicht gespeichert», keiner enthält ein Ausrufezeichen.
+  - Ein unbekannter Code ergibt `abgelehnt` mit Code im Text.
+- `datenpfad-buendel.test.ts`:
+  - `buendelPruefen` verwirft Format 2, eine fremde `nutzerId` und einen Wert ohne `teile`.
+  - `standAnzeige`: frisch ergibt keinen Stand; nicht frisch am selben Kalendertag «Stand: 08:07»; am Vortag «Stand: 24.11. 08:07» (A2); ohne Bündel den Hinweis.
+  - `fensterBeginn` über die Sommerzeit hinweg; `letzterJeOrt` mit zwei Orten und Gleichstand.
+- `schreiben.test.ts` (Fake-Adapter):
+  - Upsert mit `onConflict: 'client_id'` und `ignoreDuplicates`; Schritte in der gegebenen Reihenfolge.
+  - Abbruch beim ersten Fehler mit `bestaetigt = k−1`; Wiederholung mit denselben IDs ergibt `gespeichert`.
+  - Leere Antwort mit gleichem Inhalt beim Rücklesen ergibt `gespeichert`, mit anderem Inhalt `abweichend`.
+  - Ein Ereignis-Verstoss ruft den Adapter nicht auf.
+  - Storno filtert auf `storniert_am is null`; `nachErfolg` wird genau einmal und nur bei Erfolg gerufen; das Zeitlimit ergibt `unklar`.
+- `buendel-laden.test.ts` (Fake-Adapter, Speicher als Fake):
+  - 2500 Zeilen ergeben 3 Seiten; scheitert ein Teil, wird nicht geschrieben.
+  - `ist_tim = false` ergibt `kein_zugang` ohne Schreiben; `stand = jetzt` aus dem Parameter.
+
+**SQL, Deno:** keine neuen. Eindeutigkeit von `client_id` und die Policies prüft I0-03; dieses Paket ändert die Datenbank nicht.
+
+**Mutationsziel:** mindestens 80 % für `src/domain/datenpfad/**` und `src/domain/zeit.ts`, einmal gemessen mit `npx stryker run --mutate "src/domain/datenpfad/**/*.ts,src/domain/zeit.ts"`; der Bericht kommt in den Pull Request. Das Prüftor bleibt bei `rechner`, `zielbereich` und `aufgaben` (CLAUDE.md, `06_tests.md` 1); der Job `mutation` endet für dieses Kern-Paket weiter mit der Warnung aus `scripts/mutation.mjs`. Ob die Module dauerhaft ins Prüftor kommen, ist Frage F3.
+
+## Abweichungen von Spezifikation und Konzept
+
+| Nr. | Stelle | Abweichung | Begründung |
+|---|---|---|---|
+| D1 | 04 4.1 `schreiben<T>(tabelle, datensatz)` | `schreiben(vorgang, kontext)` mit Schritten `neu` und `storno` | Vorgänge mit mehreren Zeilen (04 4.1, zweiter Satz) und `jetzt` als Parameter (G1); das Konzept verlangt nur ein Modul |
+| D2 | 04 Abschnitt 3 (Routen) | neue Route `#/schreibprobe` (Schreibtisch) | Prüfstand für TO2 und TO8 vor I0-07; Frage F1 |
+| D3 | Konzept 11.4 TO6 «Stand: hh:mm» | Stand nur, solange kein frisches Laden gelungen ist; mit Datum, wenn nicht heute | ohne Netz wortgleich; Frage F2 |
+| D4 | Plan 9, Annahme 12 (lokales Konto erst mit I0-10) | Testkonto `e2e@example.test` schon jetzt, nur lokal, nur in E2E | TO2 braucht echte Policies; Frage F4 |
+| D5 | 04 4.2 «Heute, Gefäss und Pflanze» zeigen das Bündel | nur Heute | Gefäss und Pflanze kommen mit I1a und I1b |
+| D6 | 04 4.2 «letzter Ansatz je Ort» | ohne `ansatz_position` und `ansatz_schritt` | der Rechner (I1b) ergänzt seinen Teil (A7) |
+
+## Risiken
+
+| Risiko | Folge | Gegenmassnahme |
+|---|---|---|
+| `max_rows = 1000` schneidet still ab (`v_sollwert` hat bei 22 Sorten, 5 Phasen und 10 Grössen über 1000 Zeilen) | lückenhaftes Bündel, falsche Sollwerte offline | Seiten zu je 1000 mit stabiler Sortierung bis zur unvollen Seite; Unit-Test mit 2500 Zeilen |
+| PostgREST gibt bei `ignoreDuplicates` und `return=representation` nicht `[]` zurück (A1) | Duplikat nicht erkannt | Unit-Test gegen den Adapter-Vertrag und E2E TO2 gegen den echten Server; sonst Rücklesen immer |
+| IndexedDB-Upgrade von 1 auf 2 ist blockiert (alter Tab, wartende Version, TO7) | Bündel nicht speicherbar | `onversionchange` schliesst; `onblocked` zeigt «App neu laden»; TO7 als Regression |
+| gleiche `client_id` mit geändertem Inhalt nach unklarem Ausgang | stille Abweichung | Rücklesen und `abweichend` mit Text (A5) |
+| Teilweise geschriebener Vorgang (FK-Reihenfolge) | verwaiste Zeilen bis zur Wiederholung | Reihenfolge der Fremdschlüssel; Wiederholung des ganzen Vorgangs; Text nennt «erneut senden» |
+| Bündel veraltet und sieht aktuell aus | Fehlentscheid am Regal | «Stand» sichtbar, solange nicht frisch; Nachladen bei `online` (A9) |
+| Heute langsamer als 2 s (UC8-AK9, A) | Wartezeit am Regal | Anzeige aus IndexedDB vor dem Netz; Laden im Hintergrund |
+| Zeitlimit 15 s zu kurz bei schwachem WLAN (Q14) | unnötige «nicht gespeichert» | Wert als Konstante, Gerätetest T5 setzt ihn (A3) |
+| `route.fetch()` mit anschliessendem `abort()` unzuverlässig | TO2 unzuverlässig | `workers: 1`; Zählung in der Datenbank statt Zeitabhängigkeit |
+| Schreibprobe in der Produktion ohne Messgerät (Seed dort nur Trockenlauf, Entscheid 0007) | Probe in Produktion nicht nutzbar | Maske zeigt «Kein Messgerät erfasst», Speichern inaktiv; Abnahme 1 in der Vorschau mit dev |
+| Testdaten in Produktion | verfälschte Auswertung | nur `datenart = 'test'` (8.1 Regel 7, G5); löschbar mit `datenart_loeschen('test')` |
+| Kern-Paket über 1.0 PT | Termin 25.11. | Gefäss und Pflanze, Warteschlange und Positionen sind ausgeschlossen; Teile als Konstante |
+
+## Nicht-Ziele
+
+- Warteschlange (Q14): TO1, TO3 bis TO5, Zustände «wartet» und «fehlgeschlagen», Liste in Heute, Senden erst nach dem Update, Format der Vorversion, Prüfung von `min_client_version` (I1b oder Pool).
+- Messmaske UC9 mit Ziffernblock und Bewertung (I0-07, I1b), Heute-Karten und `faelligeAufgaben()` (I1b), Masken Gefäss und Pflanze mit Stand (I1a, I1b).
+- Prüfung der `daten`-Schlüssel in der Datenbank (Plan 9 F5), jede Migration, Hintergrundsynchronisation (Konzept 11.1: keine).
+- Aufrufe von `wissen_app_schreiben()` (UC4, I2) und `push_abo` mit Upsert auf `endpoint` (I0-08). Beide sind keine Erfassungen mit `client_id` und laufen nicht über `schreiben()` (A10).
+- Storno und Korrektur in einer Maske; hier nur das Modul mit Unit-Tests.
+
+## Annahmen (A)
+
+1. (A) PostgREST liefert bei `Prefer: resolution=ignore-duplicates, return=representation` für ein übersprungenes Duplikat ein leeres Array (SQL `on conflict do nothing returning`). Belegt durch E2E TO2 gegen die lokale Datenbank.
+2. (A) Ist der Stand nicht von heute (Kalendertag Zürich), lautet die Zeile «Stand: TT.MM. hh:mm», sonst wörtlich «Stand: hh:mm» (Konzept 11.4).
+3. (A) Zeitlimit je Request 15 s, danach `unklar`. Kein Wert im Repository; der Gerätetest T5 und Q14 können ihn ändern.
+4. (A) `unklar` zeigt denselben Text wie `kein_netz`, obwohl der Server vielleicht gespeichert hat. Die Wiederholung ist dank `client_id` sicher, und so entspricht die Anzeige TO2 und TO8.
+5. (A) Fachfelder beim Rücklesen sind alle gesendeten Felder ausser `app_version` und `client_zeit`; Zahlen werden nach den Spaltentypen verglichen (z. B. `numeric(4,2)`).
+6. (A) Bei `SIGNED_OUT` löscht die App das Bündel. Eine Offline-Sitzung ohne Sitzung im Speicher ist kein `SIGNED_OUT` (I0-06, `zustandNachEreignis`).
+7. (A) Der Teil «letzter Ansatz je Ort» enthält nur `naehrloesungsansatz`. Positionen und Schritte ergänzt das Rechner-Paket.
+8. (A) Bei einer Korrektur kommt zuerst die neue Zeile und dann das Storno der alten: Ein Abbruch dazwischen hinterlässt zwei sichtbare Zeilen statt keiner, und die Wiederholung bereinigt das.
+9. (A) Nachladen auch beim Ereignis `online`, zusätzlich zu «Start» und «nach jedem Schreiben» aus 04 4.2, damit der Stand nach einem Funkloch nicht bis zum nächsten Start veraltet.
+10. (A) «Alle Erfassungen über `schreiben()`» umfasst die Tabellen mit `client_id`. Funktionsaufrufe (`wissen_app_schreiben`) und `push_abo` brauchen später je eine eigene, gleich idempotente Variante im selben Modul.
+11. (A) Die pH-Kontrolle der Schreibprobe trägt `messart = 'ph_kontrolle'`, `platz_id = null`, `datenart = 'test'` und `messgeraet_id` aus dem Bündel; die Checks von `messung` erlauben genau das.
+12. (A) Der lokale Service-Schlüssel aus `supabase status -o env` ist kein Secret im Sinn von CLAUDE.md Regel 2: Er ist der feste Wert der lokalen CLI. Gelesen wird er nur im E2E-Prozess und nur für den Host `127.0.0.1` oder `localhost`; das Konto `e2e@example.test` nutzt eine reservierte Domain, also keine Personendaten (Regel 6).
+
+## Fragen an Tim
+
+- **F1** Die Schreibtisch-Maske «Schreibweg prüfen» (`#/schreibprobe`, pH-Kontrolle mit Datenart `test`) bleibt im Produktions-Build und ist aus Info verlinkt. Ja (Vorschlag) oder nur bis I0-07?
+- **F2** «Stand: hh:mm» nur ohne frische Daten (Vorschlag) oder immer sichtbar?
+- **F3** Mutationstest für `datenpfad` und `zeit`: einmaliger Bericht im Pull Request (Vorschlag) oder dauerhaft im Prüftor (ändert CLAUDE.md und `06_tests.md`)?
+- **F4** Lokales Testkonto `e2e@example.test` schon in diesem Paket statt mit I0-10. Ja (Vorschlag)?
+
+## Prüfung gegen CLAUDE.md
+
+- **Regeln 1 bis 7:** keine Migration und kein Secret, Zugriff nur auf lokal und dev, Zweig `paket/11-datenpfad` (19 Zeichen), keine Personendaten, Referenzdateien unberührt.
+- **Ereignisse führen:** Die App fügt nur ein oder storniert; keine Zustandsfelder, kein `do update`.
+- **«jetzt» als Parameter:** alle Funktionen in `src/domain/` mit `jetzt` und `zeitzone`, `Date.now()` nur in der Oberfläche; `src/domain/` ohne Browser-API (`crypto.randomUUID` in `src/daten/`).
+- **Ein Schreibweg:** `schreiben()` mit Client-UUID und Upsert; RLS unverändert über `ist_tim()`.
+- **Datenart:** Die Schreibprobe schreibt nur `test`.
+- **Oberfläche:** Heute bleibt `data-density="regal"` ohne Eingabefeld. Die Schreibprobe ist eine Schreibtisch-Maske mit Standarddichte und Systemtastatur, passt auf 360 × 640 dp und nutzt nur vorhandene Bausteine (TextField, Button, Notice, Card). Status nie nur über Farbe (Notice mit Symbol und Text).
+- **Texte:** Du-Form, ohne Ausrufezeichen. «Kein Netz, nicht gespeichert, erneut senden» und «Als Text kopieren» stehen wörtlich im Konzept (6.3, 11.4); der Link heisst «Schreibweg prüfen» wie «Info öffnen».
+- **Tests:** Testnamen beginnen mit AK- bzw. TO-Nummer; kein `test.skip`, kein Schnappschuss; der Testentwickler schreibt die roten Tests im eigenen Commit.
