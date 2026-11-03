@@ -1,0 +1,80 @@
+zeile_id,art_id,kulturform,feld,wert,quelle_id,fundstelle,kurzzitat,evidenzklasse,vermerk,freigegeben_am
+art.test_art_a.name_de,test_art_a,,name_de,Testart A,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+art.test_art_a.name_wiss,test_art_a,,name_wiss,Testus alpha,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+art.test_art_a.gbif_key,test_art_a,,gbif_key,9000001,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+art.test_art_a.kulturgruppe_id,test_art_a,,kulturgruppe_id,test_frucht,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+art.test_art_a.kulturformen_erlaubt,test_art_a,,kulturformen_erlaubt,dauerkultur_frucht,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+art.test_art_a.kulturform_vorgabe,test_art_a,,kulturform_vorgabe,dauerkultur_frucht,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+art.test_art_a.standard_keimfaehigkeit,test_art_a,,standard_keimfaehigkeit,0.80,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+art.test_art_a.systemeignung,test_art_a,,systemeignung,dwc,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+art.test_art_a.umsetzen_ab_d,test_art_a,,umsetzen_ab_d,14,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+art.test_art_a.umsetzen_bis_d,test_art_a,,umsetzen_bis_d,21,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+art.test_art_a.aussaatfenster_outdoor,test_art_a,,aussaatfenster_outdoor,3-6,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+ak.test_art_a.dauerkultur_frucht.ernte_ab_d,test_art_a,dauerkultur_frucht,ernte_ab_d,60,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+ak.test_art_a.dauerkultur_frucht.ernteart,test_art_a,dauerkultur_frucht,ernteart,mehrfach,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+ak.test_art_a.dauerkultur_frucht.ernteintervall_d,test_art_a,dauerkultur_frucht,ernteintervall_d,7,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+ak.test_art_a.dauerkultur_frucht.schnitte_max,test_art_a,dauerkultur_frucht,schnitte_max,10,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+ak.test_art_a.dauerkultur_frucht.kulturdauer_max_d,test_art_a,dauerkultur_frucht,kulturdauer_max_d,150,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+ak.test_art_a.dauerkultur_frucht.kulturdauer_typisch_d,test_art_a,dauerkultur_frucht,kulturdauer_typisch_d,120,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+ak.test_art_a.dauerkultur_frucht.entspitzen,test_art_a,dauerkultur_frucht,entspitzen,ja,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+art.test_art_b.name_de,test_art_b,,name_de,Testart B,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+art.test_art_b.name_wiss,test_art_b,,name_wiss,Testus beta,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+art.test_art_b.gbif_key,test_art_b,,gbif_key,9000002,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+art.test_art_b.kulturgruppe_id,test_art_b,,kulturgruppe_id,test_frucht,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+art.test_art_b.kulturformen_erlaubt,test_art_b,,kulturformen_erlaubt,kopf;schnitt,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+art.test_art_b.kulturform_vorgabe,test_art_b,,kulturform_vorgabe,kopf,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+art.test_art_b.standard_keimfaehigkeit,test_art_b,,standard_keimfaehigkeit,0.75,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+art.test_art_b.systemeignung,test_art_b,,systemeignung,beide,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+art.test_art_b.umsetzen_ab_d,test_art_b,,umsetzen_ab_d,10,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+art.test_art_b.umsetzen_bis_d,test_art_b,,umsetzen_bis_d,18,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+ak.test_art_b.kopf.ernte_ab_d,test_art_b,kopf,ernte_ab_d,35,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+ak.test_art_b.kopf.ernteart,test_art_b,kopf,ernteart,einmalig,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+ak.test_art_b.kopf.kulturdauer_max_d,test_art_b,kopf,kulturdauer_max_d,70,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+ak.test_art_b.kopf.kulturdauer_typisch_d,test_art_b,kopf,kulturdauer_typisch_d,60,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+ak.test_art_b.kopf.entspitzen,test_art_b,kopf,entspitzen,nein,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+ak.test_art_b.schnitt.ernte_ab_d,test_art_b,schnitt,ernte_ab_d,25,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+ak.test_art_b.schnitt.ernteart,test_art_b,schnitt,ernteart,mehrfach,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+ak.test_art_b.schnitt.ernteintervall_d,test_art_b,schnitt,ernteintervall_d,10,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+ak.test_art_b.schnitt.schnitte_max,test_art_b,schnitt,schnitte_max,3,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+ak.test_art_b.schnitt.kulturdauer_max_d,test_art_b,schnitt,kulturdauer_max_d,90,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+ak.test_art_b.schnitt.kulturdauer_typisch_d,test_art_b,schnitt,kulturdauer_typisch_d,70,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+ak.test_art_b.schnitt.entspitzen,test_art_b,schnitt,entspitzen,nein,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+art.test_art_c.name_de,test_art_c,,name_de,Testart C,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+art.test_art_c.name_wiss,test_art_c,,name_wiss,Testus gamma,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+art.test_art_c.gbif_key,test_art_c,,gbif_key,9000003,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+art.test_art_c.kulturgruppe_id,test_art_c,,kulturgruppe_id,test_blatt,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+art.test_art_c.kulturformen_erlaubt,test_art_c,,kulturformen_erlaubt,babyleaf;schnitt,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+art.test_art_c.kulturform_vorgabe,test_art_c,,kulturform_vorgabe,schnitt,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+art.test_art_c.standard_keimfaehigkeit,test_art_c,,standard_keimfaehigkeit,0.85,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+art.test_art_c.systemeignung,test_art_c,,systemeignung,kratky,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+art.test_art_c.umsetzen_ab_d,test_art_c,,umsetzen_ab_d,7,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+art.test_art_c.umsetzen_bis_d,test_art_c,,umsetzen_bis_d,14,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+ak.test_art_c.babyleaf.ernte_ab_d,test_art_c,babyleaf,ernte_ab_d,21,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+ak.test_art_c.babyleaf.ernteart,test_art_c,babyleaf,ernteart,einmalig,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+ak.test_art_c.babyleaf.kulturdauer_max_d,test_art_c,babyleaf,kulturdauer_max_d,35,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+ak.test_art_c.babyleaf.kulturdauer_typisch_d,test_art_c,babyleaf,kulturdauer_typisch_d,30,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+ak.test_art_c.babyleaf.entspitzen,test_art_c,babyleaf,entspitzen,nein,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+ak.test_art_c.schnitt.ernte_ab_d,test_art_c,schnitt,ernte_ab_d,28,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+ak.test_art_c.schnitt.ernteart,test_art_c,schnitt,ernteart,mehrfach,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+ak.test_art_c.schnitt.ernteintervall_d,test_art_c,schnitt,ernteintervall_d,10,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+ak.test_art_c.schnitt.schnitte_max,test_art_c,schnitt,schnitte_max,3,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+ak.test_art_c.schnitt.kulturdauer_max_d,test_art_c,schnitt,kulturdauer_max_d,90,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+ak.test_art_c.schnitt.kulturdauer_typisch_d,test_art_c,schnitt,kulturdauer_typisch_d,80,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+ak.test_art_c.schnitt.entspitzen,test_art_c,schnitt,entspitzen,nein,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+art.test_art_d.name_de,test_art_d,,name_de,Testart D,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+art.test_art_d.name_wiss,test_art_d,,name_wiss,Testus delta,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+art.test_art_d.gbif_key,test_art_d,,gbif_key,9000004,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+art.test_art_d.kulturgruppe_id,test_art_d,,kulturgruppe_id,test_blatt,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+art.test_art_d.kulturformen_erlaubt,test_art_d,,kulturformen_erlaubt,schnitt,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+art.test_art_d.kulturform_vorgabe,test_art_d,,kulturform_vorgabe,schnitt,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+art.test_art_d.standard_keimfaehigkeit,test_art_d,,standard_keimfaehigkeit,0.70,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+art.test_art_d.systemeignung,test_art_d,,systemeignung,dwc,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+art.test_art_d.umsetzen_ab_d,test_art_d,,umsetzen_ab_d,7,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+art.test_art_d.umsetzen_bis_d,test_art_d,,umsetzen_bis_d,14,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+ak.test_art_d.schnitt.ernte_ab_d,test_art_d,schnitt,ernte_ab_d,28,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+ak.test_art_d.schnitt.ernteart,test_art_d,schnitt,ernteart,mehrfach,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+ak.test_art_d.schnitt.ernteintervall_d,test_art_d,schnitt,ernteintervall_d,14,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+ak.test_art_d.schnitt.schnitte_max,test_art_d,schnitt,schnitte_max,2,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+ak.test_art_d.schnitt.kulturdauer_max_d,test_art_d,schnitt,kulturdauer_max_d,84,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+ak.test_art_d.schnitt.kulturdauer_typisch_d,test_art_d,schnitt,kulturdauer_typisch_d,70,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02
+ak.test_art_d.schnitt.entspitzen,test_art_d,schnitt,entspitzen,nein,test-fixture,Tabelle 1,Erfundener Testwert,B2,keine,2026-11-02

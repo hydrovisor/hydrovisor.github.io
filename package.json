@@ -11,11 +11,13 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p src/sw/tsconfig.json",
     "test:unit": "vitest run",
+    "test:seed": "vitest run -c vitest.seed.config.ts",
     "test:mutation": "node scripts/mutation.mjs",
     "test:e2e": "playwright test",
     "build": "vite build",
     "preview": "vite preview",
-    "seed": "node scripts/folgt.mjs seed I0-05",
+    "seed": "node scripts/seed.ts",
+    "w0:pruefen": "node scripts/w0-pruefen.ts",
     "demo": "node scripts/folgt.mjs demo I0-10"
   },
   "dependencies": {
@@ -40,6 +42,7 @@
     "eslint-plugin-prettier": "5.5.7",
     "eslint-plugin-react-hooks": "7.1.1",
     "globals": "17.13.0",
+    "postgres": "4.0.0",
     "prettier": "3.9.10",
     "typescript": "6.0.3",
     "typescript-eslint": "8.72.1",

@@ -1,0 +1,7 @@
+zeile_id,kulturgruppe_id,name,leitkultur_art_id,ec_obergrenze_validator,freigegeben_am
+fruchtgemuese,fruchtgemuese,Fruchtgemüse,solanum_lycopersicum,2.6,2026-11-02
+blattsalat,blattsalat,Blattsalate,lactuca_sativa,2.0,2026-11-02
+kohl,kohl,Kohlgewächse,brassica_rapa_chinensis,2.0,2026-11-02
+kraut_einjaehrig,kraut_einjaehrig,Einjährige Kräuter,ocimum_basilicum,2.0,2026-11-02
+kraut_ausdauernd,kraut_ausdauernd,Ausdauernde Kräuter,petroselinum_crispum,2.0,2026-11-02
+fuchsschwanz,fuchsschwanz,Fuchsschwanzgewächse,spinacia_oleracea,2.0,2026-11-02

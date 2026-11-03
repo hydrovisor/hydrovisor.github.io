@@ -1,0 +1,65 @@
+# Seed nach hydrovisor-dev (Entscheid 0007, Muster Entscheid 0006). Nur von Hand (gh workflow run), nur von main,
+# Ziel fest hydrovisor-dev; die Produktion lädt weiterhin nur deploy.yml.
+# Eingabe zweig: Zweig, dessen data/ geladen wird (für Abnahme 1 mit W0-Daten vor dem Merge).
+# Skripte, src/ und Konfiguration kommen immer aus main; aus dem Zweig nur data/.
+# Aktionen per Commit angeheftet (Version im Kommentar).
+name: dev-seed
+
+on:
+  workflow_dispatch:
+    inputs:
+      zweig:
+        description: Zweig mit den Daten (main oder paket/<issue>-<kurz>)
+        required: true
+        default: main
+      trockenlauf:
+        description: Nur anzeigen, was geladen würde (Ausführung mit Rollback)
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+concurrency:
+  group: dev-migration # dieselbe Datenbank wie dev-migration.yml: nie gleichzeitig
+  cancel-in-progress: false
+
+jobs:
+  seed:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: dev
+    env:
+      DEV_PROJEKT: jalvmzgvxvidgmoxuglp # hydrovisor-dev, fest wie in .mcp.json
+      ZWEIG: ${{ inputs.zweig }}
+    steps:
+      - name: Zweig prüfen (nur main oder Paketzweige dieses Repositorys, keine Refs oder Commits)
+        run: |
+          [[ "$ZWEIG" == "main" || "$ZWEIG" =~ ^paket/[0-9]+-[a-z0-9-]+$ ]] || { echo "::error::Zweig nicht erlaubt: $ZWEIG"; exit 1; }
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Daten aus dem Zweig übernehmen
+        run: |
+          git ls-remote --exit-code --heads "https://github.com/${GITHUB_REPOSITORY}.git" "refs/heads/$ZWEIG" > /dev/null || { echo "::error::Zweig fehlt: $ZWEIG"; exit 1; }
+          git fetch --no-tags --depth=1 "https://github.com/${GITHUB_REPOSITORY}.git" "refs/heads/$ZWEIG"
+          rm -rf data
+          git checkout FETCH_HEAD -- data
+          # Commit der Daten für die Fassungen (8.3): GITHUB_SHA ist main, die Daten stammen aus dem Zweig
+          echo "SEED_DATEN_SHA=$(git rev-parse FETCH_HEAD)" >> "$GITHUB_ENV"
+          find data -name '*.csv' | sort
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - name: Seed nach hydrovisor-dev (Management-API; Bericht in der Job-Zusammenfassung)
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          TROCKEN: ${{ inputs.trockenlauf }}
+        run: |
+          if [ "$TROCKEN" = "true" ]; then npm run seed -- --ziel dev --trocken; else npm run seed -- --ziel dev; fi

@@ -1,0 +1,6 @@
+zeile_id,ebene,bezug,kulturform,samen_je_schwamm,obergrenze_samen,pflanzen_stehen_lassen,klasse_saatmenge,substrat_passung,quelle_id,fundstelle,kurzzitat,begruendung,freigegeben_am
+se.test_art_a.dauerkultur_frucht,art,test_art_a,dauerkultur_frucht,1,2,1,B,Würfel 2.2 cm wie in der Quelle,test-fixture,Tabelle 2,Erfundene Saatmenge,Erfundene Empfehlung für Tests.,2026-11-02
+se.test_art_b.kopf,art,test_art_b,kopf,2,3,1,C,Würfel 2.2 cm wie in der Quelle,test-fixture,Tabelle 2,Erfundene Saatmenge,Erfundene Empfehlung für Tests.,2026-11-02
+se.test_art_c.schnitt,art,test_art_c,schnitt,4,6,3,B,Würfel 2.2 cm wie in der Quelle,test-fixture,Tabelle 2,Erfundene Saatmenge,Erfundene Empfehlung für Tests.,2026-11-02
+se.test_art_c.babyleaf,art,test_art_c,babyleaf,5,8,5,D,Würfel 2.2 cm wie in der Quelle,,,,"Standard, nicht belegt.",2026-11-02
+se.test_art_d.schnitt,art,test_art_d,schnitt,3,5,2,C,Würfel 2.2 cm wie in der Quelle,test-fixture,Tabelle 2,Erfundene Saatmenge,Erfundene Empfehlung für Tests.,2026-11-02

@@ -1,0 +1,3 @@
+zeile_id,kulturgruppe_id,name,leitkultur_art_id,ec_obergrenze_validator,freigegeben_am
+test_frucht,test_frucht,Testfrucht,test_art_a,2.6,2026-11-02
+test_blatt,test_blatt,Testblatt,test_art_c,2.0,2026-11-02

@@ -10,3 +10,22 @@ supabase/tests/database/04_schreibweg_app.test.sql
 supabase/tests/database/05_auswertung.test.sql
 supabase/tests/database/06_demo_loeschen.test.sql
 supabase/tests/database/07_speicher.test.sql
+# I0-05 Seed mit Validator (#10)
+tests/unit/w0-validator.test.ts
+tests/unit/w0-umrechnung.test.ts
+tests/unit/w0-csv.test.ts
+tests/unit/w0-abbildung.test.ts
+tests/unit/w0-hilfen.ts
+tests/unit/w0-fixture.ts
+tests/seed/seed.test.ts
+tests/fixtures/seed/startbelegung/data/wissensbasis/freigegeben/art.csv
+tests/fixtures/seed/startbelegung/data/wissensbasis/freigegeben/kulturgruppe.csv
+tests/fixtures/seed/startbelegung/data/wissensbasis/freigegeben/quelle.csv
+tests/fixtures/wissen/data/stammdaten/duengerschema.csv
+tests/fixtures/wissen/data/stammdaten/sorten.csv
+tests/fixtures/wissen/data/wissen/wissenseintrag.csv
+tests/fixtures/wissen/data/wissensbasis/freigegeben/art.csv
+tests/fixtures/wissen/data/wissensbasis/freigegeben/kulturgruppe.csv
+tests/fixtures/wissen/data/wissensbasis/freigegeben/profilwert.csv
+tests/fixtures/wissen/data/wissensbasis/freigegeben/quelle.csv
+tests/fixtures/wissen/data/wissensbasis/freigegeben/saatempfehlung.csv
