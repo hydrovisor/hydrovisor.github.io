@@ -3,11 +3,25 @@ import { useSyncExternalStore } from 'react';
 import type { Sitzungszustand } from '../anmeldung/sitzung.ts';
 
 export type Route =
-  { name: 'heute' } | { name: 'info' } | { name: 'anmelden' } | { name: 'muster' } | { name: 'schreibprobe' };
+  | { name: 'heute' }
+  | { name: 'info' }
+  | { name: 'anmelden' }
+  | { name: 'muster' }
+  | { name: 'schreibprobe' }
+  | { name: 'messen'; code: string }
+  | { name: 'kalibrieren'; datenart?: 'demo' | 'test' };
 
 /** Unbekannte oder leere Route → Heute */
 export function routeAusHash(hash: string): Route {
-  const pfad = hash.replace(/^#/, '').split('?')[0] ?? '';
+  const [pfad = '', abfrage = ''] = hash.replace(/^#/, '').split('?');
+  const messen = /^\/messen\/([A-Za-z0-9.-]+)$/.exec(pfad);
+  if (messen?.[1]) return { name: 'messen', code: decodeURIComponent(messen[1]) };
+  if (pfad === '/kalibrieren') {
+    const datenart = new URLSearchParams(abfrage).get('datenart');
+    return datenart === 'demo' || datenart === 'test'
+      ? { name: 'kalibrieren', datenart }
+      : { name: 'kalibrieren' };
+  }
   switch (pfad) {
     case '/info':
       return { name: 'info' };
@@ -23,6 +37,8 @@ export function routeAusHash(hash: string): Route {
 }
 
 export function hashZu(route: Route): string {
+  if (route.name === 'messen') return `#/messen/${route.code}`;
+  if (route.name === 'kalibrieren' && route.datenart) return `#/kalibrieren?datenart=${route.datenart}`;
   return `#/${route.name}`;
 }
 

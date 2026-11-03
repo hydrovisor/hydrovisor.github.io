@@ -56,3 +56,24 @@ export function tagesbeginn(tag: string, zeitzone: Zeitzone): Date {
   ergebnis = mitternachtUtc - versatz(new Date(ergebnis), zeitzone);
   return new Date(ergebnis);
 }
+
+/** Kalendertag 'JJJJ-MM-TT' plus n Tage, auf Datumsteilen gerechnet (sommerzeitfest, G2) */
+export function tagPlus(tag: string, tage: number): string {
+  const [j, m, d] = tag.split('-').map(Number) as [number, number, number];
+  return new Date(Date.UTC(j, m - 1, d + tage)).toISOString().slice(0, 10);
+}
+
+/** Anzahl Kalendertage von `von` bis `bis` (positiv, wenn `bis` später liegt) */
+export function tageZwischen(von: string, bis: string): number {
+  const ms = (t: string) => {
+    const [j, m, d] = t.split('-').map(Number) as [number, number, number];
+    return Date.UTC(j, m - 1, d);
+  };
+  return Math.round((ms(bis) - ms(von)) / 86_400_000);
+}
+
+/** «31.1.» aus 'JJJJ-MM-TT' */
+export function tagKurz(tag: string): string {
+  const [, m, d] = tag.split('-').map(Number) as [number, number, number];
+  return `${d}.${m}.`;
+}

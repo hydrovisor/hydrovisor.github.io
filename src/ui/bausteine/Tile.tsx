@@ -12,11 +12,24 @@ interface MesswertProps {
   /** Lage auf der Spur in Prozent der Breite */
   spur?: { von: number; bis: number; vorher?: number; neu?: number };
   aktiv?: boolean;
+  /** ohne reservierten Platz für das Statussymbol (Tile.md) */
+  kompakt?: boolean;
   onClick?: () => void;
 }
 
-export function MesswertKachel({ bezeichnung, wert, ton, trend, spur, aktiv, onClick }: MesswertProps) {
-  const klassen = ['hv-tile', ton && `hv-tile-${ton}`, aktiv && 'hv-tile-aktiv'].filter(Boolean).join(' ');
+export function MesswertKachel({
+  bezeichnung,
+  wert,
+  ton,
+  trend,
+  spur,
+  aktiv,
+  kompakt,
+  onClick,
+}: MesswertProps) {
+  const klassen = ['hv-tile', ton && `hv-tile-${ton}`, aktiv && 'hv-tile-aktiv', kompakt && 'hv-tile-kompakt']
+    .filter(Boolean)
+    .join(' ');
   const inhalt = (
     <>
       <span className="hv-tile-kopf">

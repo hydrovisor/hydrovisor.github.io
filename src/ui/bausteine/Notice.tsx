@@ -7,11 +7,16 @@ interface NoticeProps {
   title?: string;
   children?: ReactNode;
   action?: ReactNode;
+  /** einzeilig mit der Aktion rechts (Notice.md) */
+  kompakt?: boolean;
 }
 
-export function Notice({ tone = 'info', title, children, action }: NoticeProps) {
+export function Notice({ tone = 'info', title, children, action, kompakt }: NoticeProps) {
   return (
-    <div className={`hv-notice hv-notice-${tone}`} role={tone === 'danger' ? 'alert' : 'status'}>
+    <div
+      className={`hv-notice hv-notice-${tone}${kompakt ? ' hv-notice-kompakt' : ''}`}
+      role={tone === 'danger' ? 'alert' : 'status'}
+    >
       <span className="hv-notice-icon">
         <StatusIcon ton={tone} />
       </span>
