@@ -112,10 +112,10 @@ a:hover { color: var(--brand-strong); }
 .hv-label-id { font-size: var(--hv-label-id-size, var(--label-id-max)); line-height: 1; font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .hv-label-line { font-size: 2.6mm; line-height: 1.25; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* Anzuchtbox: 55 × 25 mm, aus einem Bogenfeld zugeschnitten */
-.hv-label-small { width: var(--label-small-width); height: var(--label-small-height); padding: 1.5mm var(--label-padding-x); }
+.hv-label-small { width: var(--label-small-width); height: var(--label-small-height); padding: 1mm var(--label-padding-x); }
 .hv-label-small .hv-label-qr-col, .hv-label-small .hv-label-qr { width: var(--label-small-qr); }
 .hv-label-small .hv-label-qr { height: var(--label-small-qr); }
-.hv-label-small .hv-label-code { display: none; }
+.hv-label-small .hv-label-code { font-size: 2mm; }
 .hv-label-small .hv-label-text { width: calc(var(--label-small-width) - var(--label-small-qr) - 2 * var(--label-padding-x)); }
 .hv-label-small .hv-label-id { font-size: var(--hv-label-id-size, 12mm); }
 

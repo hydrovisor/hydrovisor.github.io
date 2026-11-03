@@ -147,7 +147,7 @@ test('DS-01 Musterseite Notfallblatt und Vertretungsblatt A4 ohne Telefonnummer'
   const blatt = await masse(page.getByTestId('notfallblatt'));
   expect(Math.abs(blatt.width / PX_JE_MM - 210)).toBeLessThanOrEqual(0.5);
   await expect(page.getByTestId('notfallblatt').getByRole('columnheader')).toHaveText([
-    'Gefäss',
+    'Kennung',
     'Betriebsart',
     'Zielbereich',
     'Dosis je Kanne',

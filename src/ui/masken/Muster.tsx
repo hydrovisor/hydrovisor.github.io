@@ -87,8 +87,26 @@ function Regalbereich() {
           zeilen={['leer · bereit']}
           badge={<StatusBadge tone="neutral">Keimung</StatusBadge>}
         />
-        <OrtKachel kennung="W" zeilen={['Messstelle']} badge={<StatusBadge tone="uncertain" />} />
-        <OrtKachel kennung="4.1" zeilen={['in Prüfung']} badge={<StatusBadge tone="danger" />} />
+        <OrtKachel
+          kennung="W"
+          zeilen={['Messstelle']}
+          badge={
+            <>
+              <StatusBadge tone="ok" />
+              <StatusBadge tone="uncertain" />
+            </>
+          }
+        />
+        <OrtKachel
+          kennung="4.1"
+          zeilen={['Salat', 'Lösung 3/14 Tage']}
+          badge={
+            <>
+              <StatusBadge tone="danger" />
+              <StatusBadge tone="neutral">in Prüfung</StatusBadge>
+            </>
+          }
+        />
       </div>
       <Checklist
         jetzt={JETZT}
@@ -196,7 +214,7 @@ export function Muster() {
             <table className="hv-blatt-tabelle">
               <thead>
                 <tr>
-                  <th>Gefäss</th>
+                  <th>Kennung</th>
                   <th>Betriebsart</th>
                   <th>Zielbereich</th>
                   <th>Dosis je Kanne</th>
