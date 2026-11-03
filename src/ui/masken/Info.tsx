@@ -16,7 +16,7 @@ const SPEICHER_TEXT = {
 } as const;
 
 export function Info() {
-  const { speicher, installiert, installieren } = useSitzung();
+  const { zustand, speicher, installiert, installieren } = useSitzung();
   return (
     <main className="hv-seite">
       <header className="hv-seite-kopf">
@@ -51,6 +51,11 @@ export function Info() {
           </Button>
         ) : null}
       </Card>
+      {zustand === 'angemeldet' ? (
+        <a className="hv-btn hv-btn-secondary" href={hashZu({ name: 'schreibprobe' })}>
+          Schreibweg prüfen
+        </a>
+      ) : null}
       <Card title="Schrift">
         <p>Manrope, SIL Open Font License 1.1</p>
       </Card>

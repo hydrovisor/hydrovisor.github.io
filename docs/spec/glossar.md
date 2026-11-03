@@ -78,5 +78,8 @@ Stand 1.11.2026 · Auftrag 2 «Spezifikation». Bedeutungen stehen in Konzept v1
 | Kalendertag | `kalendertag()` | `kalendertag()` |
 | Schreibweg | – | `schreiben()` |
 | Offline-Bündel, Warteschlange | – | `buendel`, `warteschlange` (IndexedDB) |
+| Vorgang (Schritte einer Erfassung, je Zeile idempotent) | – | `Vorgang`, `Schritt` (`neu`, `storno`) |
+| Ergebnis des Schreibens | – | `Schreibergebnis` (`gespeichert`, `abweichend`, `nicht_gespeichert`) |
+| Stand des Bündels («Stand: hh:mm») | – | `Buendel.stand`, `standAnzeige()` |
 | Edge Functions | `push-taeglich`, `push-quittung`, `ki-tuete` | – |
 | Zugriff | `zugang`, `ist_tim()` | – |

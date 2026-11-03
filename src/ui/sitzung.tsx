@@ -8,6 +8,7 @@ import {
   type Sitzungszustand,
 } from '../anmeldung/sitzung.ts';
 import { dauerhaftenSpeicherAnfragen, type SpeicherStand } from '../anmeldung/speicher.ts';
+import { buendelLeeren } from '../daten/buendel.ts';
 import { supabase } from '../daten/supabase.ts';
 
 /** Ereignis `beforeinstallprompt` von Chrome (nicht in lib.dom) */
@@ -52,6 +53,8 @@ export function SitzungAnbieter({ children }: { children: ReactNode }) {
   useEffect(() => {
     const { data } = supabase.auth.onAuthStateChange((ereignis, sitzung) => {
       setZustand(zustandNachEreignis(ereignis, sitzung !== null, gespeichert()));
+      // nach der Abmeldung gehört das Bündel niemandem mehr (Plan 11 A6)
+      if (ereignis === 'SIGNED_OUT') void buendelLeeren().catch(() => undefined);
     });
     return () => data.subscription.unsubscribe();
   }, []);

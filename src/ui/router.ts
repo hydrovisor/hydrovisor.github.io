@@ -2,7 +2,8 @@
 import { useSyncExternalStore } from 'react';
 import type { Sitzungszustand } from '../anmeldung/sitzung.ts';
 
-export type Route = { name: 'heute' } | { name: 'info' } | { name: 'anmelden' } | { name: 'muster' };
+export type Route =
+  { name: 'heute' } | { name: 'info' } | { name: 'anmelden' } | { name: 'muster' } | { name: 'schreibprobe' };
 
 /** Unbekannte oder leere Route → Heute */
 export function routeAusHash(hash: string): Route {
@@ -14,6 +15,8 @@ export function routeAusHash(hash: string): Route {
       return { name: 'anmelden' };
     case '/muster':
       return { name: 'muster' };
+    case '/schreibprobe':
+      return { name: 'schreibprobe' };
     default:
       return { name: 'heute' };
   }
