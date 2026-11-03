@@ -18,6 +18,7 @@ export default tseslint.config(
       '.stryker-tmp',
       'test-results',
       'playwright-report',
+      'src/daten/datenbank.types.ts',
     ],
   },
   js.configs.recommended,

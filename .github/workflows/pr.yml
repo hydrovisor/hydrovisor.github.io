@@ -133,13 +133,14 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: supabase/setup-cli@45a513f8c64c0bc8e0e3dfe572b5c95be85f6359 # v3.0.1
-        with: { version: latest }
+        with: { version: 3.0.0 } # fest wie lokal (I0-03, Typen-Abgleich)
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         if: needs.vorhanden.outputs.app == 'true'
         with: { node-version: 22, cache: npm }
       - run: supabase start
       - run: supabase db reset
-      - run: mkdir -p reports && supabase test db | tee reports/pgtap.txt
+      - name: pgTAP (--debug gibt die TAP-Zeilen mit Testnamen für die AK-Abdeckung aus, I0-03)
+        run: mkdir -p reports && supabase test db --debug | tee reports/pgtap.txt
       - name: Typen-Abgleich
         if: needs.vorhanden.outputs.app == 'true'
         run: |
@@ -177,7 +178,7 @@ jobs:
       - run: npm ci
       - uses: supabase/setup-cli@45a513f8c64c0bc8e0e3dfe572b5c95be85f6359 # v3.0.1
         if: needs.vorhanden.outputs.db == 'true'
-        with: { version: latest }
+        with: { version: 3.0.0 } # fest wie lokal (I0-03, Typen-Abgleich)
       - name: Lokale Datenbank mit Demo-Szenarien
         if: needs.vorhanden.outputs.db == 'true'
         run: |
