@@ -109,6 +109,8 @@ jobs:
         with: { node-version: 22, cache: npm }
       - run: npm ci
       - run: npm run test:unit
+      - name: W0-Validator über den Stand im Repository (I0-05, startet die .ts-Dateien echt)
+        run: npm run w0:pruefen
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with: { name: bericht-unit, path: reports/, if-no-files-found: ignore }
@@ -146,9 +148,12 @@ jobs:
         run: |
           supabase gen types typescript --local > /tmp/datenbank.types.ts
           diff -u src/daten/datenbank.types.ts /tmp/datenbank.types.ts || { echo "::error::Typen weichen ab: neu erzeugen und im Zweig committen"; exit 1; }
+      - name: Seed-Integrationstests [SQL] gegen die lokale Datenbank (I0-05, Bericht reports/vitest-seed.json)
+        if: needs.vorhanden.outputs.app == 'true'
+        run: npm ci && npm run test:seed
       - name: Seed-Zähltest mit Demo-Daten
         if: needs.vorhanden.outputs.app == 'true'
-        run: npm ci && npm run seed -- --ziel lokal && npm run demo -- --laden
+        run: npm run seed -- --ziel lokal && npm run demo -- --laden
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with: { name: bericht-db, path: reports/, if-no-files-found: ignore }

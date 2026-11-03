@@ -525,7 +525,7 @@ describe('Seed Versionierung', () => {
         wert_typ: 21,
         wert_max: 23,
       });
-      await tx`select public.wissen_app_schreiben('tuetenwert', ${daten}::jsonb)`;
+      await tx`select public.wissen_app_schreiben('tuetenwert', ${daten}::text::jsonb)`;
       await tx`reset role`;
 
       const d = setze(wissen(), PFAD.sorten, 'sorte-test-a-eins', { keimtemperatur_tuete: '17-25' });
