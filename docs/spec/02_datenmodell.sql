@@ -1990,8 +1990,9 @@ comment on view public.v_pflegezeit is 'Ist-Stunden am Regal je Woche aus Erfass
 -- 8 Zugriff: RLS auf jeder Tabelle (8.1 Regel 6, 11.6)
 -- Tabellenrechte (Fehler #65, Migration 20261104170000_tabellenrechte.sql): Gehostete Supabase-Projekte geben
 -- Tabellen in public nicht mehr automatisch für die Data API frei. Die Migration setzt deshalb ausdrücklich
--- select, insert, update, delete für authenticated und service_role, auch als Standardrecht für künftige
--- Tabellen der Rolle postgres; kein truncate. RLS entscheidet weiter über die Zeilen.
+-- select, insert, update, delete für authenticated und select, insert, update für service_role (BYPASSRLS),
+-- auch als Standardrecht für künftige Tabellen der Rolle postgres; kein truncate. RLS entscheidet weiter über
+-- die Zeilen; ohne Delete-Policy löscht die App nichts.
 -- Wissen: nur lesen (Schreiben über Seed mit Service-Rolle oder
 -- wissen_app_schreiben). Übrige: lesen, einfügen, ändern; kein Löschen
 -- durch die App (Storno), Demo- und Testdaten löscht die Service-Rolle.
