@@ -10,6 +10,9 @@ export type Route =
   | { name: 'schreibprobe' }
   | { name: 'push' }
   | { name: 'messen'; code: string }
+  | { name: 'gefaess'; code: string }
+  | { name: 'anlage'; kuerzel?: string }
+  | { name: 'anlage-neu' }
   | { name: 'kalibrieren'; datenart?: 'demo' | 'test' };
 
 /** Unbekannte oder leere Route → Heute */
@@ -17,6 +20,13 @@ export function routeAusHash(hash: string): Route {
   const [pfad = '', abfrage = ''] = hash.replace(/^#/, '').split('?');
   const messen = /^\/messen\/([A-Za-z0-9.-]+)$/.exec(pfad);
   if (messen?.[1]) return { name: 'messen', code: decodeURIComponent(messen[1]) };
+  const gefaess = /^\/gefaess\/([A-Za-z0-9.-]+)$/.exec(pfad);
+  if (gefaess?.[1]) return { name: 'gefaess', code: decodeURIComponent(gefaess[1]) };
+  if (pfad === '/anlage/neu') return { name: 'anlage-neu' };
+  if (pfad === '/anlage') {
+    const kuerzel = new URLSearchParams(abfrage).get('a');
+    return kuerzel && /^[A-Z]{1,3}$/.test(kuerzel) ? { name: 'anlage', kuerzel } : { name: 'anlage' };
+  }
   if (pfad === '/kalibrieren') {
     const datenart = new URLSearchParams(abfrage).get('datenart');
     return datenart === 'demo' || datenart === 'test'
@@ -41,6 +51,9 @@ export function routeAusHash(hash: string): Route {
 
 export function hashZu(route: Route): string {
   if (route.name === 'messen') return `#/messen/${route.code}`;
+  if (route.name === 'gefaess') return `#/gefaess/${route.code}`;
+  if (route.name === 'anlage-neu') return '#/anlage/neu';
+  if (route.name === 'anlage' && route.kuerzel) return `#/anlage?a=${route.kuerzel}`;
   if (route.name === 'kalibrieren' && route.datenart) return `#/kalibrieren?datenart=${route.datenart}`;
   return `#/${route.name}`;
 }

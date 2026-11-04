@@ -59,7 +59,7 @@ Der Router wertet beim Erstaufruf und bei jedem `hashchange` dieselbe Funktion a
 | `#/umsetzen/:satz` | Umsetzen | Regal |
 | `#/pflanze/:pflanzung` | Pflanzenansicht (Satz oder Topf) | Regal |
 | `#/pruefen/:code` | Gefäss prüfen, Schritte 1 bis 3 | Regal |
-| `#/anlage`, `#/vorlagen`, `#/gefaess-neu`, `#/sorten`, `#/etiketten`, `#/einstellungen`, `#/info`, `#/druck/:art` | Schreibtisch-Masken und Druckansichten (Etikettenbogen, Notfallblatt, Vertretungsblatt) | Schreibtisch |
+| `#/anlage` (`?a=<Kürzel>` wählt die Anlage), `#/anlage/neu` (Anlage anlegen, Plan 20), `#/vorlagen`, `#/gefaess-neu`, `#/sorten`, `#/etiketten`, `#/einstellungen`, `#/info`, `#/druck/:art` | Schreibtisch-Masken und Druckansichten (Etikettenbogen, Notfallblatt, Vertretungsblatt) | Schreibtisch |
 
 Codes statt UUIDs in der Adresse (`R-2.3`), damit Etikett, Kopfzeile und Adresse gleich lesbar sind. Unbekannte Route → Heute.
 

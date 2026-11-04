@@ -5,6 +5,7 @@ import { useAblaufOffen } from '../../ablauf/offen.ts';
 import { standAnzeige } from '../../domain/datenpfad/buendel.ts';
 import { kalibrierStand, kalibrierText } from '../../domain/kalibrierung/stand.ts';
 import { messFaelligkeit, type Messfaelligkeit } from '../../domain/messung/faelligkeit.ts';
+import { heuteGruppiert, nachAnlage } from '../../domain/anlage/gruppen.ts';
 import { messbareOrte } from '../../domain/ort.ts';
 import { tagKurz, ZEITZONE } from '../../domain/zeit.ts';
 import { OrtKachel } from '../bausteine/Tile.tsx';
@@ -54,9 +55,14 @@ export function Heute() {
     <main className="hv-seite" data-density="regal" data-ablauf={ablauf}>
       <header className="hv-seite-kopf">
         <Logo height={32} />
-        <a className="hv-btn hv-btn-ghost" href={hashZu({ name: 'info' })}>
-          Info öffnen
-        </a>
+        <nav className="hv-heute-nav" aria-label="Navigation">
+          <a className="hv-btn hv-btn-ghost hv-btn-compact" href={hashZu({ name: 'anlage' })}>
+            Anlage öffnen
+          </a>
+          <a className="hv-btn hv-btn-ghost hv-btn-compact" href={hashZu({ name: 'info' })}>
+            Info öffnen
+          </a>
+        </nav>
       </header>
       <h1 className="hv-seite-titel">Heute</h1>
       <p>{DATUM.format(jetzt)}</p>
@@ -112,6 +118,7 @@ function PushHinweis() {
 function Uebersicht({ jetzt }: { jetzt: Date }) {
   const { buendel } = useBuendel();
   const geraet = messgeraet(buendel);
+  const teile = buendel?.teile;
   const orte = buendel ? messbareOrte(buendel.teile) : [];
   const messungen = messungenIm(buendel);
   return (
@@ -136,32 +143,51 @@ function Uebersicht({ jetzt }: { jetzt: Date }) {
       {orte.length === 0 ? (
         <p>Noch keine Orte erfasst</p>
       ) : (
-        <div className="hv-orte" aria-label="Orte">
-          {orte.map((o) => (
-            <OrtKachel
-              key={o.platzId}
-              kennung={o.code}
-              zeilen={[
-                faelligText(
-                  messFaelligkeit(
-                    {
-                      platzId: o.platzId,
-                      intervallMessenD: o.intervallMessenD ?? null,
-                      ...zustandVon(buendel, o.platzId),
-                    },
-                    messungen,
-                    jetzt,
-                    ZEITZONE,
-                  ),
-                  o.rolle,
-                ),
-              ]}
-              onClick={() => {
-                window.location.hash = hashZu({ name: 'messen', code: o.code });
-              }}
-            />
-          ))}
-        </div>
+        // ab zwei echten Anlagen je Anlage eine Gruppe, vorher eine Liste (UC1-AK5, Plan 20)
+        (heuteGruppiert(teile) ? nachAnlage(teile, orte) : [{ anlage: undefined, orte }]).map((g) => (
+          <section
+            key={g.anlage?.id ?? 'alle'}
+            className="hv-heute-gruppe"
+            aria-label={g.anlage ? `Anlage ${g.anlage.kuerzel}` : 'Orte'}
+          >
+            {g.anlage ? (
+              <h2 className="hv-heute-anlage">
+                Anlage {g.anlage.kuerzel} · {g.anlage.name}
+              </h2>
+            ) : null}
+            <div className="hv-orte" aria-label="Orte">
+              {g.orte.map((o) => (
+                <OrtKachel
+                  key={o.platzId}
+                  kennung={o.code}
+                  zeilen={[
+                    faelligText(
+                      messFaelligkeit(
+                        {
+                          platzId: o.platzId,
+                          intervallMessenD: o.intervallMessenD ?? null,
+                          ...zustandVon(buendel, o.platzId),
+                        },
+                        messungen,
+                        jetzt,
+                        ZEITZONE,
+                      ),
+                      o.rolle,
+                    ),
+                  ]}
+                  onClick={() => {
+                    // Gefäss öffnet die Maske «Gefäss», W die Messmaske (UC1, Plan 20)
+                    window.location.hash = hashZu(
+                      o.rolle === 'messstelle'
+                        ? { name: 'messen', code: o.code }
+                        : { name: 'gefaess', code: o.code },
+                    );
+                  }}
+                />
+              ))}
+            </div>
+          </section>
+        ))
       )}
     </>
   );

@@ -102,7 +102,7 @@ test('UC0-AK1 der aktive Punkt öffnet seinen Ablauf: Kalibrieren und Leitungswa
   await expect(page).toHaveURL(/#\/messen\/R-W$/);
 });
 
-test('UC0-AK1 Demo-Daten haken nichts ab, Punkte ohne Ablauf zeigen «Ablauf folgt»', async ({ page }) => {
+test('UC0-AK1 Demo-Daten haken nichts ab, Punkt 1 öffnet «Anlage anlegen»', async ({ page }) => {
   await heuteMit(page, () => einrichtungsTeile(9, 'demo'));
   await expect(page.getByRole('heading', { name: 'Einrichtung · 1 von 9 erledigt' })).toBeVisible();
   expect(await zustaende(page)).toEqual([
@@ -116,6 +116,14 @@ test('UC0-AK1 Demo-Daten haken nichts ab, Punkte ohne Ablauf zeigen «Ablauf fol
     'offen',
     'offen',
   ]);
+  // Punkt 1 öffnet seit I1a-02 «Anlage anlegen» (Plan 20)
+  await liste(page).getByRole('link', { name: 'Anlage anlegen' }).click();
+  await expect(page).toHaveURL(/#\/anlage\/neu$/);
+});
+
+test('UC0-AK1 ein Punkt ohne Ablauf zeigt «Ablauf folgt»', async ({ page }) => {
+  await heuteMit(page, () => einrichtungsTeile(4));
+  await expect(page.getByRole('heading', { name: 'Einrichtung · 4 von 9 erledigt' })).toBeVisible();
   await expect(liste(page).getByText('Ablauf folgt mit einer der nächsten Versionen')).toBeVisible();
 });
 
