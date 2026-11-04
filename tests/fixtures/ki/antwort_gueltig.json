@@ -1,0 +1,23 @@
+{
+  "id": "msg_fixture_01",
+  "type": "message",
+  "role": "assistant",
+  "model": "claude-sonnet-5-5",
+  "content": [
+    {
+      "type": "thinking",
+      "thinking": "Vorderseite und Rückseite gelesen.",
+      "signature": "fixture"
+    },
+    {
+      "type": "text",
+      "text": "{\"name\":\"Rote Probe\",\"art\":\"Lactuca sativa\",\"keimart\":\"licht\",\"keimtemperatur_min_c\":15,\"keimtemperatur_max_c\":20,\"keimdauer_min_d\":7,\"keimdauer_max_d\":14,\"kulturdauer_min_d\":50,\"kulturdauer_max_d\":70,\"aussaat_von_monat\":3,\"aussaat_bis_monat\":8,\"hersteller\":\"Beispiel Saaten\"}"
+    }
+  ],
+  "stop_reason": "end_turn",
+  "stop_sequence": null,
+  "usage": {
+    "input_tokens": 2100,
+    "output_tokens": 310
+  }
+}
