@@ -15,3 +15,5 @@ Datum 3.11.2026 · Entscheid des Lead im Paket I0-05 (#10, Plan `docs/plaene/10.
 **Verworfen.** Datenbankfunktion `seed_laden(jsonb)` (bräuchte eine Migration und Rechte-Entzug, Paket ohne Migration); Seed über den MCP-Server (schreibt nicht); eigenes dev-Datenbankpasswort als Secret (Tims Handgriff); `psql` als Client (unter Windows nicht sicher vorhanden).
 
 **Folgen.** Neue devDependency `postgres` (postgres.js, exakt angeheftet). Ändert W0 eine `quelle` oder `kulturgruppe`, bricht der Lauf ab (keine Versionsspalten); dann neue `quelle_id` oder eigenes Paket mit Migration.
+
+**Nachtrag 4.11.2026.** Die Freigabe in `production` gibt nach Entscheid 0010 der Lead, wenn der Deploy die Produktionsdatenbank nicht verändert (keine Migration, Seed noch trocken). Mit Migration oder scharfem Seed bleibt sie bei Tim.
