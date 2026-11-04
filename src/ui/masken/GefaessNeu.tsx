@@ -63,7 +63,7 @@ function Wahl<T extends string | number | null>({
   gesperrt?: (w: T) => boolean;
 }) {
   return (
-    <fieldset className="hv-anlage-feldgruppe hv-wahl">
+    <fieldset className="hv-anlage-feldgruppe">
       <legend>{titel}</legend>
       {werte.map((w) => (
         <label key={String(w.wert)} className="hv-anlage-wahlfeld">
@@ -158,7 +158,8 @@ export function GefaessNeu({ kuerzel, rolle: startRolle }: { kuerzel?: string; r
       festeDosis: art === 'konstantpegel' && festeDosis,
       luftpumpe,
       gefaessmodellId: modellId,
-      betriebsvolumenL: zahl(volumenText),
+      // auf Hundertstel wie die Spalte numeric(5,2) (Prüfer Runde 1, Befund 5)
+      betriebsvolumenL: Math.round(zahl(volumenText) * 100) / 100,
       deckeltypId: deckelId,
       intervalle: iv,
     };
@@ -351,8 +352,18 @@ export function GefaessNeu({ kuerzel, rolle: startRolle }: { kuerzel?: string; r
       ) : (
         <div className="hv-formular">
           <dl className="hv-angaben">
-            <dt>Code</dt>
+            <dt>Kennung</dt>
+            <dd>{vorschlag?.kennung ?? '–'}</dd>
+            <dt>Etikett-Code</dt>
             <dd>{vorschlag?.code ?? '–'}</dd>
+            {rolle === 'anzuchtort' ? (
+              <>
+                <dt>Typ</dt>
+                <dd>{vorschlag?.typ === 'box_dunkel' ? 'Dunkelkeimer, schwarz' : 'Lichtkeimer, weiss'}</dd>
+                <dt>Position</dt>
+                <dd>{vorschlag?.position === 'hinten' ? 'hinten' : 'vorne'}</dd>
+              </>
+            ) : null}
             {rolle === 'gefaess' ? (
               <>
                 <dt>Box</dt>

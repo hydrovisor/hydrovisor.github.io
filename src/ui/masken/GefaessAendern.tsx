@@ -6,13 +6,14 @@ import { neueClientId, schreiben, type Schreibergebnis } from '../../daten/schre
 import { aenderungPruefen, aenderungVorgang, type Aenderung } from '../../domain/anlage/aendern.ts';
 import type { Betriebsart } from '../../domain/anlage/anlegen.ts';
 import { entfernenPruefen, entfernenVorgang } from '../../domain/anlage/entfernen.ts';
+import { INTERVALLE } from '../../domain/anlage/erfassen.ts';
 import {
   gefaessAm,
   zeilen,
   type DeckeltypZeile,
   type GefaessmodellZeile,
 } from '../../domain/anlage/teile.ts';
-import type { Verstoss } from '../../domain/datenpfad/erfassung.ts';
+import type { Verstoss, Vorgang } from '../../domain/datenpfad/erfassung.ts';
 import { ortAufloesen } from '../../domain/ort.ts';
 import { ZEITZONE } from '../../domain/zeit.ts';
 import { Button } from '../bausteine/Button.tsx';
@@ -43,6 +44,8 @@ export function GefaessAendern({ code, teil }: { code: string; teil?: 'deckel' }
   const [ergebnis, setErgebnis] = useState<Schreibergebnis>();
   const [sendet, setSendet] = useState(false);
   const [entfernenFragen, setEntfernenFragen] = useState(false);
+  const [vorgang, setVorgang] = useState<{ schluessel: string; schritte: Vorgang }>();
+  const [letzter, setLetzter] = useState<Vorgang>();
 
   const kopf = (
     <header className="hv-seite-kopf">
@@ -86,10 +89,18 @@ export function GefaessAendern({ code, teil }: { code: string; teil?: 'deckel' }
         : {}),
     };
     if (Object.keys(intervalle).length > 0) a.intervalle = intervalle;
-    if (werte['volumen'] !== undefined && Number(werte['volumen']) !== Number(alt.betriebsvolumen_l))
-      a.betriebsvolumenL = Number(String(werte['volumen']).replace(',', '.'));
-    if (werte['betriebsart'] !== undefined && werte['betriebsart'] !== alt.betriebsart)
+    // Volumen auf Hundertstel wie die Spalte numeric(5,2) (Prüfer Runde 1, Befund 5)
+    const volumen = Math.round(Number(String(werte['volumen'] ?? '').replace(',', '.')) * 100) / 100;
+    if (werte['volumen'] !== undefined && volumen !== Number(alt.betriebsvolumen_l))
+      a.betriebsvolumenL = volumen;
+    if (werte['betriebsart'] !== undefined && werte['betriebsart'] !== alt.betriebsart) {
       a.betriebsart = werte['betriebsart'] as Betriebsart;
+      // feste Dosis gibt es nur bei Konstantpegel (Befund 4)
+      if (a.betriebsart !== 'konstantpegel' && alt.feste_dosis) a.festeDosis = false;
+    }
+    const pumpe = werte['luftpumpe'];
+    if (pumpe !== undefined && (pumpe === '' ? null : pumpe) !== (alt.luftpumpe ?? null))
+      a.luftpumpe = pumpe === '' ? null : (pumpe as 'P1' | 'P2' | 'P3' | 'P4');
     if (werte['modell'] !== undefined && werte['modell'] !== alt.gefaessmodell_id)
       a.gefaessmodellId = werte['modell'];
     if (werte['deckel'] !== undefined && werte['deckel'] !== alt.deckeltyp_id)
@@ -97,7 +108,16 @@ export function GefaessAendern({ code, teil }: { code: string; teil?: 'deckel' }
     return a;
   }
 
-  async function senden(vorgang: Parameters<typeof schreiben>[0]) {
+  /** derselbe Vorgang je Eingabe: eine Wiederholung sendet dieselben Client-UUIDs (Konzept 11.4; Befund 3) */
+  function gebunden(schluessel: string, bauen: () => Vorgang): Vorgang {
+    if (vorgang && vorgang.schluessel === schluessel) return vorgang.schritte;
+    const schritte = bauen();
+    setVorgang({ schluessel, schritte });
+    return schritte;
+  }
+
+  async function senden(vorgang: Vorgang) {
+    setLetzter(vorgang);
     setSendet(true);
     const antwort = await schreiben(vorgang, { jetzt: jetzt(), zeitzone: ZEITZONE });
     setSendet(false);
@@ -114,7 +134,9 @@ export function GefaessAendern({ code, teil }: { code: string; teil?: 'deckel' }
     const f = aenderungPruefen(teile, platzId, a);
     setFehler(f);
     if (f.length > 0) return;
-    void senden(aenderungVorgang(teile, platzId, a, neueClientId, jetzt()));
+    void senden(
+      gebunden(JSON.stringify(a), () => aenderungVorgang(teile, platzId, a, neueClientId, jetzt())),
+    );
   }
 
   const hindernisse = entfernenPruefen(teile, platzId);
@@ -182,9 +204,34 @@ export function GefaessAendern({ code, teil }: { code: string; teil?: 'deckel' }
                 type="radio"
                 name="betriebsart"
                 checked={art === b.wert}
-                onChange={() => setzen('betriebsart', b.wert)}
+                onChange={() => {
+                  // Intervalle der neuen Betriebsart vorschlagen (Plan 21 «Ändern», Befund 1)
+                  const iv = INTERVALLE[b.wert];
+                  setWerte((x) => ({
+                    ...x,
+                    betriebsart: b.wert,
+                    messen: String(iv.messenD),
+                    nachfuellen: iv.nachfuellenD === null ? '' : String(iv.nachfuellenD),
+                    wechseln: iv.wechselnD === null ? '' : String(iv.wechselnD),
+                  }));
+                  setErgebnis(undefined);
+                }}
               />
               {b.text}
+            </label>
+          ))}
+        </fieldset>
+        <fieldset className="hv-anlage-feldgruppe">
+          <legend>Luftpumpe</legend>
+          {['', 'P1', 'P2', 'P3', 'P4'].map((p) => (
+            <label key={p || 'keine'} className="hv-anlage-wahlfeld">
+              <input
+                type="radio"
+                name="luftpumpe"
+                checked={wert('luftpumpe', alt.luftpumpe ?? '') === p}
+                onChange={() => setzen('luftpumpe', p)}
+              />
+              {p || 'keine'}
             </label>
           ))}
         </fieldset>
@@ -225,7 +272,23 @@ export function GefaessAendern({ code, teil }: { code: string; teil?: 'deckel' }
         </fieldset>
       </form>
       {schreibfehler ? (
-        <Notice tone="danger">{schreibfehler.text}</Notice>
+        <Notice
+          tone="danger"
+          action={
+            schreibfehler.wiederholbar && letzter ? (
+              <Button
+                variant="secondary"
+                size="compact"
+                disabled={sendet}
+                onClick={() => void senden(letzter)}
+              >
+                Erneut senden
+              </Button>
+            ) : undefined
+          }
+        >
+          {schreibfehler.text}
+        </Notice>
       ) : ergebnis?.status === 'abweichend' ? (
         <Notice tone="warn" title="Schon gespeichert mit anderen Werten" />
       ) : null}
@@ -244,7 +307,9 @@ export function GefaessAendern({ code, teil }: { code: string; teil?: 'deckel' }
             <Button
               variant="danger"
               disabled={sendet}
-              onClick={() => void senden(entfernenVorgang(platzId, neueClientId(), jetzt()))}
+              onClick={() =>
+                void senden(gebunden('entfernen', () => entfernenVorgang(platzId, neueClientId(), jetzt())))
+              }
             >
               Entfernen bestätigen
             </Button>

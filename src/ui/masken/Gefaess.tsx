@@ -5,6 +5,7 @@ import { neueClientId, schreiben } from '../../daten/schreiben.ts';
 import { leerenVorgang } from '../../domain/anlage/aendern.ts';
 import { gefaessAnsicht, type Gefaessansicht } from '../../domain/anlage/gefaess.ts';
 import { ereignisseAm, ms, type Teile } from '../../domain/anlage/teile.ts';
+import type { Vorgang } from '../../domain/datenpfad/erfassung.ts';
 import { ortAufloesen } from '../../domain/ort.ts';
 import { ZEITZONE } from '../../domain/zeit.ts';
 import { Button } from '../bausteine/Button.tsx';
@@ -149,12 +150,18 @@ export function Gefaess({ code }: { code: string }) {
 function Nebenknoepfe({ a, teile }: { a: Gefaessansicht; teile: Teile }) {
   const [sendet, setSendet] = useState(false);
   const [fehler, setFehler] = useState<string>();
+  // je Handlung derselbe Vorgang bis zum Erfolg: eine Wiederholung sendet dieselbe Client-UUID (Prüfer Runde 1, Befund 3)
+  const [vorgaenge, setVorgaenge] = useState<Record<string, Vorgang>>({});
   const platzId = ortAufloesen(a.code, (teile ?? {}) as Record<string, readonly unknown[]>)?.platzId;
-  async function senden(vorgang: Parameters<typeof schreiben>[0]) {
+  async function senden(art: string, bauen: () => Vorgang) {
+    const vorgang = vorgaenge[art] ?? bauen();
+    setVorgaenge((v) => ({ ...v, [art]: vorgang }));
     setSendet(true);
     const antwort = await schreiben(vorgang, { jetzt: jetzt(), zeitzone: ZEITZONE });
     setSendet(false);
     setFehler(antwort.status === 'nicht_gespeichert' ? antwort.fehler.text : undefined);
+    if (antwort.status === 'gespeichert')
+      setVorgaenge((v) => Object.fromEntries(Object.entries(v).filter(([k]) => k !== art)));
   }
   return (
     <nav className="hv-gefaess-neben" aria-label="Weitere Handlungen">
@@ -176,7 +183,9 @@ function Nebenknoepfe({ a, teile }: { a: Gefaessansicht; teile: Teile }) {
             key={k.art}
             variant="secondary"
             disabled={sendet || !platzId}
-            onClick={() => platzId && void senden(leerenVorgang(platzId, neueClientId(), jetzt()))}
+            onClick={() =>
+              platzId && void senden('leeren', () => leerenVorgang(platzId, neueClientId(), jetzt()))
+            }
           >
             {k.text}
           </Button>
@@ -192,7 +201,9 @@ function Nebenknoepfe({ a, teile }: { a: Gefaessansicht; teile: Teile }) {
                 : undefined;
               const clientId = (e as { client_id?: string | null } | undefined)?.client_id ?? e?.id;
               if (clientId)
-                void senden([{ art: 'storno', tabelle: 'ereignis', clientId, grund: 'rueckgaengig' }]);
+                void senden('wiederherstellen', () => [
+                  { art: 'storno', tabelle: 'ereignis', clientId, grund: 'rueckgaengig' },
+                ]);
             }}
           >
             {k.text}

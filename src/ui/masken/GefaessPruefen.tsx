@@ -46,6 +46,10 @@ export function GefaessPruefen({ code }: { code: string }) {
   // lokal weiter, bis das neu geladene Bündel den Schritt kennt
   const schritt = Math.max(stand.naechsterSchritt ?? 5, lokal ?? 0);
   const deckel = g.deckeltyp_id ? deckeltyp(teile, g.deckeltyp_id) : undefined;
+  // «Deckel ändern» nur, wenn der letzte Eintrag ein «Stimmt nicht» in Schritt 2 oder 3 ist (Prüfer Runde 1, Befund 8)
+  const letzter = stand.protokoll.at(-1);
+  const letzterFehlschlag =
+    letzter !== undefined && !letzter.ok && (letzter.schritt === 2 || letzter.schritt === 3);
 
   async function melden(s: 1 | 2 | 3, ok: boolean) {
     if (!ort) return;
@@ -56,7 +60,7 @@ export function GefaessPruefen({ code }: { code: string }) {
     });
     setSendet(false);
     if (antwort.status !== 'gespeichert') {
-      setFehler('Kein Netz, nicht gespeichert, erneut senden');
+      setFehler(antwort.status === 'nicht_gespeichert' ? antwort.fehler.text : 'Schon gespeichert');
       return;
     }
     setFehler(undefined);
@@ -136,7 +140,7 @@ export function GefaessPruefen({ code }: { code: string }) {
           {schritt === 4 ? 'in Betrieb (Volumen offen)' : 'in Betrieb'}
         </p>
       )}
-      {stand.protokoll.some((p) => !p.ok && (p.schritt === 2 || p.schritt === 3)) && schritt <= 3 ? (
+      {letzterFehlschlag && schritt <= 3 ? (
         <a
           className="hv-btn hv-btn-secondary"
           href={hashZu({ name: 'gefaess-aendern', code, teil: 'deckel' })}

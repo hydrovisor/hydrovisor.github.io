@@ -3,7 +3,14 @@
 // neue Zeile ab jetzt (Plan 21 A1). Rein: IDs und jetzt von aussen.
 import type { Schritt, Verstoss, Vorgang } from '../datenpfad/erfassung.ts';
 import type { Betriebsart } from './anlegen.ts';
-import { belegungFelder, toepfe, toepfeAngleichen, volumenPasst, type Intervalle } from './erfassen.ts';
+import {
+  belegungFelder,
+  intervallePruefen,
+  toepfe,
+  toepfeAngleichen,
+  volumenPasst,
+  type Intervalle,
+} from './erfassen.ts';
 import { deckeltyp, gefaessAm, gefaessmodell, zeilen, type PlatzZeile, type Teile } from './teile.ts';
 
 export interface Lochbild {
@@ -49,6 +56,14 @@ export function pflanzenAmPlatz(teile: Teile, platzId: string): PflanzeAmPlatz[]
       .filter((n) => n.storniert_am === null && n.heim_platz_id === platzId)
       .map((n) => n.id),
   );
+  // Töpfe mit Heimplatz hier, die mit einer aktiven Pflanzung anderswo stehen (Prüfer Runde 1, Befund 7)
+  for (const z of zustaende)
+    if (
+      (z as { netztopf_id?: string | null }).netztopf_id &&
+      toepfeHier.has(String((z as { netztopf_id?: string | null }).netztopf_id)) &&
+      !ergebnis.some((e) => e.pflanzungId === z.pflanzung_id)
+    )
+      ergebnis.push({ art: 'pflanzung', pflanzungId: z.pflanzung_id, satzId: z.satz_id });
   const satzVon = new Map(
     zeilen<{ id: string; satz_id: string }>(teile, 'pflanzung').map((p) => [p.id, p.satz_id]),
   );
@@ -154,17 +169,13 @@ export function aenderungPruefen(teile: Teile, platzId: string, a: Aenderung): V
       feld: 'betriebsvolumen',
       grund: 'Betriebsvolumen muss kleiner sein als der Innenraum der Box.',
     });
-  const kratky = b.betriebsart === 'kratky' || b.betriebsart === 'kratky_belueftet';
-  if (!kratky && b.intervall_wechseln_d === null)
-    f.push({ feld: 'intervall_wechseln_d', grund: 'DWC und Konstantpegel brauchen ein Wechselintervall.' });
-  const intervalle: [string, number | null][] = [
-    ['intervall_messen_d', b.intervall_messen_d],
-    ['intervall_nachfuellen_d', b.intervall_nachfuellen_d],
-    ['intervall_wechseln_d', b.intervall_wechseln_d],
-  ];
-  for (const [feld, wert] of intervalle)
-    if (wert !== null && !(Number.isInteger(wert) && wert >= 1 && wert <= 60))
-      f.push({ feld, grund: 'Intervall in ganzen Tagen, 1 bis 60.' });
+  f.push(
+    ...intervallePruefen(b.betriebsart, {
+      messenD: b.intervall_messen_d ?? 0,
+      nachfuellenD: b.intervall_nachfuellen_d,
+      wechselnD: b.intervall_wechseln_d,
+    }),
+  );
   if (b.feste_dosis && b.betriebsart !== 'konstantpegel')
     f.push({ feld: 'feste_dosis', grund: 'Feste Dosis nur bei Konstantpegel.' });
   return f;

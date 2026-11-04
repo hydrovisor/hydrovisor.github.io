@@ -235,6 +235,27 @@ export function erfassenPruefen(teile: Teile, e: ErfassenEingabe): Verstoss[] {
     f.push({ feld: 'topfgroesse', grund: 'Topfgrösse nur 5 oder 8 cm.' });
   if (e.festeDosis && e.betriebsart !== 'konstantpegel')
     f.push({ feld: 'feste_dosis', grund: 'Feste Dosis nur bei Konstantpegel.' });
+  f.push(...intervallePruefen(e.betriebsart, e.intervalle));
+  return f;
+}
+
+/** Checks der Tabelle gefaess: ganze Tage 1 bis 60, Wechselintervall Pflicht ausser Kratky (Prüfer Runde 1, Befund 2) */
+export function intervallePruefen(betriebsart: Betriebsart, iv: Intervalle): Verstoss[] {
+  const f: Verstoss[] = [];
+  const kratky = betriebsart === 'kratky' || betriebsart === 'kratky_belueftet';
+  if (!kratky && iv.wechselnD === null)
+    f.push({ feld: 'intervall_wechseln_d', grund: 'DWC und Konstantpegel brauchen ein Wechselintervall.' });
+  const werte: [string, number | null][] = [
+    ['intervall_messen_d', iv.messenD],
+    ['intervall_nachfuellen_d', iv.nachfuellenD],
+    ['intervall_wechseln_d', iv.wechselnD],
+  ];
+  for (const [feld, wert] of werte)
+    if (
+      (feld === 'intervall_messen_d' || wert !== null) &&
+      !(Number.isInteger(wert) && (wert ?? 0) >= 1 && (wert ?? 0) <= 60)
+    )
+      f.push({ feld, grund: 'Intervall in ganzen Tagen, 1 bis 60.' });
   return f;
 }
 
