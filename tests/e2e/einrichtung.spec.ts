@@ -122,9 +122,18 @@ test('UC0-AK1 Demo-Daten haken nichts ab, Punkt 1 öffnet «Anlage anlegen»', a
 });
 
 test('UC0-AK1 ein Punkt ohne Ablauf zeigt «Ablauf folgt»', async ({ page }) => {
+  // Punkt 5 hat seit I1a-03 einen Ablauf (Plan 19); Punkt 6 folgt mit I1a-04
+  await heuteMit(page, () => einrichtungsTeile(5));
+  await expect(page.getByRole('heading', { name: 'Einrichtung · 5 von 9 erledigt' })).toBeVisible();
+  await expect(liste(page).getByText('Ablauf folgt mit einer der nächsten Versionen')).toBeVisible();
+});
+
+test('UC0-AK1 Punkt 5 öffnet seit I1a-03 die Vorlagen', async ({ page }) => {
   await heuteMit(page, () => einrichtungsTeile(4));
   await expect(page.getByRole('heading', { name: 'Einrichtung · 4 von 9 erledigt' })).toBeVisible();
-  await expect(liste(page).getByText('Ablauf folgt mit einer der nächsten Versionen')).toBeVisible();
+  await liste(page).getByRole('link', { name: 'Vorlagen erfassen' }).click();
+  await expect(page).toHaveURL(/#\/vorlagen$/);
+  await expect(page.getByRole('heading', { name: 'Vorlagen', level: 1 })).toBeVisible();
 });
 
 test('UC0-AK6 Thema standardmässig Hell, auch bei dunklem Systemmodus', async ({ page }) => {

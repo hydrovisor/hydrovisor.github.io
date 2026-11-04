@@ -5,6 +5,7 @@
 export type Punktziel =
   | { art: 'kalibrieren' }
   | { art: 'anlage-neu' }
+  | { art: 'vorlagen' }
   | { art: 'messen'; code: string }
   | { art: 'einweichen' }
   /** Ablauf folgt mit dem genannten Paket (Plan 18 A6) */
@@ -175,7 +176,7 @@ export function einrichtungsStand(teile: Teile, jetzt: Date, einweichenEnde?: nu
       titel: 'Vorlagen für Box, Deckel und Platte',
       knopf: 'Vorlagen erfassen',
       erledigt: vorlagen,
-      ziel: { art: 'folgt', paket: 'I1a-03' },
+      ziel: { art: 'vorlagen' },
     },
     {
       nr: 6,

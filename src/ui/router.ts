@@ -13,6 +13,7 @@ export type Route =
   | { name: 'gefaess'; code: string }
   | { name: 'anlage'; kuerzel?: string }
   | { name: 'anlage-neu' }
+  | { name: 'vorlagen' }
   | { name: 'kalibrieren'; datenart?: 'demo' | 'test' };
 
 /** Unbekannte oder leere Route → Heute */
@@ -44,6 +45,8 @@ export function routeAusHash(hash: string): Route {
       return { name: 'schreibprobe' };
     case '/push':
       return { name: 'push' };
+    case '/vorlagen':
+      return { name: 'vorlagen' };
     default:
       return { name: 'heute' };
   }
