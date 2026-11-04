@@ -94,7 +94,6 @@ async function zustand(ausfuehrer) {
   return JSON.stringify({ ...roh, zeilen });
 }
 
-/** Verdeckte Eingabe ohne Echo (Einfügen erlaubt); Ctrl+C bricht ab */
 // Zwischenablage lesen für Ctrl-V in der verdeckten Eingabe (Windows); sonst leer.
 function zwischenablageLesen() {
   if (process.platform !== 'win32') return '';
@@ -108,6 +107,7 @@ function zwischenablageLesen() {
   }
 }
 
+/** Verdeckte Eingabe ohne Echo (Einfügen erlaubt); Ctrl+C bricht ab */
 function verdeckt(frage) {
   return new Promise((aufloesen) => {
     process.stdout.write(frage);

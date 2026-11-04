@@ -17,10 +17,14 @@ if (!process.stdin.isTTY) {
 }
 
 function zwischenablage(text) {
-  execFileSync('powershell.exe', ['-NoProfile', '-Command', '$input | Set-Clipboard'], {
-    input: text,
-    stdio: ['pipe', 'ignore', 'ignore'],
-  });
+  execFileSync(
+    'powershell.exe',
+    ['-NoProfile', '-Command', 'Set-Clipboard -Value ([Console]::In.ReadToEnd())'],
+    {
+      input: text,
+      stdio: ['pipe', 'ignore', 'ignore'],
+    },
+  );
 }
 
 function zwischenablageLesen() {
@@ -97,6 +101,9 @@ try {
   );
   console.log('und füge ihn dort mit Ctrl-V als Passwort ein. Speichern.');
   console.log('Ohne diesen Schlüssel lässt sich kein Backup mehr öffnen.');
+  const warten = createInterface({ input: process.stdin, output: process.stdout });
+  await warten.question('Wenn der Eintrag gespeichert ist, hier Enter drücken: ');
+  warten.close();
 
   for (;;) {
     console.log(
@@ -106,19 +113,34 @@ try {
     const kontrolle = await verdeckt('Schlüssel aus dem Passwortmanager einfügen (Ctrl-V), dann Enter: ');
     if (kontrolle === identitaet) break;
     console.log(
-      `Stimmt nicht (${kontrolle.length} Zeichen). Der Schlüssel liegt wieder in der Zwischenablage; prüfe den Eintrag und versuche es nochmals.`,
+      `Stimmt nicht (${kontrolle.length} Zeichen). Der Schlüssel liegt wieder in der Zwischenablage; korrigiere den Eintrag im Passwortmanager.`,
     );
     zwischenablage(identitaet);
+    const nochmals = createInterface({ input: process.stdin, output: process.stdout });
+    await nochmals.question('Wenn der Eintrag korrigiert ist, hier Enter drücken: ');
+    nochmals.close();
   }
 
-  execFileSync('gh', ['secret', 'set', 'BACKUP_AGE_PUBLIC_KEY', '--env', 'backup'], {
-    input: empfaenger,
-    stdio: ['pipe', 'ignore', 'inherit'],
-  });
   const ordner = join(homedir(), 'hydrovisor-age');
   mkdirSync(ordner, { recursive: true });
   writeFileSync(join(ordner, 'backup-oeffentlich.txt'), `${empfaenger}\n`);
+  execFileSync(
+    'gh',
+    [
+      'secret',
+      'set',
+      'BACKUP_AGE_PUBLIC_KEY',
+      '--env',
+      'backup',
+      '--repo',
+      'hydrovisor/hydrovisor.github.io',
+    ],
+    { input: empfaenger, stdio: ['pipe', 'ignore', 'inherit'] },
+  );
   console.log('\nGeprüft: Der Schlüssel im Passwortmanager stimmt.');
+  console.log(
+    'Ist der Zwischenablage-Verlauf eingeschaltet (Win+V), lösch dort jetzt den Eintrag AGE-SECRET-KEY-1…',
+  );
   console.log('BACKUP_AGE_PUBLIC_KEY ist in der Umgebung backup gesetzt; der öffentliche Teil liegt in');
   console.log(`${join(ordner, 'backup-oeffentlich.txt')}.`);
   console.log('Fertig. Der Lead startet jetzt das Backup neu.');

@@ -49,7 +49,6 @@ async function frage(text) {
   }
 }
 
-/** Verdeckte Eingabe ohne Echo (Einfügen erlaubt); Ctrl+C bricht ab */
 // Zwischenablage lesen für Ctrl-V in der verdeckten Eingabe (Windows); sonst leer.
 function zwischenablageLesen() {
   if (process.platform !== 'win32') return '';
@@ -63,6 +62,7 @@ function zwischenablageLesen() {
   }
 }
 
+/** Verdeckte Eingabe ohne Echo (Einfügen erlaubt); Ctrl+C bricht ab */
 function verdeckt(text) {
   return new Promise((aufloesen) => {
     process.stdout.write(text);
