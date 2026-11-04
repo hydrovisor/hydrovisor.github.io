@@ -20,7 +20,7 @@ Fakten nur aus dem Repository. Was nicht im Repository steht, fragst du Tim, sta
 
 ## Regeln, die nie gebrochen werden
 
-1. **Merge nur nach Tims Bestätigung einer Kurzzusammenfassung, was der Merge auslöst; dann führt der Lead zusammen** (`gh pr merge --squash`). Die Zusammenfassung nennt: Dateien und Bereiche, ausgelöste Workflows (Deploy, Migration mit Freigabe, Backup), Wirkung auf Supabase und die Vorschau, Folgen für andere Zweige. Ohne ausdrückliches «Ja» im Chat kein Merge (Konzept 12.1, E6, `docs/entscheide/0001-merge-nach-bestaetigung.md`).
+1. **Merge durch den Lead ohne Einzelbestätigung, bis Tim widerruft** (`docs/entscheide/0008-merge-ohne-einzelbestaetigung.md`). Der Lead führt zusammen (`gh pr merge --squash`), sobald drei Bedingungen erfüllt sind: das Prüftor ist grün, der Prüfer hat «bestanden» geurteilt, Abnahme 1 ist kommentiert. Die Kurzzusammenfassung, was der Merge auslöst, steht weiterhin im Pull Request. Sie nennt Dateien und Bereiche, ausgelöste Workflows (Deploy, Migration mit Freigabe, Backup), die Wirkung auf Supabase und die Vorschau sowie Folgen für andere Zweige. Nach dem Merge meldet der Lead Tim das Endprodukt. Die Freigabe in `production` bleibt Tims Handgriff (Regel 2). Nach einem Widerruf gilt wieder `0001-merge-nach-bestaetigung.md`: kein Merge ohne ausdrückliches «Ja» im Chat.
 2. **Produktions-Migration, Secrets und VAPID-Schlüssel sind Tims Handgriffe.** Der Agent liest keine Schlüssel, setzt keine Secrets und hat keinen Zugang zum Produktionsprojekt.
 3. **VAPID-Schlüssel nie neu erzeugen** (sonst sind alle Push-Abos ungültig).
 4. **Supabase nur `hydrovisor-dev`** (Projekt-Referenz `jalvmzgvxvidgmoxuglp`, fest im MCP-Server `supabase` aus `.mcp.json`) oder lokal mit `supabase start`. Einen kontoweiten Supabase-Connector nicht verwenden. Nie `supabase link`, `--linked` oder `supabase db push`; die Produktion migriert nur `deploy.yml` mit Tims Freigabe in der Umgebung `production`, `hydrovisor-dev` nur `dev-migration.yml` und `dev-seed.yml` (Entscheide 0006, 0007; der MCP-Server lehnt schreibende Anweisungen ab). Workflows startet der Lead selbst mit `gh workflow run` (`docs/entscheide/0005-workflows-durch-den-lead.md`); Läufe von `dev-migration.yml` gibt der Lead selbst frei, Merge und `deploy.yml` nur, wo Tim sie im Chat für den bestimmten Pull Request ausdrücklich überlässt.
@@ -85,7 +85,7 @@ Die Skripte stehen seit Paket I0-01 (Grundgerüst) in `package.json`; ihre Namen
 1. `/umsetzen <issue>` legt `paket/<issue>-<kurz>` an und schreibt den Plan nach `docs/plaene/vorlage.md` in `docs/plaene/<issue>.md`.
 2. Planfreigabe: Kern immer, Fachlogik nur mit Migration, Routine nie. Freigabe = Label `plan-frei` von Tim; ohne Label kein Code.
 3. Testentwickler schreibt rote Tests im eigenen Commit (`Tests: …`); Lead programmiert, bis das Prüftor grün ist; Prüfer urteilt mit Plan-Code-Abgleich; höchstens zwei Runden (`runde-1`, `runde-2`), dann Frage an Tim.
-4. Pull Request mit Vorlage, Label `abnahme-wartet`; Abnahme 1 in der Vorschau; Kurzzusammenfassung; Merge nach Tims Bestätigung; Abnahme 2 in der installierten App.
+4. Pull Request mit Vorlage, Label `abnahme-wartet`; Abnahme 1 in der Vorschau; Kurzzusammenfassung; Merge durch den Lead (Entscheid 0008); Abnahme 2 in der installierten App.
 5. Statuskommentar im Issue nach jedem Planschritt und am Sitzungsende; Entscheide als Datei in `docs/entscheide/`.
 
 Paketklassen, Rollen und Modelle: Konzept 12.2. Kern-Pakete: Datenmodell mit Zugriffsregeln (I0), Datenpfad mit Offline-Bündel (I0), Aufgaben-Rechnung (I1b), Passungs-Empfehlung (I2-4). Kern nur starten, wenn mindestens 50 % des Wochenkontingents frei sind; Verbrauch (`/usage`) ins Issue. Kein neues I1b- oder I2-Paket, solange mehr als 20 `offen-regal`-Einträge offen sind.
@@ -113,6 +113,7 @@ Vorschau: Cloudflare Pages `hydrovisor-vorschau` baut jeden Zweig (`<zweig>.hydr
 - [0003 Typen im Pull Request erzeugt](docs/entscheide/0003-typen-im-pull-request.md)
 - [0004 Workflows vor dem Grundgerüst](docs/entscheide/0004-workflows-vor-dem-grundgeruest.md)
 - [0005 Workflows startet der Lead](docs/entscheide/0005-workflows-durch-den-lead.md)
+- [0008 Merge ohne Einzelbestätigung (bis auf Widerruf)](docs/entscheide/0008-merge-ohne-einzelbestaetigung.md)
 - [0006 Migrationen nach hydrovisor-dev und Zugang ohne Handgriff](docs/entscheide/0006-dev-migration-und-zugang.md)
 - [0007 Seed: Ladeskript, Ziele und [SQL]-Tests](docs/entscheide/0007-seed-ziele.md)
 - Übrige Entscheide vom 1.11.2026: `docs/spec/00_rueckfragen.md` (R1 bis R13, W1 bis W14, Annahmen 1 bis 16)
