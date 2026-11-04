@@ -18,12 +18,15 @@ function base64url(bytes: Uint8Array): string {
   return btoa(text).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
-function ausBase64url(text: string): Uint8Array {
+function ausBase64url(text: string): Uint8Array<ArrayBuffer> {
   const b64 = text
     .replace(/-/g, '+')
     .replace(/_/g, '/')
     .padEnd(Math.ceil(text.length / 4) * 4, '=');
-  return Uint8Array.from(atob(b64), (z) => z.charCodeAt(0));
+  const roh = atob(b64);
+  const bytes = new Uint8Array(new ArrayBuffer(roh.length));
+  for (let i = 0; i < roh.length; i++) bytes[i] = roh.charCodeAt(i);
+  return bytes;
 }
 
 export async function signieren(schluessel: string, text: string): Promise<string> {
