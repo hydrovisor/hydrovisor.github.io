@@ -13,6 +13,7 @@ import { Gefaess } from './masken/Gefaess.tsx';
 import { GefaessAendern } from './masken/GefaessAendern.tsx';
 import { GefaessNeu } from './masken/GefaessNeu.tsx';
 import { GefaessPruefen } from './masken/GefaessPruefen.tsx';
+import { Vorlagen } from './masken/Vorlagen.tsx';
 import { BuendelAnbieter } from './buendel.tsx';
 import { maskeFuer, useRoute } from './router.ts';
 import { SitzungAnbieter, useSitzung } from './sitzung.tsx';
@@ -49,6 +50,8 @@ function Masken() {
         <Anlage {...(maske.kuerzel ? { kuerzel: maske.kuerzel } : {})} />
       ) : maske.name === 'anlage-neu' ? (
         <AnlageNeu />
+      ) : maske.name === 'vorlagen' ? (
+        <Vorlagen />
       ) : maske.name === 'push' ? (
         <Push />
       ) : maske.name === 'schreibprobe' ? (

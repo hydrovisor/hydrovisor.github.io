@@ -99,6 +99,11 @@ tests/fixtures/ki/jpeg_1600x10.jpg
 tests/fixtures/ki/referenz_beispiel.csv
 # I0-09 Runde 1 (#14)
 tests/unit/ki-eval-runde1.test.ts
+# I1a-03 Vorlagen (#19)
+tests/fixtures/lochbilder.ts
+tests/unit/vorlagen.test.ts
+tests/e2e/vorlagen.spec.ts
+supabase/tests/database/13_vorlagen_regal.test.sql
 # I1a-04 Gefäss erfassen (#21)
 tests/unit/gefaess-erfassen.test.ts
 tests/unit/gefaess-aendern.test.ts

@@ -9,6 +9,7 @@ export type Punktziel =
   | { art: 'gefaess-neu'; rolle?: 'messstelle' }
   /** Prüfschritte 1 bis 3 eines Gefässes (Plan 21) */
   | { art: 'pruefen'; code: string }
+  | { art: 'vorlagen' }
   | { art: 'messen'; code: string }
   | { art: 'einweichen' }
   /** Ablauf folgt mit dem genannten Paket (Plan 18 A6) */
@@ -188,7 +189,7 @@ export function einrichtungsStand(teile: Teile, jetzt: Date, einweichenEnde?: nu
       titel: 'Vorlagen für Box, Deckel und Platte',
       knopf: 'Vorlagen erfassen',
       erledigt: vorlagen,
-      ziel: { art: 'folgt', paket: 'I1a-03' },
+      ziel: { art: 'vorlagen' },
     },
     {
       nr: 6,

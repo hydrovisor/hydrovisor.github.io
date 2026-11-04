@@ -1,0 +1,90 @@
+/* Vorlagen Box und Deckel (Plan 19, A10): Liste, Formular und Wahlgruppen, nur mit Tokens des Design Systems */
+.hv-vorlagen-liste {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.hv-vorlagen-eintrag {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--line);
+}
+
+.hv-vorlagen-eintrag:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.hv-vorlagen-name {
+  margin: 0;
+  font-weight: 700;
+}
+
+.hv-vorlagen-angabe,
+.hv-vorlagen-genutzt,
+.hv-vorlagen-leer {
+  margin: 0;
+  color: var(--ink-muted);
+  overflow-wrap: anywhere;
+}
+
+.hv-vorlagen-aktionen {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.hv-vorlagen-gruppe {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: var(--space-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+}
+
+.hv-vorlagen-gruppe legend {
+  padding: 0 var(--space-1);
+  font-weight: 600;
+}
+
+.hv-vorlagen-wahl {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+
+.hv-vorlagen-wahlfeld {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--size-touch);
+}
+
+.hv-vorlagen-dreispaltig {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.hv-vorlagen-vorschlag {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.hv-vorlagen-grafik {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
