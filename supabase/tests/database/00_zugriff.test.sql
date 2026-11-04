@@ -94,7 +94,7 @@ select plan(
   + (select count(*)::int from funktionen where prosecdef)
   + (select count(*)::int from funktionen)
   + (select count(*)::int from wissen)
-  + 12);
+  + 13);
 
 -- ---------------------------------------------------------------------
 -- Fixtures als postgres: mindestens eine Zeile je Tabelle, damit «0 Zeilen» etwas aussagt
@@ -306,7 +306,23 @@ begin
   end loop;
 end $$;
 
-select * from pg_temp.lesen_je_tabelle('anon', null, 'UC0-AK2 anon liest 0 Zeilen: ');
+-- #67: anon hat in public keine Tabellenrechte (lokal wie gehostet), Lesen scheitert mit 42501
+create function pg_temp.lesen_verweigert_je_tabelle(rolle text, sub uuid, beschreibung text) returns setof text language plpgsql as $$
+declare t text;
+begin
+  for t in select name from tabellen order by name loop
+    return next is(pg_temp.ausfuehren_als(rolle, sub, format('select count(*) from public.%I', t)), '42501',
+                   beschreibung || t);
+  end loop;
+end $$;
+select * from pg_temp.lesen_verweigert_je_tabelle('anon', null, 'UC0-AK2 anon darf nicht lesen (42501): ');
+select is(
+  (select coalesce(string_agg(c.relname, ', ' order by c.relname), '')
+     from pg_class c join pg_namespace n on n.oid = c.relnamespace
+    where n.nspname = 'public' and c.relkind in ('r', 'p', 'v', 'm', 'S')
+      and (has_table_privilege('anon', c.oid, 'SELECT, INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER')
+           or (c.relkind = 'S' and has_sequence_privilege('anon', c.oid, 'USAGE, SELECT, UPDATE')))),
+  '', 'UC0-AK2 #67 anon hat in public kein Recht auf Tabellen, Sichten und Sequenzen');
 select * from pg_temp.einfuegen_je_tabelle('anon', null, 'UC0-AK2 anon Insert scheitert: ');
 select * from pg_temp.lesen_je_tabelle('authenticated', '00000000-0000-4000-8000-00000000000b',
                                        'UC0-AK2 fremdes Konto liest 0 Zeilen: ');
