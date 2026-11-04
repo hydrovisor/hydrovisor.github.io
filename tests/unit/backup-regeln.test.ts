@@ -10,10 +10,12 @@ import {
   listeAufloesen,
   manifestPruefen,
   manifestZeile,
+  meldungKuerzen,
   probeErgebnisLesen,
   probeSql,
   scramVerifier,
   speicherToken,
+  tarLesen,
   vergleichen,
   zaehlungLesen,
 } from '../../scripts/backup-regeln.mjs';
@@ -425,4 +427,290 @@ it('Backup-Einrichtung speicherToken mit injizierter Uhr: Kopf HS256, role, iat,
   expect(
     await crypto.subtle.verify('HMAC', falsch, base64urlDecode(signatur), text.encode(`${kopf}.${nutzlast}`)),
   ).toBe(false);
+});
+
+// ---------------------------------------------------------------------
+// Runde 1 (Befunde der Prüfer): Rückfall ohne session_replication_role, setval, Storage-Namen, tar, Meldungen
+// ---------------------------------------------------------------------
+
+it('Wiederherstellungsprobe (M0) probeSql Rückfall bei insufficient_privilege: Trigger aus und Fremdschlüssel aufgeschoben vor truncate', async () => {
+  const sql = await probeSql(DATEN, TABELLEN);
+  const doStart = sql.search(/\bdo\s+\$/i);
+  const replica = sql.search(/set\s+local\s+session_replication_role\s*=\s*'replica'/i);
+  const ausnahme = sql.search(/exception\s+when\s+insufficient_privilege\s+then/i);
+  const trigger = sql.search(/disable\s+trigger\s+user/i);
+  const aufgeschoben = sql.search(/deferrable\s+initially\s+deferred/i);
+  const constraints = sql.search(/set\s+constraints\s+all\s+deferred\s*;/i);
+  const truncate = sql.search(/truncate/i);
+
+  for (const [name, wert] of Object.entries({
+    doStart,
+    replica,
+    ausnahme,
+    trigger,
+    aufgeschoben,
+    constraints,
+  }))
+    expect(wert, name).toBeGreaterThanOrEqual(0);
+  // Versuch im DO-Block, Ausnahmezweig danach, darin Trigger und Fremdschlüssel; dann set constraints, dann truncate
+  expect(doStart).toBeLessThan(replica);
+  expect(replica).toBeLessThan(ausnahme);
+  expect(ausnahme).toBeLessThan(trigger);
+  expect(ausnahme).toBeLessThan(aufgeschoben);
+  expect(trigger).toBeLessThan(constraints);
+  expect(aufgeschoben).toBeLessThan(constraints);
+  expect(constraints).toBeLessThan(truncate);
+  // Der Rückfall liegt im DO-Block: Blockende nach den Fremdschlüsseln und vor set constraints
+  const blockEnde = sql.slice(ausnahme).search(/end\s+\$[a-z_]*\$\s*;/i) + ausnahme;
+  expect(blockEnde).toBeGreaterThan(aufgeschoben);
+  expect(blockEnde).toBeLessThan(constraints);
+  // Ohne Festschreiben auch im Rückfall
+  expect(sql).not.toMatch(/\bcommit\b/i);
+});
+
+it('Wiederherstellungsprobe (M0) dumpBereinigen entfernt SELECT pg_catalog.setval, weil setval nicht transaktional ist', async () => {
+  const zeilen = [
+    "SET client_encoding = 'UTF8';",
+    "INSERT INTO public.anlage (id, name) VALUES ('fb000000-0000-4000-8000-000000000301', 'Backupregal');",
+    "SELECT pg_catalog.setval('public.ereignis_nr_seq', 42, true);",
+    "  select pg_catalog.setval('public.zaehler_seq', 1, false);",
+    "INSERT INTO public.messung (id, notiz) VALUES ('fb000000-0000-4000-8000-000000000501', 'SELECT pg_catalog.setval im Text');",
+    "SELECT pg_catalog.set_config('search_path', '', false);",
+    '',
+  ];
+  const bereinigt = await dumpBereinigen(zeilen.join('\n'));
+  expect(bereinigt).not.toMatch(/^\s*select\s+pg_catalog\.setval\(/im);
+  expect(bereinigt).not.toContain('ereignis_nr_seq');
+  expect(bereinigt).not.toContain('zaehler_seq');
+  // Andere Zeilen unverändert und in gleicher Reihenfolge
+  expect(bereinigt).toBe([zeilen[0], zeilen[1], zeilen[4], zeilen[5], ''].join('\n'));
+});
+
+it('Backup-Storage listeAufloesen lehnt Namen mit / oder \\ sowie . und .. ab', async () => {
+  for (const name of [
+    `${SORTE_1}/${FOTO_1}`,
+    '../geheim.jpg',
+    'a\\b.jpg',
+    '..\\x.jpg',
+    '.',
+    '..',
+    '/absolut.jpg',
+  ]) {
+    expect(
+      () =>
+        listeAufloesen(
+          [{ name, id: 'fb000000-0000-4000-8000-000000000701', metadata: { size: 1 } }],
+          SORTE_1,
+        ),
+      name,
+    ).toThrow();
+    expect(() => listeAufloesen([{ name, id: null, metadata: null }], ''), `Ordner ${name}`).toThrow();
+  }
+  // Punkte im Namen sind erlaubt, solange der Name nicht . oder .. ist
+  const r = await listeAufloesen(
+    [
+      { name: '..jpg', id: 'fb000000-0000-4000-8000-000000000701', metadata: { size: 1 } },
+      { name: FOTO_1, id: 'fb000000-0000-4000-8000-000000000702', metadata: { size: 2 } },
+    ],
+    SORTE_1,
+  );
+  expect(r.dateien.map((d) => d.pfad)).toEqual([`${SORTE_1}/..jpg`, `${SORTE_1}/${FOTO_1}`]);
+});
+
+// tar-Archive als Bytes im Test (512-Byte-Köpfe mit Prüfsumme), ohne Dateisystem und ohne Programm
+
+type TarFormat = 'ustar' | 'gnu';
+
+interface TarExtra {
+  praefix?: string;
+  atime?: string;
+}
+
+function tarKopf(
+  name: string,
+  groesse: number,
+  typ: string,
+  format: TarFormat,
+  extra: TarExtra = {},
+): Uint8Array {
+  const kopf = new Uint8Array(512);
+  const setzen = (von: number, wert: string, laenge: number) => {
+    const bytes = text.encode(wert);
+    if (bytes.length > laenge) throw new Error(`Feld zu lang: ${wert}`);
+    kopf.set(bytes, von);
+  };
+  setzen(0, name, 100);
+  setzen(100, '0000644\0', 8);
+  setzen(108, '0001750\0', 8);
+  setzen(116, '0001750\0', 8);
+  setzen(124, `${groesse.toString(8).padStart(11, '0')}\0`, 12);
+  setzen(136, '15000000000\0', 12);
+  setzen(156, typ, 1);
+  if (format === 'ustar') {
+    setzen(257, 'ustar\0', 6);
+    setzen(263, '00', 2);
+    if (extra.praefix) setzen(345, extra.praefix, 155);
+  } else {
+    // GNU: Magic «ustar  \0»; an der Stelle des Präfixes stehen atime und ctime
+    setzen(257, 'ustar  \0', 8);
+    if (extra.atime) setzen(345, extra.atime, 12);
+  }
+  setzen(148, '        ', 8);
+  const summe = kopf.reduce((a, b) => a + b, 0);
+  setzen(148, `${summe.toString(8).padStart(6, '0')}\0 `, 8);
+  return kopf;
+}
+
+function tarEintrag(kopf: Uint8Array, inhalt: Uint8Array): Uint8Array[] {
+  const block = new Uint8Array(Math.ceil(inhalt.length / 512) * 512);
+  block.set(inhalt);
+  return [kopf, block];
+}
+
+function tarDatei(
+  name: string,
+  inhalt: string | Uint8Array,
+  format: TarFormat = 'ustar',
+  extra: TarExtra = {},
+): Uint8Array[] {
+  const bytes = typeof inhalt === 'string' ? text.encode(inhalt) : inhalt;
+  return tarEintrag(tarKopf(name, bytes.length, '0', format, extra), bytes);
+}
+
+function tarArchiv(...teile: Uint8Array[][]): Uint8Array {
+  const alle = [...teile.flat(), new Uint8Array(1024)];
+  const ergebnis = new Uint8Array(alle.reduce((a, b) => a + b.length, 0));
+  let pos = 0;
+  for (const teil of alle) {
+    ergebnis.set(teil, pos);
+    pos += teil.length;
+  }
+  return ergebnis;
+}
+
+/** pax-Satz «<länge> <schlüssel>=<wert>\n»; die Länge zählt sich selbst mit */
+function paxSatz(schluessel: string, wert: string): string {
+  const rest = text.encode(` ${schluessel}=${wert}\n`).length;
+  let laenge = rest + 1;
+  while (String(laenge).length + rest !== laenge) laenge += 1;
+  return `${laenge} ${schluessel}=${wert}\n`;
+}
+
+const dekodieren = (bytes: Uint8Array | undefined) => (bytes ? new TextDecoder().decode(bytes) : undefined);
+
+// Fotopfad im Backup: sicherung/storage/saattueten/<uuid>/<uuid>.jpg, 106 Zeichen
+const FOTO_PFAD = `sicherung/storage/saattueten/${SORTE_1}/${FOTO_1}`;
+const FOTO_PFAD_2 = `sicherung/storage/saattueten/${SORTE_2}/${FOTO_2}`;
+
+it('Backup-Storage tarLesen liest nur reguläre Dateien aus einem ustar-Archiv, auch über 512 Bytes', async () => {
+  const gross = new Uint8Array(1300).map((_, i) => i % 251);
+  const archiv = tarArchiv(
+    tarEintrag(tarKopf('sicherung/', 0, '5', 'ustar'), new Uint8Array(0)),
+    tarDatei('sicherung/zaehlung.csv', 'tabelle;zeilen\nanlage;3\n'),
+    tarDatei('./sicherung/manifest.txt', ''),
+    tarDatei('sicherung/foto.jpg', gross),
+    tarEintrag(tarKopf('sicherung/verweis', 0, '2', 'ustar'), new Uint8Array(0)),
+  );
+  const dateien = await tarLesen(archiv);
+  expect([...dateien.keys()].sort()).toEqual([
+    'sicherung/foto.jpg',
+    'sicherung/manifest.txt',
+    'sicherung/zaehlung.csv',
+  ]);
+  expect(dekodieren(dateien.get('sicherung/zaehlung.csv'))).toBe('tabelle;zeilen\nanlage;3\n');
+  expect(dateien.get('sicherung/manifest.txt')?.length).toBe(0);
+  expect(Array.from(dateien.get('sicherung/foto.jpg') ?? [])).toEqual(Array.from(gross));
+});
+
+it('Backup-Storage tarLesen ustar-Präfix ergibt den Fotopfad mit 106 Zeichen', async () => {
+  expect(FOTO_PFAD.length).toBe(106);
+  const praefix = `sicherung/storage/saattueten/${SORTE_1}`;
+  const archiv = tarArchiv(tarDatei(FOTO_1, 'foto-eins', 'ustar', { praefix }));
+  const dateien = await tarLesen(archiv);
+  expect([...dateien.keys()]).toEqual([FOTO_PFAD]);
+  expect(dekodieren(dateien.get(FOTO_PFAD))).toBe('foto-eins');
+});
+
+it('Backup-Storage tarLesen GNU-Format: Präfix nur bei Magic ustar\\0, atime an derselben Stelle wird nicht Teil des Namens', async () => {
+  const archiv = tarArchiv(tarDatei('sicherung/zaehlung.csv', 'anlage;3\n', 'gnu', { atime: '15000000000' }));
+  const dateien = await tarLesen(archiv);
+  expect([...dateien.keys()]).toEqual(['sicherung/zaehlung.csv']);
+  expect(dekodieren(dateien.get('sicherung/zaehlung.csv'))).toBe('anlage;3\n');
+});
+
+it('Backup-Storage tarLesen GNU-Langname «L» für Pfade über 100 Zeichen', async () => {
+  const lang = text.encode(`${FOTO_PFAD}\0`);
+  const archiv = tarArchiv(
+    tarEintrag(tarKopf('././@LongLink', lang.length, 'L', 'gnu'), lang),
+    tarDatei(FOTO_PFAD.slice(0, 100), 'foto-eins', 'gnu', { atime: '15000000000' }),
+    // Der Langname gilt nur für den nächsten Eintrag
+    tarDatei('sicherung/zaehlung.csv', 'anlage;3\n', 'gnu'),
+  );
+  const dateien = await tarLesen(archiv);
+  expect([...dateien.keys()].sort()).toEqual([FOTO_PFAD, 'sicherung/zaehlung.csv']);
+  expect(dekodieren(dateien.get(FOTO_PFAD))).toBe('foto-eins');
+});
+
+it('Backup-Storage tarLesen pax «x» mit path= und globaler Kopf «g» wird übersprungen', async () => {
+  const global = text.encode(paxSatz('comment', 'Backup Hydrovisor'));
+  const pax = text.encode(paxSatz('mtime', '1767225600.5') + paxSatz('path', FOTO_PFAD));
+  const pax2 = text.encode(paxSatz('path', FOTO_PFAD_2));
+  const archiv = tarArchiv(
+    tarEintrag(tarKopf('pax_global_header', global.length, 'g', 'ustar'), global),
+    tarEintrag(tarKopf('PaxHeaders/foto1', pax.length, 'x', 'ustar'), pax),
+    tarDatei(FOTO_1, 'foto-eins', 'ustar'),
+    tarEintrag(tarKopf('PaxHeaders/foto2', pax2.length, 'x', 'ustar'), pax2),
+    tarDatei(FOTO_2, 'foto-zwei', 'ustar'),
+    // Der Langname gilt nur für den nächsten Eintrag
+    tarDatei('sicherung/zaehlung.csv', 'anlage;3\n', 'ustar'),
+  );
+  const dateien = await tarLesen(archiv);
+  expect([...dateien.keys()].sort()).toEqual([FOTO_PFAD, FOTO_PFAD_2, 'sicherung/zaehlung.csv'].sort());
+  expect(dekodieren(dateien.get(FOTO_PFAD))).toBe('foto-eins');
+  expect(dekodieren(dateien.get(FOTO_PFAD_2))).toBe('foto-zwei');
+  expect(dateien.has('pax_global_header')).toBe(false);
+  expect(dateien.has(FOTO_1)).toBe(false);
+});
+
+it('Backup-Storage tarLesen und manifestPruefen: Fotopfad über 100 Zeichen ist vollständig', async () => {
+  const inhalt = text.encode('foto-eins');
+  const lang = text.encode(`${FOTO_PFAD}\0`);
+  const archiv = tarArchiv(
+    tarEintrag(tarKopf('././@LongLink', lang.length, 'L', 'gnu'), lang),
+    tarDatei(FOTO_PFAD.slice(0, 100), inhalt, 'gnu'),
+  );
+  const dateien = await tarLesen(archiv);
+  const relativ = new Map(
+    [...dateien].map(
+      ([pfad, bytes]) => [pfad.replace(/^sicherung\/storage\/saattueten\//, ''), bytes] as const,
+    ),
+  );
+  const zeile = await manifestZeile(`${SORTE_1}/${FOTO_1}`, inhalt.length, await sha256Hex(inhalt));
+  expect(await manifestPruefen(zeile, relativ)).toEqual({ ok: true, fehlend: [], abweichend: [] });
+});
+
+it('Wiederherstellungsprobe (M0) meldungKuerzen nur erste Zeile, ohne DETAIL, Werte geschwärzt, Bezeichner bleiben', async () => {
+  const meldung =
+    'Failed to run sql query: ERROR:  23505: duplicate key value violates unique constraint "anlage_kuerzel_key" ' +
+    'DETAIL:  Key (kuerzel)=(BKT) already exists.\nCONTEXT: zweite Zeile mit "Backupregal"';
+  const kurz = await meldungKuerzen(meldung);
+  expect(kurz).toContain('"anlage_kuerzel_key"');
+  expect(kurz).not.toContain('DETAIL');
+  expect(kurz).not.toContain('BKT');
+  expect(kurz).not.toContain('Backupregal');
+  expect(kurz).not.toContain('\n');
+
+  const wert = await meldungKuerzen(
+    'ERROR:  22P02: invalid input syntax for type uuid: "Backupregal R-2.3" on table "messung"\nDETAIL: x',
+  );
+  expect(wert).toBe('ERROR:  22P02: invalid input syntax for type uuid: "…" on table "messung"');
+  // Grossbuchstaben, Ziffern am Anfang und Leerzeichen sind kein Bezeichner
+  expect(await meldungKuerzen('Wert "Testwert" und "1abc" in "zugang"')).toBe('Wert "…" und "…" in "zugang"');
+});
+
+it('Wiederherstellungsprobe (M0) meldungKuerzen höchstens 300 Zeichen', async () => {
+  const kurz = await meldungKuerzen(`ERROR: ${'x'.repeat(1000)}\nzweite`);
+  expect(kurz.length).toBe(300);
+  expect(kurz.startsWith('ERROR: x')).toBe(true);
+  expect(await meldungKuerzen('')).toBe('');
 });
