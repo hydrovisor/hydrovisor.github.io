@@ -101,9 +101,8 @@ try {
   );
   console.log('und füge ihn dort mit Ctrl-V als Passwort ein. Speichern.');
   console.log('Ohne diesen Schlüssel lässt sich kein Backup mehr öffnen.');
-  const warten = createInterface({ input: process.stdin, output: process.stdout });
-  await warten.question('Wenn der Eintrag gespeichert ist, hier Enter drücken: ');
-  warten.close();
+  // Verdeckt warten: Fügt Tim hier versehentlich den Schlüssel ein, erscheint er nicht auf dem Bildschirm
+  await verdeckt('Wenn der Eintrag gespeichert ist, hier nur Enter drücken (nichts einfügen): ');
 
   for (;;) {
     console.log(
@@ -116,9 +115,7 @@ try {
       `Stimmt nicht (${kontrolle.length} Zeichen). Der Schlüssel liegt wieder in der Zwischenablage; korrigiere den Eintrag im Passwortmanager.`,
     );
     zwischenablage(identitaet);
-    const nochmals = createInterface({ input: process.stdin, output: process.stdout });
-    await nochmals.question('Wenn der Eintrag korrigiert ist, hier Enter drücken: ');
-    nochmals.close();
+    await verdeckt('Wenn der Eintrag korrigiert ist, hier nur Enter drücken (nichts einfügen): ');
   }
 
   const ordner = join(homedir(), 'hydrovisor-age');
