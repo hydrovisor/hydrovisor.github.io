@@ -24,7 +24,7 @@ src/
   konstanten.ts  BASIS_URL, SCOPE, START_URL, APP_VERSION
 supabase/
   migrations/    additive Migrationen (Abschnitt 8)
-  functions/     push-taeglich, push-quittung, ki-tuete; deno.json mit Import-Map auf ../../src/domain/
+  functions/     push-taeglich, push-quittung, ki-tuete; importieren src/domain/ relativ (../../../src/domain/…), ohne Import-Map (Plan 14)
   tests/         pgTAP
 scripts/         seed.ts, w0-pruefen.ts, ak-abdeckung.ts, typen-pruefen.ts
 tests/           unit/ (Vitest), e2e/ (Playwright), golden/ (Referenzdateien), fixtures/ (Demo-Szenarien S1–S9)
@@ -32,7 +32,7 @@ data/            wissensbasis/, stammdaten/, wissen/, eval/
 design-system/   Quelle des Design Systems (E6)
 ```
 
-**Risikotest I0:** Die Edge Function bündelt `src/domain/` über die Import-Map. Scheitert das Bündeln, kopiert `scripts/domain-kopieren.ts` die Dateien nach `supabase/functions/_shared/domain/`, und der Prüftor-Job vergleicht Kopie und Quelle byteweise (A).
+**Risikotest I0:** Die Edge Function bündelt `src/domain/` über relative Importe (seit Plan 14 ohne Import-Map). Scheitert das Bündeln, kopiert `scripts/domain-kopieren.ts` die Dateien nach `supabase/functions/_shared/domain/`, und der Prüftor-Job vergleicht Kopie und Quelle byteweise (A).
 
 ## 2 Konstanten und Version
 
@@ -114,6 +114,8 @@ Rundgang, Abhakliste, Gefässprüfung und Timer speichern nach jedem Tipp ihren 
 - Client: beide Seiten im Canvas auf 1568 px lange Kante, JPEG 0.8, damit EXIF entfernt; Upload nach `saattueten/{sorte_id}/{uuid}.jpg` (privat), Anzeige über signierte Links (60 s). Für eine neue Sorte erzeugt der Client die `sorte_id` vor dem Upload; `wissen_app_schreiben('sorte_neu')` übernimmt sie als `sorte_schluessel.id` mit `sorte_key` = `zeile_id` = `app-<sorte_id>` und ist bei gleicher `sorte_id` idempotent (Warteschlange).
 - Modell `claude-sonnet-5-5`, Denkstufe low, Structured Outputs mit JSON-Schema (Name, Art, Keimart, Keimtemperatur min und max, Keimdauer, Kulturdauer, Aussaatfenster, Hersteller; je Feld `null` statt «nicht gefunden»; kein pH, EC, Phase), keine Sampling-Parameter, `max_tokens` 2000. Bei 429, 5xx oder nach 20 s ein Versuch mit `claude-haiku-5-5`; nach höchstens 30 s «von Hand», Eingaben bleiben. Antwort wird gegen das Schema geprüft; Felder ausserhalb des Schemas werden verworfen (TK1 bis TK3). Modell-IDs und Parameter werden vor dem I0-Eval an der aktuellen API-Dokumentation geprüft.
 - Die Claude API wird im Prüftor nie aufgerufen; Tests nutzen aufgezeichnete Antworten.
+- Umsetzung I0-09 (Plan 14): Kern `tueteLesen()` in `supabase/functions/ki-tuete/kern.ts` mit eingespritztem Datenzugriff, Rufer und Uhr; eine Zeile `ki_aufruf` je API-Request (ein Ausweichen belegt zwei der 30), die Grenze wird vor jedem Request am Zürcher Kalendertag geprüft. Antwort `200` mit `KiErgebnis` auch bei «von Hand»; `400` bei ungültigem Körper oder Bild über 1568 px; `401`, `403`, `405`. Ohne Secret `ANTHROPIC_API_KEY` antwortet sie «von Hand» (nicht eingerichtet) ohne Zeile. Parameter am 4.11.2026 geprüft: `output_config` mit `effort: low` und `format: json_schema`, `thinking` weggelassen (adaptiv), Header `anthropic-version: 2023-06-01`, ohne Beta-Header.
+- Eval am PC (12.6): `npm run eval:tueten` ruft je Tüte beide Modelle ohne Ausweichen mit demselben `anfrageBauen()`, verkleinert die Fotos wie der Client (Canvas in Playwright-Chromium) und schreibt `reports/ki-eval.md`; `--trocken` läuft mit aufgezeichneten Antworten.
 
 ## 7 Service Worker «Hinweis statt Automatik»
 
