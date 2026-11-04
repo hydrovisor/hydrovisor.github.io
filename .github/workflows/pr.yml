@@ -166,7 +166,9 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed # v2.0.5
         with: { deno-version: v2.x }
+      # package.json im Repository nicht beachten: die Functions brauchen kein node_modules (Plan 14, Runde 1)
       - run: mkdir -p reports && deno test --allow-read --allow-env --reporter=junit supabase/functions | tee reports/deno.xml
+        env: { DENO_NO_PACKAGE_JSON: '1' }
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with: { name: bericht-edge, path: reports/, if-no-files-found: ignore }
