@@ -53,7 +53,10 @@ if (-not $prod) { throw 'Repository-Variable SUPABASE_PROJECT_REF_PROD fehlt' }
 function SecretNamen {
   $json = npx --yes supabase@3.0.0 secrets list --project-ref $prod --output json
   Pruefen 'supabase secrets list (vorher: npx supabase login)'
-  return @(($json | Out-String | ConvertFrom-Json) | ForEach-Object { $_.name })
+  $liste = $json | Out-String | ConvertFrom-Json
+  # Leere Ausgabe ergäbe unter PowerShell 5.1 $null und damit «kein Secret»: dann lieber abbrechen (Regel 3)
+  if ($null -eq $liste) { throw 'supabase secrets list lieferte kein JSON' }
+  return @($liste | ForEach-Object { $_.name })
 }
 $secrets = SecretNamen
 $quittungBesteht = $secrets -contains 'PUSH_QUITTUNG_SCHLUESSEL'
@@ -67,6 +70,10 @@ if ($uebernehmen) {
   $zeiger = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($eingabe)
   try { $privat = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($zeiger).Trim() }
   finally { [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($zeiger) }
+  if ($privat -notmatch '^[A-Za-z0-9_-]{43}$') {
+    Write-Host 'Abbruch: Der private VAPID-Schlüssel hat nicht die Form von 43 Zeichen base64url. Nichts wurde gesetzt.'
+    exit 1
+  }
   $abgeleitet = OeffentlichZu $privat
   if (-not $abgeleitet -or $abgeleitet -ne $oeffentlich) {
     Write-Host 'Abbruch: Der private Schlüssel passt nicht zu VITE_VAPID_PUBLIC_KEY. Nichts wurde gesetzt.'
@@ -108,8 +115,17 @@ if (-not $quittungBesteht) { $zeilen += "PUSH_QUITTUNG_SCHLUESSEL=$quittung" }
 $datei = New-TemporaryFile
 try {
   $zeilen | Set-Content -Path $datei -Encoding ASCII
-  $ausgabe = npx --yes supabase@3.0.0 secrets set --project-ref $prod --env-file $datei.FullName 2>&1 | Out-String
-  if ($LASTEXITCODE -ne 0) { Write-Host $ausgabe; throw "supabase secrets set fehlgeschlagen (Exit $LASTEXITCODE)" }
+  # Unter PowerShell 5.1 mit ErrorActionPreference Stop bricht jede Zeile auf stderr ab, auch bei Exit 0 (Prüfer #74)
+  $alt = $ErrorActionPreference
+  $ErrorActionPreference = 'Continue'
+  try {
+    $ausgabe = npx --yes supabase@3.0.0 secrets set --project-ref $prod --env-file $datei.FullName 2>&1 |
+      ForEach-Object { "$_" } | Out-String
+    $code = $LASTEXITCODE
+  } finally {
+    $ErrorActionPreference = $alt
+  }
+  if ($code -ne 0) { Write-Host $ausgabe; throw "supabase secrets set fehlgeschlagen (Exit $code)" }
 } finally {
   Remove-Item $datei -Force
 }
