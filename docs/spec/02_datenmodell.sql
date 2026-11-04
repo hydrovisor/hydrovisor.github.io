@@ -1285,8 +1285,9 @@ grant execute on function public.datenart_loeschen(public.datenart) to service_r
 comment on function public.datenart_loeschen(public.datenart) is
   'Löscht alle Zeilen der Datenart demo oder test: Anlage mit Kaskaden (Plätze, Gefässe, Sätze, Pflanzungen, Messungen, Ansätze, Ereignisse), Pflanzvorgänge über pflanzung_geloescht, Kalibrierungen, pH-Kontrollen ohne Platz und Aufschübe derselben Datenart, Push-Abos mit Versand, Ereignisse mit daten.datenart, Etikett-Scans des Kürzels. Nur Service-Rolle (Rechte und Rollenprüfung).';
 
--- Backup (11.7, A8). In Produktion legt Tim die Rolle an; das Passwort steht nur im Secret
--- SUPABASE_DB_URL_BACKUP:
+-- Backup (11.7, A8). Umgesetzt in I0-11: Die Migration 20261104150000_backup_rollen.sql legt die Rolle ohne
+-- Anmeldung an (mit Rückfall E7); Tim setzt Anmeldung und Passwort mit scripts/backup-einrichten.mjs. Das Passwort
+-- steht nur im Secret SUPABASE_DB_URL_BACKUP. Ursprünglicher Entwurf:
 --   create role backup_leser login bypassrls password '…';
 --   grant usage on schema public to backup_leser;
 --   grant select on all tables in schema public to backup_leser;

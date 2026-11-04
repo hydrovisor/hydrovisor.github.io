@@ -1,7 +1,11 @@
-# Verschlüsseltes Backup (Konzept 11.7, docs/spec/04_architektur.md Abschnitt 9), täglich 03:00 UTC.
-# Umgebung backup ohne Freigabe; Secrets setzt Tim in I0. Ohne Secrets endet der Lauf mit einer Warnung.
-# Rückfall ohne BYPASSRLS (Erratum E7): Repository-Variable BACKUP_MIT_RLS = true → pg_dump --enable-row-security.
-# Secrets nur in den Schritten, die sie brauchen; Aktionen per Commit angeheftet.
+# Verschlüsseltes Backup (Konzept 11.7, docs/spec/04_architektur.md Abschnitt 9, Plan 16), täglich 03:00 UTC.
+# Umgebung backup ohne Freigabe; Secrets setzt Tim (scripts/backup-einrichten.mjs). Ohne Datenbank-Secrets endet der
+# Lauf mit einer Warnung; ohne Storage-Token sichert er nur die Datenbank und warnt.
+# Rolle backup_leser (Migration 20261104150000_backup_rollen.sql): Modus zur Laufzeit (BYPASSRLS oder Rückfall E7
+# mit Policies backup_lesen). Dump mit pg_dump 17, weil supabase db dump intern SET ROLE postgres setzt (Plan 16 A2,
+# lokal belegt). Nur Schema public, Daten als INSERT für die Wiederherstellungsprobe über die Management-API.
+# Secrets nur in den Schritten, die sie brauchen; keine Ausgabe von Inhalten, nur Tabellennamen und Zahlen.
+# Aktionen per Commit angeheftet.
 name: backup
 
 on:
@@ -20,6 +24,9 @@ concurrency:
   group: backup
   cancel-in-progress: false
 
+env:
+  PG_BILD: postgres:17-alpine
+
 jobs:
   backup:
     if: github.ref == 'refs/heads/main'
@@ -31,41 +38,75 @@ jobs:
           DB_URL: ${{ secrets.SUPABASE_DB_URL_BACKUP }}
           AGE_SCHLUESSEL: ${{ secrets.BACKUP_AGE_PUBLIC_KEY }}
           GH_TOKEN: ${{ secrets.BACKUP_REPO_TOKEN }}
+          STORAGE_TOKEN: ${{ secrets.SUPABASE_STORAGE_TOKEN_BACKUP }}
         run: |
           if [ -z "$DB_URL" ] || [ -z "$AGE_SCHLUESSEL" ] || [ -z "$GH_TOKEN" ]; then
-            echo "::warning::Umgebung backup ist noch nicht eingerichtet (Tim, I0); kein Backup"
+            echo "::warning::Umgebung backup ist noch nicht eingerichtet (Tim, scripts/backup-einrichten.mjs); kein Backup"
             echo ok=false >> "$GITHUB_OUTPUT"
           else
             echo ok=true >> "$GITHUB_OUTPUT"
           fi
+          if [ -n "$STORAGE_TOKEN" ]; then echo storage=true >> "$GITHUB_OUTPUT"; else echo storage=false >> "$GITHUB_OUTPUT"; fi
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         if: steps.bereit.outputs.ok == 'true'
-      - uses: supabase/setup-cli@45a513f8c64c0bc8e0e3dfe572b5c95be85f6359 # v3.0.1
-        if: steps.bereit.outputs.ok == 'true'
-        with: { version: 3.0.0 } # fest wie pr.yml und deploy.yml (I0-03)
-      - name: Datenbank (Schema und Daten getrennt)
+      - name: Modus und Rechte prüfen
+        id: modus
         if: steps.bereit.outputs.ok == 'true'
         env:
           DB_URL: ${{ secrets.SUPABASE_DB_URL_BACKUP }}
-          MIT_RLS: ${{ vars.BACKUP_MIT_RLS }}
+        run: |
+          sql() { docker run --rm --network host -e DB_URL "$PG_BILD" psql "$DB_URL" -v ON_ERROR_STOP=1 -tA -c "$1"; }
+          bypass=$(sql "select rolbypassrls from pg_roles where rolname = current_user")
+          if [ "$bypass" = "t" ]; then
+            echo "Modus: BYPASSRLS"; echo rls=false >> "$GITHUB_OUTPUT"
+          else
+            echo "Modus: Zeilensicherheit (backup_lesen)"; echo rls=true >> "$GITHUB_OUTPUT"
+          fi
+          # Jede Basistabelle in public muss lesbar sein, im Rückfall mit Policy backup_lesen; sonst entstünde still
+          # ein unvollständiges Backup. pg_class statt information_schema, das Tabellen ohne Recht verbirgt.
+          fehlt=$(sql "select coalesce(string_agg(c.relname, ', ' order by c.relname), '')
+            from pg_class c join pg_namespace n on n.oid = c.relnamespace
+            where n.nspname = 'public' and c.relkind in ('r', 'p')
+              and (not has_table_privilege(c.oid, 'SELECT')
+                or ('$bypass' <> 't' and not exists (select 1 from pg_policies p
+                  where p.schemaname = 'public' and p.tablename = c.relname and p.policyname = 'backup_lesen')))")
+          if [ -n "$fehlt" ]; then
+            echo "::error::backup_leser darf nicht lesen: $fehlt"
+            exit 1
+          fi
+          echo "Rechte: alle $(sql "select count(*) from pg_class c join pg_namespace n on n.oid = c.relnamespace where n.nspname = 'public' and c.relkind in ('r', 'p')") Tabellen lesbar"
+      - name: Datenbank (Schema, Daten, Zählung, Migrationen)
+        if: steps.bereit.outputs.ok == 'true'
+        env:
+          DB_URL: ${{ secrets.SUPABASE_DB_URL_BACKUP }}
+          MIT_RLS: ${{ steps.modus.outputs.rls }}
         run: |
           mkdir -p sicherung
-          supabase db dump --db-url "$DB_URL" -f sicherung/schema.sql
-          if [ "$MIT_RLS" = "true" ]; then
-            docker run --rm --network host -v "$PWD/sicherung:/aus" postgres:17-alpine pg_dump "$DB_URL" -n public -a --enable-row-security -f /aus/daten.sql
-          else
-            supabase db dump --db-url "$DB_URL" --data-only -f sicherung/daten.sql
-          fi
+          rls=""; [ "$MIT_RLS" = "true" ] && rls="--enable-row-security"
+          pg() { docker run --rm --network host -e DB_URL -v "$PWD/sicherung:/aus" "$PG_BILD" "$@"; }
+          pg sh -c 'pg_dump "$DB_URL" -n public --schema-only -f /aus/schema.sql'
+          pg sh -c "pg_dump \"\$DB_URL\" -n public --data-only --inserts --rows-per-insert=100 $rls -f /aus/daten.sql"
+          # Zählung unmittelbar nach dem Dump, je Basistabelle in public (Wiederherstellungsprobe vergleicht damit)
+          { echo "tabelle;zeilen"; pg psql "$DB_URL" -v ON_ERROR_STOP=1 -tA -c "select c.relname || ';' ||
+              (xpath('/row/n/text()', query_to_xml(format('select count(*) as n from public.%I', c.relname), false, true, '')))[1]::text
+            from pg_class c join pg_namespace n on n.oid = c.relnamespace
+            where n.nspname = 'public' and c.relkind in ('r', 'p') order by c.relname"; } > sicherung/zaehlung.csv
+          pg psql "$DB_URL" -v ON_ERROR_STOP=1 -tA -c "select version from supabase_migrations.schema_migrations order by version" > sicherung/migrationen.txt
+          echo "Tabellen: $(($(wc -l < sicherung/zaehlung.csv) - 1)), Zeilen: $(awk -F';' 'NR > 1 { s += $2 } END { print s + 0 }' sicherung/zaehlung.csv), Migrationen: $(wc -l < sicherung/migrationen.txt)"
+          echo "FOTOS=$(pg psql "$DB_URL" -v ON_ERROR_STOP=1 -tA -c "select count(distinct fotopfad) from public.ki_feldprotokoll where fotopfad is not null")" >> "$GITHUB_ENV"
       - name: Storage-Bucket saattueten (nur lesend)
         if: steps.bereit.outputs.ok == 'true'
         env:
           STORAGE_TOKEN: ${{ secrets.SUPABASE_STORAGE_TOKEN_BACKUP }}
           SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          SUPABASE_APIKEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
+          MIT_STORAGE: ${{ steps.bereit.outputs.storage }}
         run: |
-          if [ -f scripts/backup-storage.mjs ] && [ -n "$STORAGE_TOKEN" ]; then
-            node scripts/backup-storage.mjs --ziel sicherung/storage
+          if [ "$MIT_STORAGE" = "true" ]; then
+            node scripts/backup-storage.mjs --ziel sicherung/storage --mindestens "$FOTOS"
           else
-            echo "::warning::Storage-Kopie fehlt (Skript folgt mit Paket I0-11 oder Token nicht gesetzt)"
+            echo "::warning::Storage nicht gesichert: SUPABASE_STORAGE_TOKEN_BACKUP fehlt (scripts/backup-einrichten.mjs)"
+            echo "Storage nicht gesichert (kein Token)" > sicherung/storage-nicht-gesichert.txt
           fi
       - name: Verschlüsseln und ablegen (30 Stände)
         if: steps.bereit.outputs.ok == 'true'
@@ -87,4 +128,4 @@ jobs:
         if: steps.bereit.outputs.ok == 'true'
         env:
           DB_URL: ${{ secrets.SUPABASE_DB_URL_BACKUP }}
-        run: docker run --rm --network host postgres:17-alpine psql "$DB_URL" -v ON_ERROR_STOP=1 -c "select public.backup_status_melden($GROESSE)"
+        run: docker run --rm --network host -e DB_URL "$PG_BILD" sh -c "psql \"\$DB_URL\" -v ON_ERROR_STOP=1 -c 'select public.backup_status_melden($GROESSE)'"
