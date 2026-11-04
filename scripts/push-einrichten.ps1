@@ -1,10 +1,10 @@
-﻿﻿# Push einrichten (I0-08, Plan 13 «Tims Handgriffe» 2 bis 4 und 7): Tim startet dieses Skript einmal in seiner
+﻿# Push einrichten (I0-08, Plan 13 «Tims Handgriffe» 2 bis 4 und 7): Tim startet dieses Skript einmal in seiner
 # eigenen PowerShell. Es erzeugt das VAPID-Schlüsselpaar und zwei Zufallswerte, setzt die Supabase-Secrets NUR in der
 # Produktion (nie in hydrovisor-dev, wo der Agent Functions ausliefern kann; Prüfer Sicherheit 1), setzt die
 # GitHub-Variable VITE_VAPID_PUBLIC_KEY und gibt jeden geheimen Wert einzeln über die Zwischenablage an den
 # Passwortmanager weiter. Es schreibt keine Datei und zeigt keinen Wert auf der Konsole.
 # CLAUDE.md Regel 3: VAPID-Schlüssel nie neu erzeugen. Das Skript bricht ab, wenn schon ein Schlüssel besteht.
-# Es fragt vor jedem Schritt nach; ohne Konsole (z. B. aus einem Agenten) bricht es beim ersten Read-Host ab.
+# Es fragt vor jedem Schritt nach und bricht bei umgeleiteter Eingabe ab (z. B. aus einem Agenten oder mit «echo ja |»).
 # Aufruf im Ordner des Repositorys: powershell -ExecutionPolicy Bypass -File scripts\push-einrichten.ps1
 $ErrorActionPreference = 'Stop'
 $BETREFF = 'https://hydrovisor.github.io/'
@@ -24,6 +24,7 @@ function Weitergeben([string]$name, [string]$wert) {
   Read-Host "$name liegt in der Zwischenablage. Im Passwortmanager speichern, dann Enter" | Out-Null
 }
 
+if ([Console]::IsInputRedirected) { Write-Host 'Abbruch: Das Skript läuft nur in einer eigenen Konsole.'; exit 1 }
 $antwort = Read-Host 'Push für die Produktion einrichten? Zum Bestätigen «ja» eingeben'
 if ($antwort -ne 'ja') { Write-Host 'Abgebrochen.'; exit 1 }
 
@@ -50,6 +51,8 @@ Pruefen 'web-push generate-vapid-keys'
 if (-not $vapid.publicKey -or -not $vapid.privateKey) { throw 'VAPID-Schlüssel leer' }
 $quittung = Zufall
 $cron = Zufall
+
+try {
 
 Weitergeben 'VAPID_PUBLIC_KEY' $vapid.publicKey
 Weitergeben 'VAPID_PRIVATE_KEY' $vapid.privateKey
@@ -78,6 +81,9 @@ Pruefen 'gh variable set'
 # Vault der Produktion: im SQL-Editor einfügen und ausführen (vor oder nach dem Deploy)
 Set-Clipboard -Value "select vault.create_secret('$cron', 'cron_geheimnis');`nselect vault.create_secret('https://$prod.supabase.co', 'projekt_url');"
 Read-Host 'Die Vault-Anweisungen liegen in der Zwischenablage. Im SQL-Editor der Produktion einfügen und ausführen, dann Enter' | Out-Null
-Set-Clipboard -Value ' '
+} finally {
+  # Zwischenablage auch bei einem Abbruch leeren (Prüfer Sicherheit, Runde 1)
+  Set-Clipboard -Value ' '
+}
 
 Write-Host 'Fertig. Die Zwischenablage ist geleert.'
