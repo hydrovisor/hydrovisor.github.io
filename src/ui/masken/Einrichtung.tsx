@@ -23,6 +23,21 @@ function Aktion({ punkt, starten }: { punkt: Punkt; starten: () => void }) {
     ) : (
       <span className="hv-check-menge">Läuft, hakt sich nach 12 Stunden selbst ab</span>
     );
+  if (z.art === 'gefaess-neu')
+    return (
+      <a
+        className="hv-btn hv-btn-secondary"
+        href={hashZu({ name: 'gefaess-neu', ...(z.rolle ? { rolle: z.rolle } : {}) })}
+      >
+        {z.rolle === 'messstelle' ? 'Messstelle W erfassen' : punkt.knopf}
+      </a>
+    );
+  if (z.art === 'pruefen')
+    return (
+      <a className="hv-btn hv-btn-secondary" href={hashZu({ name: 'pruefen', code: z.code })}>
+        {punkt.knopf}
+      </a>
+    );
   if (z.art === 'anlage-neu')
     return (
       <a className="hv-btn hv-btn-secondary" href={hashZu({ name: 'anlage-neu' })}>

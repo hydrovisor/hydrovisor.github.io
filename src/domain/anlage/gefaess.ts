@@ -2,8 +2,10 @@
 // Verlauf aus dem Bündel, ohne neu zu rechnen (R2.5, Plan 20 A3, A4). Rein: jetzt und Zeitzone als Parameter.
 import { messFaelligkeit } from '../messung/faelligkeit.ts';
 import { ortAufloesen } from '../ort.ts';
-import { kalendertag, tageZwischen, uhrzeit, type Zeitzone } from '../zeit.ts';
-import { anzuchtortAm, gefaessAm, gefaessStatus, zeilen, type Teile } from './teile.ts';
+import { pruefStand } from '../etikett/pruefung.ts';
+import { kalendertag, tagKurz, tageZwischen, uhrzeit, type Zeitzone } from '../zeit.ts';
+import { wiederherstellbar } from './entfernen.ts';
+import { anzuchtortAm, ereignisseAm, gefaessAm, gefaessStatus, ms, zeilen, type Teile } from './teile.ts';
 import { fuellText, statusBadge } from './uebersicht.ts';
 
 export type Ton = 'ok' | 'warn' | 'danger';
@@ -28,6 +30,10 @@ export interface Gefaessansicht {
   pflanzen: { satzId: string; sorte: string; anzahl: number; phase: string; seitTagen: number }[];
   dosis: { komponente: string; mlProL: string }[];
   hauptknopf?: { text: string; code: string };
+  /** Plan 21: Nebenknöpfe «Prüfen», «Ändern», «Leeren» (nur bei Lösung), «Wiederherstellen» (bis 7 Tage) */
+  nebenknoepfe: { art: 'pruefen' | 'aendern' | 'leeren' | 'wiederherstellen'; text: string }[];
+  /** «Gefäss 2.3 entfernt am 10.12.» (R9.2) */
+  entfernt?: string;
   verlauf: {
     tag: string;
     zeit: string;
@@ -144,11 +150,34 @@ export function gefaessAnsicht(
     pflanzen: [],
     dosis: [],
     verlauf: [],
+    nebenknoepfe: [],
   };
 
   if (g) {
-    const status = statusBadge(gefaessStatus(teile, g.id));
+    const roh = gefaessStatus(teile, g.id);
+    const status = statusBadge(roh);
     if (status) ansicht.pruefstatus = status;
+    // in Betrieb: Tag von Prüfschritt 4 (Plan 21)
+    const geprueft = roh === 'in_betrieb' ? pruefStand(teile, ort.platzId).geprueftAm : undefined;
+    if (geprueft)
+      ansicht.pruefstatus = `in Betrieb, geprüft am ${tagKurz(kalendertag(new Date(geprueft), zeitzone))}`;
+    const fuellNeben = zeilen<{ platz_id: string; fuellzustand: string }>(teile, 'v_fuellzustand').find(
+      (f) => f.platz_id === ort.platzId,
+    )?.fuellzustand;
+    if (roh === 'entfernt') {
+      const am = ereignisseAm(teile, ort.platzId, 'entfernt').sort(
+        (a, b) => ms(b.gilt_ab) - ms(a.gilt_ab),
+      )[0];
+      if (am) {
+        ansicht.entfernt = `Gefäss ${ort.kennung} entfernt am ${tagKurz(kalendertag(new Date(am.gilt_ab), zeitzone))}`;
+        if (wiederherstellbar(am.gilt_ab, jetzt, zeitzone))
+          ansicht.nebenknoepfe.push({ art: 'wiederherstellen', text: 'Wiederherstellen' });
+      }
+    } else {
+      if (roh === 'in_pruefung') ansicht.nebenknoepfe.push({ art: 'pruefen', text: 'Prüfen' });
+      ansicht.nebenknoepfe.push({ art: 'aendern', text: 'Ändern' });
+      if (fuellNeben === 'loesung') ansicht.nebenknoepfe.push({ art: 'leeren', text: 'Leeren' });
+    }
     const fuell = zeilen<{ platz_id: string; fuellzustand: string; letzter_ansatz: string | null }>(
       teile,
       'v_fuellzustand',

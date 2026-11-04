@@ -5,6 +5,10 @@
 export type Punktziel =
   | { art: 'kalibrieren' }
   | { art: 'anlage-neu' }
+  /** Assistent «Gefäss erfassen», für Punkt 4 ohne W mit Rolle Messstelle (Plan 21) */
+  | { art: 'gefaess-neu'; rolle?: 'messstelle' }
+  /** Prüfschritte 1 bis 3 eines Gefässes (Plan 21) */
+  | { art: 'pruefen'; code: string }
   | { art: 'messen'; code: string }
   | { art: 'einweichen' }
   /** Ablauf folgt mit dem genannten Paket (Plan 18 A6) */
@@ -137,6 +141,15 @@ export function einrichtungsStand(teile: Teile, jetzt: Date, einweichenEnde?: nu
       (s.direktsaat_platz_id !== null && platzIds.has(s.direktsaat_platz_id)),
   );
 
+  // erstes Gefäss «in Prüfung» nach Code für Punkt 8 (Plan 21)
+  const erstesInPruefung = gefaesse
+    .filter((g) => (status.get(g.id) ?? 'in_pruefung') === 'in_pruefung')
+    .map((g) => {
+      const p = plaetze.find((x) => x.id === g.platz_id);
+      return p ? `${kuerzel.get(p.anlage_id) ?? ''}-${p.kennung}` : '';
+    })
+    .filter((c) => c !== '')
+    .sort((a, b) => a.localeCompare(b, 'de', { numeric: true }))[0];
   const w = messstellen[0];
   const wCode = w ? `${kuerzel.get(w.anlage_id) ?? ''}-${w.kennung}` : undefined;
 
@@ -168,7 +181,7 @@ export function einrichtungsStand(teile: Teile, jetzt: Date, einweichenEnde?: nu
       titel: 'Leitungswasser-EC messen (W)',
       knopf: 'Leitungswasser messen',
       erledigt: wasserGemessen,
-      ziel: wCode ? { art: 'messen', code: wCode } : { art: 'folgt', paket: 'I1a-04' },
+      ziel: wCode ? { art: 'messen', code: wCode } : { art: 'gefaess-neu', rolle: 'messstelle' },
     },
     {
       nr: 5,
@@ -182,7 +195,7 @@ export function einrichtungsStand(teile: Teile, jetzt: Date, einweichenEnde?: nu
       titel: 'Gefässe, Anzuchtboxen und Messstelle W erfassen',
       knopf: 'Gefässe erfassen',
       erledigt: erfasst,
-      ziel: { art: 'folgt', paket: 'I1a-04' },
+      ziel: { art: 'gefaess-neu' },
     },
     {
       nr: 7,
@@ -196,7 +209,7 @@ export function einrichtungsStand(teile: Teile, jetzt: Date, einweichenEnde?: nu
       titel: 'Gefässe prüfen, Schritte 1 bis 3',
       knopf: 'Gefässe prüfen',
       erledigt: geprueft,
-      ziel: { art: 'folgt', paket: 'I1a-04' },
+      ziel: erstesInPruefung ? { art: 'pruefen', code: erstesInPruefung } : { art: 'gefaess-neu' },
     },
     {
       nr: 9,

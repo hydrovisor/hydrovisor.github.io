@@ -6,6 +6,7 @@ import { standAnzeige } from '../../domain/datenpfad/buendel.ts';
 import { kalibrierStand, kalibrierText } from '../../domain/kalibrierung/stand.ts';
 import { messFaelligkeit, type Messfaelligkeit } from '../../domain/messung/faelligkeit.ts';
 import { heuteGruppiert, nachAnlage } from '../../domain/anlage/gruppen.ts';
+import { pruefAufgaben } from '../../domain/etikett/pruefung.ts';
 import { messbareOrte } from '../../domain/ort.ts';
 import { tagKurz, ZEITZONE } from '../../domain/zeit.ts';
 import { OrtKachel } from '../bausteine/Tile.tsx';
@@ -81,6 +82,7 @@ export function Heute() {
       {buendel && !keinZugang ? <Einrichtung /> : null}
       {zeigen ? <NeueVersionHinweis /> : null}
       {buendel && !keinZugang ? <PushHinweis /> : null}
+      {buendel && !keinZugang ? <Pruefaufgaben /> : null}
       {buendel ? <Uebersicht jetzt={new Date(jetzt)} /> : null}
     </main>
   );
@@ -190,5 +192,26 @@ function Uebersicht({ jetzt }: { jetzt: Date }) {
         ))
       )}
     </>
+  );
+}
+
+/** Aufgabe «Gefäss prüfen» je Gefäss «in Prüfung» echter Anlagen, bis zur Aufgaben-Rechnung (Plan 21 A7) */
+function Pruefaufgaben() {
+  const { buendel } = useBuendel();
+  const aufgaben = pruefAufgaben(buendel?.teile);
+  if (aufgaben.length === 0) return null;
+  return (
+    <ul className="hv-aufgaben" aria-label="Aufgaben">
+      {aufgaben.map((a) => (
+        <li key={a.platzId} className="hv-aufgabe">
+          <span>
+            {a.titel} · {a.kennung}
+          </span>
+          <a className="hv-btn hv-btn-secondary" href={hashZu({ name: 'pruefen', code: a.code })}>
+            Prüfen
+          </a>
+        </li>
+      ))}
+    </ul>
   );
 }
