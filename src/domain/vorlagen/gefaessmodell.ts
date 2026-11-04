@@ -96,14 +96,13 @@ const MASSFELDER = [
 
 export function gefaessmodellPruefen(
   eingabe: GefaessmodellEingabe,
-  bestand: readonly Pick<GefaessmodellZeile, 'name' | 'client_id'>[],
-  /** bei einer Korrektur: die client_id der Vorlage, die ersetzt wird */
-  ersetzt?: string,
+  /** aktive Vorlagen derselben Art; bei Korrektur oder Wiederholung ohne die eigene Zeile */
+  bestand: readonly Pick<GefaessmodellZeile, 'name'>[],
 ): Verstoss[] {
   const verstoesse: Verstoss[] = [];
   if (nameLeer(eingabe.name))
     verstoesse.push({ feld: 'name', grund: 'Gib einen Namen ein, z. B. «Rako 40 × 30 × 17»' });
-  else if (nameDoppelt(eingabe.name, bestand, ersetzt))
+  else if (nameDoppelt(eingabe.name, bestand))
     verstoesse.push({ feld: 'name', grund: `Eine Box «${eingabe.name.trim()}» gibt es schon` });
   if (eingabe.form !== 'rechteckig' && eingabe.form !== 'oval')
     verstoesse.push({ feld: 'form', grund: 'Wähle die Form rechteckig oder oval' });

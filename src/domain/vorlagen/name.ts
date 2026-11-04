@@ -4,15 +4,8 @@ export function nameLeer(name: string): boolean {
   return name.trim() === '';
 }
 
-export function nameDoppelt(
-  name: string,
-  bestand: readonly { name: string; client_id: string | null }[],
-  ersetzt?: string,
-): boolean {
+/** ohne Gross-/Kleinschreibung und Leerzeichen am Rand */
+export function nameDoppelt(name: string, bestand: readonly { name: string }[]): boolean {
   const gesucht = name.trim().toLocaleLowerCase('de-CH');
-  return bestand.some(
-    (v) =>
-      (ersetzt === undefined || v.client_id !== ersetzt) &&
-      v.name.trim().toLocaleLowerCase('de-CH') === gesucht,
-  );
+  return bestand.some((v) => v.name.trim().toLocaleLowerCase('de-CH') === gesucht);
 }

@@ -2,7 +2,7 @@
 // Erfassen, Korrigieren (Storno plus neue Zeile) und Löschen (Storno) über schreiben(); genutzte Vorlagen sind
 // nicht löschbar. Die Deckelgrafik erscheint sofort beim Tippen von «Löcher je Reihe».
 import { useRef, useState, type ReactNode } from 'react';
-import { neueClientId, schreiben, type Schreibergebnis } from '../../daten/schreiben.ts';
+import { buendelNeuLaden, neueClientId, schreiben, type Schreibergebnis } from '../../daten/schreiben.ts';
 import type { Verstoss, Vorgang } from '../../domain/datenpfad/erfassung.ts';
 import { erfassungBinden, type Erfassungsbindung } from '../../domain/messung/erfassung.ts';
 import {
@@ -74,6 +74,8 @@ function useSenden() {
       const antwort = await schreiben(bauen(bindung.current.clientId), { jetzt, zeitzone: ZEITZONE });
       setSendet(false);
       setErgebnis(antwort);
+      // ein Teil des Vorgangs (z. B. das Storno einer Korrektur) ist schon geschrieben: Liste neu laden (Prüferbefund 1)
+      if (antwort.status === 'nicht_gespeichert' && antwort.bestaetigt > 0) buendelNeuLaden();
       return antwort.status === 'gespeichert';
     },
   };
@@ -263,7 +265,8 @@ function Vorschlag({ e, uebernehmen }: { e: GefaessmodellEingabe; uebernehmen: (
   const h = mmLesen(e.hoeheMm);
   if (l === null || b === null || h === null) return null;
   const v = betriebsvolumenVorschlag(e.form, l, b, mmLesen(e.fuellhoeheMm), h);
-  if ('liter' in v)
+  // sehr kleine Masse ergeben 0.0 l: kein Vorschlag (Prüferbefund 4)
+  if ('liter' in v && v.liter > 0)
     return (
       <div className="hv-vorlagen-vorschlag">
         <p className="hv-vorlagen-angabe hv-num">
@@ -274,7 +277,7 @@ function Vorschlag({ e, uebernehmen }: { e: GefaessmodellEingabe; uebernehmen: (
         </Button>
       </div>
     );
-  if (v.grund === 'fuellhoehe_zu_gross')
+  if ('grund' in v && v.grund === 'fuellhoehe_zu_gross')
     return <p className="hv-vorlagen-angabe">Die Füllhöhe muss unter der Höhe liegen</p>;
   return null;
 }

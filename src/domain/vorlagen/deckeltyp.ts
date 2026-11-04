@@ -16,13 +16,12 @@ export interface DeckeltypEingabe {
 
 export function deckeltypPruefen(
   eingabe: DeckeltypEingabe,
-  bestand: readonly Pick<DeckeltypZeile, 'name' | 'client_id'>[],
-  /** bei einer Korrektur: die client_id der Vorlage, die ersetzt wird (ihr Name zählt nicht als doppelt) */
-  ersetzt?: string,
+  /** aktive Vorlagen derselben Art; bei Korrektur oder Wiederholung ohne die eigene Zeile */
+  bestand: readonly Pick<DeckeltypZeile, 'name'>[],
 ): Verstoss[] {
   const verstoesse: Verstoss[] = [];
   if (nameLeer(eingabe.name)) verstoesse.push({ feld: 'name', grund: 'Gib einen Namen ein, z. B. «D6»' });
-  else if (nameDoppelt(eingabe.name, bestand, ersetzt))
+  else if (nameDoppelt(eingabe.name, bestand))
     verstoesse.push({ feld: 'name', grund: `Einen Deckel «${eingabe.name.trim()}» gibt es schon` });
   if (eingabe.topfdurchmesserCm !== 5 && eingabe.topfdurchmesserCm !== 8)
     verstoesse.push({ feld: 'topfdurchmesser_mm', grund: 'Wähle die Topfgrösse 5 oder 8 cm' });
