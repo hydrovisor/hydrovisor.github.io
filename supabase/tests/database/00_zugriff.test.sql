@@ -286,7 +286,7 @@ end $$;
 select * from pg_temp.sichten_invoker();
 
 -- ---------------------------------------------------------------------
--- Ohne Anmeldung (anon) und mit fremdem Konto: 0 Zeilen, jedes Insert scheitert (A2: 42501)
+-- Ohne Anmeldung (anon): kein Recht, Lesen und Insert scheitern mit 42501 (#67); fremdes Konto: 0 Zeilen, Insert 42501
 -- ---------------------------------------------------------------------
 
 create function pg_temp.lesen_je_tabelle(rolle text, sub uuid, beschreibung text) returns setof text language plpgsql as $$
@@ -320,7 +320,7 @@ select is(
   (select coalesce(string_agg(c.relname, ', ' order by c.relname), '')
      from pg_class c join pg_namespace n on n.oid = c.relnamespace
     where n.nspname = 'public' and c.relkind in ('r', 'p', 'v', 'm', 'S')
-      and (has_table_privilege('anon', c.oid, 'SELECT, INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER')
+      and (has_table_privilege('anon', c.oid, 'SELECT, INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER, MAINTAIN')
            or (c.relkind = 'S' and has_sequence_privilege('anon', c.oid, 'USAGE, SELECT, UPDATE')))),
   '', 'UC0-AK2 #67 anon hat in public kein Recht auf Tabellen, Sichten und Sequenzen');
 select * from pg_temp.einfuegen_je_tabelle('anon', null, 'UC0-AK2 anon Insert scheitert: ');
