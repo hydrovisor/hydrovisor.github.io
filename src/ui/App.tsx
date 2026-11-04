@@ -10,6 +10,7 @@ import { Push } from './masken/Push.tsx';
 import { Anlage } from './masken/Anlage.tsx';
 import { AnlageNeu } from './masken/AnlageNeu.tsx';
 import { Gefaess } from './masken/Gefaess.tsx';
+import { Vorlagen } from './masken/Vorlagen.tsx';
 import { BuendelAnbieter } from './buendel.tsx';
 import { maskeFuer, useRoute } from './router.ts';
 import { SitzungAnbieter, useSitzung } from './sitzung.tsx';
@@ -37,6 +38,8 @@ function Masken() {
         <Anlage {...(maske.kuerzel ? { kuerzel: maske.kuerzel } : {})} />
       ) : maske.name === 'anlage-neu' ? (
         <AnlageNeu />
+      ) : maske.name === 'vorlagen' ? (
+        <Vorlagen />
       ) : maske.name === 'push' ? (
         <Push />
       ) : maske.name === 'schreibprobe' ? (
