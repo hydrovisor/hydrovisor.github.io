@@ -126,11 +126,12 @@ export async function tueteLesen(
     ];
     let letzterGrund: VonHandGrund = 'fehler';
     for (const { modell, ausweich } of laeufe) {
-      const rest = FRIST_GESAMT_MS - seit();
-      if (rest <= 0) return vonHand('zeit');
+      if (seit() >= FRIST_GESAMT_MS) return vonHand('zeit');
       if ((await abh.daten.aufrufeSeit(ab)) >= AUFRUFE_JE_TAG) return vonHand('grenze');
       const beginn = seit();
       const id = await abh.daten.aufrufBeginnen({ modell, app_version: appVersion });
+      // Restzeit erst nach den Datenbankaufrufen, damit die Gesamtfrist von 30 s hält (Prüferbefund 3)
+      const rest = Math.max(0, FRIST_GESAMT_MS - seit());
       const r = await versuch(abh, modell, eingabe, ausweich ? rest : Math.min(FRIST_HAUPT_MS, rest));
 
       if (r.art === 'ok') {

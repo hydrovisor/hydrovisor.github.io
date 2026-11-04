@@ -42,6 +42,8 @@ export interface ModellAuswertung {
   dauerMedianMs: number;
   dauerMaxMs: number;
   kostenJeTueteUsd: number;
+  /** gescheiterte Läufe mit Fehlertext (Status, ungültiges JSON, Netz) */
+  fehler: { sorteZeileId: string; fehler: string }[];
 }
 
 export interface Auswertung {
@@ -153,7 +155,8 @@ export function auswerten(
         for (const feld of KI_FELDER) {
           const s = soll.get(`${l.sorteZeileId}|${feld}`);
           if (s === undefined) continue;
-          b[feld] = feldBewerten(feld, s, l.texte?.[feld] ?? null);
+          // gescheiterter Lauf: kein Feld gelesen, auch «nicht auf der Tüte» gilt nicht als richtig
+          b[feld] = l.texte === null ? 'fehlend' : feldBewerten(feld, s, l.texte[feld]);
           zaehler[feld].bewertet += 1;
           if (b[feld] === 'richtig') zaehler[feld].richtig += 1;
         }
@@ -184,16 +187,19 @@ export function auswerten(
         dauerMedianMs: median(eigene.map((l) => l.dauerMs)),
         dauerMaxMs: Math.max(0, ...eigene.map((l) => l.dauerMs)),
         kostenJeTueteUsd: kosten.length ? kosten.reduce((a, b) => a + b, 0) / kosten.length : 0,
+        fehler: eigene
+          .filter((l) => l.texte === null || l.fehler !== undefined)
+          .map((l) => ({ sorteZeileId: l.sorteZeileId, fehler: l.fehler ?? 'keine Antwort' })),
       };
     }),
   };
 }
 
 /** Default (11.3): höhere Trefferquote; liegen die besten höchstens 1 Feld auseinander, die kleinere Median-Dauer;
- *  ein Modell ohne M0 nur, wenn keines M0 erfüllt (A7) */
+ *  ein Modell ohne M0 wird nie Default; erfüllt keines M0, gibt es keinen Default ("", Frage an Tim, A7) */
 export function defaultWaehlen(a: Auswertung): string {
-  const mitM0 = a.modelle.filter((m) => m.m0);
-  const kandidaten = mitM0.length > 0 ? mitM0 : a.modelle;
+  const kandidaten = a.modelle.filter((m) => m.m0);
+  if (kandidaten.length === 0) return '';
   const bestes = Math.max(...kandidaten.map((m) => m.richtig));
   const knapp = kandidaten.filter((m) => m.richtig >= bestes - 1);
   knapp.sort((x, y) => x.dauerMedianMs - y.dauerMedianMs || y.richtig - x.richtig);
@@ -240,6 +246,11 @@ export function berichtMarkdown(a: Auswertung, stand: Date, zeitzone: Zeitzone):
     ),
   ];
   if (zeilen[zeilen.length - 1] === 'Abweichungen je Tüte:') zeilen.push('- keine');
+  const gescheitert = a.modelle.flatMap((m) =>
+    m.fehler.map((f) => `- ${m.modell}, ${f.sorteZeileId}: ${f.fehler}`),
+  );
+  if (gescheitert.length > 0)
+    zeilen.push('', 'Gescheiterte Aufrufe (alle Felder als fehlend gewertet):', ...gescheitert);
   for (const m of a.modelle)
     if (m.kostenJeTueteUsd > KOSTEN_WARNUNG_USD)
       zeilen.push(
@@ -248,7 +259,9 @@ export function berichtMarkdown(a: Auswertung, stand: Date, zeitzone: Zeitzone):
       );
   zeilen.push(
     '',
-    `Default nach 11.3: ${defaultWaehlen(a)}. Die Schwelle 80 % je Feld gilt verbindlich erst mit 22 Tüten (I2-05).`,
+    defaultWaehlen(a)
+      ? `Default nach 11.3: ${defaultWaehlen(a)}. Die Schwelle 80 % je Feld gilt verbindlich erst mit 22 Tüten (I2-05).`
+      : 'Es gibt kein Default: M0 ist bei keinem Modell erfüllt. Frage an Tim (Plan 14, Risiko «M0 verfehlt»).',
   );
   return zeilen.join('\n');
 }

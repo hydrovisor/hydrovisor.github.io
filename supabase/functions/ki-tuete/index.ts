@@ -77,9 +77,16 @@ Deno.serve(async (req) => {
   const { data: tim } = await benutzer.rpc('ist_tim');
   if (tim !== true) return antwort(403, { fehler: 'kein Zugang' }, cors);
 
+  // Körper höchstens 64 KB vor dem Parsen (Prüfer Sicherheit, Befund 2); Text bis 8000 Zeichen passt gut hinein
+  const laenge = Number(req.headers.get('content-length') ?? '0');
+  if (!Number.isFinite(laenge) || laenge > 64 * 1024)
+    return antwort(413, { fehler: 'Körper zu gross' }, cors);
+
   let body: unknown;
   try {
-    body = await req.json();
+    const text = await req.text();
+    if (text.length > 64 * 1024) return antwort(413, { fehler: 'Körper zu gross' }, cors);
+    body = JSON.parse(text);
   } catch {
     return antwort(400, { fehler: 'Körper ist kein JSON' }, cors);
   }

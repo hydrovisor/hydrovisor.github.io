@@ -96,7 +96,13 @@ async function hauptprogramm(): Promise<void> {
       console.log(
         `${m.modell}: ${m.richtig} von ${m.felder} richtig, M0 ${m.m0 ? 'erfüllt' : 'nicht erfüllt'}, Median ${(m.dauerMedianMs / 1000).toFixed(1)} s, ${m.kostenJeTueteUsd.toFixed(4)} USD je Tüte`,
       );
-    console.log(`Default: ${r.defaultModell}. Bericht: reports/ki-eval.md`);
+    for (const m of r.auswertung.modelle)
+      for (const f of m.fehler) console.log(`${m.modell}, ${f.sorteZeileId}: ${f.fehler}`);
+    console.log(
+      r.defaultModell
+        ? `Default: ${r.defaultModell}. Bericht: reports/ki-eval.md`
+        : 'Kein Default: M0 bei keinem Modell erfüllt. Bericht: reports/ki-eval.md',
+    );
   } finally {
     await wandler.schliessen();
   }

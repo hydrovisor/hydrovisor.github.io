@@ -32,6 +32,7 @@ sorte-beispiel,hersteller,Beispiel Saaten
 - **Fehlt etwas auf der Tüte:** `nicht auf der Tüte`.
 - **Mehrere gültige Schreibweisen:** mit `|` trennen.
 - **Zahlen:** Bei Keimtemperatur, Keimdauer, Kulturdauer und Aussaatfenster zählen nur die Zahlen. «15 bis 20 °C» gilt wie «15-20».
+- **Keimdauer und Kulturdauer:** in Tagen, Wochen mal 7. «2 bis 3 Wochen» heisst also «14-21».
 - **Aussaatfenster:** als Monatszahlen.
 - **Keimart:** `Lichtkeimer`, `Dunkelkeimer` oder `indifferent`.
 

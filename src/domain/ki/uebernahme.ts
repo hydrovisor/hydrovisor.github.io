@@ -19,7 +19,7 @@ const HINWEIS: Record<VonHandGrund, string> = {
   zeit: 'Die Tüte konnte nicht innert 30 Sekunden gelesen werden. Trag die Werte von Hand ein.',
   fehler: 'Das Lesen der Tüte ist gerade nicht möglich. Trag die Werte von Hand ein.',
   ungueltig: 'Die Antwort zur Tüte war nicht lesbar. Trag die Werte von Hand ein.',
-  grenze: 'Heute sind schon 30 Tüten gelesen worden. Trag die Werte von Hand ein.',
+  grenze: 'Das Tageslimit für das Lesen von Tüten ist erreicht. Trag die Werte von Hand ein.',
   nicht_eingerichtet: 'Das Lesen der Tüte ist noch nicht eingerichtet. Trag die Werte von Hand ein.',
 };
 
