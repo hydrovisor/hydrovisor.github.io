@@ -48,6 +48,10 @@ export declare function berichtMarkdown(
   migrationen: { gleich: boolean; nurBackup: string[]; nurDev: string[] },
 ): string;
 
+export declare function tarLesen(daten: Uint8Array): Map<string, Uint8Array>;
+
+export declare function meldungKuerzen(text: string): string;
+
 export declare function scramVerifier(passwort: string, salz: Uint8Array, iterationen: number): string;
 
 export declare function speicherToken(geheimnis: string, jetzt: Date, ablauf: Date): string;

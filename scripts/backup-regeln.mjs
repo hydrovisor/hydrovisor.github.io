@@ -36,7 +36,8 @@ export function listeAufloesen(eintraege, praefix) {
   const dateien = [];
   const ordner = [];
   for (const eintrag of eintraege) {
-    if (!eintrag.name || eintrag.name.includes('/') || eintrag.name === '.' || eintrag.name === '..')
+    // Kein Pfadtrenner (auch \ für Windows) und kein . oder ..: der Name wird ein Pfad unter dem Zielordner
+    if (!eintrag.name || /[/\\]/.test(eintrag.name) || eintrag.name === '.' || eintrag.name === '..')
       throw new Error(`Ungültiger Name in der Storage-Liste: ${JSON.stringify(eintrag.name)}`);
     const pfad = praefix ? `${praefix}/${eintrag.name}` : eintrag.name;
     if (eintrag.id === null) ordner.push(pfad);
@@ -94,13 +95,16 @@ export function zaehlungLesen(csv) {
 
 /**
  * psql-Befehle \restrict und \unrestrict (pg_dump 17.6+) entfernen. Andere psql-Befehle und COPY … FROM stdin kennt
- * die Management-API nicht; dann bricht die Probe ab, statt still weniger einzuspielen.
+ * die Management-API nicht; dann bricht die Probe ab, statt still weniger einzuspielen. Zeilen mit
+ * pg_catalog.setval(…) fallen weg: setval ist nicht transaktional und bliebe trotz HV_PROBE im Ziel (Prüfer
+ * Fachlogik, Runde 1); die Zählung hängt nicht davon ab.
  */
 export function dumpBereinigen(sql) {
   const zeilen = sql.split('\n');
   const behalten = [];
   for (const zeile of zeilen) {
     if (/^\s*\\(restrict|unrestrict)(\s|$)/.test(zeile)) continue;
+    if (/^\s*SELECT\s+pg_catalog\.setval\(/i.test(zeile)) continue;
     if (/^\s*\\/.test(zeile)) throw new Error(`psql-Befehl im Dump: ${zeile.slice(0, 40)}`);
     if (/^\s*COPY\s.*\bFROM\s+stdin\b/i.test(zeile))
       throw new Error('COPY … FROM stdin im Dump; die Daten müssen als INSERT gesichert sein');
@@ -241,6 +245,60 @@ export function berichtMarkdown(stand, vergleich, storage, migrationen) {
   }
   if (storage === null) zeilen.push('Storage nicht gesichert: Der Stand enthält keine Tütenfotos.', '');
   return zeilen.join('\n');
+}
+
+/**
+ * tar-Archiv im Speicher lesen (ustar mit Präfix, GNU-Langnamen «L», pax «x»); nur reguläre Dateien. Das Präfix gilt
+ * nur bei Magic «ustar\0», im GNU-Format steht an derselben Stelle atime (Prüfer Fachlogik, Runde 1).
+ * @param {Uint8Array} daten
+ * @returns {Map<string, Uint8Array>}
+ */
+export function tarLesen(daten) {
+  const dateien = new Map();
+  const text = (von, laenge) => {
+    const teil = daten.subarray(von, von + laenge);
+    const ende = teil.indexOf(0);
+    return Buffer.from(ende >= 0 ? teil.subarray(0, ende) : teil).toString('utf8');
+  };
+  let pos = 0;
+  let langname = null;
+  while (pos + 512 <= daten.length) {
+    if (daten.subarray(pos, pos + 512).every((b) => b === 0)) break;
+    const groesse = parseInt(text(pos + 124, 12).trim() || '0', 8);
+    if (!Number.isSafeInteger(groesse) || groesse < 0) throw new Error('Ungültiger tar-Kopf');
+    const typ = String.fromCharCode(daten[pos + 156] || 48);
+    const ustar = Buffer.from(daten.subarray(pos + 257, pos + 263)).toString('latin1') === 'ustar\0';
+    const praefix = ustar ? text(pos + 345, 155) : '';
+    let name = text(pos, 100);
+    if (praefix) name = `${praefix}/${name}`;
+    const inhalt = daten.subarray(pos + 512, pos + 512 + groesse);
+    pos += 512 + Math.ceil(groesse / 512) * 512;
+    if (typ === 'L') {
+      langname = Buffer.from(inhalt).toString('utf8').replace(/\0+$/, '');
+      continue;
+    }
+    if (typ === 'x') {
+      const pfad = /(?:^|\n)\d+ path=([^\n]*)\n/.exec(Buffer.from(inhalt).toString('utf8'));
+      if (pfad) langname = pfad[1];
+      continue;
+    }
+    if (typ === 'g') continue;
+    if (langname) {
+      name = langname;
+      langname = null;
+    }
+    if (typ === '0' || typ === '\0') dateien.set(name.replace(/^\.\//, ''), new Uint8Array(inhalt));
+  }
+  return dateien;
+}
+
+/**
+ * Erste Zeile einer Fehlermeldung für die Konsole: ohne DETAIL und mit geschwärzten Werten in Anführungszeichen,
+ * ausser Bezeichnern (Tabelle, Constraint). So erscheint kein Wert aus der Produktion (Prüfer Sicherheit, Runde 1).
+ */
+export function meldungKuerzen(text) {
+  const erste = String(text ?? '').split(/\n|DETAIL/)[0];
+  return erste.replace(/"([^"]*)"/g, (ganz, innen) => (BEZEICHNER.test(innen) ? ganz : '"…"')).slice(0, 300);
 }
 
 // ---------------------------------------------------------------------

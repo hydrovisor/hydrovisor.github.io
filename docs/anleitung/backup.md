@@ -18,6 +18,8 @@ Das Skript fragt zuerst nach «ja». Danach kommen drei Schritte:
 2. **Session-Pooler-Host:** Klick im Dashboard der Produktion oben auf «Connect» › «Session pooler». Kopiere den Host, der auf `.pooler.supabase.com` endet, oder die ganze Verbindungszeile, und füge ihn ein. Das Skript meldet sich als `backup_leser` an, nennt den Modus (BYPASSRLS oder Zeilensicherheit) und setzt das Secret `SUPABASE_DB_URL_BACKUP`.
 3. **Storage-Token:** Öffne im Dashboard Project Settings › JWT Keys › Reiter «Legacy JWT Secret» › «Reveal» und kopiere das Geheimnis. Füge es ein; die Eingabe bleibt verdeckt. Das Skript signiert einen Token, der nur die Tütenfotos lesen darf und am 30.6.2027 abläuft. Es prüft ihn gegen den Storage und setzt `SUPABASE_STORAGE_TOKEN_BACKUP`. Gibt es kein Legacy JWT Secret, drückst du nur Enter. Dann sichert das Backup vorerst keine Fotos.
 
+Das Skript leert am Ende die Zwischenablage, aber nicht deren Verlauf. Ist der Verlauf eingeschaltet (Win+V), löschst du dort danach den Eintrag mit dem Legacy JWT Secret. Dasselbe gilt nach der Wiederherstellungsprobe für den `age`-Schlüssel und das Access-Token.
+
 Beide Werte musst du nicht im Passwortmanager ablegen. Bei einem Verdacht auf ein Leck startest du das Skript einfach noch einmal.
 
 Danach startet der Lead `backup.yml` von Hand und meldet dir den ersten Stand.

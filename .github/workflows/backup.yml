@@ -55,7 +55,8 @@ jobs:
         env:
           DB_URL: ${{ secrets.SUPABASE_DB_URL_BACKUP }}
         run: |
-          sql() { docker run --rm --network host -e DB_URL "$PG_BILD" psql "$DB_URL" -v ON_ERROR_STOP=1 -tA -c "$1"; }
+          # DB_URL und Anweisung erst im Container einsetzen: das Passwort steht nie in den Argumenten von docker run
+          sql() { docker run --rm --network host -e DB_URL -e Q="$1" "$PG_BILD" sh -c 'psql "$DB_URL" -v ON_ERROR_STOP=1 -tA -c "$Q"'; }
           bypass=$(sql "select rolbypassrls from pg_roles where rolname = current_user")
           if [ "$bypass" = "t" ]; then
             echo "Modus: BYPASSRLS"; echo rls=false >> "$GITHUB_OUTPUT"
@@ -84,16 +85,19 @@ jobs:
           mkdir -p sicherung
           rls=""; [ "$MIT_RLS" = "true" ] && rls="--enable-row-security"
           pg() { docker run --rm --network host -e DB_URL -v "$PWD/sicherung:/aus" "$PG_BILD" "$@"; }
+          sql() { docker run --rm --network host -e DB_URL -e Q="$1" "$PG_BILD" sh -c 'psql "$DB_URL" -v ON_ERROR_STOP=1 -tA -c "$Q"'; }
           pg sh -c 'pg_dump "$DB_URL" -n public --schema-only -f /aus/schema.sql'
           pg sh -c "pg_dump \"\$DB_URL\" -n public --data-only --inserts --rows-per-insert=100 $rls -f /aus/daten.sql"
           # Zählung unmittelbar nach dem Dump, je Basistabelle in public (Wiederherstellungsprobe vergleicht damit)
-          { echo "tabelle;zeilen"; pg psql "$DB_URL" -v ON_ERROR_STOP=1 -tA -c "select c.relname || ';' ||
+          { echo "tabelle;zeilen"; sql "select c.relname || ';' ||
               (xpath('/row/n/text()', query_to_xml(format('select count(*) as n from public.%I', c.relname), false, true, '')))[1]::text
             from pg_class c join pg_namespace n on n.oid = c.relnamespace
             where n.nspname = 'public' and c.relkind in ('r', 'p') order by c.relname"; } > sicherung/zaehlung.csv
-          pg psql "$DB_URL" -v ON_ERROR_STOP=1 -tA -c "select version from supabase_migrations.schema_migrations order by version" > sicherung/migrationen.txt
+          sql "select version from supabase_migrations.schema_migrations order by version" > sicherung/migrationen.txt
           echo "Tabellen: $(($(wc -l < sicherung/zaehlung.csv) - 1)), Zeilen: $(awk -F';' 'NR > 1 { s += $2 } END { print s + 0 }' sicherung/zaehlung.csv), Migrationen: $(wc -l < sicherung/migrationen.txt)"
-          echo "FOTOS=$(pg psql "$DB_URL" -v ON_ERROR_STOP=1 -tA -c "select count(distinct fotopfad) from public.ki_feldprotokoll where fotopfad is not null")" >> "$GITHUB_ENV"
+          fotos=$(sql "select count(distinct fotopfad) from public.ki_feldprotokoll where fotopfad is not null")
+          [[ "$fotos" =~ ^[0-9]+$ ]] || { echo "::error::Zahl der Fotos nicht lesbar"; exit 1; }
+          echo "FOTOS=$fotos" >> "$GITHUB_ENV"
       - name: Storage-Bucket saattueten (nur lesend)
         if: steps.bereit.outputs.ok == 'true'
         env:
@@ -119,7 +123,9 @@ jobs:
           tar -czf "$stand.tar.gz" sicherung
           age -r "$AGE_SCHLUESSEL" -o "$stand.tar.gz.age" "$stand.tar.gz"
           rm -rf sicherung "$stand.tar.gz"
-          echo "GROESSE=$(stat -c %s "$stand.tar.gz.age")" >> "$GITHUB_ENV"
+          groesse=$(stat -c %s "$stand.tar.gz.age")
+          [[ "$groesse" =~ ^[0-9]+$ ]] || { echo "::error::Grösse nicht lesbar"; exit 1; }
+          echo "GROESSE=$groesse" >> "$GITHUB_ENV"
           gh release create "$stand" "$stand.tar.gz.age" --repo hydrovisor/hydrovisor-backup --title "$stand" --notes "Automatisches Backup"
           gh release list --repo hydrovisor/hydrovisor-backup --limit 200 --json tagName,createdAt \
             --jq 'sort_by(.createdAt) | reverse | .[30:] | .[].tagName' |
@@ -128,4 +134,7 @@ jobs:
         if: steps.bereit.outputs.ok == 'true'
         env:
           DB_URL: ${{ secrets.SUPABASE_DB_URL_BACKUP }}
-        run: docker run --rm --network host -e DB_URL "$PG_BILD" sh -c "psql \"\$DB_URL\" -v ON_ERROR_STOP=1 -c 'select public.backup_status_melden($GROESSE)'"
+        run: |
+          [[ "$GROESSE" =~ ^[0-9]+$ ]] || { echo "::error::Grösse fehlt"; exit 1; }
+          docker run --rm --network host -e DB_URL -e Q="select public.backup_status_melden($GROESSE)" "$PG_BILD" \
+            sh -c 'psql "$DB_URL" -v ON_ERROR_STOP=1 -c "$Q"'

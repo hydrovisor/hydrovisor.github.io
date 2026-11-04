@@ -20,8 +20,10 @@ import {
   berichtMarkdown,
   dumpBereinigen,
   manifestPruefen,
+  meldungKuerzen,
   probeErgebnisLesen,
   probeSql,
+  tarLesen,
   vergleichen,
   zaehlungLesen,
 } from './backup-regeln.mjs';
@@ -58,6 +60,40 @@ function befehl(programm, args) {
   });
 }
 
+/** Eingefügte Geheimnisse nicht in der Zwischenablage lassen (Windows; den Verlauf mit Win+V leert Tim selbst) */
+function zwischenablageLeeren() {
+  if (process.platform !== 'win32') return;
+  try {
+    execFileSync('powershell.exe', ['-NoProfile', '-Command', "Set-Clipboard -Value ' '"], {
+      stdio: 'ignore',
+    });
+  } catch {
+    // ohne PowerShell bleibt die Zwischenablage, wie sie ist
+  }
+}
+
+/**
+ * Zustand des Ziels als Nachweis, dass die Probe nichts festgeschrieben hat: Zeilen je Basistabelle in public,
+ * abgeschaltete eigene Trigger, aufschiebbare Fremdschlüssel (Prüfer Fachlogik und Sicherheit, Runde 1).
+ */
+const ZUSTAND_SQL = `select json_build_object(
+  'zeilen', (select json_object_agg(c.relname,
+      (xpath('/row/n/text()', query_to_xml(format('select count(*) as n from public.%I', c.relname), false, true, '')))[1]::text)
+    from pg_class c join pg_namespace n on n.oid = c.relnamespace where n.nspname = 'public' and c.relkind in ('r', 'p')),
+  'trigger_aus', (select count(*) from pg_trigger t join pg_class c on c.oid = t.tgrelid
+    where c.relnamespace = 'public'::regnamespace and not t.tgisinternal and t.tgenabled = 'D'),
+  'aufschiebbar', (select count(*) from pg_constraint
+    where connamespace = 'public'::regnamespace and contype = 'f' and condeferrable),
+  'kanarie', to_regclass('public.hv_probe_kanarie')::text
+)::text as zustand`;
+
+async function zustand(ausfuehrer) {
+  const [zeile] = await ausfuehrer.abfrage(ZUSTAND_SQL);
+  const roh = JSON.parse(String(zeile.zustand));
+  const zeilen = Object.fromEntries(Object.entries(roh.zeilen ?? {}).sort(([a], [b]) => a.localeCompare(b)));
+  return JSON.stringify({ ...roh, zeilen });
+}
+
 /** Verdeckte Eingabe ohne Echo (Einfügen erlaubt); Ctrl+C bricht ab */
 function verdeckt(frage) {
   return new Promise((aufloesen) => {
@@ -74,6 +110,7 @@ function verdeckt(frage) {
           ein.pause();
           ein.off('data', lesen);
           process.stdout.write('\n');
+          zwischenablageLeeren();
           aufloesen(wert.trim());
           return;
         }
@@ -87,46 +124,6 @@ function verdeckt(frage) {
     };
     ein.on('data', lesen);
   });
-}
-
-// ---------------------------------------------------------------------
-// tar im Speicher (ustar mit Präfix, GNU-Langnamen «L», pax «x»); nur reguläre Dateien
-// ---------------------------------------------------------------------
-function tarLesen(daten) {
-  const dateien = new Map();
-  const text = (von, laenge) => {
-    const teil = daten.subarray(von, von + laenge);
-    const ende = teil.indexOf(0);
-    return Buffer.from(ende >= 0 ? teil.subarray(0, ende) : teil).toString('utf8');
-  };
-  let pos = 0;
-  let langname = null;
-  while (pos + 512 <= daten.length) {
-    if (daten.subarray(pos, pos + 512).every((b) => b === 0)) break;
-    const groesse = parseInt(text(pos + 124, 12).trim() || '0', 8);
-    const typ = String.fromCharCode(daten[pos + 156] || 48);
-    const praefix = text(pos + 345, 155);
-    let name = text(pos, 100);
-    if (praefix) name = `${praefix}/${name}`;
-    const inhalt = daten.subarray(pos + 512, pos + 512 + groesse);
-    pos += 512 + Math.ceil(groesse / 512) * 512;
-    if (typ === 'L') {
-      langname = Buffer.from(inhalt).toString('utf8').replace(/\0+$/, '');
-      continue;
-    }
-    if (typ === 'x') {
-      const pfad = /(?:^|\n)\d+ path=([^\n]*)\n/.exec(Buffer.from(inhalt).toString('utf8'));
-      if (pfad) langname = pfad[1];
-      continue;
-    }
-    if (typ === 'g') continue;
-    if (langname) {
-      name = langname;
-      langname = null;
-    }
-    if (typ === '0' || typ === '\0') dateien.set(name.replace(/^\.\//, ''), new Uint8Array(inhalt));
-  }
-  return dateien;
 }
 
 // ---------------------------------------------------------------------
@@ -182,10 +179,9 @@ function ausfuehrerLokal() {
   };
 }
 
-/** Erste Zeile einer Fehlermeldung ohne DETAIL (könnte Werte enthalten, A6) */
+/** Erste Zeile einer Fehlermeldung, Werte geschwärzt */
 function kurzeMeldung(e) {
-  const text = e instanceof Error ? e.message : String(e);
-  return text.split(/\n|DETAIL/)[0].slice(0, 300);
+  return meldungKuerzen(e instanceof Error ? e.message : String(e));
 }
 
 // ---------------------------------------------------------------------
@@ -297,17 +293,41 @@ try {
     console.log(
       `Probe: ${erwartet.size} Tabellen im Stand, ${tabellen.length} im Ziel, ${sql.length} Zeichen SQL`,
     );
+    // Kanarienlauf über denselben Weg: Bildet der Ausführer keine Transaktion, bliebe die Tabelle bestehen
+    try {
+      await ausfuehrer.abfrage(
+        `create table public.hv_probe_kanarie (); do $hv$ begin raise exception '${'HV_PROBE'} {}'; end $hv$;`,
+      );
+    } catch {
+      // erwartet: HV_PROBE
+    }
+    const [kanarie] = await ausfuehrer.abfrage(`select to_regclass('public.hv_probe_kanarie')::text as k`);
+    if (kanarie?.k) {
+      await ausfuehrer.abfrage('drop table public.hv_probe_kanarie');
+      throw new Error(
+        'Der Ausführer bildet keine Transaktion (Kanarie blieb bestehen); Probe nicht gestartet',
+      );
+    }
+    const vorher = await zustand(ausfuehrer);
+
     let ist = null;
+    let ohneAbbruch = false;
     try {
       await ausfuehrer.abfrage(sql);
-      throw new Error('Probe endete ohne HV_PROBE; das darf nicht sein');
+      ohneAbbruch = true;
     } catch (e) {
       ist = probeErgebnisLesen(e instanceof Error ? e.message : String(e));
       if (!ist) console.log(`Probe gescheitert: ${kurzeMeldung(e)}`);
     }
+    const unveraendert = !ohneAbbruch && (await zustand(ausfuehrer)) === vorher;
+    if (!unveraendert) {
+      console.log('ACHTUNG: Das Ziel ist möglicherweise verändert (Zeilen, Trigger oder Fremdschlüssel).');
+      console.log('Melde das sofort dem Lead; er prüft hydrovisor-dev und setzt es zurück.');
+      ist = null;
+    }
     if (ist) {
       const vergleich = vergleichen(erwartet, ist);
-      const bericht = berichtMarkdown(stand, vergleich, storage, migrationen);
+      const bericht = `${berichtMarkdown(stand, vergleich, storage, migrationen)}\nZiel nach der Probe unverändert: ja (Zeilen je Tabelle, Trigger, Fremdschlüssel)\n`;
       console.log(`\n${bericht}`);
       await mkdir('reports', { recursive: true });
       const pfad = join('reports', `wiederherstellungsprobe-${stand}.md`);

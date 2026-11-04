@@ -33,7 +33,10 @@ if (restTage < 30)
     `::warning::Storage-Token läuft in ${Math.floor(restTage)} Tagen ab (scripts/backup-einrichten.mjs)`,
   );
 const m = process.argv.indexOf('--mindestens');
-const mindestens = m >= 0 ? Number(process.argv[m + 1]) : 0;
+const mindestensText = m >= 0 ? (process.argv[m + 1] ?? '') : '0';
+if (!/^\d+$/.test(mindestensText))
+  throw new Error(`--mindestens <zahl> ungültig: ${JSON.stringify(mindestensText)}`);
+const mindestens = Number(mindestensText);
 if (!Number.isSafeInteger(mindestens) || mindestens < 0) throw new Error('--mindestens <zahl> ungültig');
 
 const kopf = { Authorization: `Bearer ${token}`, apikey };
