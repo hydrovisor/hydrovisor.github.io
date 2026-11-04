@@ -20,4 +20,4 @@ Datum 3.11.2026 · Entscheid des Lead im Auftrag von Tim (Chat: «Löse das Prob
 
 **Umsetzung.** Pull Request zu #9 mit Workflow, Migration, pgTAP `08_zugang_migration.test.sql` und Nachführung von `CLAUDE.md`.
 
-**Nachtrag 4.11.2026.** Abgelöst durch Entscheid 0008 (Merge durch den Lead) und Entscheid 0010 (Abnahme 1 durch den Lead, selbständiges Arbeiten), bis Tim widerruft. Nach einem Widerruf gilt wieder dieser Entscheid.
+**Nachtrag 4.11.2026.** Teilweise abgelöst: Den Satz zum Merge ersetzt Entscheid 0008. Die Freigabe von `deploy.yml` in `production` gibt der Lead nach Entscheid 0010 selbst, wenn der Deploy keine Produktions-Migration enthält; mit Migration bleibt sie bei Tim. Alles Übrige gilt weiter.
