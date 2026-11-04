@@ -52,6 +52,24 @@ tests/e2e/messung.spec.ts
 tests/e2e/orte.ts
 tests/unit/messung-runde1.test.ts
 tests/e2e/messung-runde1.spec.ts
+# I0-08 Push-Test von Ende zu Ende (#13)
+supabase/functions/push-taeglich/kern.test.ts
+supabase/functions/push-quittung/kern.test.ts
+supabase/tests/database/09_push_cron.test.sql
+tests/unit/push-fixture.ts
+tests/unit/push-zeitpunkt.test.ts
+tests/unit/push-inhalt.test.ts
+tests/unit/push-stand.test.ts
+tests/unit/push-sw.test.ts
+tests/unit/push-abo.test.ts
+tests/e2e/push.spec.ts
+tests/unit/push-stand-runde1.test.ts
+supabase/tests/database/10_push_cron_rechte.test.sql
+# I0-11 Backup scharf (#16)
+supabase/tests/database/11_backup.test.sql
+tests/unit/backup-regeln.test.ts
+# Fehler #65 Tabellenrechte
+supabase/tests/database/12_tabellenrechte.test.sql
 # I0-09 KI-Eval (#14)
 supabase/functions/ki-tuete/jpeg_test.ts
 supabase/functions/ki-tuete/kern_test.ts

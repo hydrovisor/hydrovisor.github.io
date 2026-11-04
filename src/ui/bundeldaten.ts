@@ -1,33 +1,28 @@
-// Teile des Offline-Bündels für Messen, Kalibrieren und Heute (Plan 12): lesen, nie rechnen.
+// Teile des Offline-Bündels für Messen, Kalibrieren und Heute (Plan 12): lesen, nie rechnen. Die Lesehilfen
+// liegen seit Plan 13 in src/domain/teile.ts, damit die Edge Function push-taeglich sie teilt (R5.1).
 import type { Buendel } from '../domain/datenpfad/buendel.ts';
-import type { GeraeteEreignis, Kalibrierdaten, KalibrierZeile } from '../domain/kalibrierung/stand.ts';
+import type { Kalibrierdaten } from '../domain/kalibrierung/stand.ts';
+import {
+  kalibrierdatenAus,
+  messgeraetAus,
+  messungenAus,
+  zustandAus,
+  type Messgeraet,
+} from '../domain/teile.ts';
 
-export interface Messgeraet {
-  id: string;
-  u_ec: number;
-  u_ph: number;
-}
-
-const teil = <T>(b: Buendel | undefined, name: string) => (b?.teile[name] ?? []) as readonly T[];
+export type { Messgeraet };
 
 /** erstes Messgerät im Bündel (A3) */
 export function messgeraet(b: Buendel | undefined): Messgeraet | undefined {
-  const g = teil<Messgeraet>(b, 'messgeraet')[0];
-  return g ? { id: g.id, u_ec: Number(g.u_ec), u_ph: Number(g.u_ph) } : undefined;
+  return messgeraetAus(b?.teile);
 }
 
 export function kalibrierdaten(b: Buendel | undefined): Kalibrierdaten {
-  const termine = teil<{ feste_kalibriertermine?: string[] | null }>(b, 'einstellung')[0]
-    ?.feste_kalibriertermine;
-  return {
-    kalibrierungen: teil<KalibrierZeile>(b, 'kalibrierung'),
-    ereignisse: teil<GeraeteEreignis>(b, 'ereignis'),
-    festeTermine: termine ?? [],
-  };
+  return kalibrierdatenAus(b?.teile);
 }
 
 export function messungenIm(b: Buendel | undefined) {
-  return teil<{ platz_id: string | null; gilt_ab: string; storniert_am: string | null }>(b, 'messung');
+  return messungenAus(b?.teile);
 }
 
 /** Füllzustand und Prüfstatus eines Platzes aus den Sichten im Bündel */
@@ -35,18 +30,7 @@ export function zustandVon(
   b: Buendel | undefined,
   platzId: string,
 ): { fuellzustand?: 'leer' | 'loesung'; status?: string } {
-  const fuell = teil<{ platz_id: string; fuellzustand: 'leer' | 'loesung' }>(b, 'v_fuellzustand').find(
-    (z) => z.platz_id === platzId,
-  )?.fuellzustand;
-  const gefaess = teil<{ id: string; platz_id: string; gueltig_bis: string | null }>(b, 'gefaess').find(
-    (g) => g.platz_id === platzId && g.gueltig_bis === null,
-  );
-  const status = gefaess
-    ? teil<{ gefaess_id: string; status: string }>(b, 'v_gefaess_status').find(
-        (s) => s.gefaess_id === gefaess.id,
-      )?.status
-    : undefined;
-  return { ...(fuell ? { fuellzustand: fuell } : {}), ...(status ? { status } : {}) };
+  return zustandAus(b?.teile, platzId);
 }
 
 /** aktueller Zeitpunkt für Ereignis-Handler; Date.now() nur in der Oberfläche (CLAUDE.md) */

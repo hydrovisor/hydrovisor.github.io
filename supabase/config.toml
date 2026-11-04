@@ -421,6 +421,13 @@ enabled = true
 # and column/key alignment. Set to "null" to emit raw, unformatted SQL.
 # format_options = "{\"keywordCase\":\"upper\",\"indent\":2,\"maxWidth\":180,\"commaStyle\":\"trailing\"}"
 
+# Edge Functions der Push-Kette prüfen Cron-Geheimnis, Token und Signatur selbst (Plan 13)
+[functions.push-taeglich]
+verify_jwt = false
+
+[functions.push-quittung]
+verify_jwt = false
+
 # Edge Function ki-tuete prüft Token und ist_tim() selbst (Plan 14, A9)
 [functions.ki-tuete]
 verify_jwt = false

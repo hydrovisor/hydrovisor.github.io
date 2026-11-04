@@ -83,7 +83,7 @@ jobs:
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           PROJEKT: ${{ vars.SUPABASE_PROJECT_REF_PROD }}
-        run: supabase functions deploy --project-ref "$PROJEKT"
+        run: supabase functions deploy --project-ref "$PROJEKT" --yes
       - name: Tag letzte-migration nachziehen
         run: |
           git tag -f letzte-migration "$GITHUB_SHA"
