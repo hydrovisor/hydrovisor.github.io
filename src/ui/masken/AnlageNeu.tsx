@@ -228,8 +228,7 @@ export function AnlageNeu() {
             </a>
           }
         >
-          Diese Anlage ist schon mit anderen Werten gespeichert; deine Änderung ist nicht übernommen. Öffne
-          die Anlage, um den gespeicherten Stand zu sehen.
+          Diese Anlage ist schon mit anderen Werten gespeichert; deine Änderung ist nicht übernommen.
         </Notice>
       ) : null}
       {schreibfehler ? (
