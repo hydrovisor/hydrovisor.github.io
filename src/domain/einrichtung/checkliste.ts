@@ -4,6 +4,7 @@
 
 export type Punktziel =
   | { art: 'kalibrieren' }
+  | { art: 'anlage-neu' }
   | { art: 'messen'; code: string }
   | { art: 'einweichen' }
   /** Ablauf folgt mit dem genannten Paket (Plan 18 A6) */
@@ -145,7 +146,7 @@ export function einrichtungsStand(teile: Teile, jetzt: Date, einweichenEnde?: nu
       titel: 'Anlage anlegen',
       knopf: 'Anlage anlegen',
       erledigt: anlageDa,
-      ziel: { art: 'folgt', paket: 'I1a-02' },
+      ziel: { art: 'anlage-neu' },
     },
     {
       nr: 2,

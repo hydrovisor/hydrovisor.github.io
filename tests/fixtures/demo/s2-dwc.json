@@ -1,36 +1,371 @@
 {
   "kommentar": "S2 DWC normal: 2.3 mit 2 Sätzen (Sorten Zwei und Drei als Salat), umgesetzt vor 28 Tagen, Messungen der letzten 14 Tage, letzter Wechsel vor 12 Tagen",
   "zeilen": [
-    {"tabelle":"netztopf","ref":"X-topf-2.3.1","felder":{"anlage_id":"@X","kennung":"2.3.1","groesse_mm":80,"heim_platz_id":"@X-2.3","heim_loch_nr":1}},
-    {"tabelle":"netztopf","ref":"X-topf-2.3.2","felder":{"anlage_id":"@X","kennung":"2.3.2","groesse_mm":80,"heim_platz_id":"@X-2.3","heim_loch_nr":2}},
-    {"tabelle":"netztopf","ref":"X-topf-2.3.3","felder":{"anlage_id":"@X","kennung":"2.3.3","groesse_mm":80,"heim_platz_id":"@X-2.3","heim_loch_nr":3}},
-    {"tabelle":"netztopf","ref":"X-topf-2.3.4","felder":{"anlage_id":"@X","kennung":"2.3.4","groesse_mm":80,"heim_platz_id":"@X-2.3","heim_loch_nr":4}},
-    {"tabelle":"satz","ref":"X-s2-a","felder":{"sorte_id":"?sorte_schluessel.sorte_key=sorte-test-b-zwei","kulturform":"schnitt","anzuchtort_platz_id":"@X-A1","anzahl_schwaemme":2,"samen_je_schwamm":2,"saatdatum":"heute-40","gilt_ab":"jetzt-40d 19:00"}},
-    {"tabelle":"pflanzung","ref":"X-s2-p1","felder":{"satz_id":"@X-s2-a","gilt_ab":"jetzt-40d 19:00"}},
-    {"tabelle":"reservierung","ref":"X-s2-r1","felder":{"pflanzung_id":"@X-s2-p1","netztopf_id":"@X-topf-2.3.1","umsetzen_vorgabe_am":"heute-28","umsetzen_geplant_am":"heute-28","gilt_ab":"jetzt-40d 19:00"}},
-    {"tabelle":"pflanzung","ref":"X-s2-p2","felder":{"satz_id":"@X-s2-a","gilt_ab":"jetzt-40d 19:00"}},
-    {"tabelle":"reservierung","ref":"X-s2-r2","felder":{"pflanzung_id":"@X-s2-p2","netztopf_id":"@X-topf-2.3.2","umsetzen_vorgabe_am":"heute-28","umsetzen_geplant_am":"heute-28","gilt_ab":"jetzt-40d 19:00"}},
-    {"tabelle":"ereignis","ref":"X-s2-a-anzucht","felder":{"typ":"phase_antwort","satz_id":"@X-s2-a","daten":{"phase":"anzucht","antwort":"ja","erwartet_am":"heute-34"},"gilt_ab":"jetzt-34d 08:00"}},
-    {"tabelle":"ereignis","ref":"X-s2-umsetzen-1","felder":{"typ":"umsetzen","pflanzung_id":"@X-s2-p1","netztopf_id":"@X-topf-2.3.1","platz_id":"@X-2.3","daten":{"von_platz_id":"@X-A1","von_loch_nr":null,"nach_platz_id":"@X-2.3","nach_loch_nr":1},"gilt_ab":"jetzt-28d 18:30"}},
-    {"tabelle":"ereignis","ref":"X-s2-umsetzen-2","felder":{"typ":"umsetzen","pflanzung_id":"@X-s2-p2","netztopf_id":"@X-topf-2.3.2","platz_id":"@X-2.3","daten":{"von_platz_id":"@X-A1","von_loch_nr":null,"nach_platz_id":"@X-2.3","nach_loch_nr":2},"gilt_ab":"jetzt-28d 18:30"}},
-    {"tabelle":"ereignis","ref":"X-s2-a-wachstum","felder":{"typ":"phase_antwort","satz_id":"@X-s2-a","daten":{"phase":"wachstum","antwort":"ja","erwartet_am":"heute-20"},"gilt_ab":"jetzt-20d 08:00"}},
-    {"tabelle":"satz","ref":"X-s2-b","felder":{"sorte_id":"?sorte_schluessel.sorte_key=sorte-test-c-drei","kulturform":"schnitt","anzuchtort_platz_id":"@X-A1","anzahl_schwaemme":2,"samen_je_schwamm":2,"saatdatum":"heute-40","gilt_ab":"jetzt-40d 19:00"}},
-    {"tabelle":"pflanzung","ref":"X-s2-p3","felder":{"satz_id":"@X-s2-b","gilt_ab":"jetzt-40d 19:00"}},
-    {"tabelle":"reservierung","ref":"X-s2-r3","felder":{"pflanzung_id":"@X-s2-p3","netztopf_id":"@X-topf-2.3.3","umsetzen_vorgabe_am":"heute-28","umsetzen_geplant_am":"heute-28","gilt_ab":"jetzt-40d 19:00"}},
-    {"tabelle":"pflanzung","ref":"X-s2-p4","felder":{"satz_id":"@X-s2-b","gilt_ab":"jetzt-40d 19:00"}},
-    {"tabelle":"reservierung","ref":"X-s2-r4","felder":{"pflanzung_id":"@X-s2-p4","netztopf_id":"@X-topf-2.3.4","umsetzen_vorgabe_am":"heute-28","umsetzen_geplant_am":"heute-28","gilt_ab":"jetzt-40d 19:00"}},
-    {"tabelle":"ereignis","ref":"X-s2-b-anzucht","felder":{"typ":"phase_antwort","satz_id":"@X-s2-b","daten":{"phase":"anzucht","antwort":"ja","erwartet_am":"heute-34"},"gilt_ab":"jetzt-34d 08:00"}},
-    {"tabelle":"ereignis","ref":"X-s2-umsetzen-3","felder":{"typ":"umsetzen","pflanzung_id":"@X-s2-p3","netztopf_id":"@X-topf-2.3.3","platz_id":"@X-2.3","daten":{"von_platz_id":"@X-A1","von_loch_nr":null,"nach_platz_id":"@X-2.3","nach_loch_nr":3},"gilt_ab":"jetzt-28d 18:30"}},
-    {"tabelle":"ereignis","ref":"X-s2-umsetzen-4","felder":{"typ":"umsetzen","pflanzung_id":"@X-s2-p4","netztopf_id":"@X-topf-2.3.4","platz_id":"@X-2.3","daten":{"von_platz_id":"@X-A1","von_loch_nr":null,"nach_platz_id":"@X-2.3","nach_loch_nr":4},"gilt_ab":"jetzt-28d 18:30"}},
-    {"tabelle":"ereignis","ref":"X-s2-b-wachstum","felder":{"typ":"phase_antwort","satz_id":"@X-s2-b","daten":{"phase":"wachstum","antwort":"ja","erwartet_am":"heute-20"},"gilt_ab":"jetzt-20d 08:00"}},
-    {"tabelle":"naehrloesungsansatz","ref":"X-s2-ansatz-1","felder":{"platz_id":"@X-2.3","typ":"neuansatz","status":"abgeschlossen","begonnen_am":"jetzt-28d 18:00","abgeschlossen_am":"jetzt-28d 18:00","volumen_l":30,"gilt_ab":"jetzt-28d 18:00"}},
-    {"tabelle":"naehrloesungsansatz","ref":"X-s2-ansatz-2","felder":{"platz_id":"@X-2.3","typ":"neuansatz","status":"abgeschlossen","begonnen_am":"jetzt-12d 18:00","abgeschlossen_am":"jetzt-12d 18:00","volumen_l":30,"gilt_ab":"jetzt-12d 18:00"}},
-    {"tabelle":"messung","ref":"X-s2-messung-14","felder":{"platz_id":"@X-2.3","messgeraet_id":"?messgeraet","messart":"rundgang","ph":6.1,"ec":1.32,"temperatur":19.5,"schnappschuss":{"betriebsart":"dwc"},"gilt_ab":"jetzt-14d 08:00"}},
-    {"tabelle":"messung","ref":"X-s2-messung-12","felder":{"platz_id":"@X-2.3","messgeraet_id":"?messgeraet","messart":"rundgang","ph":6.3,"ec":1.41,"temperatur":19.8,"schnappschuss":{"betriebsart":"dwc"},"gilt_ab":"jetzt-12d 08:00"}},
-    {"tabelle":"messung","ref":"X-s2-messung-10","felder":{"platz_id":"@X-2.3","messgeraet_id":"?messgeraet","messart":"rundgang","ph":6,"ec":1.28,"temperatur":19.4,"schnappschuss":{"betriebsart":"dwc"},"gilt_ab":"jetzt-10d 08:00"}},
-    {"tabelle":"messung","ref":"X-s2-messung-8","felder":{"platz_id":"@X-2.3","messgeraet_id":"?messgeraet","messart":"rundgang","ph":6.1,"ec":1.3,"temperatur":19.6,"schnappschuss":{"betriebsart":"dwc"},"gilt_ab":"jetzt-8d 08:00"}},
-    {"tabelle":"messung","ref":"X-s2-messung-6","felder":{"platz_id":"@X-2.3","messgeraet_id":"?messgeraet","messart":"rundgang","ph":6.2,"ec":1.35,"temperatur":19.9,"schnappschuss":{"betriebsart":"dwc"},"gilt_ab":"jetzt-6d 08:00"}},
-    {"tabelle":"messung","ref":"X-s2-messung-4","felder":{"platz_id":"@X-2.3","messgeraet_id":"?messgeraet","messart":"rundgang","ph":6.2,"ec":1.38,"temperatur":20.1,"schnappschuss":{"betriebsart":"dwc"},"gilt_ab":"jetzt-4d 08:00"}},
-    {"tabelle":"messung","ref":"X-s2-messung-2","felder":{"platz_id":"@X-2.3","messgeraet_id":"?messgeraet","messart":"rundgang","ph":6.3,"ec":1.42,"temperatur":19.7,"schnappschuss":{"betriebsart":"dwc"},"gilt_ab":"jetzt-2d 08:00"}}
+    {
+      "tabelle": "netztopf",
+      "ref": "X-topf-2.3.1",
+      "felder": {
+        "anlage_id": "@X",
+        "kennung": "2.3.1",
+        "groesse_mm": 80,
+        "heim_platz_id": "@X-2.3",
+        "heim_loch_nr": 1
+      }
+    },
+    {
+      "tabelle": "netztopf",
+      "ref": "X-topf-2.3.2",
+      "felder": {
+        "anlage_id": "@X",
+        "kennung": "2.3.2",
+        "groesse_mm": 80,
+        "heim_platz_id": "@X-2.3",
+        "heim_loch_nr": 2
+      }
+    },
+    {
+      "tabelle": "netztopf",
+      "ref": "X-topf-2.3.3",
+      "felder": {
+        "anlage_id": "@X",
+        "kennung": "2.3.3",
+        "groesse_mm": 80,
+        "heim_platz_id": "@X-2.3",
+        "heim_loch_nr": 3
+      }
+    },
+    {
+      "tabelle": "netztopf",
+      "ref": "X-topf-2.3.4",
+      "felder": {
+        "anlage_id": "@X",
+        "kennung": "2.3.4",
+        "groesse_mm": 80,
+        "heim_platz_id": "@X-2.3",
+        "heim_loch_nr": 4
+      }
+    },
+    {
+      "tabelle": "satz",
+      "ref": "X-s2-a",
+      "felder": {
+        "sorte_id": "?sorte_schluessel.sorte_key=sorte-test-b-zwei",
+        "kulturform": "schnitt",
+        "anzuchtort_platz_id": "@X-A1",
+        "anzahl_schwaemme": 2,
+        "samen_je_schwamm": 2,
+        "saatdatum": "heute-40",
+        "gilt_ab": "jetzt-40d 19:00"
+      }
+    },
+    {
+      "tabelle": "pflanzung",
+      "ref": "X-s2-p1",
+      "felder": { "satz_id": "@X-s2-a", "gilt_ab": "jetzt-40d 19:00" }
+    },
+    {
+      "tabelle": "reservierung",
+      "ref": "X-s2-r1",
+      "felder": {
+        "pflanzung_id": "@X-s2-p1",
+        "netztopf_id": "@X-topf-2.3.1",
+        "umsetzen_vorgabe_am": "heute-28",
+        "umsetzen_geplant_am": "heute-28",
+        "gilt_ab": "jetzt-40d 19:00"
+      }
+    },
+    {
+      "tabelle": "pflanzung",
+      "ref": "X-s2-p2",
+      "felder": { "satz_id": "@X-s2-a", "gilt_ab": "jetzt-40d 19:00" }
+    },
+    {
+      "tabelle": "reservierung",
+      "ref": "X-s2-r2",
+      "felder": {
+        "pflanzung_id": "@X-s2-p2",
+        "netztopf_id": "@X-topf-2.3.2",
+        "umsetzen_vorgabe_am": "heute-28",
+        "umsetzen_geplant_am": "heute-28",
+        "gilt_ab": "jetzt-40d 19:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-s2-a-anzucht",
+      "felder": {
+        "typ": "phase_antwort",
+        "satz_id": "@X-s2-a",
+        "daten": { "phase": "anzucht", "antwort": "ja", "erwartet_am": "heute-34" },
+        "gilt_ab": "jetzt-34d 08:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-s2-umsetzen-1",
+      "felder": {
+        "typ": "umsetzen",
+        "pflanzung_id": "@X-s2-p1",
+        "netztopf_id": "@X-topf-2.3.1",
+        "platz_id": "@X-2.3",
+        "daten": {
+          "von_platz_id": "@X-A1",
+          "von_loch_nr": null,
+          "nach_platz_id": "@X-2.3",
+          "nach_loch_nr": 1
+        },
+        "gilt_ab": "jetzt-28d 18:30"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-s2-umsetzen-2",
+      "felder": {
+        "typ": "umsetzen",
+        "pflanzung_id": "@X-s2-p2",
+        "netztopf_id": "@X-topf-2.3.2",
+        "platz_id": "@X-2.3",
+        "daten": {
+          "von_platz_id": "@X-A1",
+          "von_loch_nr": null,
+          "nach_platz_id": "@X-2.3",
+          "nach_loch_nr": 2
+        },
+        "gilt_ab": "jetzt-28d 18:30"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-s2-a-wachstum",
+      "felder": {
+        "typ": "phase_antwort",
+        "satz_id": "@X-s2-a",
+        "daten": { "phase": "wachstum", "antwort": "ja", "erwartet_am": "heute-20" },
+        "gilt_ab": "jetzt-20d 08:00"
+      }
+    },
+    {
+      "tabelle": "satz",
+      "ref": "X-s2-b",
+      "felder": {
+        "sorte_id": "?sorte_schluessel.sorte_key=sorte-test-c-drei",
+        "kulturform": "schnitt",
+        "anzuchtort_platz_id": "@X-A1",
+        "anzahl_schwaemme": 2,
+        "samen_je_schwamm": 2,
+        "saatdatum": "heute-40",
+        "gilt_ab": "jetzt-40d 19:00"
+      }
+    },
+    {
+      "tabelle": "pflanzung",
+      "ref": "X-s2-p3",
+      "felder": { "satz_id": "@X-s2-b", "gilt_ab": "jetzt-40d 19:00" }
+    },
+    {
+      "tabelle": "reservierung",
+      "ref": "X-s2-r3",
+      "felder": {
+        "pflanzung_id": "@X-s2-p3",
+        "netztopf_id": "@X-topf-2.3.3",
+        "umsetzen_vorgabe_am": "heute-28",
+        "umsetzen_geplant_am": "heute-28",
+        "gilt_ab": "jetzt-40d 19:00"
+      }
+    },
+    {
+      "tabelle": "pflanzung",
+      "ref": "X-s2-p4",
+      "felder": { "satz_id": "@X-s2-b", "gilt_ab": "jetzt-40d 19:00" }
+    },
+    {
+      "tabelle": "reservierung",
+      "ref": "X-s2-r4",
+      "felder": {
+        "pflanzung_id": "@X-s2-p4",
+        "netztopf_id": "@X-topf-2.3.4",
+        "umsetzen_vorgabe_am": "heute-28",
+        "umsetzen_geplant_am": "heute-28",
+        "gilt_ab": "jetzt-40d 19:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-s2-b-anzucht",
+      "felder": {
+        "typ": "phase_antwort",
+        "satz_id": "@X-s2-b",
+        "daten": { "phase": "anzucht", "antwort": "ja", "erwartet_am": "heute-34" },
+        "gilt_ab": "jetzt-34d 08:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-s2-umsetzen-3",
+      "felder": {
+        "typ": "umsetzen",
+        "pflanzung_id": "@X-s2-p3",
+        "netztopf_id": "@X-topf-2.3.3",
+        "platz_id": "@X-2.3",
+        "daten": {
+          "von_platz_id": "@X-A1",
+          "von_loch_nr": null,
+          "nach_platz_id": "@X-2.3",
+          "nach_loch_nr": 3
+        },
+        "gilt_ab": "jetzt-28d 18:30"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-s2-umsetzen-4",
+      "felder": {
+        "typ": "umsetzen",
+        "pflanzung_id": "@X-s2-p4",
+        "netztopf_id": "@X-topf-2.3.4",
+        "platz_id": "@X-2.3",
+        "daten": {
+          "von_platz_id": "@X-A1",
+          "von_loch_nr": null,
+          "nach_platz_id": "@X-2.3",
+          "nach_loch_nr": 4
+        },
+        "gilt_ab": "jetzt-28d 18:30"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-s2-b-wachstum",
+      "felder": {
+        "typ": "phase_antwort",
+        "satz_id": "@X-s2-b",
+        "daten": { "phase": "wachstum", "antwort": "ja", "erwartet_am": "heute-20" },
+        "gilt_ab": "jetzt-20d 08:00"
+      }
+    },
+    {
+      "tabelle": "naehrloesungsansatz",
+      "ref": "X-s2-ansatz-1",
+      "felder": {
+        "platz_id": "@X-2.3",
+        "typ": "neuansatz",
+        "status": "abgeschlossen",
+        "begonnen_am": "jetzt-28d 18:00",
+        "abgeschlossen_am": "jetzt-28d 18:00",
+        "volumen_l": 30,
+        "gilt_ab": "jetzt-28d 18:00"
+      }
+    },
+    {
+      "tabelle": "naehrloesungsansatz",
+      "ref": "X-s2-ansatz-2",
+      "felder": {
+        "platz_id": "@X-2.3",
+        "typ": "neuansatz",
+        "status": "abgeschlossen",
+        "begonnen_am": "jetzt-12d 18:00",
+        "abgeschlossen_am": "jetzt-12d 18:00",
+        "volumen_l": 30,
+        "gilt_ab": "jetzt-12d 18:00"
+      }
+    },
+    {
+      "tabelle": "messung",
+      "ref": "X-s2-messung-14",
+      "felder": {
+        "platz_id": "@X-2.3",
+        "messgeraet_id": "?messgeraet",
+        "messart": "rundgang",
+        "ph": 6.1,
+        "ec": 1.32,
+        "temperatur": 19.5,
+        "schnappschuss": { "betriebsart": "dwc" },
+        "gilt_ab": "jetzt-14d 08:00"
+      }
+    },
+    {
+      "tabelle": "messung",
+      "ref": "X-s2-messung-12",
+      "felder": {
+        "platz_id": "@X-2.3",
+        "messgeraet_id": "?messgeraet",
+        "messart": "rundgang",
+        "ph": 6.3,
+        "ec": 1.41,
+        "temperatur": 19.8,
+        "schnappschuss": { "betriebsart": "dwc" },
+        "gilt_ab": "jetzt-12d 08:00"
+      }
+    },
+    {
+      "tabelle": "messung",
+      "ref": "X-s2-messung-10",
+      "felder": {
+        "platz_id": "@X-2.3",
+        "messgeraet_id": "?messgeraet",
+        "messart": "rundgang",
+        "ph": 6,
+        "ec": 1.28,
+        "temperatur": 19.4,
+        "schnappschuss": { "betriebsart": "dwc" },
+        "gilt_ab": "jetzt-10d 08:00"
+      }
+    },
+    {
+      "tabelle": "messung",
+      "ref": "X-s2-messung-8",
+      "felder": {
+        "platz_id": "@X-2.3",
+        "messgeraet_id": "?messgeraet",
+        "messart": "rundgang",
+        "ph": 6.1,
+        "ec": 1.3,
+        "temperatur": 19.6,
+        "schnappschuss": { "betriebsart": "dwc" },
+        "gilt_ab": "jetzt-8d 08:00"
+      }
+    },
+    {
+      "tabelle": "messung",
+      "ref": "X-s2-messung-6",
+      "felder": {
+        "platz_id": "@X-2.3",
+        "messgeraet_id": "?messgeraet",
+        "messart": "rundgang",
+        "ph": 6.2,
+        "ec": 1.35,
+        "temperatur": 19.9,
+        "schnappschuss": { "betriebsart": "dwc" },
+        "gilt_ab": "jetzt-6d 08:00"
+      }
+    },
+    {
+      "tabelle": "messung",
+      "ref": "X-s2-messung-4",
+      "felder": {
+        "platz_id": "@X-2.3",
+        "messgeraet_id": "?messgeraet",
+        "messart": "rundgang",
+        "ph": 6.2,
+        "ec": 1.38,
+        "temperatur": 20.1,
+        "schnappschuss": { "betriebsart": "dwc" },
+        "gilt_ab": "jetzt-4d 08:00"
+      }
+    },
+    {
+      "tabelle": "messung",
+      "ref": "X-s2-messung-2",
+      "felder": {
+        "platz_id": "@X-2.3",
+        "messgeraet_id": "?messgeraet",
+        "messart": "rundgang",
+        "ph": 6.3,
+        "ec": 1.42,
+        "temperatur": 19.7,
+        "schnappschuss": { "betriebsart": "dwc" },
+        "gilt_ab": "jetzt-2d 08:00"
+      }
+    }
   ]
 }

@@ -1,137 +1,1222 @@
 {
   "kommentar": "S1 Regal komplett: Anlage X, 4 Ebenen, 13 Gefässe (Stationen 4.1 bis 4.5) mit gefaess_erfasst, A1 bis A4, W, Deckel D1 bis D6, S8, S5 (06_tests.md Abschnitt 10)",
   "zeilen": [
-    {"tabelle":"anlage","ref":"X","felder":{"name":"Demo-Anlage X","kuerzel":"X","datenart":"demo","licht_von":"06:00","licht_bis":"21:00","laufweg":["4.1","4.2","4.3","4.4","4.5","A1","A2","A3","A4","3.1","3.2","3.3","2.1","2.2","2.3","1.1","1.2","W"]}},
-    {"tabelle":"bereich","ref":"X-b1","felder":{"anlage_id":"@X","nummer":1,"name":"Ebene 1","standard_betriebsart":"dwc","lichtleisten":1,"lichtstunden":15,"nutzbare_hoehe_mm":450}},
-    {"tabelle":"bereich","ref":"X-b2","felder":{"anlage_id":"@X","nummer":2,"name":"Ebene 2","standard_betriebsart":"dwc","lichtleisten":1,"lichtstunden":15,"nutzbare_hoehe_mm":200}},
-    {"tabelle":"bereich","ref":"X-b3","felder":{"anlage_id":"@X","nummer":3,"name":"Ebene 3","standard_betriebsart":"kratky_belueftet","lichtleisten":1,"lichtstunden":15,"nutzbare_hoehe_mm":150}},
-    {"tabelle":"bereich","ref":"X-b4","felder":{"anlage_id":"@X","nummer":4,"name":"Ebene 4","standard_betriebsart":"konstantpegel","lichtleisten":1,"lichtstunden":15,"nutzbare_hoehe_mm":150}},
-    {"tabelle":"gefaessmodell","ref":"demo-modell-rako","einmal":"name","felder":{"name":"Demo RAKO 60 × 40","form":"rechteckig","innen_l_mm":570,"innen_b_mm":370,"innen_h_mm":210,"nennvolumen_l":40,"betriebsvolumen_l":30}},
-    {"tabelle":"gefaessmodell","ref":"demo-modell-halbbox","einmal":"name","felder":{"name":"Demo RAKO Halbbox","form":"rechteckig","innen_l_mm":370,"innen_b_mm":270,"innen_h_mm":210,"nennvolumen_l":20,"betriebsvolumen_l":12}},
-    {"tabelle":"gefaessmodell","ref":"demo-modell-leni","einmal":"name","felder":{"name":"Demo Leni Flori 36","form":"oval","innen_l_mm":560,"innen_b_mm":340,"innen_h_mm":190,"nennvolumen_l":36,"betriebsvolumen_l":20}},
-    {"tabelle":"deckeltyp","ref":"demo-deckel-D1","einmal":"name","felder":{"name":"Demo D1","topfdurchmesser_mm":80,"loecher_je_reihe":[2,2]}},
-    {"tabelle":"deckeltyp","ref":"demo-deckel-D2","einmal":"name","felder":{"name":"Demo D2","topfdurchmesser_mm":80,"loecher_je_reihe":[3,3]}},
-    {"tabelle":"deckeltyp","ref":"demo-deckel-D3","einmal":"name","felder":{"name":"Demo D3","topfdurchmesser_mm":50,"loecher_je_reihe":[4,4]}},
-    {"tabelle":"deckeltyp","ref":"demo-deckel-D4","einmal":"name","felder":{"name":"Demo D4","topfdurchmesser_mm":80,"loecher_je_reihe":[1,1]}},
-    {"tabelle":"deckeltyp","ref":"demo-deckel-D6","einmal":"name","felder":{"name":"Demo D6","topfdurchmesser_mm":50,"loecher_je_reihe":[2,2,2]}},
-    {"tabelle":"deckeltyp","ref":"demo-deckel-S8","einmal":"name","felder":{"name":"Demo S8","topfdurchmesser_mm":80,"loecher_je_reihe":[4]}},
-    {"tabelle":"deckeltyp","ref":"demo-deckel-S5","einmal":"name","felder":{"name":"Demo S5","topfdurchmesser_mm":50,"loecher_je_reihe":[1,2,1,2,1,2,1,2,1]}},
-    {"tabelle":"platz","ref":"X-1.1","felder":{"anlage_id":"@X","bereich_id":"@X-b1","kennung":"1.1","rolle":"gefaess","position":1,"erfasst_am":"jetzt-60d 10:00"}},
-    {"tabelle":"gefaess","ref":"X-g1.1","felder":{"platz_id":"@X-1.1","gefaessmodell_id":"@demo-modell-rako","deckeltyp_id":"@demo-deckel-D1","betriebsart":"dwc","feste_dosis":false,"luftpumpe":"P1","betriebsvolumen_l":30,"intervall_messen_d":2,"intervall_wechseln_d":14,"gueltig_von":"jetzt-60d 10:00"}},
-    {"tabelle":"ereignis","ref":"X-erfasst-1.1","felder":{"typ":"gefaess_erfasst","platz_id":"@X-1.1","gilt_ab":"jetzt-60d 10:00"}},
-    {"tabelle":"ereignis","ref":"X-pruefung-1.1-1","felder":{"typ":"gefaesspruefung","platz_id":"@X-1.1","daten":{"schritt":1,"ok":true},"gilt_ab":"jetzt-59d 10:00"}},
-    {"tabelle":"ereignis","ref":"X-pruefung-1.1-2","felder":{"typ":"gefaesspruefung","platz_id":"@X-1.1","daten":{"schritt":2,"ok":true},"gilt_ab":"jetzt-59d 10:00"}},
-    {"tabelle":"ereignis","ref":"X-pruefung-1.1-3","felder":{"typ":"gefaesspruefung","platz_id":"@X-1.1","daten":{"schritt":3,"ok":true},"gilt_ab":"jetzt-59d 10:00"}},
-    {"tabelle":"ereignis","ref":"X-pruefung-1.1-4","felder":{"typ":"gefaesspruefung","platz_id":"@X-1.1","daten":{"schritt":4,"ok":true,"volumen_gezaehlt_l":30},"gilt_ab":"jetzt-59d 18:00"}},
-    {"tabelle":"etikett","ref":"X-etikett-1.1","felder":{"code":"X-1.1","platz_id":"@X-1.1"}},
-    {"tabelle":"platz","ref":"X-1.2","felder":{"anlage_id":"@X","bereich_id":"@X-b1","kennung":"1.2","rolle":"gefaess","position":2,"erfasst_am":"jetzt-60d 10:00"}},
-    {"tabelle":"gefaess","ref":"X-g1.2","felder":{"platz_id":"@X-1.2","gefaessmodell_id":"@demo-modell-rako","deckeltyp_id":"@demo-deckel-D1","betriebsart":"dwc","feste_dosis":false,"luftpumpe":"P1","betriebsvolumen_l":30,"intervall_messen_d":2,"intervall_wechseln_d":14,"gueltig_von":"jetzt-60d 10:00"}},
-    {"tabelle":"ereignis","ref":"X-erfasst-1.2","felder":{"typ":"gefaess_erfasst","platz_id":"@X-1.2","gilt_ab":"jetzt-60d 10:00"}},
-    {"tabelle":"ereignis","ref":"X-pruefung-1.2-1","felder":{"typ":"gefaesspruefung","platz_id":"@X-1.2","daten":{"schritt":1,"ok":true},"gilt_ab":"jetzt-59d 10:00"}},
-    {"tabelle":"ereignis","ref":"X-pruefung-1.2-2","felder":{"typ":"gefaesspruefung","platz_id":"@X-1.2","daten":{"schritt":2,"ok":true},"gilt_ab":"jetzt-59d 10:00"}},
-    {"tabelle":"ereignis","ref":"X-pruefung-1.2-3","felder":{"typ":"gefaesspruefung","platz_id":"@X-1.2","daten":{"schritt":3,"ok":true},"gilt_ab":"jetzt-59d 10:00"}},
-    {"tabelle":"ereignis","ref":"X-pruefung-1.2-4","felder":{"typ":"gefaesspruefung","platz_id":"@X-1.2","daten":{"schritt":4,"ok":true,"volumen_gezaehlt_l":30},"gilt_ab":"jetzt-59d 18:00"}},
-    {"tabelle":"etikett","ref":"X-etikett-1.2","felder":{"code":"X-1.2","platz_id":"@X-1.2"}},
-    {"tabelle":"platz","ref":"X-2.1","felder":{"anlage_id":"@X","bereich_id":"@X-b2","kennung":"2.1","rolle":"gefaess","position":1,"erfasst_am":"jetzt-60d 10:00"}},
-    {"tabelle":"gefaess","ref":"X-g2.1","felder":{"platz_id":"@X-2.1","gefaessmodell_id":"@demo-modell-rako","deckeltyp_id":"@demo-deckel-D2","betriebsart":"dwc","feste_dosis":false,"luftpumpe":"P2","betriebsvolumen_l":30,"intervall_messen_d":2,"intervall_wechseln_d":14,"gueltig_von":"jetzt-60d 10:00"}},
-    {"tabelle":"ereignis","ref":"X-erfasst-2.1","felder":{"typ":"gefaess_erfasst","platz_id":"@X-2.1","gilt_ab":"jetzt-60d 10:00"}},
-    {"tabelle":"ereignis","ref":"X-pruefung-2.1-1","felder":{"typ":"gefaesspruefung","platz_id":"@X-2.1","daten":{"schritt":1,"ok":true},"gilt_ab":"jetzt-59d 10:00"}},
-    {"tabelle":"ereignis","ref":"X-pruefung-2.1-2","felder":{"typ":"gefaesspruefung","platz_id":"@X-2.1","daten":{"schritt":2,"ok":true},"gilt_ab":"jetzt-59d 10:00"}},
-    {"tabelle":"ereignis","ref":"X-pruefung-2.1-3","felder":{"typ":"gefaesspruefung","platz_id":"@X-2.1","daten":{"schritt":3,"ok":true},"gilt_ab":"jetzt-59d 10:00"}},
-    {"tabelle":"ereignis","ref":"X-pruefung-2.1-4","felder":{"typ":"gefaesspruefung","platz_id":"@X-2.1","daten":{"schritt":4,"ok":true,"volumen_gezaehlt_l":30},"gilt_ab":"jetzt-59d 18:00"}},
-    {"tabelle":"etikett","ref":"X-etikett-2.1","felder":{"code":"X-2.1","platz_id":"@X-2.1"}},
-    {"tabelle":"platz","ref":"X-2.2","felder":{"anlage_id":"@X","bereich_id":"@X-b2","kennung":"2.2","rolle":"gefaess","position":2,"erfasst_am":"jetzt-60d 10:00"}},
-    {"tabelle":"gefaess","ref":"X-g2.2","felder":{"platz_id":"@X-2.2","gefaessmodell_id":"@demo-modell-rako","deckeltyp_id":"@demo-deckel-D4","betriebsart":"dwc","feste_dosis":false,"luftpumpe":"P2","betriebsvolumen_l":30,"intervall_messen_d":2,"intervall_wechseln_d":14,"gueltig_von":"jetzt-60d 10:00"}},
-    {"tabelle":"ereignis","ref":"X-erfasst-2.2","felder":{"typ":"gefaess_erfasst","platz_id":"@X-2.2","gilt_ab":"jetzt-60d 10:00"}},
-    {"tabelle":"ereignis","ref":"X-pruefung-2.2-1","felder":{"typ":"gefaesspruefung","platz_id":"@X-2.2","daten":{"schritt":1,"ok":true},"gilt_ab":"jetzt-59d 10:00"}},
-    {"tabelle":"ereignis","ref":"X-pruefung-2.2-2","felder":{"typ":"gefaesspruefung","platz_id":"@X-2.2","daten":{"schritt":2,"ok":true},"gilt_ab":"jetzt-59d 10:00"}},
-    {"tabelle":"ereignis","ref":"X-pruefung-2.2-3","felder":{"typ":"gefaesspruefung","platz_id":"@X-2.2","daten":{"schritt":3,"ok":true},"gilt_ab":"jetzt-59d 10:00"}},
-    {"tabelle":"ereignis","ref":"X-pruefung-2.2-4","felder":{"typ":"gefaesspruefung","platz_id":"@X-2.2","daten":{"schritt":4,"ok":true,"volumen_gezaehlt_l":30},"gilt_ab":"jetzt-59d 18:00"}},
-    {"tabelle":"etikett","ref":"X-etikett-2.2","felder":{"code":"X-2.2","platz_id":"@X-2.2"}},
-    {"tabelle":"platz","ref":"X-2.3","felder":{"anlage_id":"@X","bereich_id":"@X-b2","kennung":"2.3","rolle":"gefaess","position":3,"erfasst_am":"jetzt-60d 10:00"}},
-    {"tabelle":"gefaess","ref":"X-g2.3","felder":{"platz_id":"@X-2.3","gefaessmodell_id":"@demo-modell-rako","deckeltyp_id":"@demo-deckel-D2","betriebsart":"dwc","feste_dosis":false,"luftpumpe":"P2","betriebsvolumen_l":30,"intervall_messen_d":2,"intervall_wechseln_d":14,"gueltig_von":"jetzt-60d 10:00"}},
-    {"tabelle":"ereignis","ref":"X-erfasst-2.3","felder":{"typ":"gefaess_erfasst","platz_id":"@X-2.3","gilt_ab":"jetzt-60d 10:00"}},
-    {"tabelle":"ereignis","ref":"X-pruefung-2.3-1","felder":{"typ":"gefaesspruefung","platz_id":"@X-2.3","daten":{"schritt":1,"ok":true},"gilt_ab":"jetzt-59d 10:00"}},
-    {"tabelle":"ereignis","ref":"X-pruefung-2.3-2","felder":{"typ":"gefaesspruefung","platz_id":"@X-2.3","daten":{"schritt":2,"ok":true},"gilt_ab":"jetzt-59d 10:00"}},
-    {"tabelle":"ereignis","ref":"X-pruefung-2.3-3","felder":{"typ":"gefaesspruefung","platz_id":"@X-2.3","daten":{"schritt":3,"ok":true},"gilt_ab":"jetzt-59d 10:00"}},
-    {"tabelle":"ereignis","ref":"X-pruefung-2.3-4","felder":{"typ":"gefaesspruefung","platz_id":"@X-2.3","daten":{"schritt":4,"ok":true,"volumen_gezaehlt_l":30},"gilt_ab":"jetzt-59d 18:00"}},
-    {"tabelle":"etikett","ref":"X-etikett-2.3","felder":{"code":"X-2.3","platz_id":"@X-2.3"}},
-    {"tabelle":"platz","ref":"X-3.1","felder":{"anlage_id":"@X","bereich_id":"@X-b3","kennung":"3.1","rolle":"gefaess","position":1,"erfasst_am":"jetzt-60d 10:00"}},
-    {"tabelle":"gefaess","ref":"X-g3.1","felder":{"platz_id":"@X-3.1","gefaessmodell_id":"@demo-modell-rako","deckeltyp_id":"@demo-deckel-D3","betriebsart":"kratky_belueftet","feste_dosis":false,"luftpumpe":"P3","betriebsvolumen_l":30,"intervall_messen_d":7,"intervall_wechseln_d":null,"gueltig_von":"jetzt-60d 10:00"}},
-    {"tabelle":"ereignis","ref":"X-erfasst-3.1","felder":{"typ":"gefaess_erfasst","platz_id":"@X-3.1","gilt_ab":"jetzt-60d 10:00"}},
-    {"tabelle":"ereignis","ref":"X-pruefung-3.1-1","felder":{"typ":"gefaesspruefung","platz_id":"@X-3.1","daten":{"schritt":1,"ok":true},"gilt_ab":"jetzt-59d 10:00"}},
-    {"tabelle":"ereignis","ref":"X-pruefung-3.1-2","felder":{"typ":"gefaesspruefung","platz_id":"@X-3.1","daten":{"schritt":2,"ok":true},"gilt_ab":"jetzt-59d 10:00"}},
-    {"tabelle":"ereignis","ref":"X-pruefung-3.1-3","felder":{"typ":"gefaesspruefung","platz_id":"@X-3.1","daten":{"schritt":3,"ok":true},"gilt_ab":"jetzt-59d 10:00"}},
-    {"tabelle":"ereignis","ref":"X-pruefung-3.1-4","felder":{"typ":"gefaesspruefung","platz_id":"@X-3.1","daten":{"schritt":4,"ok":true,"volumen_gezaehlt_l":30},"gilt_ab":"jetzt-59d 18:00"}},
-    {"tabelle":"etikett","ref":"X-etikett-3.1","felder":{"code":"X-3.1","platz_id":"@X-3.1"}},
-    {"tabelle":"platz","ref":"X-3.2","felder":{"anlage_id":"@X","bereich_id":"@X-b3","kennung":"3.2","rolle":"gefaess","position":2,"erfasst_am":"jetzt-60d 10:00"}},
-    {"tabelle":"gefaess","ref":"X-g3.2","felder":{"platz_id":"@X-3.2","gefaessmodell_id":"@demo-modell-rako","deckeltyp_id":"@demo-deckel-D6","betriebsart":"kratky_belueftet","feste_dosis":false,"luftpumpe":"P3","betriebsvolumen_l":30,"intervall_messen_d":7,"intervall_wechseln_d":null,"gueltig_von":"jetzt-60d 10:00"}},
-    {"tabelle":"ereignis","ref":"X-erfasst-3.2","felder":{"typ":"gefaess_erfasst","platz_id":"@X-3.2","gilt_ab":"jetzt-60d 10:00"}},
-    {"tabelle":"ereignis","ref":"X-pruefung-3.2-1","felder":{"typ":"gefaesspruefung","platz_id":"@X-3.2","daten":{"schritt":1,"ok":true},"gilt_ab":"jetzt-59d 10:00"}},
-    {"tabelle":"ereignis","ref":"X-pruefung-3.2-2","felder":{"typ":"gefaesspruefung","platz_id":"@X-3.2","daten":{"schritt":2,"ok":true},"gilt_ab":"jetzt-59d 10:00"}},
-    {"tabelle":"ereignis","ref":"X-pruefung-3.2-3","felder":{"typ":"gefaesspruefung","platz_id":"@X-3.2","daten":{"schritt":3,"ok":true},"gilt_ab":"jetzt-59d 10:00"}},
-    {"tabelle":"ereignis","ref":"X-pruefung-3.2-4","felder":{"typ":"gefaesspruefung","platz_id":"@X-3.2","daten":{"schritt":4,"ok":true,"volumen_gezaehlt_l":30},"gilt_ab":"jetzt-59d 18:00"}},
-    {"tabelle":"etikett","ref":"X-etikett-3.2","felder":{"code":"X-3.2","platz_id":"@X-3.2"}},
-    {"tabelle":"platz","ref":"X-3.3","felder":{"anlage_id":"@X","bereich_id":"@X-b3","kennung":"3.3","rolle":"gefaess","position":3,"erfasst_am":"jetzt-60d 10:00"}},
-    {"tabelle":"gefaess","ref":"X-g3.3","felder":{"platz_id":"@X-3.3","gefaessmodell_id":"@demo-modell-rako","deckeltyp_id":"@demo-deckel-D3","betriebsart":"kratky_belueftet","feste_dosis":false,"luftpumpe":"P3","betriebsvolumen_l":30,"intervall_messen_d":7,"intervall_wechseln_d":null,"gueltig_von":"jetzt-60d 10:00"}},
-    {"tabelle":"ereignis","ref":"X-erfasst-3.3","felder":{"typ":"gefaess_erfasst","platz_id":"@X-3.3","gilt_ab":"jetzt-60d 10:00"}},
-    {"tabelle":"ereignis","ref":"X-pruefung-3.3-1","felder":{"typ":"gefaesspruefung","platz_id":"@X-3.3","daten":{"schritt":1,"ok":true},"gilt_ab":"jetzt-59d 10:00"}},
-    {"tabelle":"ereignis","ref":"X-pruefung-3.3-2","felder":{"typ":"gefaesspruefung","platz_id":"@X-3.3","daten":{"schritt":2,"ok":true},"gilt_ab":"jetzt-59d 10:00"}},
-    {"tabelle":"ereignis","ref":"X-pruefung-3.3-3","felder":{"typ":"gefaesspruefung","platz_id":"@X-3.3","daten":{"schritt":3,"ok":true},"gilt_ab":"jetzt-59d 10:00"}},
-    {"tabelle":"ereignis","ref":"X-pruefung-3.3-4","felder":{"typ":"gefaesspruefung","platz_id":"@X-3.3","daten":{"schritt":4,"ok":true,"volumen_gezaehlt_l":30},"gilt_ab":"jetzt-59d 18:00"}},
-    {"tabelle":"etikett","ref":"X-etikett-3.3","felder":{"code":"X-3.3","platz_id":"@X-3.3"}},
-    {"tabelle":"platz","ref":"X-4.1","felder":{"anlage_id":"@X","bereich_id":"@X-b4","kennung":"4.1","rolle":"gefaess","position":1,"erfasst_am":"jetzt-60d 10:00"}},
-    {"tabelle":"gefaess","ref":"X-g4.1","felder":{"platz_id":"@X-4.1","gefaessmodell_id":"@demo-modell-halbbox","deckeltyp_id":"@demo-deckel-D6","betriebsart":"konstantpegel","feste_dosis":true,"luftpumpe":"P4","betriebsvolumen_l":12,"intervall_messen_d":2,"intervall_wechseln_d":14,"gueltig_von":"jetzt-60d 10:00"}},
-    {"tabelle":"ereignis","ref":"X-erfasst-4.1","felder":{"typ":"gefaess_erfasst","platz_id":"@X-4.1","gilt_ab":"jetzt-60d 10:00"}},
-    {"tabelle":"ereignis","ref":"X-pruefung-4.1-1","felder":{"typ":"gefaesspruefung","platz_id":"@X-4.1","daten":{"schritt":1,"ok":true},"gilt_ab":"jetzt-59d 10:00"}},
-    {"tabelle":"ereignis","ref":"X-pruefung-4.1-2","felder":{"typ":"gefaesspruefung","platz_id":"@X-4.1","daten":{"schritt":2,"ok":true},"gilt_ab":"jetzt-59d 10:00"}},
-    {"tabelle":"ereignis","ref":"X-pruefung-4.1-3","felder":{"typ":"gefaesspruefung","platz_id":"@X-4.1","daten":{"schritt":3,"ok":true},"gilt_ab":"jetzt-59d 10:00"}},
-    {"tabelle":"ereignis","ref":"X-pruefung-4.1-4","felder":{"typ":"gefaesspruefung","platz_id":"@X-4.1","daten":{"schritt":4,"ok":true,"volumen_gezaehlt_l":12},"gilt_ab":"jetzt-59d 18:00"}},
-    {"tabelle":"etikett","ref":"X-etikett-4.1","felder":{"code":"X-4.1","platz_id":"@X-4.1"}},
-    {"tabelle":"platz","ref":"X-4.2","felder":{"anlage_id":"@X","bereich_id":"@X-b4","kennung":"4.2","rolle":"gefaess","position":2,"erfasst_am":"jetzt-60d 10:00"}},
-    {"tabelle":"gefaess","ref":"X-g4.2","felder":{"platz_id":"@X-4.2","gefaessmodell_id":"@demo-modell-leni","deckeltyp_id":"@demo-deckel-S8","betriebsart":"konstantpegel","feste_dosis":true,"luftpumpe":"P4","betriebsvolumen_l":20,"intervall_messen_d":2,"intervall_wechseln_d":14,"gueltig_von":"jetzt-60d 10:00"}},
-    {"tabelle":"ereignis","ref":"X-erfasst-4.2","felder":{"typ":"gefaess_erfasst","platz_id":"@X-4.2","gilt_ab":"jetzt-60d 10:00"}},
-    {"tabelle":"ereignis","ref":"X-pruefung-4.2-1","felder":{"typ":"gefaesspruefung","platz_id":"@X-4.2","daten":{"schritt":1,"ok":true},"gilt_ab":"jetzt-59d 10:00"}},
-    {"tabelle":"ereignis","ref":"X-pruefung-4.2-2","felder":{"typ":"gefaesspruefung","platz_id":"@X-4.2","daten":{"schritt":2,"ok":true},"gilt_ab":"jetzt-59d 10:00"}},
-    {"tabelle":"ereignis","ref":"X-pruefung-4.2-3","felder":{"typ":"gefaesspruefung","platz_id":"@X-4.2","daten":{"schritt":3,"ok":true},"gilt_ab":"jetzt-59d 10:00"}},
-    {"tabelle":"ereignis","ref":"X-pruefung-4.2-4","felder":{"typ":"gefaesspruefung","platz_id":"@X-4.2","daten":{"schritt":4,"ok":true,"volumen_gezaehlt_l":20},"gilt_ab":"jetzt-59d 18:00"}},
-    {"tabelle":"etikett","ref":"X-etikett-4.2","felder":{"code":"X-4.2","platz_id":"@X-4.2"}},
-    {"tabelle":"platz","ref":"X-4.3","felder":{"anlage_id":"@X","bereich_id":"@X-b4","kennung":"4.3","rolle":"gefaess","position":3,"erfasst_am":"jetzt-60d 10:00"}},
-    {"tabelle":"gefaess","ref":"X-g4.3","felder":{"platz_id":"@X-4.3","gefaessmodell_id":"@demo-modell-leni","deckeltyp_id":"@demo-deckel-S8","betriebsart":"konstantpegel","feste_dosis":true,"luftpumpe":"P4","betriebsvolumen_l":20,"intervall_messen_d":2,"intervall_wechseln_d":14,"gueltig_von":"jetzt-60d 10:00"}},
-    {"tabelle":"ereignis","ref":"X-erfasst-4.3","felder":{"typ":"gefaess_erfasst","platz_id":"@X-4.3","gilt_ab":"jetzt-60d 10:00"}},
-    {"tabelle":"ereignis","ref":"X-pruefung-4.3-1","felder":{"typ":"gefaesspruefung","platz_id":"@X-4.3","daten":{"schritt":1,"ok":true},"gilt_ab":"jetzt-59d 10:00"}},
-    {"tabelle":"ereignis","ref":"X-pruefung-4.3-2","felder":{"typ":"gefaesspruefung","platz_id":"@X-4.3","daten":{"schritt":2,"ok":true},"gilt_ab":"jetzt-59d 10:00"}},
-    {"tabelle":"ereignis","ref":"X-pruefung-4.3-3","felder":{"typ":"gefaesspruefung","platz_id":"@X-4.3","daten":{"schritt":3,"ok":true},"gilt_ab":"jetzt-59d 10:00"}},
-    {"tabelle":"ereignis","ref":"X-pruefung-4.3-4","felder":{"typ":"gefaesspruefung","platz_id":"@X-4.3","daten":{"schritt":4,"ok":true,"volumen_gezaehlt_l":20},"gilt_ab":"jetzt-59d 18:00"}},
-    {"tabelle":"etikett","ref":"X-etikett-4.3","felder":{"code":"X-4.3","platz_id":"@X-4.3"}},
-    {"tabelle":"platz","ref":"X-4.4","felder":{"anlage_id":"@X","bereich_id":"@X-b4","kennung":"4.4","rolle":"gefaess","position":4,"erfasst_am":"jetzt-60d 10:00"}},
-    {"tabelle":"gefaess","ref":"X-g4.4","felder":{"platz_id":"@X-4.4","gefaessmodell_id":"@demo-modell-leni","deckeltyp_id":"@demo-deckel-S5","betriebsart":"konstantpegel","feste_dosis":true,"luftpumpe":"P4","betriebsvolumen_l":20,"intervall_messen_d":2,"intervall_wechseln_d":14,"gueltig_von":"jetzt-60d 10:00"}},
-    {"tabelle":"ereignis","ref":"X-erfasst-4.4","felder":{"typ":"gefaess_erfasst","platz_id":"@X-4.4","gilt_ab":"jetzt-60d 10:00"}},
-    {"tabelle":"ereignis","ref":"X-pruefung-4.4-1","felder":{"typ":"gefaesspruefung","platz_id":"@X-4.4","daten":{"schritt":1,"ok":true},"gilt_ab":"jetzt-59d 10:00"}},
-    {"tabelle":"ereignis","ref":"X-pruefung-4.4-2","felder":{"typ":"gefaesspruefung","platz_id":"@X-4.4","daten":{"schritt":2,"ok":true},"gilt_ab":"jetzt-59d 10:00"}},
-    {"tabelle":"ereignis","ref":"X-pruefung-4.4-3","felder":{"typ":"gefaesspruefung","platz_id":"@X-4.4","daten":{"schritt":3,"ok":true},"gilt_ab":"jetzt-59d 10:00"}},
-    {"tabelle":"ereignis","ref":"X-pruefung-4.4-4","felder":{"typ":"gefaesspruefung","platz_id":"@X-4.4","daten":{"schritt":4,"ok":true,"volumen_gezaehlt_l":20},"gilt_ab":"jetzt-59d 18:00"}},
-    {"tabelle":"etikett","ref":"X-etikett-4.4","felder":{"code":"X-4.4","platz_id":"@X-4.4"}},
-    {"tabelle":"platz","ref":"X-4.5","felder":{"anlage_id":"@X","bereich_id":"@X-b4","kennung":"4.5","rolle":"gefaess","position":5,"erfasst_am":"jetzt-60d 10:00"}},
-    {"tabelle":"gefaess","ref":"X-g4.5","felder":{"platz_id":"@X-4.5","gefaessmodell_id":"@demo-modell-leni","deckeltyp_id":"@demo-deckel-S5","betriebsart":"konstantpegel","feste_dosis":true,"luftpumpe":"P4","betriebsvolumen_l":20,"intervall_messen_d":2,"intervall_wechseln_d":14,"gueltig_von":"jetzt-60d 10:00"}},
-    {"tabelle":"ereignis","ref":"X-erfasst-4.5","felder":{"typ":"gefaess_erfasst","platz_id":"@X-4.5","gilt_ab":"jetzt-60d 10:00"}},
-    {"tabelle":"ereignis","ref":"X-pruefung-4.5-1","felder":{"typ":"gefaesspruefung","platz_id":"@X-4.5","daten":{"schritt":1,"ok":true},"gilt_ab":"jetzt-59d 10:00"}},
-    {"tabelle":"ereignis","ref":"X-pruefung-4.5-2","felder":{"typ":"gefaesspruefung","platz_id":"@X-4.5","daten":{"schritt":2,"ok":true},"gilt_ab":"jetzt-59d 10:00"}},
-    {"tabelle":"ereignis","ref":"X-pruefung-4.5-3","felder":{"typ":"gefaesspruefung","platz_id":"@X-4.5","daten":{"schritt":3,"ok":true},"gilt_ab":"jetzt-59d 10:00"}},
-    {"tabelle":"etikett","ref":"X-etikett-4.5","felder":{"code":"X-4.5","platz_id":"@X-4.5"}},
-    {"tabelle":"platz","ref":"X-A1","felder":{"anlage_id":"@X","bereich_id":"@X-b4","kennung":"A1","rolle":"anzuchtort","position":6,"erfasst_am":"jetzt-60d 10:00"}},
-    {"tabelle":"anzuchtort","ref":"X-anzucht-A1","felder":{"platz_id":"@X-A1","typ":"box_licht","position":"vorne"}},
-    {"tabelle":"etikett","ref":"X-etikett-A1","felder":{"code":"X-A1","platz_id":"@X-A1","format":"55x25"}},
-    {"tabelle":"platz","ref":"X-A2","felder":{"anlage_id":"@X","bereich_id":"@X-b4","kennung":"A2","rolle":"anzuchtort","position":7,"erfasst_am":"jetzt-60d 10:00"}},
-    {"tabelle":"anzuchtort","ref":"X-anzucht-A2","felder":{"platz_id":"@X-A2","typ":"box_licht","position":"hinten"}},
-    {"tabelle":"etikett","ref":"X-etikett-A2","felder":{"code":"X-A2","platz_id":"@X-A2","format":"55x25"}},
-    {"tabelle":"platz","ref":"X-A3","felder":{"anlage_id":"@X","bereich_id":"@X-b4","kennung":"A3","rolle":"anzuchtort","position":8,"erfasst_am":"jetzt-60d 10:00"}},
-    {"tabelle":"anzuchtort","ref":"X-anzucht-A3","felder":{"platz_id":"@X-A3","typ":"box_dunkel","position":"vorne"}},
-    {"tabelle":"etikett","ref":"X-etikett-A3","felder":{"code":"X-A3","platz_id":"@X-A3","format":"55x25"}},
-    {"tabelle":"platz","ref":"X-A4","felder":{"anlage_id":"@X","bereich_id":"@X-b4","kennung":"A4","rolle":"anzuchtort","position":9,"erfasst_am":"jetzt-60d 10:00"}},
-    {"tabelle":"anzuchtort","ref":"X-anzucht-A4","felder":{"platz_id":"@X-A4","typ":"box_dunkel","position":"hinten"}},
-    {"tabelle":"etikett","ref":"X-etikett-A4","felder":{"code":"X-A4","platz_id":"@X-A4","format":"55x25"}},
-    {"tabelle":"platz","ref":"X-W","felder":{"anlage_id":"@X","kennung":"W","rolle":"messstelle","erfasst_am":"jetzt-60d 10:00"}},
-    {"tabelle":"etikett","ref":"X-etikett-W","felder":{"code":"X-W","platz_id":"@X-W"}}
+    {
+      "tabelle": "anlage",
+      "ref": "X",
+      "felder": {
+        "name": "Demo-Anlage X",
+        "kuerzel": "X",
+        "datenart": "demo",
+        "licht_von": "06:00",
+        "licht_bis": "21:00",
+        "laufweg": [
+          "4.1",
+          "4.2",
+          "4.3",
+          "4.4",
+          "4.5",
+          "A1",
+          "A2",
+          "A3",
+          "A4",
+          "3.1",
+          "3.2",
+          "3.3",
+          "2.1",
+          "2.2",
+          "2.3",
+          "1.1",
+          "1.2",
+          "W"
+        ]
+      }
+    },
+    {
+      "tabelle": "bereich",
+      "ref": "X-b1",
+      "felder": {
+        "anlage_id": "@X",
+        "nummer": 1,
+        "name": "Ebene 1",
+        "standard_betriebsart": "dwc",
+        "lichtleisten": 1,
+        "lichtstunden": 15,
+        "nutzbare_hoehe_mm": 450
+      }
+    },
+    {
+      "tabelle": "bereich",
+      "ref": "X-b2",
+      "felder": {
+        "anlage_id": "@X",
+        "nummer": 2,
+        "name": "Ebene 2",
+        "standard_betriebsart": "dwc",
+        "lichtleisten": 1,
+        "lichtstunden": 15,
+        "nutzbare_hoehe_mm": 200
+      }
+    },
+    {
+      "tabelle": "bereich",
+      "ref": "X-b3",
+      "felder": {
+        "anlage_id": "@X",
+        "nummer": 3,
+        "name": "Ebene 3",
+        "standard_betriebsart": "kratky_belueftet",
+        "lichtleisten": 1,
+        "lichtstunden": 15,
+        "nutzbare_hoehe_mm": 150
+      }
+    },
+    {
+      "tabelle": "bereich",
+      "ref": "X-b4",
+      "felder": {
+        "anlage_id": "@X",
+        "nummer": 4,
+        "name": "Ebene 4",
+        "standard_betriebsart": "konstantpegel",
+        "lichtleisten": 1,
+        "lichtstunden": 15,
+        "nutzbare_hoehe_mm": 150
+      }
+    },
+    {
+      "tabelle": "gefaessmodell",
+      "ref": "demo-modell-rako",
+      "einmal": "name",
+      "felder": {
+        "name": "Demo RAKO 60 × 40",
+        "form": "rechteckig",
+        "innen_l_mm": 570,
+        "innen_b_mm": 370,
+        "innen_h_mm": 210,
+        "nennvolumen_l": 40,
+        "betriebsvolumen_l": 30
+      }
+    },
+    {
+      "tabelle": "gefaessmodell",
+      "ref": "demo-modell-halbbox",
+      "einmal": "name",
+      "felder": {
+        "name": "Demo RAKO Halbbox",
+        "form": "rechteckig",
+        "innen_l_mm": 370,
+        "innen_b_mm": 270,
+        "innen_h_mm": 210,
+        "nennvolumen_l": 20,
+        "betriebsvolumen_l": 12
+      }
+    },
+    {
+      "tabelle": "gefaessmodell",
+      "ref": "demo-modell-leni",
+      "einmal": "name",
+      "felder": {
+        "name": "Demo Leni Flori 36",
+        "form": "oval",
+        "innen_l_mm": 560,
+        "innen_b_mm": 340,
+        "innen_h_mm": 190,
+        "nennvolumen_l": 36,
+        "betriebsvolumen_l": 20
+      }
+    },
+    {
+      "tabelle": "deckeltyp",
+      "ref": "demo-deckel-D1",
+      "einmal": "name",
+      "felder": { "name": "Demo D1", "topfdurchmesser_mm": 80, "loecher_je_reihe": [2, 2] }
+    },
+    {
+      "tabelle": "deckeltyp",
+      "ref": "demo-deckel-D2",
+      "einmal": "name",
+      "felder": { "name": "Demo D2", "topfdurchmesser_mm": 80, "loecher_je_reihe": [3, 3] }
+    },
+    {
+      "tabelle": "deckeltyp",
+      "ref": "demo-deckel-D3",
+      "einmal": "name",
+      "felder": { "name": "Demo D3", "topfdurchmesser_mm": 50, "loecher_je_reihe": [4, 4] }
+    },
+    {
+      "tabelle": "deckeltyp",
+      "ref": "demo-deckel-D4",
+      "einmal": "name",
+      "felder": { "name": "Demo D4", "topfdurchmesser_mm": 80, "loecher_je_reihe": [1, 1] }
+    },
+    {
+      "tabelle": "deckeltyp",
+      "ref": "demo-deckel-D6",
+      "einmal": "name",
+      "felder": { "name": "Demo D6", "topfdurchmesser_mm": 50, "loecher_je_reihe": [2, 2, 2] }
+    },
+    {
+      "tabelle": "deckeltyp",
+      "ref": "demo-deckel-S8",
+      "einmal": "name",
+      "felder": { "name": "Demo S8", "topfdurchmesser_mm": 80, "loecher_je_reihe": [4] }
+    },
+    {
+      "tabelle": "deckeltyp",
+      "ref": "demo-deckel-S5",
+      "einmal": "name",
+      "felder": {
+        "name": "Demo S5",
+        "topfdurchmesser_mm": 50,
+        "loecher_je_reihe": [1, 2, 1, 2, 1, 2, 1, 2, 1]
+      }
+    },
+    {
+      "tabelle": "platz",
+      "ref": "X-1.1",
+      "felder": {
+        "anlage_id": "@X",
+        "bereich_id": "@X-b1",
+        "kennung": "1.1",
+        "rolle": "gefaess",
+        "position": 1,
+        "erfasst_am": "jetzt-60d 10:00"
+      }
+    },
+    {
+      "tabelle": "gefaess",
+      "ref": "X-g1.1",
+      "felder": {
+        "platz_id": "@X-1.1",
+        "gefaessmodell_id": "@demo-modell-rako",
+        "deckeltyp_id": "@demo-deckel-D1",
+        "betriebsart": "dwc",
+        "feste_dosis": false,
+        "luftpumpe": "P1",
+        "betriebsvolumen_l": 30,
+        "intervall_messen_d": 2,
+        "intervall_wechseln_d": 14,
+        "gueltig_von": "jetzt-60d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-erfasst-1.1",
+      "felder": { "typ": "gefaess_erfasst", "platz_id": "@X-1.1", "gilt_ab": "jetzt-60d 10:00" }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-pruefung-1.1-1",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@X-1.1",
+        "daten": { "schritt": 1, "ok": true },
+        "gilt_ab": "jetzt-59d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-pruefung-1.1-2",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@X-1.1",
+        "daten": { "schritt": 2, "ok": true },
+        "gilt_ab": "jetzt-59d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-pruefung-1.1-3",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@X-1.1",
+        "daten": { "schritt": 3, "ok": true },
+        "gilt_ab": "jetzt-59d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-pruefung-1.1-4",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@X-1.1",
+        "daten": { "schritt": 4, "ok": true, "volumen_gezaehlt_l": 30 },
+        "gilt_ab": "jetzt-59d 18:00"
+      }
+    },
+    { "tabelle": "etikett", "ref": "X-etikett-1.1", "felder": { "code": "X-1.1", "platz_id": "@X-1.1" } },
+    {
+      "tabelle": "platz",
+      "ref": "X-1.2",
+      "felder": {
+        "anlage_id": "@X",
+        "bereich_id": "@X-b1",
+        "kennung": "1.2",
+        "rolle": "gefaess",
+        "position": 2,
+        "erfasst_am": "jetzt-60d 10:00"
+      }
+    },
+    {
+      "tabelle": "gefaess",
+      "ref": "X-g1.2",
+      "felder": {
+        "platz_id": "@X-1.2",
+        "gefaessmodell_id": "@demo-modell-rako",
+        "deckeltyp_id": "@demo-deckel-D1",
+        "betriebsart": "dwc",
+        "feste_dosis": false,
+        "luftpumpe": "P1",
+        "betriebsvolumen_l": 30,
+        "intervall_messen_d": 2,
+        "intervall_wechseln_d": 14,
+        "gueltig_von": "jetzt-60d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-erfasst-1.2",
+      "felder": { "typ": "gefaess_erfasst", "platz_id": "@X-1.2", "gilt_ab": "jetzt-60d 10:00" }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-pruefung-1.2-1",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@X-1.2",
+        "daten": { "schritt": 1, "ok": true },
+        "gilt_ab": "jetzt-59d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-pruefung-1.2-2",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@X-1.2",
+        "daten": { "schritt": 2, "ok": true },
+        "gilt_ab": "jetzt-59d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-pruefung-1.2-3",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@X-1.2",
+        "daten": { "schritt": 3, "ok": true },
+        "gilt_ab": "jetzt-59d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-pruefung-1.2-4",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@X-1.2",
+        "daten": { "schritt": 4, "ok": true, "volumen_gezaehlt_l": 30 },
+        "gilt_ab": "jetzt-59d 18:00"
+      }
+    },
+    { "tabelle": "etikett", "ref": "X-etikett-1.2", "felder": { "code": "X-1.2", "platz_id": "@X-1.2" } },
+    {
+      "tabelle": "platz",
+      "ref": "X-2.1",
+      "felder": {
+        "anlage_id": "@X",
+        "bereich_id": "@X-b2",
+        "kennung": "2.1",
+        "rolle": "gefaess",
+        "position": 1,
+        "erfasst_am": "jetzt-60d 10:00"
+      }
+    },
+    {
+      "tabelle": "gefaess",
+      "ref": "X-g2.1",
+      "felder": {
+        "platz_id": "@X-2.1",
+        "gefaessmodell_id": "@demo-modell-rako",
+        "deckeltyp_id": "@demo-deckel-D2",
+        "betriebsart": "dwc",
+        "feste_dosis": false,
+        "luftpumpe": "P2",
+        "betriebsvolumen_l": 30,
+        "intervall_messen_d": 2,
+        "intervall_wechseln_d": 14,
+        "gueltig_von": "jetzt-60d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-erfasst-2.1",
+      "felder": { "typ": "gefaess_erfasst", "platz_id": "@X-2.1", "gilt_ab": "jetzt-60d 10:00" }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-pruefung-2.1-1",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@X-2.1",
+        "daten": { "schritt": 1, "ok": true },
+        "gilt_ab": "jetzt-59d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-pruefung-2.1-2",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@X-2.1",
+        "daten": { "schritt": 2, "ok": true },
+        "gilt_ab": "jetzt-59d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-pruefung-2.1-3",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@X-2.1",
+        "daten": { "schritt": 3, "ok": true },
+        "gilt_ab": "jetzt-59d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-pruefung-2.1-4",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@X-2.1",
+        "daten": { "schritt": 4, "ok": true, "volumen_gezaehlt_l": 30 },
+        "gilt_ab": "jetzt-59d 18:00"
+      }
+    },
+    { "tabelle": "etikett", "ref": "X-etikett-2.1", "felder": { "code": "X-2.1", "platz_id": "@X-2.1" } },
+    {
+      "tabelle": "platz",
+      "ref": "X-2.2",
+      "felder": {
+        "anlage_id": "@X",
+        "bereich_id": "@X-b2",
+        "kennung": "2.2",
+        "rolle": "gefaess",
+        "position": 2,
+        "erfasst_am": "jetzt-60d 10:00"
+      }
+    },
+    {
+      "tabelle": "gefaess",
+      "ref": "X-g2.2",
+      "felder": {
+        "platz_id": "@X-2.2",
+        "gefaessmodell_id": "@demo-modell-rako",
+        "deckeltyp_id": "@demo-deckel-D4",
+        "betriebsart": "dwc",
+        "feste_dosis": false,
+        "luftpumpe": "P2",
+        "betriebsvolumen_l": 30,
+        "intervall_messen_d": 2,
+        "intervall_wechseln_d": 14,
+        "gueltig_von": "jetzt-60d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-erfasst-2.2",
+      "felder": { "typ": "gefaess_erfasst", "platz_id": "@X-2.2", "gilt_ab": "jetzt-60d 10:00" }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-pruefung-2.2-1",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@X-2.2",
+        "daten": { "schritt": 1, "ok": true },
+        "gilt_ab": "jetzt-59d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-pruefung-2.2-2",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@X-2.2",
+        "daten": { "schritt": 2, "ok": true },
+        "gilt_ab": "jetzt-59d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-pruefung-2.2-3",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@X-2.2",
+        "daten": { "schritt": 3, "ok": true },
+        "gilt_ab": "jetzt-59d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-pruefung-2.2-4",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@X-2.2",
+        "daten": { "schritt": 4, "ok": true, "volumen_gezaehlt_l": 30 },
+        "gilt_ab": "jetzt-59d 18:00"
+      }
+    },
+    { "tabelle": "etikett", "ref": "X-etikett-2.2", "felder": { "code": "X-2.2", "platz_id": "@X-2.2" } },
+    {
+      "tabelle": "platz",
+      "ref": "X-2.3",
+      "felder": {
+        "anlage_id": "@X",
+        "bereich_id": "@X-b2",
+        "kennung": "2.3",
+        "rolle": "gefaess",
+        "position": 3,
+        "erfasst_am": "jetzt-60d 10:00"
+      }
+    },
+    {
+      "tabelle": "gefaess",
+      "ref": "X-g2.3",
+      "felder": {
+        "platz_id": "@X-2.3",
+        "gefaessmodell_id": "@demo-modell-rako",
+        "deckeltyp_id": "@demo-deckel-D2",
+        "betriebsart": "dwc",
+        "feste_dosis": false,
+        "luftpumpe": "P2",
+        "betriebsvolumen_l": 30,
+        "intervall_messen_d": 2,
+        "intervall_wechseln_d": 14,
+        "gueltig_von": "jetzt-60d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-erfasst-2.3",
+      "felder": { "typ": "gefaess_erfasst", "platz_id": "@X-2.3", "gilt_ab": "jetzt-60d 10:00" }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-pruefung-2.3-1",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@X-2.3",
+        "daten": { "schritt": 1, "ok": true },
+        "gilt_ab": "jetzt-59d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-pruefung-2.3-2",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@X-2.3",
+        "daten": { "schritt": 2, "ok": true },
+        "gilt_ab": "jetzt-59d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-pruefung-2.3-3",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@X-2.3",
+        "daten": { "schritt": 3, "ok": true },
+        "gilt_ab": "jetzt-59d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-pruefung-2.3-4",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@X-2.3",
+        "daten": { "schritt": 4, "ok": true, "volumen_gezaehlt_l": 30 },
+        "gilt_ab": "jetzt-59d 18:00"
+      }
+    },
+    { "tabelle": "etikett", "ref": "X-etikett-2.3", "felder": { "code": "X-2.3", "platz_id": "@X-2.3" } },
+    {
+      "tabelle": "platz",
+      "ref": "X-3.1",
+      "felder": {
+        "anlage_id": "@X",
+        "bereich_id": "@X-b3",
+        "kennung": "3.1",
+        "rolle": "gefaess",
+        "position": 1,
+        "erfasst_am": "jetzt-60d 10:00"
+      }
+    },
+    {
+      "tabelle": "gefaess",
+      "ref": "X-g3.1",
+      "felder": {
+        "platz_id": "@X-3.1",
+        "gefaessmodell_id": "@demo-modell-rako",
+        "deckeltyp_id": "@demo-deckel-D3",
+        "betriebsart": "kratky_belueftet",
+        "feste_dosis": false,
+        "luftpumpe": "P3",
+        "betriebsvolumen_l": 30,
+        "intervall_messen_d": 7,
+        "intervall_wechseln_d": null,
+        "gueltig_von": "jetzt-60d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-erfasst-3.1",
+      "felder": { "typ": "gefaess_erfasst", "platz_id": "@X-3.1", "gilt_ab": "jetzt-60d 10:00" }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-pruefung-3.1-1",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@X-3.1",
+        "daten": { "schritt": 1, "ok": true },
+        "gilt_ab": "jetzt-59d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-pruefung-3.1-2",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@X-3.1",
+        "daten": { "schritt": 2, "ok": true },
+        "gilt_ab": "jetzt-59d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-pruefung-3.1-3",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@X-3.1",
+        "daten": { "schritt": 3, "ok": true },
+        "gilt_ab": "jetzt-59d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-pruefung-3.1-4",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@X-3.1",
+        "daten": { "schritt": 4, "ok": true, "volumen_gezaehlt_l": 30 },
+        "gilt_ab": "jetzt-59d 18:00"
+      }
+    },
+    { "tabelle": "etikett", "ref": "X-etikett-3.1", "felder": { "code": "X-3.1", "platz_id": "@X-3.1" } },
+    {
+      "tabelle": "platz",
+      "ref": "X-3.2",
+      "felder": {
+        "anlage_id": "@X",
+        "bereich_id": "@X-b3",
+        "kennung": "3.2",
+        "rolle": "gefaess",
+        "position": 2,
+        "erfasst_am": "jetzt-60d 10:00"
+      }
+    },
+    {
+      "tabelle": "gefaess",
+      "ref": "X-g3.2",
+      "felder": {
+        "platz_id": "@X-3.2",
+        "gefaessmodell_id": "@demo-modell-rako",
+        "deckeltyp_id": "@demo-deckel-D6",
+        "betriebsart": "kratky_belueftet",
+        "feste_dosis": false,
+        "luftpumpe": "P3",
+        "betriebsvolumen_l": 30,
+        "intervall_messen_d": 7,
+        "intervall_wechseln_d": null,
+        "gueltig_von": "jetzt-60d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-erfasst-3.2",
+      "felder": { "typ": "gefaess_erfasst", "platz_id": "@X-3.2", "gilt_ab": "jetzt-60d 10:00" }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-pruefung-3.2-1",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@X-3.2",
+        "daten": { "schritt": 1, "ok": true },
+        "gilt_ab": "jetzt-59d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-pruefung-3.2-2",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@X-3.2",
+        "daten": { "schritt": 2, "ok": true },
+        "gilt_ab": "jetzt-59d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-pruefung-3.2-3",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@X-3.2",
+        "daten": { "schritt": 3, "ok": true },
+        "gilt_ab": "jetzt-59d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-pruefung-3.2-4",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@X-3.2",
+        "daten": { "schritt": 4, "ok": true, "volumen_gezaehlt_l": 30 },
+        "gilt_ab": "jetzt-59d 18:00"
+      }
+    },
+    { "tabelle": "etikett", "ref": "X-etikett-3.2", "felder": { "code": "X-3.2", "platz_id": "@X-3.2" } },
+    {
+      "tabelle": "platz",
+      "ref": "X-3.3",
+      "felder": {
+        "anlage_id": "@X",
+        "bereich_id": "@X-b3",
+        "kennung": "3.3",
+        "rolle": "gefaess",
+        "position": 3,
+        "erfasst_am": "jetzt-60d 10:00"
+      }
+    },
+    {
+      "tabelle": "gefaess",
+      "ref": "X-g3.3",
+      "felder": {
+        "platz_id": "@X-3.3",
+        "gefaessmodell_id": "@demo-modell-rako",
+        "deckeltyp_id": "@demo-deckel-D3",
+        "betriebsart": "kratky_belueftet",
+        "feste_dosis": false,
+        "luftpumpe": "P3",
+        "betriebsvolumen_l": 30,
+        "intervall_messen_d": 7,
+        "intervall_wechseln_d": null,
+        "gueltig_von": "jetzt-60d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-erfasst-3.3",
+      "felder": { "typ": "gefaess_erfasst", "platz_id": "@X-3.3", "gilt_ab": "jetzt-60d 10:00" }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-pruefung-3.3-1",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@X-3.3",
+        "daten": { "schritt": 1, "ok": true },
+        "gilt_ab": "jetzt-59d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-pruefung-3.3-2",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@X-3.3",
+        "daten": { "schritt": 2, "ok": true },
+        "gilt_ab": "jetzt-59d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-pruefung-3.3-3",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@X-3.3",
+        "daten": { "schritt": 3, "ok": true },
+        "gilt_ab": "jetzt-59d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-pruefung-3.3-4",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@X-3.3",
+        "daten": { "schritt": 4, "ok": true, "volumen_gezaehlt_l": 30 },
+        "gilt_ab": "jetzt-59d 18:00"
+      }
+    },
+    { "tabelle": "etikett", "ref": "X-etikett-3.3", "felder": { "code": "X-3.3", "platz_id": "@X-3.3" } },
+    {
+      "tabelle": "platz",
+      "ref": "X-4.1",
+      "felder": {
+        "anlage_id": "@X",
+        "bereich_id": "@X-b4",
+        "kennung": "4.1",
+        "rolle": "gefaess",
+        "position": 1,
+        "erfasst_am": "jetzt-60d 10:00"
+      }
+    },
+    {
+      "tabelle": "gefaess",
+      "ref": "X-g4.1",
+      "felder": {
+        "platz_id": "@X-4.1",
+        "gefaessmodell_id": "@demo-modell-halbbox",
+        "deckeltyp_id": "@demo-deckel-D6",
+        "betriebsart": "konstantpegel",
+        "feste_dosis": true,
+        "luftpumpe": "P4",
+        "betriebsvolumen_l": 12,
+        "intervall_messen_d": 2,
+        "intervall_wechseln_d": 14,
+        "gueltig_von": "jetzt-60d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-erfasst-4.1",
+      "felder": { "typ": "gefaess_erfasst", "platz_id": "@X-4.1", "gilt_ab": "jetzt-60d 10:00" }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-pruefung-4.1-1",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@X-4.1",
+        "daten": { "schritt": 1, "ok": true },
+        "gilt_ab": "jetzt-59d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-pruefung-4.1-2",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@X-4.1",
+        "daten": { "schritt": 2, "ok": true },
+        "gilt_ab": "jetzt-59d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-pruefung-4.1-3",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@X-4.1",
+        "daten": { "schritt": 3, "ok": true },
+        "gilt_ab": "jetzt-59d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-pruefung-4.1-4",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@X-4.1",
+        "daten": { "schritt": 4, "ok": true, "volumen_gezaehlt_l": 12 },
+        "gilt_ab": "jetzt-59d 18:00"
+      }
+    },
+    { "tabelle": "etikett", "ref": "X-etikett-4.1", "felder": { "code": "X-4.1", "platz_id": "@X-4.1" } },
+    {
+      "tabelle": "platz",
+      "ref": "X-4.2",
+      "felder": {
+        "anlage_id": "@X",
+        "bereich_id": "@X-b4",
+        "kennung": "4.2",
+        "rolle": "gefaess",
+        "position": 2,
+        "erfasst_am": "jetzt-60d 10:00"
+      }
+    },
+    {
+      "tabelle": "gefaess",
+      "ref": "X-g4.2",
+      "felder": {
+        "platz_id": "@X-4.2",
+        "gefaessmodell_id": "@demo-modell-leni",
+        "deckeltyp_id": "@demo-deckel-S8",
+        "betriebsart": "konstantpegel",
+        "feste_dosis": true,
+        "luftpumpe": "P4",
+        "betriebsvolumen_l": 20,
+        "intervall_messen_d": 2,
+        "intervall_wechseln_d": 14,
+        "gueltig_von": "jetzt-60d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-erfasst-4.2",
+      "felder": { "typ": "gefaess_erfasst", "platz_id": "@X-4.2", "gilt_ab": "jetzt-60d 10:00" }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-pruefung-4.2-1",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@X-4.2",
+        "daten": { "schritt": 1, "ok": true },
+        "gilt_ab": "jetzt-59d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-pruefung-4.2-2",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@X-4.2",
+        "daten": { "schritt": 2, "ok": true },
+        "gilt_ab": "jetzt-59d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-pruefung-4.2-3",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@X-4.2",
+        "daten": { "schritt": 3, "ok": true },
+        "gilt_ab": "jetzt-59d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-pruefung-4.2-4",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@X-4.2",
+        "daten": { "schritt": 4, "ok": true, "volumen_gezaehlt_l": 20 },
+        "gilt_ab": "jetzt-59d 18:00"
+      }
+    },
+    { "tabelle": "etikett", "ref": "X-etikett-4.2", "felder": { "code": "X-4.2", "platz_id": "@X-4.2" } },
+    {
+      "tabelle": "platz",
+      "ref": "X-4.3",
+      "felder": {
+        "anlage_id": "@X",
+        "bereich_id": "@X-b4",
+        "kennung": "4.3",
+        "rolle": "gefaess",
+        "position": 3,
+        "erfasst_am": "jetzt-60d 10:00"
+      }
+    },
+    {
+      "tabelle": "gefaess",
+      "ref": "X-g4.3",
+      "felder": {
+        "platz_id": "@X-4.3",
+        "gefaessmodell_id": "@demo-modell-leni",
+        "deckeltyp_id": "@demo-deckel-S8",
+        "betriebsart": "konstantpegel",
+        "feste_dosis": true,
+        "luftpumpe": "P4",
+        "betriebsvolumen_l": 20,
+        "intervall_messen_d": 2,
+        "intervall_wechseln_d": 14,
+        "gueltig_von": "jetzt-60d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-erfasst-4.3",
+      "felder": { "typ": "gefaess_erfasst", "platz_id": "@X-4.3", "gilt_ab": "jetzt-60d 10:00" }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-pruefung-4.3-1",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@X-4.3",
+        "daten": { "schritt": 1, "ok": true },
+        "gilt_ab": "jetzt-59d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-pruefung-4.3-2",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@X-4.3",
+        "daten": { "schritt": 2, "ok": true },
+        "gilt_ab": "jetzt-59d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-pruefung-4.3-3",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@X-4.3",
+        "daten": { "schritt": 3, "ok": true },
+        "gilt_ab": "jetzt-59d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-pruefung-4.3-4",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@X-4.3",
+        "daten": { "schritt": 4, "ok": true, "volumen_gezaehlt_l": 20 },
+        "gilt_ab": "jetzt-59d 18:00"
+      }
+    },
+    { "tabelle": "etikett", "ref": "X-etikett-4.3", "felder": { "code": "X-4.3", "platz_id": "@X-4.3" } },
+    {
+      "tabelle": "platz",
+      "ref": "X-4.4",
+      "felder": {
+        "anlage_id": "@X",
+        "bereich_id": "@X-b4",
+        "kennung": "4.4",
+        "rolle": "gefaess",
+        "position": 4,
+        "erfasst_am": "jetzt-60d 10:00"
+      }
+    },
+    {
+      "tabelle": "gefaess",
+      "ref": "X-g4.4",
+      "felder": {
+        "platz_id": "@X-4.4",
+        "gefaessmodell_id": "@demo-modell-leni",
+        "deckeltyp_id": "@demo-deckel-S5",
+        "betriebsart": "konstantpegel",
+        "feste_dosis": true,
+        "luftpumpe": "P4",
+        "betriebsvolumen_l": 20,
+        "intervall_messen_d": 2,
+        "intervall_wechseln_d": 14,
+        "gueltig_von": "jetzt-60d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-erfasst-4.4",
+      "felder": { "typ": "gefaess_erfasst", "platz_id": "@X-4.4", "gilt_ab": "jetzt-60d 10:00" }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-pruefung-4.4-1",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@X-4.4",
+        "daten": { "schritt": 1, "ok": true },
+        "gilt_ab": "jetzt-59d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-pruefung-4.4-2",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@X-4.4",
+        "daten": { "schritt": 2, "ok": true },
+        "gilt_ab": "jetzt-59d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-pruefung-4.4-3",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@X-4.4",
+        "daten": { "schritt": 3, "ok": true },
+        "gilt_ab": "jetzt-59d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-pruefung-4.4-4",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@X-4.4",
+        "daten": { "schritt": 4, "ok": true, "volumen_gezaehlt_l": 20 },
+        "gilt_ab": "jetzt-59d 18:00"
+      }
+    },
+    { "tabelle": "etikett", "ref": "X-etikett-4.4", "felder": { "code": "X-4.4", "platz_id": "@X-4.4" } },
+    {
+      "tabelle": "platz",
+      "ref": "X-4.5",
+      "felder": {
+        "anlage_id": "@X",
+        "bereich_id": "@X-b4",
+        "kennung": "4.5",
+        "rolle": "gefaess",
+        "position": 5,
+        "erfasst_am": "jetzt-60d 10:00"
+      }
+    },
+    {
+      "tabelle": "gefaess",
+      "ref": "X-g4.5",
+      "felder": {
+        "platz_id": "@X-4.5",
+        "gefaessmodell_id": "@demo-modell-leni",
+        "deckeltyp_id": "@demo-deckel-S5",
+        "betriebsart": "konstantpegel",
+        "feste_dosis": true,
+        "luftpumpe": "P4",
+        "betriebsvolumen_l": 20,
+        "intervall_messen_d": 2,
+        "intervall_wechseln_d": 14,
+        "gueltig_von": "jetzt-60d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-erfasst-4.5",
+      "felder": { "typ": "gefaess_erfasst", "platz_id": "@X-4.5", "gilt_ab": "jetzt-60d 10:00" }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-pruefung-4.5-1",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@X-4.5",
+        "daten": { "schritt": 1, "ok": true },
+        "gilt_ab": "jetzt-59d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-pruefung-4.5-2",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@X-4.5",
+        "daten": { "schritt": 2, "ok": true },
+        "gilt_ab": "jetzt-59d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "X-pruefung-4.5-3",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@X-4.5",
+        "daten": { "schritt": 3, "ok": true },
+        "gilt_ab": "jetzt-59d 10:00"
+      }
+    },
+    { "tabelle": "etikett", "ref": "X-etikett-4.5", "felder": { "code": "X-4.5", "platz_id": "@X-4.5" } },
+    {
+      "tabelle": "platz",
+      "ref": "X-A1",
+      "felder": {
+        "anlage_id": "@X",
+        "bereich_id": "@X-b4",
+        "kennung": "A1",
+        "rolle": "anzuchtort",
+        "position": 6,
+        "erfasst_am": "jetzt-60d 10:00"
+      }
+    },
+    {
+      "tabelle": "anzuchtort",
+      "ref": "X-anzucht-A1",
+      "felder": { "platz_id": "@X-A1", "typ": "box_licht", "position": "vorne" }
+    },
+    {
+      "tabelle": "etikett",
+      "ref": "X-etikett-A1",
+      "felder": { "code": "X-A1", "platz_id": "@X-A1", "format": "55x25" }
+    },
+    {
+      "tabelle": "platz",
+      "ref": "X-A2",
+      "felder": {
+        "anlage_id": "@X",
+        "bereich_id": "@X-b4",
+        "kennung": "A2",
+        "rolle": "anzuchtort",
+        "position": 7,
+        "erfasst_am": "jetzt-60d 10:00"
+      }
+    },
+    {
+      "tabelle": "anzuchtort",
+      "ref": "X-anzucht-A2",
+      "felder": { "platz_id": "@X-A2", "typ": "box_licht", "position": "hinten" }
+    },
+    {
+      "tabelle": "etikett",
+      "ref": "X-etikett-A2",
+      "felder": { "code": "X-A2", "platz_id": "@X-A2", "format": "55x25" }
+    },
+    {
+      "tabelle": "platz",
+      "ref": "X-A3",
+      "felder": {
+        "anlage_id": "@X",
+        "bereich_id": "@X-b4",
+        "kennung": "A3",
+        "rolle": "anzuchtort",
+        "position": 8,
+        "erfasst_am": "jetzt-60d 10:00"
+      }
+    },
+    {
+      "tabelle": "anzuchtort",
+      "ref": "X-anzucht-A3",
+      "felder": { "platz_id": "@X-A3", "typ": "box_dunkel", "position": "vorne" }
+    },
+    {
+      "tabelle": "etikett",
+      "ref": "X-etikett-A3",
+      "felder": { "code": "X-A3", "platz_id": "@X-A3", "format": "55x25" }
+    },
+    {
+      "tabelle": "platz",
+      "ref": "X-A4",
+      "felder": {
+        "anlage_id": "@X",
+        "bereich_id": "@X-b4",
+        "kennung": "A4",
+        "rolle": "anzuchtort",
+        "position": 9,
+        "erfasst_am": "jetzt-60d 10:00"
+      }
+    },
+    {
+      "tabelle": "anzuchtort",
+      "ref": "X-anzucht-A4",
+      "felder": { "platz_id": "@X-A4", "typ": "box_dunkel", "position": "hinten" }
+    },
+    {
+      "tabelle": "etikett",
+      "ref": "X-etikett-A4",
+      "felder": { "code": "X-A4", "platz_id": "@X-A4", "format": "55x25" }
+    },
+    {
+      "tabelle": "platz",
+      "ref": "X-W",
+      "felder": { "anlage_id": "@X", "kennung": "W", "rolle": "messstelle", "erfasst_am": "jetzt-60d 10:00" }
+    },
+    { "tabelle": "etikett", "ref": "X-etikett-W", "felder": { "code": "X-W", "platz_id": "@X-W" } }
   ]
 }

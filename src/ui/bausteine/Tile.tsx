@@ -68,11 +68,13 @@ interface OrtProps {
   zeilen: string[];
   badge?: ReactNode;
   onClick?: () => void;
+  /** Regalbild: Messstelle W gestrichelt (Tile.md «Regalbild») */
+  messstelle?: boolean;
 }
 
-export function OrtKachel({ kennung, zeilen, badge, onClick }: OrtProps) {
+export function OrtKachel({ kennung, zeilen, badge, onClick, messstelle }: OrtProps) {
   return (
-    <button type="button" className="hv-tile" onClick={onClick}>
+    <button type="button" className={messstelle ? 'hv-tile hv-regal-w' : 'hv-tile'} onClick={onClick}>
       <span className="hv-tile-kennung">{kennung}</span>
       {zeilen.map((z) => (
         <span key={z} className="hv-tile-zeile">

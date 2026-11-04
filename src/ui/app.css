@@ -185,3 +185,130 @@ body {
   line-height: var(--text-heading-line);
   font-weight: var(--text-heading-weight);
 }
+
+/* Anlagenübersicht (UC1, Plan 20): kompakter Kopf, damit das Regalbild ohne Scrollen passt */
+.hv-anlage {
+  gap: var(--space-2);
+}
+
+.hv-anlage-titel {
+  margin: 0;
+  font-size: var(--text-heading-size);
+  line-height: var(--text-heading-line);
+  font-weight: var(--text-heading-weight);
+}
+
+.hv-anlage-wahl {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.hv-anlage-info {
+  color: var(--ink-muted);
+}
+
+/* Maske «Gefäss» (UC1, 05_masken.md 3.3, Plan 20): Kopf, Zustand und Hauptknopf ohne Scrollen */
+.hv-gefaess {
+  gap: var(--space-3);
+}
+
+.hv-gefaess-kopf {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.hv-gefaess-kennung {
+  margin: 0;
+  font-size: var(--text-value-regal-size);
+  line-height: var(--text-value-regal-line);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.hv-gefaess-unter,
+.hv-gefaess-trend,
+.hv-verlauf-marker {
+  color: var(--ink-muted);
+  font-size: var(--text-small-size);
+  line-height: var(--text-small-line);
+}
+
+.hv-gefaess-zustand {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.hv-gefaess-zeile {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.hv-gefaess-angaben dd {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.hv-gefaess-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.hv-gefaess-pflanzen {
+  margin: 0;
+  padding-left: var(--space-4);
+}
+
+.hv-gefaess-haupt {
+  min-height: 72px;
+  font-size: var(--text-heading-size);
+}
+
+.hv-gefaess-h2 {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-heading-size);
+  line-height: var(--text-heading-line);
+}
+
+.hv-verlauf {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.hv-verlauf th,
+.hv-verlauf td {
+  text-align: left;
+  padding: var(--space-1) var(--space-2) var(--space-1) 0;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+
+.hv-verlauf td {
+  text-align: right;
+}
+
+/* Heute: Gruppen je Anlage ab zwei echten Anlagen (UC1-AK5, Plan 20) */
+.hv-heute-nav {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.hv-heute-gruppe {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.hv-heute-anlage {
+  margin: 0;
+  font-size: var(--text-heading-size);
+  line-height: var(--text-heading-line);
+  font-weight: var(--text-heading-weight);
+}

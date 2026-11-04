@@ -1,94 +1,907 @@
 {
   "kommentar": "S9 Spitzentag in eigener Demo-Anlage Z (A4 im Plan): 4 DWC-Wechsel (Z-1.1 bis Z-2.2), 2 Kratky-Ansätze mit Direktsaat heute (Z-3.1, Z-3.2), 14 Sätze in Z-A1 mit Phasenfrage Keimung → Anzucht heute (R5.6)",
   "zeilen": [
-    {"tabelle":"anlage","ref":"Z","felder":{"name":"Demo-Spitzentag Z","kuerzel":"Z","datenart":"demo","licht_von":"06:00","licht_bis":"21:00"}},
-    {"tabelle":"bereich","ref":"Z-b1","felder":{"anlage_id":"@Z","nummer":1,"name":"Ebene 1","standard_betriebsart":"dwc","lichtleisten":1,"lichtstunden":15,"nutzbare_hoehe_mm":450}},
-    {"tabelle":"bereich","ref":"Z-b2","felder":{"anlage_id":"@Z","nummer":2,"name":"Ebene 2","standard_betriebsart":"dwc","lichtleisten":1,"lichtstunden":15,"nutzbare_hoehe_mm":200}},
-    {"tabelle":"bereich","ref":"Z-b3","felder":{"anlage_id":"@Z","nummer":3,"name":"Ebene 3","standard_betriebsart":"kratky_belueftet","lichtleisten":1,"lichtstunden":15,"nutzbare_hoehe_mm":150}},
-    {"tabelle":"bereich","ref":"Z-b4","felder":{"anlage_id":"@Z","nummer":4,"name":"Ebene 4","standard_betriebsart":"konstantpegel","lichtleisten":1,"lichtstunden":15,"nutzbare_hoehe_mm":150}},
-    {"tabelle":"platz","ref":"Z-1.1","felder":{"anlage_id":"@Z","bereich_id":"@Z-b1","kennung":"1.1","rolle":"gefaess","position":1,"erfasst_am":"jetzt-60d 10:00"}},
-    {"tabelle":"gefaess","ref":"Z-g1.1","felder":{"platz_id":"@Z-1.1","gefaessmodell_id":"@demo-modell-rako","deckeltyp_id":"@demo-deckel-D1","betriebsart":"dwc","feste_dosis":false,"luftpumpe":"P1","betriebsvolumen_l":30,"intervall_messen_d":2,"intervall_wechseln_d":14,"gueltig_von":"jetzt-60d 10:00"}},
-    {"tabelle":"ereignis","ref":"Z-erfasst-1.1","felder":{"typ":"gefaess_erfasst","platz_id":"@Z-1.1","gilt_ab":"jetzt-60d 10:00"}},
-    {"tabelle":"ereignis","ref":"Z-pruefung-1.1-1","felder":{"typ":"gefaesspruefung","platz_id":"@Z-1.1","daten":{"schritt":1,"ok":true},"gilt_ab":"jetzt-59d 10:00"}},
-    {"tabelle":"ereignis","ref":"Z-pruefung-1.1-2","felder":{"typ":"gefaesspruefung","platz_id":"@Z-1.1","daten":{"schritt":2,"ok":true},"gilt_ab":"jetzt-59d 10:00"}},
-    {"tabelle":"ereignis","ref":"Z-pruefung-1.1-3","felder":{"typ":"gefaesspruefung","platz_id":"@Z-1.1","daten":{"schritt":3,"ok":true},"gilt_ab":"jetzt-59d 10:00"}},
-    {"tabelle":"ereignis","ref":"Z-pruefung-1.1-4","felder":{"typ":"gefaesspruefung","platz_id":"@Z-1.1","daten":{"schritt":4,"ok":true,"volumen_gezaehlt_l":30},"gilt_ab":"jetzt-59d 18:00"}},
-    {"tabelle":"platz","ref":"Z-1.2","felder":{"anlage_id":"@Z","bereich_id":"@Z-b1","kennung":"1.2","rolle":"gefaess","position":2,"erfasst_am":"jetzt-60d 10:00"}},
-    {"tabelle":"gefaess","ref":"Z-g1.2","felder":{"platz_id":"@Z-1.2","gefaessmodell_id":"@demo-modell-rako","deckeltyp_id":"@demo-deckel-D1","betriebsart":"dwc","feste_dosis":false,"luftpumpe":"P1","betriebsvolumen_l":30,"intervall_messen_d":2,"intervall_wechseln_d":14,"gueltig_von":"jetzt-60d 10:00"}},
-    {"tabelle":"ereignis","ref":"Z-erfasst-1.2","felder":{"typ":"gefaess_erfasst","platz_id":"@Z-1.2","gilt_ab":"jetzt-60d 10:00"}},
-    {"tabelle":"ereignis","ref":"Z-pruefung-1.2-1","felder":{"typ":"gefaesspruefung","platz_id":"@Z-1.2","daten":{"schritt":1,"ok":true},"gilt_ab":"jetzt-59d 10:00"}},
-    {"tabelle":"ereignis","ref":"Z-pruefung-1.2-2","felder":{"typ":"gefaesspruefung","platz_id":"@Z-1.2","daten":{"schritt":2,"ok":true},"gilt_ab":"jetzt-59d 10:00"}},
-    {"tabelle":"ereignis","ref":"Z-pruefung-1.2-3","felder":{"typ":"gefaesspruefung","platz_id":"@Z-1.2","daten":{"schritt":3,"ok":true},"gilt_ab":"jetzt-59d 10:00"}},
-    {"tabelle":"ereignis","ref":"Z-pruefung-1.2-4","felder":{"typ":"gefaesspruefung","platz_id":"@Z-1.2","daten":{"schritt":4,"ok":true,"volumen_gezaehlt_l":30},"gilt_ab":"jetzt-59d 18:00"}},
-    {"tabelle":"platz","ref":"Z-2.1","felder":{"anlage_id":"@Z","bereich_id":"@Z-b2","kennung":"2.1","rolle":"gefaess","position":1,"erfasst_am":"jetzt-60d 10:00"}},
-    {"tabelle":"gefaess","ref":"Z-g2.1","felder":{"platz_id":"@Z-2.1","gefaessmodell_id":"@demo-modell-rako","deckeltyp_id":"@demo-deckel-D2","betriebsart":"dwc","feste_dosis":false,"luftpumpe":"P2","betriebsvolumen_l":30,"intervall_messen_d":2,"intervall_wechseln_d":14,"gueltig_von":"jetzt-60d 10:00"}},
-    {"tabelle":"ereignis","ref":"Z-erfasst-2.1","felder":{"typ":"gefaess_erfasst","platz_id":"@Z-2.1","gilt_ab":"jetzt-60d 10:00"}},
-    {"tabelle":"ereignis","ref":"Z-pruefung-2.1-1","felder":{"typ":"gefaesspruefung","platz_id":"@Z-2.1","daten":{"schritt":1,"ok":true},"gilt_ab":"jetzt-59d 10:00"}},
-    {"tabelle":"ereignis","ref":"Z-pruefung-2.1-2","felder":{"typ":"gefaesspruefung","platz_id":"@Z-2.1","daten":{"schritt":2,"ok":true},"gilt_ab":"jetzt-59d 10:00"}},
-    {"tabelle":"ereignis","ref":"Z-pruefung-2.1-3","felder":{"typ":"gefaesspruefung","platz_id":"@Z-2.1","daten":{"schritt":3,"ok":true},"gilt_ab":"jetzt-59d 10:00"}},
-    {"tabelle":"ereignis","ref":"Z-pruefung-2.1-4","felder":{"typ":"gefaesspruefung","platz_id":"@Z-2.1","daten":{"schritt":4,"ok":true,"volumen_gezaehlt_l":30},"gilt_ab":"jetzt-59d 18:00"}},
-    {"tabelle":"platz","ref":"Z-2.2","felder":{"anlage_id":"@Z","bereich_id":"@Z-b2","kennung":"2.2","rolle":"gefaess","position":2,"erfasst_am":"jetzt-60d 10:00"}},
-    {"tabelle":"gefaess","ref":"Z-g2.2","felder":{"platz_id":"@Z-2.2","gefaessmodell_id":"@demo-modell-rako","deckeltyp_id":"@demo-deckel-D4","betriebsart":"dwc","feste_dosis":false,"luftpumpe":"P2","betriebsvolumen_l":30,"intervall_messen_d":2,"intervall_wechseln_d":14,"gueltig_von":"jetzt-60d 10:00"}},
-    {"tabelle":"ereignis","ref":"Z-erfasst-2.2","felder":{"typ":"gefaess_erfasst","platz_id":"@Z-2.2","gilt_ab":"jetzt-60d 10:00"}},
-    {"tabelle":"ereignis","ref":"Z-pruefung-2.2-1","felder":{"typ":"gefaesspruefung","platz_id":"@Z-2.2","daten":{"schritt":1,"ok":true},"gilt_ab":"jetzt-59d 10:00"}},
-    {"tabelle":"ereignis","ref":"Z-pruefung-2.2-2","felder":{"typ":"gefaesspruefung","platz_id":"@Z-2.2","daten":{"schritt":2,"ok":true},"gilt_ab":"jetzt-59d 10:00"}},
-    {"tabelle":"ereignis","ref":"Z-pruefung-2.2-3","felder":{"typ":"gefaesspruefung","platz_id":"@Z-2.2","daten":{"schritt":3,"ok":true},"gilt_ab":"jetzt-59d 10:00"}},
-    {"tabelle":"ereignis","ref":"Z-pruefung-2.2-4","felder":{"typ":"gefaesspruefung","platz_id":"@Z-2.2","daten":{"schritt":4,"ok":true,"volumen_gezaehlt_l":30},"gilt_ab":"jetzt-59d 18:00"}},
-    {"tabelle":"platz","ref":"Z-3.1","felder":{"anlage_id":"@Z","bereich_id":"@Z-b3","kennung":"3.1","rolle":"gefaess","position":1,"erfasst_am":"jetzt-60d 10:00"}},
-    {"tabelle":"gefaess","ref":"Z-g3.1","felder":{"platz_id":"@Z-3.1","gefaessmodell_id":"@demo-modell-rako","deckeltyp_id":"@demo-deckel-D3","betriebsart":"kratky_belueftet","feste_dosis":false,"luftpumpe":"P3","betriebsvolumen_l":30,"intervall_messen_d":7,"intervall_wechseln_d":null,"gueltig_von":"jetzt-60d 10:00"}},
-    {"tabelle":"ereignis","ref":"Z-erfasst-3.1","felder":{"typ":"gefaess_erfasst","platz_id":"@Z-3.1","gilt_ab":"jetzt-60d 10:00"}},
-    {"tabelle":"ereignis","ref":"Z-pruefung-3.1-1","felder":{"typ":"gefaesspruefung","platz_id":"@Z-3.1","daten":{"schritt":1,"ok":true},"gilt_ab":"jetzt-59d 10:00"}},
-    {"tabelle":"ereignis","ref":"Z-pruefung-3.1-2","felder":{"typ":"gefaesspruefung","platz_id":"@Z-3.1","daten":{"schritt":2,"ok":true},"gilt_ab":"jetzt-59d 10:00"}},
-    {"tabelle":"ereignis","ref":"Z-pruefung-3.1-3","felder":{"typ":"gefaesspruefung","platz_id":"@Z-3.1","daten":{"schritt":3,"ok":true},"gilt_ab":"jetzt-59d 10:00"}},
-    {"tabelle":"ereignis","ref":"Z-pruefung-3.1-4","felder":{"typ":"gefaesspruefung","platz_id":"@Z-3.1","daten":{"schritt":4,"ok":true,"volumen_gezaehlt_l":30},"gilt_ab":"jetzt-59d 18:00"}},
-    {"tabelle":"platz","ref":"Z-3.2","felder":{"anlage_id":"@Z","bereich_id":"@Z-b3","kennung":"3.2","rolle":"gefaess","position":2,"erfasst_am":"jetzt-60d 10:00"}},
-    {"tabelle":"gefaess","ref":"Z-g3.2","felder":{"platz_id":"@Z-3.2","gefaessmodell_id":"@demo-modell-rako","deckeltyp_id":"@demo-deckel-D6","betriebsart":"kratky_belueftet","feste_dosis":false,"luftpumpe":"P3","betriebsvolumen_l":30,"intervall_messen_d":7,"intervall_wechseln_d":null,"gueltig_von":"jetzt-60d 10:00"}},
-    {"tabelle":"ereignis","ref":"Z-erfasst-3.2","felder":{"typ":"gefaess_erfasst","platz_id":"@Z-3.2","gilt_ab":"jetzt-60d 10:00"}},
-    {"tabelle":"ereignis","ref":"Z-pruefung-3.2-1","felder":{"typ":"gefaesspruefung","platz_id":"@Z-3.2","daten":{"schritt":1,"ok":true},"gilt_ab":"jetzt-59d 10:00"}},
-    {"tabelle":"ereignis","ref":"Z-pruefung-3.2-2","felder":{"typ":"gefaesspruefung","platz_id":"@Z-3.2","daten":{"schritt":2,"ok":true},"gilt_ab":"jetzt-59d 10:00"}},
-    {"tabelle":"ereignis","ref":"Z-pruefung-3.2-3","felder":{"typ":"gefaesspruefung","platz_id":"@Z-3.2","daten":{"schritt":3,"ok":true},"gilt_ab":"jetzt-59d 10:00"}},
-    {"tabelle":"ereignis","ref":"Z-pruefung-3.2-4","felder":{"typ":"gefaesspruefung","platz_id":"@Z-3.2","daten":{"schritt":4,"ok":true,"volumen_gezaehlt_l":30},"gilt_ab":"jetzt-59d 18:00"}},
-    {"tabelle":"platz","ref":"Z-A1","felder":{"anlage_id":"@Z","bereich_id":"@Z-b4","kennung":"A1","rolle":"anzuchtort","position":6,"erfasst_am":"jetzt-60d 10:00"}},
-    {"tabelle":"anzuchtort","ref":"Z-anzucht-A1","felder":{"platz_id":"@Z-A1","typ":"box_licht","position":"vorne"}},
-    {"tabelle":"naehrloesungsansatz","ref":"Z-ansatz-1.1","felder":{"platz_id":"@Z-1.1","typ":"neuansatz","status":"abgeschlossen","begonnen_am":"jetzt-14d 18:00","abgeschlossen_am":"jetzt-14d 18:00","volumen_l":30,"gilt_ab":"jetzt-14d 18:00"}},
-    {"tabelle":"naehrloesungsansatz","ref":"Z-ansatz-1.2","felder":{"platz_id":"@Z-1.2","typ":"neuansatz","status":"abgeschlossen","begonnen_am":"jetzt-14d 18:00","abgeschlossen_am":"jetzt-14d 18:00","volumen_l":30,"gilt_ab":"jetzt-14d 18:00"}},
-    {"tabelle":"naehrloesungsansatz","ref":"Z-ansatz-2.1","felder":{"platz_id":"@Z-2.1","typ":"neuansatz","status":"abgeschlossen","begonnen_am":"jetzt-14d 18:00","abgeschlossen_am":"jetzt-14d 18:00","volumen_l":30,"gilt_ab":"jetzt-14d 18:00"}},
-    {"tabelle":"naehrloesungsansatz","ref":"Z-ansatz-2.2","felder":{"platz_id":"@Z-2.2","typ":"neuansatz","status":"abgeschlossen","begonnen_am":"jetzt-14d 18:00","abgeschlossen_am":"jetzt-14d 18:00","volumen_l":30,"gilt_ab":"jetzt-14d 18:00"}},
-    {"tabelle":"netztopf","ref":"Z-topf-3.1.1","felder":{"anlage_id":"@Z","kennung":"3.1.1","groesse_mm":50,"heim_platz_id":"@Z-3.1","heim_loch_nr":1}},
-    {"tabelle":"satz","ref":"Z-satz-3.1","felder":{"sorte_id":"?sorte_schluessel.sorte_key=sorte-test-c-drei","kulturform":"babyleaf","direktsaat_platz_id":"@Z-3.1","anzahl_schwaemme":1,"samen_je_schwamm":4,"saatdatum":"heute","gilt_ab":"jetzt"}},
-    {"tabelle":"pflanzung","ref":"Z-pflanzung-3.1","felder":{"satz_id":"@Z-satz-3.1","gilt_ab":"jetzt"}},
-    {"tabelle":"reservierung","ref":"Z-reservierung-3.1","felder":{"pflanzung_id":"@Z-pflanzung-3.1","netztopf_id":"@Z-topf-3.1.1","umsetzen_vorgabe_am":"heute","umsetzen_geplant_am":"heute","gilt_ab":"jetzt"}},
-    {"tabelle":"netztopf","ref":"Z-topf-3.2.1","felder":{"anlage_id":"@Z","kennung":"3.2.1","groesse_mm":50,"heim_platz_id":"@Z-3.2","heim_loch_nr":1}},
-    {"tabelle":"satz","ref":"Z-satz-3.2","felder":{"sorte_id":"?sorte_schluessel.sorte_key=sorte-test-c-drei","kulturform":"babyleaf","direktsaat_platz_id":"@Z-3.2","anzahl_schwaemme":1,"samen_je_schwamm":4,"saatdatum":"heute","gilt_ab":"jetzt"}},
-    {"tabelle":"pflanzung","ref":"Z-pflanzung-3.2","felder":{"satz_id":"@Z-satz-3.2","gilt_ab":"jetzt"}},
-    {"tabelle":"reservierung","ref":"Z-reservierung-3.2","felder":{"pflanzung_id":"@Z-pflanzung-3.2","netztopf_id":"@Z-topf-3.2.1","umsetzen_vorgabe_am":"heute","umsetzen_geplant_am":"heute","gilt_ab":"jetzt"}},
-    {"tabelle":"satz","ref":"Z-phase-1","felder":{"sorte_id":"?sorte_schluessel.sorte_key=sorte-test-b-zwei","kulturform":"schnitt","anzuchtort_platz_id":"@Z-A1","anzahl_schwaemme":1,"samen_je_schwamm":3,"saatdatum":"heute-6","gilt_ab":"jetzt-6d 19:00"}},
-    {"tabelle":"pflanzung","ref":"Z-phase-p1","felder":{"satz_id":"@Z-phase-1","gilt_ab":"jetzt-6d 19:00"}},
-    {"tabelle":"satz","ref":"Z-phase-2","felder":{"sorte_id":"?sorte_schluessel.sorte_key=sorte-test-c-drei","kulturform":"schnitt","anzuchtort_platz_id":"@Z-A1","anzahl_schwaemme":1,"samen_je_schwamm":3,"saatdatum":"heute-6","gilt_ab":"jetzt-6d 19:00"}},
-    {"tabelle":"pflanzung","ref":"Z-phase-p2","felder":{"satz_id":"@Z-phase-2","gilt_ab":"jetzt-6d 19:00"}},
-    {"tabelle":"satz","ref":"Z-phase-3","felder":{"sorte_id":"?sorte_schluessel.sorte_key=sorte-test-d-vier","kulturform":"schnitt","anzuchtort_platz_id":"@Z-A1","anzahl_schwaemme":1,"samen_je_schwamm":3,"saatdatum":"heute-6","gilt_ab":"jetzt-6d 19:00"}},
-    {"tabelle":"pflanzung","ref":"Z-phase-p3","felder":{"satz_id":"@Z-phase-3","gilt_ab":"jetzt-6d 19:00"}},
-    {"tabelle":"satz","ref":"Z-phase-4","felder":{"sorte_id":"?sorte_schluessel.sorte_key=sorte-test-b-zwei","kulturform":"schnitt","anzuchtort_platz_id":"@Z-A1","anzahl_schwaemme":1,"samen_je_schwamm":3,"saatdatum":"heute-6","gilt_ab":"jetzt-6d 19:00"}},
-    {"tabelle":"pflanzung","ref":"Z-phase-p4","felder":{"satz_id":"@Z-phase-4","gilt_ab":"jetzt-6d 19:00"}},
-    {"tabelle":"satz","ref":"Z-phase-5","felder":{"sorte_id":"?sorte_schluessel.sorte_key=sorte-test-c-drei","kulturform":"schnitt","anzuchtort_platz_id":"@Z-A1","anzahl_schwaemme":1,"samen_je_schwamm":3,"saatdatum":"heute-6","gilt_ab":"jetzt-6d 19:00"}},
-    {"tabelle":"pflanzung","ref":"Z-phase-p5","felder":{"satz_id":"@Z-phase-5","gilt_ab":"jetzt-6d 19:00"}},
-    {"tabelle":"satz","ref":"Z-phase-6","felder":{"sorte_id":"?sorte_schluessel.sorte_key=sorte-test-d-vier","kulturform":"schnitt","anzuchtort_platz_id":"@Z-A1","anzahl_schwaemme":1,"samen_je_schwamm":3,"saatdatum":"heute-6","gilt_ab":"jetzt-6d 19:00"}},
-    {"tabelle":"pflanzung","ref":"Z-phase-p6","felder":{"satz_id":"@Z-phase-6","gilt_ab":"jetzt-6d 19:00"}},
-    {"tabelle":"satz","ref":"Z-phase-7","felder":{"sorte_id":"?sorte_schluessel.sorte_key=sorte-test-b-zwei","kulturform":"schnitt","anzuchtort_platz_id":"@Z-A1","anzahl_schwaemme":1,"samen_je_schwamm":3,"saatdatum":"heute-6","gilt_ab":"jetzt-6d 19:00"}},
-    {"tabelle":"pflanzung","ref":"Z-phase-p7","felder":{"satz_id":"@Z-phase-7","gilt_ab":"jetzt-6d 19:00"}},
-    {"tabelle":"satz","ref":"Z-phase-8","felder":{"sorte_id":"?sorte_schluessel.sorte_key=sorte-test-c-drei","kulturform":"schnitt","anzuchtort_platz_id":"@Z-A1","anzahl_schwaemme":1,"samen_je_schwamm":3,"saatdatum":"heute-6","gilt_ab":"jetzt-6d 19:00"}},
-    {"tabelle":"pflanzung","ref":"Z-phase-p8","felder":{"satz_id":"@Z-phase-8","gilt_ab":"jetzt-6d 19:00"}},
-    {"tabelle":"satz","ref":"Z-phase-9","felder":{"sorte_id":"?sorte_schluessel.sorte_key=sorte-test-d-vier","kulturform":"schnitt","anzuchtort_platz_id":"@Z-A1","anzahl_schwaemme":1,"samen_je_schwamm":3,"saatdatum":"heute-6","gilt_ab":"jetzt-6d 19:00"}},
-    {"tabelle":"pflanzung","ref":"Z-phase-p9","felder":{"satz_id":"@Z-phase-9","gilt_ab":"jetzt-6d 19:00"}},
-    {"tabelle":"satz","ref":"Z-phase-10","felder":{"sorte_id":"?sorte_schluessel.sorte_key=sorte-test-b-zwei","kulturform":"schnitt","anzuchtort_platz_id":"@Z-A1","anzahl_schwaemme":1,"samen_je_schwamm":3,"saatdatum":"heute-6","gilt_ab":"jetzt-6d 19:00"}},
-    {"tabelle":"pflanzung","ref":"Z-phase-p10","felder":{"satz_id":"@Z-phase-10","gilt_ab":"jetzt-6d 19:00"}},
-    {"tabelle":"satz","ref":"Z-phase-11","felder":{"sorte_id":"?sorte_schluessel.sorte_key=sorte-test-c-drei","kulturform":"schnitt","anzuchtort_platz_id":"@Z-A1","anzahl_schwaemme":1,"samen_je_schwamm":3,"saatdatum":"heute-6","gilt_ab":"jetzt-6d 19:00"}},
-    {"tabelle":"pflanzung","ref":"Z-phase-p11","felder":{"satz_id":"@Z-phase-11","gilt_ab":"jetzt-6d 19:00"}},
-    {"tabelle":"satz","ref":"Z-phase-12","felder":{"sorte_id":"?sorte_schluessel.sorte_key=sorte-test-d-vier","kulturform":"schnitt","anzuchtort_platz_id":"@Z-A1","anzahl_schwaemme":1,"samen_je_schwamm":3,"saatdatum":"heute-6","gilt_ab":"jetzt-6d 19:00"}},
-    {"tabelle":"pflanzung","ref":"Z-phase-p12","felder":{"satz_id":"@Z-phase-12","gilt_ab":"jetzt-6d 19:00"}},
-    {"tabelle":"satz","ref":"Z-phase-13","felder":{"sorte_id":"?sorte_schluessel.sorte_key=sorte-test-b-zwei","kulturform":"schnitt","anzuchtort_platz_id":"@Z-A1","anzahl_schwaemme":1,"samen_je_schwamm":3,"saatdatum":"heute-6","gilt_ab":"jetzt-6d 19:00"}},
-    {"tabelle":"pflanzung","ref":"Z-phase-p13","felder":{"satz_id":"@Z-phase-13","gilt_ab":"jetzt-6d 19:00"}},
-    {"tabelle":"satz","ref":"Z-phase-14","felder":{"sorte_id":"?sorte_schluessel.sorte_key=sorte-test-c-drei","kulturform":"schnitt","anzuchtort_platz_id":"@Z-A1","anzahl_schwaemme":1,"samen_je_schwamm":3,"saatdatum":"heute-6","gilt_ab":"jetzt-6d 19:00"}},
-    {"tabelle":"pflanzung","ref":"Z-phase-p14","felder":{"satz_id":"@Z-phase-14","gilt_ab":"jetzt-6d 19:00"}}
+    {
+      "tabelle": "anlage",
+      "ref": "Z",
+      "felder": {
+        "name": "Demo-Spitzentag Z",
+        "kuerzel": "Z",
+        "datenart": "demo",
+        "licht_von": "06:00",
+        "licht_bis": "21:00"
+      }
+    },
+    {
+      "tabelle": "bereich",
+      "ref": "Z-b1",
+      "felder": {
+        "anlage_id": "@Z",
+        "nummer": 1,
+        "name": "Ebene 1",
+        "standard_betriebsart": "dwc",
+        "lichtleisten": 1,
+        "lichtstunden": 15,
+        "nutzbare_hoehe_mm": 450
+      }
+    },
+    {
+      "tabelle": "bereich",
+      "ref": "Z-b2",
+      "felder": {
+        "anlage_id": "@Z",
+        "nummer": 2,
+        "name": "Ebene 2",
+        "standard_betriebsart": "dwc",
+        "lichtleisten": 1,
+        "lichtstunden": 15,
+        "nutzbare_hoehe_mm": 200
+      }
+    },
+    {
+      "tabelle": "bereich",
+      "ref": "Z-b3",
+      "felder": {
+        "anlage_id": "@Z",
+        "nummer": 3,
+        "name": "Ebene 3",
+        "standard_betriebsart": "kratky_belueftet",
+        "lichtleisten": 1,
+        "lichtstunden": 15,
+        "nutzbare_hoehe_mm": 150
+      }
+    },
+    {
+      "tabelle": "bereich",
+      "ref": "Z-b4",
+      "felder": {
+        "anlage_id": "@Z",
+        "nummer": 4,
+        "name": "Ebene 4",
+        "standard_betriebsart": "konstantpegel",
+        "lichtleisten": 1,
+        "lichtstunden": 15,
+        "nutzbare_hoehe_mm": 150
+      }
+    },
+    {
+      "tabelle": "platz",
+      "ref": "Z-1.1",
+      "felder": {
+        "anlage_id": "@Z",
+        "bereich_id": "@Z-b1",
+        "kennung": "1.1",
+        "rolle": "gefaess",
+        "position": 1,
+        "erfasst_am": "jetzt-60d 10:00"
+      }
+    },
+    {
+      "tabelle": "gefaess",
+      "ref": "Z-g1.1",
+      "felder": {
+        "platz_id": "@Z-1.1",
+        "gefaessmodell_id": "@demo-modell-rako",
+        "deckeltyp_id": "@demo-deckel-D1",
+        "betriebsart": "dwc",
+        "feste_dosis": false,
+        "luftpumpe": "P1",
+        "betriebsvolumen_l": 30,
+        "intervall_messen_d": 2,
+        "intervall_wechseln_d": 14,
+        "gueltig_von": "jetzt-60d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "Z-erfasst-1.1",
+      "felder": { "typ": "gefaess_erfasst", "platz_id": "@Z-1.1", "gilt_ab": "jetzt-60d 10:00" }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "Z-pruefung-1.1-1",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@Z-1.1",
+        "daten": { "schritt": 1, "ok": true },
+        "gilt_ab": "jetzt-59d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "Z-pruefung-1.1-2",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@Z-1.1",
+        "daten": { "schritt": 2, "ok": true },
+        "gilt_ab": "jetzt-59d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "Z-pruefung-1.1-3",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@Z-1.1",
+        "daten": { "schritt": 3, "ok": true },
+        "gilt_ab": "jetzt-59d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "Z-pruefung-1.1-4",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@Z-1.1",
+        "daten": { "schritt": 4, "ok": true, "volumen_gezaehlt_l": 30 },
+        "gilt_ab": "jetzt-59d 18:00"
+      }
+    },
+    {
+      "tabelle": "platz",
+      "ref": "Z-1.2",
+      "felder": {
+        "anlage_id": "@Z",
+        "bereich_id": "@Z-b1",
+        "kennung": "1.2",
+        "rolle": "gefaess",
+        "position": 2,
+        "erfasst_am": "jetzt-60d 10:00"
+      }
+    },
+    {
+      "tabelle": "gefaess",
+      "ref": "Z-g1.2",
+      "felder": {
+        "platz_id": "@Z-1.2",
+        "gefaessmodell_id": "@demo-modell-rako",
+        "deckeltyp_id": "@demo-deckel-D1",
+        "betriebsart": "dwc",
+        "feste_dosis": false,
+        "luftpumpe": "P1",
+        "betriebsvolumen_l": 30,
+        "intervall_messen_d": 2,
+        "intervall_wechseln_d": 14,
+        "gueltig_von": "jetzt-60d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "Z-erfasst-1.2",
+      "felder": { "typ": "gefaess_erfasst", "platz_id": "@Z-1.2", "gilt_ab": "jetzt-60d 10:00" }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "Z-pruefung-1.2-1",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@Z-1.2",
+        "daten": { "schritt": 1, "ok": true },
+        "gilt_ab": "jetzt-59d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "Z-pruefung-1.2-2",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@Z-1.2",
+        "daten": { "schritt": 2, "ok": true },
+        "gilt_ab": "jetzt-59d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "Z-pruefung-1.2-3",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@Z-1.2",
+        "daten": { "schritt": 3, "ok": true },
+        "gilt_ab": "jetzt-59d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "Z-pruefung-1.2-4",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@Z-1.2",
+        "daten": { "schritt": 4, "ok": true, "volumen_gezaehlt_l": 30 },
+        "gilt_ab": "jetzt-59d 18:00"
+      }
+    },
+    {
+      "tabelle": "platz",
+      "ref": "Z-2.1",
+      "felder": {
+        "anlage_id": "@Z",
+        "bereich_id": "@Z-b2",
+        "kennung": "2.1",
+        "rolle": "gefaess",
+        "position": 1,
+        "erfasst_am": "jetzt-60d 10:00"
+      }
+    },
+    {
+      "tabelle": "gefaess",
+      "ref": "Z-g2.1",
+      "felder": {
+        "platz_id": "@Z-2.1",
+        "gefaessmodell_id": "@demo-modell-rako",
+        "deckeltyp_id": "@demo-deckel-D2",
+        "betriebsart": "dwc",
+        "feste_dosis": false,
+        "luftpumpe": "P2",
+        "betriebsvolumen_l": 30,
+        "intervall_messen_d": 2,
+        "intervall_wechseln_d": 14,
+        "gueltig_von": "jetzt-60d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "Z-erfasst-2.1",
+      "felder": { "typ": "gefaess_erfasst", "platz_id": "@Z-2.1", "gilt_ab": "jetzt-60d 10:00" }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "Z-pruefung-2.1-1",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@Z-2.1",
+        "daten": { "schritt": 1, "ok": true },
+        "gilt_ab": "jetzt-59d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "Z-pruefung-2.1-2",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@Z-2.1",
+        "daten": { "schritt": 2, "ok": true },
+        "gilt_ab": "jetzt-59d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "Z-pruefung-2.1-3",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@Z-2.1",
+        "daten": { "schritt": 3, "ok": true },
+        "gilt_ab": "jetzt-59d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "Z-pruefung-2.1-4",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@Z-2.1",
+        "daten": { "schritt": 4, "ok": true, "volumen_gezaehlt_l": 30 },
+        "gilt_ab": "jetzt-59d 18:00"
+      }
+    },
+    {
+      "tabelle": "platz",
+      "ref": "Z-2.2",
+      "felder": {
+        "anlage_id": "@Z",
+        "bereich_id": "@Z-b2",
+        "kennung": "2.2",
+        "rolle": "gefaess",
+        "position": 2,
+        "erfasst_am": "jetzt-60d 10:00"
+      }
+    },
+    {
+      "tabelle": "gefaess",
+      "ref": "Z-g2.2",
+      "felder": {
+        "platz_id": "@Z-2.2",
+        "gefaessmodell_id": "@demo-modell-rako",
+        "deckeltyp_id": "@demo-deckel-D4",
+        "betriebsart": "dwc",
+        "feste_dosis": false,
+        "luftpumpe": "P2",
+        "betriebsvolumen_l": 30,
+        "intervall_messen_d": 2,
+        "intervall_wechseln_d": 14,
+        "gueltig_von": "jetzt-60d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "Z-erfasst-2.2",
+      "felder": { "typ": "gefaess_erfasst", "platz_id": "@Z-2.2", "gilt_ab": "jetzt-60d 10:00" }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "Z-pruefung-2.2-1",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@Z-2.2",
+        "daten": { "schritt": 1, "ok": true },
+        "gilt_ab": "jetzt-59d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "Z-pruefung-2.2-2",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@Z-2.2",
+        "daten": { "schritt": 2, "ok": true },
+        "gilt_ab": "jetzt-59d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "Z-pruefung-2.2-3",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@Z-2.2",
+        "daten": { "schritt": 3, "ok": true },
+        "gilt_ab": "jetzt-59d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "Z-pruefung-2.2-4",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@Z-2.2",
+        "daten": { "schritt": 4, "ok": true, "volumen_gezaehlt_l": 30 },
+        "gilt_ab": "jetzt-59d 18:00"
+      }
+    },
+    {
+      "tabelle": "platz",
+      "ref": "Z-3.1",
+      "felder": {
+        "anlage_id": "@Z",
+        "bereich_id": "@Z-b3",
+        "kennung": "3.1",
+        "rolle": "gefaess",
+        "position": 1,
+        "erfasst_am": "jetzt-60d 10:00"
+      }
+    },
+    {
+      "tabelle": "gefaess",
+      "ref": "Z-g3.1",
+      "felder": {
+        "platz_id": "@Z-3.1",
+        "gefaessmodell_id": "@demo-modell-rako",
+        "deckeltyp_id": "@demo-deckel-D3",
+        "betriebsart": "kratky_belueftet",
+        "feste_dosis": false,
+        "luftpumpe": "P3",
+        "betriebsvolumen_l": 30,
+        "intervall_messen_d": 7,
+        "intervall_wechseln_d": null,
+        "gueltig_von": "jetzt-60d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "Z-erfasst-3.1",
+      "felder": { "typ": "gefaess_erfasst", "platz_id": "@Z-3.1", "gilt_ab": "jetzt-60d 10:00" }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "Z-pruefung-3.1-1",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@Z-3.1",
+        "daten": { "schritt": 1, "ok": true },
+        "gilt_ab": "jetzt-59d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "Z-pruefung-3.1-2",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@Z-3.1",
+        "daten": { "schritt": 2, "ok": true },
+        "gilt_ab": "jetzt-59d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "Z-pruefung-3.1-3",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@Z-3.1",
+        "daten": { "schritt": 3, "ok": true },
+        "gilt_ab": "jetzt-59d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "Z-pruefung-3.1-4",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@Z-3.1",
+        "daten": { "schritt": 4, "ok": true, "volumen_gezaehlt_l": 30 },
+        "gilt_ab": "jetzt-59d 18:00"
+      }
+    },
+    {
+      "tabelle": "platz",
+      "ref": "Z-3.2",
+      "felder": {
+        "anlage_id": "@Z",
+        "bereich_id": "@Z-b3",
+        "kennung": "3.2",
+        "rolle": "gefaess",
+        "position": 2,
+        "erfasst_am": "jetzt-60d 10:00"
+      }
+    },
+    {
+      "tabelle": "gefaess",
+      "ref": "Z-g3.2",
+      "felder": {
+        "platz_id": "@Z-3.2",
+        "gefaessmodell_id": "@demo-modell-rako",
+        "deckeltyp_id": "@demo-deckel-D6",
+        "betriebsart": "kratky_belueftet",
+        "feste_dosis": false,
+        "luftpumpe": "P3",
+        "betriebsvolumen_l": 30,
+        "intervall_messen_d": 7,
+        "intervall_wechseln_d": null,
+        "gueltig_von": "jetzt-60d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "Z-erfasst-3.2",
+      "felder": { "typ": "gefaess_erfasst", "platz_id": "@Z-3.2", "gilt_ab": "jetzt-60d 10:00" }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "Z-pruefung-3.2-1",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@Z-3.2",
+        "daten": { "schritt": 1, "ok": true },
+        "gilt_ab": "jetzt-59d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "Z-pruefung-3.2-2",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@Z-3.2",
+        "daten": { "schritt": 2, "ok": true },
+        "gilt_ab": "jetzt-59d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "Z-pruefung-3.2-3",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@Z-3.2",
+        "daten": { "schritt": 3, "ok": true },
+        "gilt_ab": "jetzt-59d 10:00"
+      }
+    },
+    {
+      "tabelle": "ereignis",
+      "ref": "Z-pruefung-3.2-4",
+      "felder": {
+        "typ": "gefaesspruefung",
+        "platz_id": "@Z-3.2",
+        "daten": { "schritt": 4, "ok": true, "volumen_gezaehlt_l": 30 },
+        "gilt_ab": "jetzt-59d 18:00"
+      }
+    },
+    {
+      "tabelle": "platz",
+      "ref": "Z-A1",
+      "felder": {
+        "anlage_id": "@Z",
+        "bereich_id": "@Z-b4",
+        "kennung": "A1",
+        "rolle": "anzuchtort",
+        "position": 6,
+        "erfasst_am": "jetzt-60d 10:00"
+      }
+    },
+    {
+      "tabelle": "anzuchtort",
+      "ref": "Z-anzucht-A1",
+      "felder": { "platz_id": "@Z-A1", "typ": "box_licht", "position": "vorne" }
+    },
+    {
+      "tabelle": "naehrloesungsansatz",
+      "ref": "Z-ansatz-1.1",
+      "felder": {
+        "platz_id": "@Z-1.1",
+        "typ": "neuansatz",
+        "status": "abgeschlossen",
+        "begonnen_am": "jetzt-14d 18:00",
+        "abgeschlossen_am": "jetzt-14d 18:00",
+        "volumen_l": 30,
+        "gilt_ab": "jetzt-14d 18:00"
+      }
+    },
+    {
+      "tabelle": "naehrloesungsansatz",
+      "ref": "Z-ansatz-1.2",
+      "felder": {
+        "platz_id": "@Z-1.2",
+        "typ": "neuansatz",
+        "status": "abgeschlossen",
+        "begonnen_am": "jetzt-14d 18:00",
+        "abgeschlossen_am": "jetzt-14d 18:00",
+        "volumen_l": 30,
+        "gilt_ab": "jetzt-14d 18:00"
+      }
+    },
+    {
+      "tabelle": "naehrloesungsansatz",
+      "ref": "Z-ansatz-2.1",
+      "felder": {
+        "platz_id": "@Z-2.1",
+        "typ": "neuansatz",
+        "status": "abgeschlossen",
+        "begonnen_am": "jetzt-14d 18:00",
+        "abgeschlossen_am": "jetzt-14d 18:00",
+        "volumen_l": 30,
+        "gilt_ab": "jetzt-14d 18:00"
+      }
+    },
+    {
+      "tabelle": "naehrloesungsansatz",
+      "ref": "Z-ansatz-2.2",
+      "felder": {
+        "platz_id": "@Z-2.2",
+        "typ": "neuansatz",
+        "status": "abgeschlossen",
+        "begonnen_am": "jetzt-14d 18:00",
+        "abgeschlossen_am": "jetzt-14d 18:00",
+        "volumen_l": 30,
+        "gilt_ab": "jetzt-14d 18:00"
+      }
+    },
+    {
+      "tabelle": "netztopf",
+      "ref": "Z-topf-3.1.1",
+      "felder": {
+        "anlage_id": "@Z",
+        "kennung": "3.1.1",
+        "groesse_mm": 50,
+        "heim_platz_id": "@Z-3.1",
+        "heim_loch_nr": 1
+      }
+    },
+    {
+      "tabelle": "satz",
+      "ref": "Z-satz-3.1",
+      "felder": {
+        "sorte_id": "?sorte_schluessel.sorte_key=sorte-test-c-drei",
+        "kulturform": "babyleaf",
+        "direktsaat_platz_id": "@Z-3.1",
+        "anzahl_schwaemme": 1,
+        "samen_je_schwamm": 4,
+        "saatdatum": "heute",
+        "gilt_ab": "jetzt"
+      }
+    },
+    {
+      "tabelle": "pflanzung",
+      "ref": "Z-pflanzung-3.1",
+      "felder": { "satz_id": "@Z-satz-3.1", "gilt_ab": "jetzt" }
+    },
+    {
+      "tabelle": "reservierung",
+      "ref": "Z-reservierung-3.1",
+      "felder": {
+        "pflanzung_id": "@Z-pflanzung-3.1",
+        "netztopf_id": "@Z-topf-3.1.1",
+        "umsetzen_vorgabe_am": "heute",
+        "umsetzen_geplant_am": "heute",
+        "gilt_ab": "jetzt"
+      }
+    },
+    {
+      "tabelle": "netztopf",
+      "ref": "Z-topf-3.2.1",
+      "felder": {
+        "anlage_id": "@Z",
+        "kennung": "3.2.1",
+        "groesse_mm": 50,
+        "heim_platz_id": "@Z-3.2",
+        "heim_loch_nr": 1
+      }
+    },
+    {
+      "tabelle": "satz",
+      "ref": "Z-satz-3.2",
+      "felder": {
+        "sorte_id": "?sorte_schluessel.sorte_key=sorte-test-c-drei",
+        "kulturform": "babyleaf",
+        "direktsaat_platz_id": "@Z-3.2",
+        "anzahl_schwaemme": 1,
+        "samen_je_schwamm": 4,
+        "saatdatum": "heute",
+        "gilt_ab": "jetzt"
+      }
+    },
+    {
+      "tabelle": "pflanzung",
+      "ref": "Z-pflanzung-3.2",
+      "felder": { "satz_id": "@Z-satz-3.2", "gilt_ab": "jetzt" }
+    },
+    {
+      "tabelle": "reservierung",
+      "ref": "Z-reservierung-3.2",
+      "felder": {
+        "pflanzung_id": "@Z-pflanzung-3.2",
+        "netztopf_id": "@Z-topf-3.2.1",
+        "umsetzen_vorgabe_am": "heute",
+        "umsetzen_geplant_am": "heute",
+        "gilt_ab": "jetzt"
+      }
+    },
+    {
+      "tabelle": "satz",
+      "ref": "Z-phase-1",
+      "felder": {
+        "sorte_id": "?sorte_schluessel.sorte_key=sorte-test-b-zwei",
+        "kulturform": "schnitt",
+        "anzuchtort_platz_id": "@Z-A1",
+        "anzahl_schwaemme": 1,
+        "samen_je_schwamm": 3,
+        "saatdatum": "heute-6",
+        "gilt_ab": "jetzt-6d 19:00"
+      }
+    },
+    {
+      "tabelle": "pflanzung",
+      "ref": "Z-phase-p1",
+      "felder": { "satz_id": "@Z-phase-1", "gilt_ab": "jetzt-6d 19:00" }
+    },
+    {
+      "tabelle": "satz",
+      "ref": "Z-phase-2",
+      "felder": {
+        "sorte_id": "?sorte_schluessel.sorte_key=sorte-test-c-drei",
+        "kulturform": "schnitt",
+        "anzuchtort_platz_id": "@Z-A1",
+        "anzahl_schwaemme": 1,
+        "samen_je_schwamm": 3,
+        "saatdatum": "heute-6",
+        "gilt_ab": "jetzt-6d 19:00"
+      }
+    },
+    {
+      "tabelle": "pflanzung",
+      "ref": "Z-phase-p2",
+      "felder": { "satz_id": "@Z-phase-2", "gilt_ab": "jetzt-6d 19:00" }
+    },
+    {
+      "tabelle": "satz",
+      "ref": "Z-phase-3",
+      "felder": {
+        "sorte_id": "?sorte_schluessel.sorte_key=sorte-test-d-vier",
+        "kulturform": "schnitt",
+        "anzuchtort_platz_id": "@Z-A1",
+        "anzahl_schwaemme": 1,
+        "samen_je_schwamm": 3,
+        "saatdatum": "heute-6",
+        "gilt_ab": "jetzt-6d 19:00"
+      }
+    },
+    {
+      "tabelle": "pflanzung",
+      "ref": "Z-phase-p3",
+      "felder": { "satz_id": "@Z-phase-3", "gilt_ab": "jetzt-6d 19:00" }
+    },
+    {
+      "tabelle": "satz",
+      "ref": "Z-phase-4",
+      "felder": {
+        "sorte_id": "?sorte_schluessel.sorte_key=sorte-test-b-zwei",
+        "kulturform": "schnitt",
+        "anzuchtort_platz_id": "@Z-A1",
+        "anzahl_schwaemme": 1,
+        "samen_je_schwamm": 3,
+        "saatdatum": "heute-6",
+        "gilt_ab": "jetzt-6d 19:00"
+      }
+    },
+    {
+      "tabelle": "pflanzung",
+      "ref": "Z-phase-p4",
+      "felder": { "satz_id": "@Z-phase-4", "gilt_ab": "jetzt-6d 19:00" }
+    },
+    {
+      "tabelle": "satz",
+      "ref": "Z-phase-5",
+      "felder": {
+        "sorte_id": "?sorte_schluessel.sorte_key=sorte-test-c-drei",
+        "kulturform": "schnitt",
+        "anzuchtort_platz_id": "@Z-A1",
+        "anzahl_schwaemme": 1,
+        "samen_je_schwamm": 3,
+        "saatdatum": "heute-6",
+        "gilt_ab": "jetzt-6d 19:00"
+      }
+    },
+    {
+      "tabelle": "pflanzung",
+      "ref": "Z-phase-p5",
+      "felder": { "satz_id": "@Z-phase-5", "gilt_ab": "jetzt-6d 19:00" }
+    },
+    {
+      "tabelle": "satz",
+      "ref": "Z-phase-6",
+      "felder": {
+        "sorte_id": "?sorte_schluessel.sorte_key=sorte-test-d-vier",
+        "kulturform": "schnitt",
+        "anzuchtort_platz_id": "@Z-A1",
+        "anzahl_schwaemme": 1,
+        "samen_je_schwamm": 3,
+        "saatdatum": "heute-6",
+        "gilt_ab": "jetzt-6d 19:00"
+      }
+    },
+    {
+      "tabelle": "pflanzung",
+      "ref": "Z-phase-p6",
+      "felder": { "satz_id": "@Z-phase-6", "gilt_ab": "jetzt-6d 19:00" }
+    },
+    {
+      "tabelle": "satz",
+      "ref": "Z-phase-7",
+      "felder": {
+        "sorte_id": "?sorte_schluessel.sorte_key=sorte-test-b-zwei",
+        "kulturform": "schnitt",
+        "anzuchtort_platz_id": "@Z-A1",
+        "anzahl_schwaemme": 1,
+        "samen_je_schwamm": 3,
+        "saatdatum": "heute-6",
+        "gilt_ab": "jetzt-6d 19:00"
+      }
+    },
+    {
+      "tabelle": "pflanzung",
+      "ref": "Z-phase-p7",
+      "felder": { "satz_id": "@Z-phase-7", "gilt_ab": "jetzt-6d 19:00" }
+    },
+    {
+      "tabelle": "satz",
+      "ref": "Z-phase-8",
+      "felder": {
+        "sorte_id": "?sorte_schluessel.sorte_key=sorte-test-c-drei",
+        "kulturform": "schnitt",
+        "anzuchtort_platz_id": "@Z-A1",
+        "anzahl_schwaemme": 1,
+        "samen_je_schwamm": 3,
+        "saatdatum": "heute-6",
+        "gilt_ab": "jetzt-6d 19:00"
+      }
+    },
+    {
+      "tabelle": "pflanzung",
+      "ref": "Z-phase-p8",
+      "felder": { "satz_id": "@Z-phase-8", "gilt_ab": "jetzt-6d 19:00" }
+    },
+    {
+      "tabelle": "satz",
+      "ref": "Z-phase-9",
+      "felder": {
+        "sorte_id": "?sorte_schluessel.sorte_key=sorte-test-d-vier",
+        "kulturform": "schnitt",
+        "anzuchtort_platz_id": "@Z-A1",
+        "anzahl_schwaemme": 1,
+        "samen_je_schwamm": 3,
+        "saatdatum": "heute-6",
+        "gilt_ab": "jetzt-6d 19:00"
+      }
+    },
+    {
+      "tabelle": "pflanzung",
+      "ref": "Z-phase-p9",
+      "felder": { "satz_id": "@Z-phase-9", "gilt_ab": "jetzt-6d 19:00" }
+    },
+    {
+      "tabelle": "satz",
+      "ref": "Z-phase-10",
+      "felder": {
+        "sorte_id": "?sorte_schluessel.sorte_key=sorte-test-b-zwei",
+        "kulturform": "schnitt",
+        "anzuchtort_platz_id": "@Z-A1",
+        "anzahl_schwaemme": 1,
+        "samen_je_schwamm": 3,
+        "saatdatum": "heute-6",
+        "gilt_ab": "jetzt-6d 19:00"
+      }
+    },
+    {
+      "tabelle": "pflanzung",
+      "ref": "Z-phase-p10",
+      "felder": { "satz_id": "@Z-phase-10", "gilt_ab": "jetzt-6d 19:00" }
+    },
+    {
+      "tabelle": "satz",
+      "ref": "Z-phase-11",
+      "felder": {
+        "sorte_id": "?sorte_schluessel.sorte_key=sorte-test-c-drei",
+        "kulturform": "schnitt",
+        "anzuchtort_platz_id": "@Z-A1",
+        "anzahl_schwaemme": 1,
+        "samen_je_schwamm": 3,
+        "saatdatum": "heute-6",
+        "gilt_ab": "jetzt-6d 19:00"
+      }
+    },
+    {
+      "tabelle": "pflanzung",
+      "ref": "Z-phase-p11",
+      "felder": { "satz_id": "@Z-phase-11", "gilt_ab": "jetzt-6d 19:00" }
+    },
+    {
+      "tabelle": "satz",
+      "ref": "Z-phase-12",
+      "felder": {
+        "sorte_id": "?sorte_schluessel.sorte_key=sorte-test-d-vier",
+        "kulturform": "schnitt",
+        "anzuchtort_platz_id": "@Z-A1",
+        "anzahl_schwaemme": 1,
+        "samen_je_schwamm": 3,
+        "saatdatum": "heute-6",
+        "gilt_ab": "jetzt-6d 19:00"
+      }
+    },
+    {
+      "tabelle": "pflanzung",
+      "ref": "Z-phase-p12",
+      "felder": { "satz_id": "@Z-phase-12", "gilt_ab": "jetzt-6d 19:00" }
+    },
+    {
+      "tabelle": "satz",
+      "ref": "Z-phase-13",
+      "felder": {
+        "sorte_id": "?sorte_schluessel.sorte_key=sorte-test-b-zwei",
+        "kulturform": "schnitt",
+        "anzuchtort_platz_id": "@Z-A1",
+        "anzahl_schwaemme": 1,
+        "samen_je_schwamm": 3,
+        "saatdatum": "heute-6",
+        "gilt_ab": "jetzt-6d 19:00"
+      }
+    },
+    {
+      "tabelle": "pflanzung",
+      "ref": "Z-phase-p13",
+      "felder": { "satz_id": "@Z-phase-13", "gilt_ab": "jetzt-6d 19:00" }
+    },
+    {
+      "tabelle": "satz",
+      "ref": "Z-phase-14",
+      "felder": {
+        "sorte_id": "?sorte_schluessel.sorte_key=sorte-test-c-drei",
+        "kulturform": "schnitt",
+        "anzuchtort_platz_id": "@Z-A1",
+        "anzahl_schwaemme": 1,
+        "samen_je_schwamm": 3,
+        "saatdatum": "heute-6",
+        "gilt_ab": "jetzt-6d 19:00"
+      }
+    },
+    {
+      "tabelle": "pflanzung",
+      "ref": "Z-phase-p14",
+      "felder": { "satz_id": "@Z-phase-14", "gilt_ab": "jetzt-6d 19:00" }
+    }
   ]
 }
