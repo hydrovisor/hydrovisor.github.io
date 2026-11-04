@@ -120,6 +120,8 @@ jobs:
         run: |
           sudo apt-get update -qq && sudo apt-get install -y -qq age
           stand="backup-$(date -u +%Y-%m-%d)"
+          # Zweiter Lauf am selben Tag (von Hand): Uhrzeit anhängen, statt am bestehenden Release zu scheitern
+          if gh release view "$stand" --repo hydrovisor/hydrovisor-backup > /dev/null 2>&1; then stand="$stand-$(date -u +%H%M)"; fi
           tar -czf "$stand.tar.gz" sicherung
           age -r "$AGE_SCHLUESSEL" -o "$stand.tar.gz.age" "$stand.tar.gz"
           rm -rf sicherung "$stand.tar.gz"

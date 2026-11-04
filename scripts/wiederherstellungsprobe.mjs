@@ -42,7 +42,7 @@ const identitaetDatei = argument('--identitaet');
 const archivDatei = argument('--archiv');
 
 if (ziel !== 'dev' && ziel !== 'lokal') throw new Error(`--ziel nur dev oder lokal, nicht ${ziel}`);
-if (standArg && !/^backup-\d{4}-\d{2}-\d{2}$/.test(standArg))
+if (standArg && !/^backup-\d{4}-\d{2}-\d{2}(-\d{4})?$/.test(standArg))
   throw new Error(`--stand ungültig: ${standArg}`);
 if (ziel === 'dev') {
   if (!process.stdin.isTTY || !process.stdout.isTTY) {
@@ -94,6 +94,19 @@ async function zustand(ausfuehrer) {
   return JSON.stringify({ ...roh, zeilen });
 }
 
+// Zwischenablage lesen für Ctrl-V in der verdeckten Eingabe (Windows); sonst leer.
+function zwischenablageLesen() {
+  if (process.platform !== 'win32') return '';
+  try {
+    return execFileSync('powershell.exe', ['-NoProfile', '-Command', 'Get-Clipboard -Raw'], {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    }).trim();
+  } catch {
+    return '';
+  }
+}
+
 /** Verdeckte Eingabe ohne Echo (Einfügen erlaubt); Ctrl+C bricht ab */
 function verdeckt(frage) {
   return new Promise((aufloesen) => {
@@ -118,8 +131,18 @@ function verdeckt(frage) {
           process.stdout.write('\nAbgebrochen.\n');
           process.exit(1);
         }
-        if (z === '\u007f' || z === '\b') wert = wert.slice(0, -1);
-        else wert += z;
+        if (z === '\u007f' || z === '\b') {
+          if (wert) process.stdout.write('\b \b');
+          wert = wert.slice(0, -1);
+        } else if (z === '\u0016') {
+          // Ctrl-V kommt im Raw-Modus als Steuerzeichen an; die Zwischenablage selbst lesen (nur Windows)
+          const eingefuegt = zwischenablageLesen();
+          wert += eingefuegt;
+          process.stdout.write('*'.repeat(eingefuegt.length));
+        } else if (z >= ' ') {
+          wert += z;
+          process.stdout.write('*');
+        }
       }
     };
     ein.on('data', lesen);
@@ -196,12 +219,12 @@ try {
   let archiv;
   if (archivDatei) {
     archiv = new Uint8Array(await readFile(archivDatei));
-    stand ??= (/backup-\d{4}-\d{2}-\d{2}/.exec(archivDatei) ?? ['lokal'])[0];
+    stand ??= (/backup-\d{4}-\d{2}-\d{2}(-\d{4})?/.exec(archivDatei) ?? ['lokal'])[0];
   } else {
     stand ??= JSON.parse(
       befehl('gh', ['release', 'view', '--repo', BACKUP_REPO, '--json', 'tagName']),
     ).tagName;
-    if (!/^backup-\d{4}-\d{2}-\d{2}$/.test(stand)) throw new Error(`Unerwarteter Stand: ${stand}`);
+    if (!/^backup-\d{4}-\d{2}-\d{2}(-\d{4})?$/.test(stand)) throw new Error(`Unerwarteter Stand: ${stand}`);
     console.log(`Lade ${stand} aus ${BACKUP_REPO} ...`);
     befehl('gh', [
       'release',

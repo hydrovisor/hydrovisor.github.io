@@ -20,7 +20,9 @@ Das Skript fragt zuerst nach «ja». Danach kommen drei Schritte:
 
 Das Skript leert am Ende die Zwischenablage, aber nicht deren Verlauf. Ist der Verlauf eingeschaltet (Win+V), löschst du dort danach den Eintrag mit dem Legacy JWT Secret. Dasselbe gilt nach der Wiederherstellungsprobe für den `age`-Schlüssel und das Access-Token.
 
-Beide Werte musst du nicht im Passwortmanager ablegen. Bei einem Verdacht auf ein Leck startest du das Skript einfach noch einmal.
+Das Passwort von `backup_leser` und den Storage-Token musst du nicht im Passwortmanager ablegen. Bei einem Verdacht auf ein Leck startest du das Skript einfach noch einmal.
+
+**Anders der private `age`-Schlüssel:** Er gehört zwingend in den Passwortmanager. Ohne ihn lässt sich kein Backup öffnen. Fehlt er, erzeugst du mit `node scripts/backup-schluessel-neu.mjs` ein neues Paar. Das Skript legt den privaten Schlüssel nur in die Zwischenablage und prüft, ob du ihn im Passwortmanager gespeichert hast. Erst dann setzt es `BACKUP_AGE_PUBLIC_KEY`. Ältere Stände bleiben mit dem alten Schlüssel verschlüsselt. Danach löschst du den Eintrag im Zwischenablage-Verlauf (Win+V), falls er eingeschaltet ist. Danach startet der Lead `backup.yml` neu. Ein zweiter Stand am selben Tag heisst `backup-JJJJ-MM-TT-HHMM`.
 
 Danach startet der Lead `backup.yml` von Hand und meldet dir den ersten Stand.
 
