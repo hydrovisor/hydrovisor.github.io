@@ -21,7 +21,7 @@ function zustellung(iso: string, jetzt: Date, zeitzone: Zeitzone): string {
 
 export function pushStand(
   geraet: { unterstuetzt: boolean; berechtigung: 'granted' | 'denied' | 'default'; endpoint: string | null },
-  abos: readonly { endpoint: string; aktiv: boolean; datenart: Datenart }[],
+  abos: readonly { endpoint: string; aktiv: boolean; datenart: Datenart; id?: string; erfasst_am?: string }[],
   versande: readonly {
     abo_id: string | null;
     art: string;
@@ -40,11 +40,24 @@ export function pushStand(
     return { art: 'nicht_eingerichtet', grund: 'kein_abo' };
   if (!eigene.some((a) => a.aktiv)) return { art: 'nicht_eingerichtet', grund: 'abgemeldet' };
 
+  // nur Versände der eigenen echten Abos, wenn die Abos eine id tragen (Prüfer Fachlogik 3)
+  const ids = new Set(eigene.map((a) => a.id).filter((id): id is string => id !== undefined));
   const letzte = versande
+    .filter((v) => ids.size === 0 || (v.abo_id !== null && ids.has(v.abo_id)))
     .map((v) => v.angezeigt_am)
     .filter((a): a is string => a !== null)
     .reduce<string | undefined>((l, a) => (!l || Date.parse(a) > Date.parse(l) ? a : l), undefined);
-  if (!letzte) return { art: 'eingerichtet', warnung48h: false };
+  if (!letzte) {
+    // ohne Zustellung zählt die Warnung ab dem Anlegen des eigenen aktiven Abos (Plan 13 «Anzeige», Prüfer Fachlogik 1)
+    const angelegt = eigene
+      .filter((a) => a.aktiv && a.erfasst_am)
+      .map((a) => Date.parse(a.erfasst_am as string))
+      .reduce<number | undefined>((l, t) => (l === undefined || t < l ? t : l), undefined);
+    return {
+      art: 'eingerichtet',
+      warnung48h: angelegt !== undefined && jetzt.getTime() - angelegt >= WARNUNG_MS,
+    };
+  }
   return {
     art: 'eingerichtet',
     letzteZustellung: zustellung(letzte, jetzt, zeitzone),

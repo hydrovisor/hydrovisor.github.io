@@ -23,6 +23,8 @@ export interface Versandzeile {
 }
 
 interface Abozeile {
+  id: string;
+  erfasst_am: string;
   endpoint: string;
   aktiv: boolean;
   datenart: Datenart;

@@ -2,10 +2,11 @@
 // Tabellen und Sichten mit denselben Filtern wie das Offline-Bündel (src/daten/buendel.ts), soweit tagesliste()
 // sie braucht. app_version der Serverzeilen ist push-taeglich (A10).
 import type { SupabaseClient } from 'jsr:@supabase/supabase-js@2';
+import { fensterBeginn } from '../../../src/domain/datenpfad/buendel.ts';
 import type { Abo, PushDaten } from './kern.ts';
 
 const APP_VERSION = 'push-taeglich';
-const MESSUNG_FENSTER_TAGE = 14;
+const MESSUNG_FENSTER_TAGE = 14; // wie das Bündel (messung, fensterTage 14)
 
 function pruefen<T>(r: { data: T | null; error: { message: string } | null }, was: string): T {
   if (r.error) throw new Error(`${was}: ${r.error.message}`);
@@ -28,7 +29,8 @@ export function supabaseDaten(db: SupabaseClient): PushDaten {
       return (pruefen(r, 'push_abo') as Abo | null) ?? undefined;
     },
     async teile(stichtag) {
-      const fenster = new Date(stichtag.getTime() - MESSUNG_FENSTER_TAGE * 86_400_000).toISOString();
+      const zone = ((await this.einstellung()).zeitzone ?? 'Europe/Zurich') as string;
+      const fenster = fensterBeginn(stichtag, MESSUNG_FENSTER_TAGE, zone);
       const [anlage, platz, gefaess, fuell, status, messung, geraet, kalibrierung, ereignis, einstellung] =
         await Promise.all([
           db.from('anlage').select('*').is('storniert_am', null),

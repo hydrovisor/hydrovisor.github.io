@@ -14,18 +14,18 @@ npx supabase login
 powershell -ExecutionPolicy Bypass -File scripts\push-einrichten.ps1
 ```
 
-Das Skript erledigt Folgendes:
+Das Skript fragt zuerst nach «ja» und erledigt dann Folgendes:
 - Es erzeugt das VAPID-Schlüsselpaar, den Quittungs-Schlüssel und das Cron-Geheimnis.
-- Es setzt die Supabase-Secrets `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` und `PUSH_QUITTUNG_SCHLUESSEL`, in der Produktion und in `hydrovisor-dev`.
+- Jeden Wert legt es einzeln in die Zwischenablage. Du speicherst ihn im Passwortmanager und drückst Enter. Eine Datei schreibt es nicht.
+- Es setzt die Supabase-Secrets `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` und `PUSH_QUITTUNG_SCHLUESSEL`, nur in der Produktion. `hydrovisor-dev` bekommt keine Push-Secrets, weil der Agent dort Functions ausliefern kann.
 - Es setzt die GitHub-Variable `VITE_VAPID_PUBLIC_KEY`. Der öffentliche Schlüssel ist kein Geheimnis.
-- Es schreibt eine Sicherung nach `Dokumente\hydrovisor-push-schluessel.txt`. Übertrage sie in den Passwortmanager und lösch die Datei danach.
-- Es legt die Vault-Anweisungen für die Produktion in die Zwischenablage.
+- Zum Schluss legt es die Vault-Anweisungen für die Produktion in die Zwischenablage und leert sie danach wieder.
 
-Besteht `VITE_VAPID_PUBLIC_KEY` schon, bricht das Skript ab, weil ein neuer Schlüssel alle Abos ungültig machen würde.
+Besteht schon ein VAPID-Schlüssel (Variable oder Secret), bricht das Skript ab, weil ein neuer Schlüssel alle Abos ungültig machen würde.
 
-## 2 Vault in der Produktion (rund 2 Minuten)
+## 2 Vault in der Produktion (im Skript, rund 2 Minuten)
 
-Der Lead öffnet dir den SQL-Editor der Produktion. Du fügst die Zwischenablage ein und führst sie aus. Damit kennt der Cron-Job die Adresse und das Geheimnis. Ohne diese Einträge ruft er nichts auf.
+Öffne den SQL-Editor der Produktion, wenn das Skript dich dazu auffordert. Füge die Zwischenablage ein und führe sie aus. Damit kennt der Cron-Job die Adresse und das Geheimnis. Ohne diese Einträge ruft er nichts auf.
 
 ## 3 Nach dem Merge
 

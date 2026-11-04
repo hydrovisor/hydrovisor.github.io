@@ -80,4 +80,8 @@ jobs:
         if: inputs.functions && !inputs.trockenlauf
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-        run: supabase functions deploy --project-ref "$DEV_PROJEKT" --no-verify-jwt
+        # --no-verify-jwt nur für die Functions mit eigener Prüfung (Prüfer Sicherheit 4); weitere Functions ohne die Option
+        run: |
+          for f in push-taeglich push-quittung ki-tuete; do
+            if [ -d "supabase/functions/$f" ]; then supabase functions deploy "$f" --project-ref "$DEV_PROJEKT" --no-verify-jwt; fi
+          done
