@@ -284,6 +284,15 @@ describe('Volumen-Vorschlag und Eingabeprüfung', () => {
     // derselbe Name bei der anderen Art stört nicht
     expect(gefaessmodellPruefen(box({ name: 'D6' }), modelle)).toEqual([]);
   });
+
+  it('UC2 Namensprüfung (A6) unterscheidet Gross-/Kleinschreibung und Leerzeichen am Rand nicht', () => {
+    const { deckel: bestandDeckel, modelle } = vorlagenAusTeilen({
+      deckeltyp: [deckelZeile('d-1', 'D6')],
+      gefaessmodell: [modellZeile('m-1', 'Rako 40 × 30 × 27')],
+    });
+    expect(deckeltypPruefen(deckel({ name: ' d6 ' }), bestandDeckel).length).toBeGreaterThan(0);
+    expect(gefaessmodellPruefen(box({ name: 'rako 40 × 30 × 27' }), modelle).length).toBeGreaterThan(0);
+  });
 });
 
 describe('Schritte für schreiben()', () => {
