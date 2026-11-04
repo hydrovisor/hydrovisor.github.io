@@ -198,6 +198,13 @@ button.hv-tile { cursor: pointer; touch-action: manipulation; }
 .hv-check-haken:disabled { cursor: not-allowed; border-style: dashed; background: var(--surface-sunken); }
 .hv-check-erledigt .hv-check-haken { background: var(--brand); border-color: var(--brand); }
 .hv-check-erledigt .hv-check-titel { text-decoration: line-through; text-decoration-thickness: 2px; color: var(--ink-muted); }
+.hv-check-aktion { margin-top: var(--space-2); }
+/* Variante «selbst» (Einrichtung UC0): Zeilen haken sich durch die Erfassung selbst ab; Status statt Haken-Knopf */
+.hv-check-status { width: var(--size-touch-regal); height: var(--size-touch-regal); border-radius: 50%; border: 2px solid var(--line-control); background: var(--surface-raised); color: var(--on-brand);
+  display: inline-flex; align-items: center; justify-content: center; }
+.hv-check-status svg { width: var(--icon-status-regal); height: var(--icon-status-regal); }
+.hv-check-offen .hv-check-status { border-style: dashed; background: var(--surface-sunken); }
+.hv-check-erledigt .hv-check-status { background: var(--brand); border-color: var(--brand); }
 
 /* Deckelgrafik: Löcher als Tippflächen, Loch 1 vorne links, zeilenweise nach hinten (vorne = unten) */
 .hv-deckel { display: flex; flex-direction: column-reverse; gap: var(--space-2); padding: var(--space-3); border-radius: var(--radius-lg); background: var(--surface-sunken); border: 1px solid var(--line); width: max-content; max-width: 100%; }

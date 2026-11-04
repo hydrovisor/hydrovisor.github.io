@@ -10,6 +10,7 @@ import { Push } from './masken/Push.tsx';
 import { BuendelAnbieter } from './buendel.tsx';
 import { maskeFuer, useRoute } from './router.ts';
 import { SitzungAnbieter, useSitzung } from './sitzung.tsx';
+import { Thema } from './thema.tsx';
 
 function Masken() {
   const route = useRoute();
@@ -45,6 +46,7 @@ export function App() {
     <DienstAnbieter>
       <SitzungAnbieter>
         <BuendelAnbieter>
+          <Thema />
           <Masken />
         </BuendelAnbieter>
       </SitzungAnbieter>
