@@ -219,7 +219,15 @@ export function AnlageNeu() {
         </Button>
       </form>
       {abweichend ? (
-        <Notice tone="warn" title="Schon gespeichert">
+        <Notice
+          tone="warn"
+          title="Schon gespeichert"
+          action={
+            <a className="hv-btn hv-btn-secondary" href={hashZu({ name: 'anlage', kuerzel: e.kuerzel })}>
+              Anlage öffnen
+            </a>
+          }
+        >
           Diese Anlage ist schon mit anderen Werten gespeichert; deine Änderung ist nicht übernommen. Öffne
           die Anlage, um den gespeicherten Stand zu sehen.
         </Notice>
