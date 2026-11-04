@@ -7,7 +7,7 @@
 # - Übernehmen: Ist VITE_VAPID_PUBLIC_KEY schon gesetzt (Tim am 1.11.2026), erzeugt es KEINEN Schlüssel. Tim gibt den
 #   bestehenden privaten Schlüssel verdeckt ein; das Skript prüft, dass er zum öffentlichen Schlüssel der Variable
 #   gehört, und bricht sonst ab. Ein schon gesetzter PUSH_QUITTUNG_SCHLUESSEL bleibt unverändert.
-# Es schreibt keine Datei ausser einer sofort gelöschten Secrets-Datei und zeigt keinen geheimen Wert auf der Konsole.
+# Es schreibt keine Datei ausser einer temporären Secrets-Datei für «secrets set», die es sofort löscht, und zeigt keinen geheimen Wert auf der Konsole.
 # CLAUDE.md Regel 3: VAPID-Schlüssel nie neu erzeugen, wenn schon einer besteht.
 # Es fragt vor jedem Schritt nach und bricht bei umgeleiteter Eingabe ab (z. B. aus einem Agenten oder mit «echo ja |»).
 # Aufruf im Ordner des Repositorys: powershell -ExecutionPolicy Bypass -File scripts\push-einrichten.ps1
@@ -57,22 +57,24 @@ if ($uebernehmen) {
   Write-Host 'VITE_VAPID_PUBLIC_KEY ist schon gesetzt. Das Skript übernimmt den bestehenden Schlüssel und erzeugt keinen neuen.'
   $oeffentlich = (gh variable get VITE_VAPID_PUBLIC_KEY).Trim()
   Pruefen 'gh variable get VITE_VAPID_PUBLIC_KEY'
+  if (-not $oeffentlich) { throw 'VITE_VAPID_PUBLIC_KEY ist leer' }
   $eingabe = Read-Host 'Bestehenden privaten VAPID-Schlüssel einfügen (Eingabe bleibt verdeckt), dann Enter' -AsSecureString
   $zeiger = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($eingabe)
   try { $privat = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($zeiger).Trim() }
   finally { [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($zeiger) }
-  if ((OeffentlichZu $privat) -ne $oeffentlich) {
+  $abgeleitet = OeffentlichZu $privat
+  if (-not $abgeleitet -or $abgeleitet -ne $oeffentlich) {
     Write-Host 'Abbruch: Der private Schlüssel passt nicht zu VITE_VAPID_PUBLIC_KEY. Nichts wurde gesetzt.'
     Write-Host 'Prüfe, ob du den privaten Schlüssel vom 1.11. vollständig kopiert hast (43 Zeichen, ohne Leerzeichen).'
     exit 1
   }
   Write-Host 'Der private Schlüssel passt zum öffentlichen.'
   $vapid = [pscustomobject]@{ publicKey = $oeffentlich; privateKey = $privat }
-  if ($secrets -match 'VAPID_PUBLIC_KEY') {
+  if ($secrets -match 'VAPID_(PUBLIC|PRIVATE)_KEY') {
     Write-Host 'In der Produktion besteht schon ein VAPID-Secret. Es wird mit dem geprüften Paar überschrieben.'
   }
 } else {
-  if ($secrets -match 'VAPID_PUBLIC_KEY') {
+  if ($secrets -match 'VAPID_(PUBLIC|PRIVATE)_KEY') {
     Write-Host 'Abbruch: In der Produktion besteht schon ein VAPID-Schlüssel, aber VITE_VAPID_PUBLIC_KEY fehlt (CLAUDE.md Regel 3).'
     exit 1
   }
@@ -82,7 +84,6 @@ if ($uebernehmen) {
   if (-not $vapid.publicKey -or -not $vapid.privateKey) { throw 'VAPID-Schlüssel leer' }
 }
 $quittung = Zufall
-$cron = Zufall
 
 try {
 
@@ -114,9 +115,9 @@ if (-not $uebernehmen) {
   Pruefen 'gh variable set'
 }
 
-# Vault der Produktion: im SQL-Editor einfügen und ausführen (vor oder nach dem Deploy). Bestehende Einträge bleiben;
-# cron_geheimnis braucht niemand ausser Vault, deshalb geht es nicht in den Passwortmanager.
-Set-Clipboard -Value ("select vault.create_secret('$cron', 'cron_geheimnis') where not exists (select 1 from vault.secrets where name = 'cron_geheimnis');`n" +
+# Vault der Produktion: im SQL-Editor einfügen und ausführen (vor oder nach dem Deploy). Bestehende Einträge bleiben.
+# cron_geheimnis entsteht in der Datenbank (pgcrypto) und verlässt Vault nie (Prüfer Sicherheit, PR #63).
+Set-Clipboard -Value ("select vault.create_secret(encode(extensions.gen_random_bytes(32), 'hex'), 'cron_geheimnis') where not exists (select 1 from vault.secrets where name = 'cron_geheimnis');`n" +
   "select vault.create_secret('https://$prod.supabase.co', 'projekt_url') where not exists (select 1 from vault.secrets where name = 'projekt_url');`n" +
   "select name, created_at from vault.secrets where name in ('cron_geheimnis', 'projekt_url');")
 Read-Host 'Die Vault-Anweisungen liegen in der Zwischenablage. Im SQL-Editor der Produktion einfügen und ausführen, dann Enter' | Out-Null
