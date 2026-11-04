@@ -29,7 +29,7 @@ Closes #<issue>
 
 ## Kurzzusammenfassung, was der Merge auslöst
 
-<!-- Dateien und Bereiche, Workflows (deploy.yml mit Migration und Freigabe, backup.yml), Supabase, Vorschau, Folgen für andere Zweige. Merge erst nach Tims Bestätigung im Chat. -->
+<!-- Dateien und Bereiche, Workflows (deploy.yml mit Migration und Freigabe, backup.yml), Supabase, Vorschau, Folgen für andere Zweige. Merge durch den Lead nach Prüftor, Prüfer und Abnahme 1 (Entscheid 0008). -->
 
 ## Abnahme 1 (Vorschau)
 

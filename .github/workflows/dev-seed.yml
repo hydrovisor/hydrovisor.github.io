@@ -1,6 +1,7 @@
 # Seed nach hydrovisor-dev (Entscheid 0007, Muster Entscheid 0006). Nur von Hand (gh workflow run), nur von main,
 # Ziel fest hydrovisor-dev; die Produktion lädt weiterhin nur deploy.yml.
 # Eingabe zweig: Zweig, dessen data/ geladen wird (für Abnahme 1 mit W0-Daten vor dem Merge).
+# Eingabe demo: danach Demo-Szenarien laden oder löschen (npm run demo, Plan 15); Fixtures immer aus main.
 # Skripte, src/ und Konfiguration kommen immer aus main; aus dem Zweig nur data/.
 # Aktionen per Commit angeheftet (Version im Kommentar).
 name: dev-seed
@@ -16,6 +17,11 @@ on:
         description: Nur anzeigen, was geladen würde (Ausführung mit Rollback)
         type: boolean
         default: true
+      demo:
+        description: Demo-Szenarien S1 bis S9 und Testanlage Y (I0-10) nach dem Seed laden oder löschen
+        type: choice
+        options: [nein, laden, loeschen]
+        default: nein
 
 permissions:
   contents: read
@@ -63,3 +69,12 @@ jobs:
           TROCKEN: ${{ inputs.trockenlauf }}
         run: |
           if [ "$TROCKEN" = "true" ]; then npm run seed -- --ziel dev --trocken; else npm run seed -- --ziel dev; fi
+      - name: Demo-Daten in hydrovisor-dev (Plan 15; Laden nie im Trockenlauf)
+        if: inputs.demo != 'nein'
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          TROCKEN: ${{ inputs.trockenlauf }}
+          DEMO: ${{ inputs.demo }}
+        run: |
+          [ "$DEMO" = "loeschen" ] || [ "$TROCKEN" = "false" ] || { echo "::error::Demo laden nur mit trockenlauf=false"; exit 1; }
+          npm run demo -- --$DEMO --ziel dev
