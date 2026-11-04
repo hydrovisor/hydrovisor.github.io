@@ -79,6 +79,7 @@ Die Skripte stehen seit Paket I0-01 (Grundgerüst) in `package.json`; ihre Namen
 | Rauchtest | `BASIS_URL=<adresse> ERWARTETER_COMMIT=<sha> npx playwright test -c playwright.rauchtest.config.ts` (in `deploy.yml` nach jedem Deploy; Rückfall-Probe: `deploy.yml` auf `main` mit `rueckfall_probe=true`, nur wenn `letzter-guter-stand` auf `main` zeigt) |
 | Entwurf Datenmodell prüfen | `bash docs/spec/pruefung/lauf.sh` (Docker, PostgreSQL 17) |
 | Sperr-Hook testen | `node --test .claude/hooks/sperre.test.mjs` |
+| Wiederherstellungsprobe | `node scripts/wiederherstellungsprobe.mjs` (Ziel `dev`, nur Tim in der eigenen Konsole); Lead nur `--ziel lokal --identitaet <testschluessel> --archiv <datei.age>` |
 
 ## Paketablauf (Kurzfassung, vollständig im Skill)
 

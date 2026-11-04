@@ -136,7 +136,8 @@ select is(
   (select coalesce(string_agg(cmd || ' ' || roles::text || ' ' || (concat(qual, ' ', with_check) ~ 'ist_tim\(\)')::text,
                               ', ' order by cmd), 'keine')
      from pg_policies
-    where schemaname = 'storage' and tablename = 'objects' and concat(qual, ' ', with_check) ~ 'saattueten'),
+    where schemaname = 'storage' and tablename = 'objects' and concat(qual, ' ', with_check) ~ 'saattueten'
+      and roles <> '{backup_speicher_leser}'),
   'INSERT {authenticated} true, SELECT {authenticated} true, UPDATE {authenticated} true',
   'UC4-AK6 Policies select, insert, update nur für Tim, keine Delete-Policy');
 
