@@ -371,7 +371,7 @@ export function GefaessNeu({ kuerzel, rolle: startRolle }: { kuerzel?: string; r
                 <dt>Deckel</dt>
                 <dd>{gewaehlterDeckel?.name ?? '–'}</dd>
                 <dt>Volumen</dt>
-                <dd>{volumenText} l</dd>
+                <dd>{(Math.round(zahl(volumenText) * 100) / 100).toString()} l</dd>
                 <dt>Töpfe</dt>
                 <dd>
                   {topfListe.length === 0

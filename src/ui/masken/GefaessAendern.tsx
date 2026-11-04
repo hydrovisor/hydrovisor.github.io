@@ -207,13 +207,22 @@ export function GefaessAendern({ code, teil }: { code: string; teil?: 'deckel' }
                 onChange={() => {
                   // Intervalle der neuen Betriebsart vorschlagen (Plan 21 «Ändern», Befund 1)
                   const iv = INTERVALLE[b.wert];
-                  setWerte((x) => ({
-                    ...x,
-                    betriebsart: b.wert,
-                    messen: String(iv.messenD),
-                    nachfuellen: iv.nachfuellenD === null ? '' : String(iv.nachfuellenD),
-                    wechseln: iv.wechselnD === null ? '' : String(iv.wechselnD),
-                  }));
+                  setWerte((x) => {
+                    // zurück zur bisherigen Betriebsart: die eigenen Intervalle der Zeile (Prüfer Runde 2, Befund 1)
+                    if (b.wert === alt.betriebsart) {
+                      const rest = Object.fromEntries(
+                        Object.entries(x).filter(([k]) => !['messen', 'nachfuellen', 'wechseln'].includes(k)),
+                      );
+                      return { ...rest, betriebsart: b.wert };
+                    }
+                    return {
+                      ...x,
+                      betriebsart: b.wert,
+                      messen: String(iv.messenD),
+                      nachfuellen: iv.nachfuellenD === null ? '' : String(iv.nachfuellenD),
+                      wechseln: iv.wechselnD === null ? '' : String(iv.wechselnD),
+                    };
+                  });
                   setErgebnis(undefined);
                 }}
               />
