@@ -68,3 +68,5 @@ supabase/tests/database/10_push_cron_rechte.test.sql
 # I0-11 Backup scharf (#16)
 supabase/tests/database/11_backup.test.sql
 tests/unit/backup-regeln.test.ts
+# Fehler #65 Tabellenrechte
+supabase/tests/database/12_tabellenrechte.test.sql
