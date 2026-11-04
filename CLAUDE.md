@@ -16,7 +16,9 @@ Private PWA mit Supabase für Tims Hydroponikregal; einziger Nutzer Tim, bedient
 | Rollen der Subagents | `.claude/agents/` (Modell und Denkstufe fest in der Datei) |
 | Paketablauf | Skill `/umsetzen <issue>` in `.claude/skills/umsetzen/SKILL.md` |
 
-Fakten nur aus dem Repository. Was nicht im Repository steht, fragst du Tim, statt es anzunehmen.
+Fakten nur aus dem Repository. Fachliche Fakten, die nicht im Repository stehen, fragst du Tim, statt sie anzunehmen. Technische Details entscheidest du selbst und kennzeichnest sie mit (A).
+
+**Selbständig durcharbeiten** (`docs/entscheide/0010-lead-arbeitet-selbstaendig.md`): Der Lead committet, merged, startet Workflows, arbeitet im Terminal und im Browser ohne Rückfrage. Tim bestätigt nur: Schlüssel und Anmeldungen, Produktion (Zugriff, Freigabe in `production`, Migration), die Planfreigabe der Kern-Pakete, Abnahme 2 am Honor, endgültiges Löschen und Force-Push, fachliche Fakten und das Konzept sowie Änderungen an den Sperren. Seine Handgriffe bündelt der Lead in einer Nachricht oder einem Skript und prüft Ergebnisse selbst.
 
 ## Regeln, die nie gebrochen werden
 
@@ -84,9 +86,9 @@ Die Skripte stehen seit Paket I0-01 (Grundgerüst) in `package.json`; ihre Namen
 ## Paketablauf (Kurzfassung, vollständig im Skill)
 
 1. `/umsetzen <issue>` legt `paket/<issue>-<kurz>` an und schreibt den Plan nach `docs/plaene/vorlage.md` in `docs/plaene/<issue>.md`.
-2. Planfreigabe: Kern immer, Fachlogik nur mit Migration, Routine nie. Freigabe = Label `plan-frei` von Tim; ohne Label kein Code.
-3. Testentwickler schreibt rote Tests im eigenen Commit (`Tests: …`); Lead programmiert, bis das Prüftor grün ist; Prüfer urteilt mit Plan-Code-Abgleich; höchstens zwei Runden (`runde-1`, `runde-2`), dann Frage an Tim.
-4. Pull Request mit Vorlage, Label `abnahme-wartet`; Abnahme 1 in der Vorschau; Kurzzusammenfassung; Merge durch den Lead (Entscheid 0008); Abnahme 2 in der installierten App.
+2. Planfreigabe durch Tim nur bei Kern-Paketen (Label `plan-frei` von Tim; ohne Label kein Code). Fachlogik mit Migration gibt der Lead selbst frei, Routine braucht keine Freigabe (Entscheid 0010).
+3. Testentwickler schreibt rote Tests im eigenen Commit (`Tests: …`); Lead programmiert, bis das Prüftor grün ist; Prüfer urteilt mit Plan-Code-Abgleich; höchstens zwei Runden (`runde-1`, `runde-2`), danach entscheidet der Lead über das weitere Vorgehen und hält es im Issue fest (Entscheid 0010).
+4. Pull Request mit Vorlage, Label `abnahme-wartet`; Abnahme 1 durch den Lead in der Vorschau; Kurzzusammenfassung; Merge durch den Lead (Entscheid 0008); Abnahme 2 in der installierten App.
 5. Statuskommentar im Issue nach jedem Planschritt und am Sitzungsende; Entscheide als Datei in `docs/entscheide/`.
 
 Paketklassen, Rollen und Modelle: Konzept 12.2. Kern-Pakete: Datenmodell mit Zugriffsregeln (I0), Datenpfad mit Offline-Bündel (I0), Aufgaben-Rechnung (I1b), Passungs-Empfehlung (I2-4). Kern nur starten, wenn mindestens 50 % des Wochenkontingents frei sind; Verbrauch (`/usage`) ins Issue. Kein neues I1b- oder I2-Paket, solange mehr als 20 `offen-regal`-Einträge offen sind.
@@ -115,6 +117,7 @@ Vorschau: Cloudflare Pages `hydrovisor-vorschau` baut jeden Zweig (`<zweig>.hydr
 - [0004 Workflows vor dem Grundgerüst](docs/entscheide/0004-workflows-vor-dem-grundgeruest.md)
 - [0005 Workflows startet der Lead](docs/entscheide/0005-workflows-durch-den-lead.md)
 - [0009 Default-Modell für das Lesen der Saattüten](docs/entscheide/0009-ki-default-modell.md)
+- [0010 Der Lead arbeitet selbständig durch](docs/entscheide/0010-lead-arbeitet-selbstaendig.md)
 - [0008 Merge ohne Einzelbestätigung (bis auf Widerruf)](docs/entscheide/0008-merge-ohne-einzelbestaetigung.md)
 - [0006 Migrationen nach hydrovisor-dev und Zugang ohne Handgriff](docs/entscheide/0006-dev-migration-und-zugang.md)
 - [0007 Seed: Ladeskript, Ziele und [SQL]-Tests](docs/entscheide/0007-seed-ziele.md)
