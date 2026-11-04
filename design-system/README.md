@@ -47,7 +47,7 @@ Dieses System ist die verbindliche Ausgangslage für die App. Werte, Namen und B
 - `blattgruen` erreicht auf hellem Grund nur 2.5:1 und ist deshalb Fläche oder Grafik, nie Text. Für den Sollbereich der Skala gilt `gauge-target`.
 - Diagramme: `chart-ph`, `chart-ec`, `chart-temp` für die Linien, `chart-target` als Band des Sollbereichs.
 - Etiketten: `label-ink` auf `label-paper`, in beiden Themen schwarz auf weiss, weil sie auf Papier stehen.
-- Dunkles Thema: Die App folgt `prefers-color-scheme` und setzt `data-theme="dark"` auf `<html>`; eine Einstellung in der App kann das übersteuern.
+- Dunkles Thema: Die App setzt `data-theme` auf `<html>` nach der Einstellung «Thema» (Hell, Dunkel, wie System; Standard «Hell», W7). Nur «wie System» folgt `prefers-color-scheme`.
 
 ## Schrift
 

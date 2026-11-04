@@ -1,4 +1,5 @@
-// Heute (Kontext Regal, docs/spec/05_masken.md 3.1). Im Grundgerüst nur Kopf und Hinweise; Karten folgen mit I1b.
+// Heute (Kontext Regal, docs/spec/05_masken.md 3.1): Kopf, Hinweise, Einrichtungs-Checkliste (Plan 18); Karten folgen
+// mit I1b.
 import { useState } from 'react';
 import { useAblaufOffen } from '../../ablauf/offen.ts';
 import { standAnzeige } from '../../domain/datenpfad/buendel.ts';
@@ -9,6 +10,7 @@ import { tagKurz, ZEITZONE } from '../../domain/zeit.ts';
 import { OrtKachel } from '../bausteine/Tile.tsx';
 import { kalibrierdaten, messgeraet, messungenIm, zustandVon } from '../bundeldaten.ts';
 import { Notice } from '../bausteine/Notice.tsx';
+import { Einrichtung } from './Einrichtung.tsx';
 import { useBuendel } from '../buendel.tsx';
 import { Logo } from '../bausteine/Logo.tsx';
 import { useNeueVersion } from '../dienst.tsx';
@@ -70,6 +72,7 @@ export function Heute() {
       ) : null}
       {keinZugang ? <Notice tone="warn" title="Kein Zugang für dieses Konto" /> : null}
       {!keinZugang && anzeige.hinweis ? <Notice title={anzeige.hinweis} /> : null}
+      {buendel && !keinZugang ? <Einrichtung /> : null}
       {zeigen ? <NeueVersionHinweis /> : null}
       {buendel && !keinZugang ? <PushHinweis /> : null}
       {buendel ? <Uebersicht jetzt={new Date(jetzt)} /> : null}

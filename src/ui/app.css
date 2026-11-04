@@ -171,3 +171,17 @@ body {
   grid-template-columns: repeat(auto-fill, minmax(var(--size-tile-min-width), 1fr));
   gap: var(--space-2);
 }
+
+/* Einrichtungs-Checkliste in Heute (UC0, Plan 18) */
+.hv-einrichtung {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.hv-einrichtung-titel {
+  margin: 0;
+  font-size: var(--text-heading-size);
+  line-height: var(--text-heading-line);
+  font-weight: var(--text-heading-weight);
+}
