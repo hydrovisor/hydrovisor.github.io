@@ -12,7 +12,7 @@ Zustand nur in Git und im Issue. Beim Aufruf zuerst den Stand bestimmen, dann am
 
 1. `gh issue view $ARGUMENTS --json number,title,labels,body,comments` lesen: Paketklasse (Routine, Fachlogik, Kern), Migration ja/nein, AK-Liste, Labels (`plan-wartet`, `plan-frei`, `runde-1`, `runde-2`, `abnahme-wartet`, `db-lock`).
 2. Zweig `paket/<issue>-<kurz>` (höchstens 28 Zeichen) vorhanden? Plandatei `docs/plaene/<issue>.md` vorhanden? Letzter Statuskommentar im Issue?
-3. Halbfertiger Zweig ohne passenden Statuskommentar: auf den Commit des letzten Statuskommentars zurücksetzen (Tim fragen, bevor Arbeit verloren geht) und die lokale Datenbank mit `supabase db reset` neu aufbauen.
+3. Halbfertiger Zweig ohne passenden Statuskommentar: zuerst einen Sicherungszweig `sicherung/<issue>-<datum>` vom aktuellen Stand pushen. Dann die Commits nach dem letzten Statuskommentar zurücknehmen: noch nicht gepusht mit `git reset`, schon gepusht mit `git revert --no-edit <status>..HEAD` und normalem Push, nie mit Force-Push. Das geschieht ohne Rückfrage (Entscheid 0010). Danach die lokale Datenbank mit `supabase db reset` neu aufbauen.
 4. Kern-Paket: nur starten, wenn mindestens 50 % des Wochenkontingents frei sind und ein 5-Stunden-Fenster beginnt; sonst Tim melden und anhalten.
 5. I1b- oder I2-Paket: `gh issue list --label offen-regal --state open --json number --jq length` zählen; bei mehr als 20 offenen Einträgen kein neues Paket starten, Tim melden und anhalten (Konzept 12.4, E5).
 
@@ -24,11 +24,11 @@ Zustand nur in Git und im Issue. Beim Aufruf zuerst den Stand bestimmen, dann am
    - Fachlogik: Subagent `planer`.
    - Kern: Subagent `planer_kern`. Vergleichspakete I0-03 und I0-04 (Konzept 12.7 a): `planer_kern` und `planer` schreiben je einen Plan in `docs/plaene/<issue>-plan-a.md` und `-plan-b.md` (Zuordnung ausgelost, nur im Issue-Kommentar «Zuordnung (erst nach der Bewertung öffnen)»); nach Tims verdeckter Bewertung wird der gewählte Plan als `docs/plaene/<issue>.md` freigegeben.
 3. Plan committen (`Plan: <issue> <kurz>`), pushen und als Kommentar ins Issue (`gh issue comment`).
-4. Planfreigabe nötig (Kern immer, Fachlogik nur mit Migration)? Dann Label `plan-wartet` setzen, Statuskommentar schreiben und **anhalten**. Sonst weiter ohne Halt.
+4. Planfreigabe durch Tim nur bei Kern-Paketen und bei Fehlern gegen eine Referenzdatei (Konzept 12.5): Label `plan-wartet` setzen, Statuskommentar schreiben und **anhalten**. Fachlogik mit Migration: Der Lead setzt `plan-frei` selbst und nennt im Statuskommentar die Migration und die Annahmen (Entscheid 0010). Sonst weiter ohne Halt.
 
 ## 2 Freigabe prüfen
 
-Beim Fortsetzen: `gh issue view` zeigt Label `plan-frei` und Tims Kommentar «Plan freigegeben» mit Commit-Kürzel. Ohne Label kein Code, wenn eine Freigabe nötig ist. Weicht der Plan inzwischen vom freigegebenen Kürzel ab, erneut Freigabe holen.
+Beim Fortsetzen eines Kern-Pakets: `gh issue view` zeigt Label `plan-frei` und Tims Kommentar «Plan freigegeben» mit Commit-Kürzel. Ohne Label kein Code. Weicht der Plan inzwischen vom freigegebenen Kürzel ab, erneut Freigabe holen. Bei Fachlogik mit Migration genügt die Freigabe des Leads (Entscheid 0010).
 
 ## 3 Tests, Migration, Code
 
@@ -41,15 +41,15 @@ Beim Fortsetzen: `gh issue view` zeigt Label `plan-frei` und Tims Kommentar «Pl
 
 1. Routine: `pruefer`. Fachlogik: `pruefer_fachlogik`. Kern: `pruefer_fachlogik` und `pruefer_sicherheit` parallel als Agent Team.
 2. Auftrag an den Prüfer: Issue, Plan, Zweig; Urteil mit Befundliste und Plan-Code-Abgleich.
-3. «nachbessern»: Label `runde-1` bzw. `runde-2`, Befunde beheben, erneut prüfen. Nach zwei Runden ohne «bestanden» anhalten und Tim fragen (Eskalation, Konzept 12.2).
+3. «nachbessern»: Label `runde-1` bzw. `runde-2`, Befunde beheben, erneut prüfen. Nach zwei Runden ohne «bestanden» entscheidet der Lead: dritte Runde, Plan ändern oder Paket teilen. Den Entscheid hält er im Issue fest (Entscheid 0010). Die Hebung auf Fable oder auf eine höhere Denkstufe bleibt bei Tim. Tim fragt er nur, wenn eine fachliche Frage offen ist, die das Repository nicht beantwortet.
 
 ## 5 Pull Request und Abnahme
 
 1. `git push -u origin paket/<issue>-<kurz>`; Pull Request mit `.github/pull_request_template.md`, alle Pflichtfelder ausgefüllt (Paketklasse, Schätzung, Tims Minuten, Runden, Prüferbefunde, Modell und Denkstufe, Verbrauch `/usage`); `Closes #<issue>`; Labels am Pull Request: Klasse (`routine`, `fachlogik` oder `kern`; `kern` löst den Mutationstest aus), `db-lock` bei Änderungen in `supabase/migrations`, `abnahme-wartet`.
 2. Prüftor in GitHub abwarten (Job `pruefstor`).
-3. Abnahme 1: Tim prüft in der Vorschau `<zweig>.hydrovisor-vorschau.pages.dev` und schreibt den Abnahmekommentar nach `.github/abnahme_vorlage.md`; [Gerät]-AK am Regal bekommen `offen-regal` (höchstens 20 offen). Danach entfernt der Lead das Label `abnahme-wartet`; das löst das Prüftor neu aus, und die AK-Abdeckung liest die [Gerät]-Nummern aus dem Kommentar.
+3. Abnahme 1: Der Lead prüft selbst in der Vorschau `<zweig>.hydrovisor-vorschau.pages.dev` im eingebauten Browser mit 360 × 640 und schreibt den Abnahmekommentar nach `.github/abnahme_vorlage.md` mit «Prüfer: Lead» (Entscheid 0010; ohne Maske über Tests und Trockenlauf). [Gerät]-AK setzt er nie auf «ok»: AK am Regal auf «offen-regal» mit Label `offen-regal` (höchstens 20 offen), die übrigen [Gerät]-AK auf «offen-abnahme-2» ohne Label. Danach entfernt der Lead das Label `abnahme-wartet`; das löst das Prüftor neu aus, und die AK-Abdeckung liest die [Gerät]-Nummern aus dem Kommentar.
 4. **Kurzzusammenfassung, was der Merge auslöst** (Dateien, Workflows, Migration mit Freigabe, Supabase, Vorschau, Folgen für andere Zweige) in den Pull Request.
-5. Merge durch den Lead ohne Einzelbestätigung (Entscheid 0008, bis Tim widerruft): Prüftor grün, Prüfer «bestanden», Abnahme 1 kommentiert, dann `gh pr merge <nr> --squash` und Tim das Endprodukt melden. Bei einer Migration danach anhalten für Tims Freigabe von `deploy.yml` in `production`. Danach Abnahme 2 in der installierten App (Info-Seite zeigt den Commit). Nach einem Widerruf: erst nach Tims ausdrücklichem «Ja» im Chat.
+5. Merge durch den Lead ohne Einzelbestätigung (Entscheid 0008, bis Tim widerruft): Prüftor grün, Prüfer «bestanden», Abnahme 1 kommentiert, dann `gh pr merge <nr> --squash` und Tim das Endprodukt melden. Danach den wartenden Lauf von `deploy.yml` in `production`: Der Lead gibt ihn selbst frei, wenn `git diff --name-only letzte-migration <sha> -- supabase/migrations` leer ist und der Produktions-Seed noch mit `--trocken` läuft (Entscheid 0010). Sonst, oder wenn das Tag `letzte-migration` fehlt, anhalten für Tims Freigabe; nach dem Scharfschalten des Seeds gilt das auch bei Änderungen in `data/`, `scripts/seed*` oder `src/domain/w0/`. Danach Abnahme 2 in der installierten App (Info-Seite zeigt den Commit): Tim belegt alle [Gerät]-AK, die in Abnahme 1 offen waren. Nach einem Widerruf: erst nach Tims ausdrücklichem «Ja» im Chat.
 
 ## 6 Statuskommentar (nach jedem Schritt und am Sitzungsende)
 

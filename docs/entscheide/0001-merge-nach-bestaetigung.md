@@ -7,3 +7,5 @@ Datum 1.11.2026 · Entscheid von Tim · Quelle: `docs/spec/00_rueckfragen.md` W1
 **Kurzzusammenfassung enthält:** geänderte Dateien und Bereiche; ausgelöste Workflows (`deploy.yml` mit Migration und Freigabe in `production`, Pages, Rauchtest; `backup.yml`); Wirkung auf Supabase (Dev, Produktion) und die Vorschau; Folgen für andere Zweige.
 
 **Bleibt gesperrt:** Push auf `main`, Force-Push, `supabase db push`, `supabase link`, jede Projekt-Referenz ausser `hydrovisor-dev` (Deny-Regeln und Hook `.claude/hooks/sperre.mjs`). Produktions-Migration, Secrets und VAPID-Schlüssel bleiben Tims Handgriffe.
+
+**Nachtrag 4.11.2026.** Abgelöst durch Entscheid 0008 (Merge durch den Lead), bis Tim 0008 widerruft. Danach gilt wieder dieser Entscheid.
