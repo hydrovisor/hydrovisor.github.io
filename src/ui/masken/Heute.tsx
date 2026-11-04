@@ -14,6 +14,7 @@ import { Logo } from '../bausteine/Logo.tsx';
 import { useNeueVersion } from '../dienst.tsx';
 import { hinweisNeueVersionZeigen } from '../neueVersion.ts';
 import { NeueVersionHinweis } from '../NeueVersion.tsx';
+import { usePushStand } from '../pushZustand.ts';
 import { hashZu } from '../router.ts';
 
 /** Text der Messfälligkeit in der Ortskachel (Übergang bis zu den Karten in I1b) */
@@ -70,9 +71,38 @@ export function Heute() {
       {keinZugang ? <Notice tone="warn" title="Kein Zugang für dieses Konto" /> : null}
       {!keinZugang && anzeige.hinweis ? <Notice title={anzeige.hinweis} /> : null}
       {zeigen ? <NeueVersionHinweis /> : null}
+      {buendel && !keinZugang ? <PushHinweis /> : null}
       {buendel ? <Uebersicht jetzt={new Date(jetzt)} /> : null}
     </main>
   );
+}
+
+/** Push-Stand (Plan 13, R5.5, UC0-AK5): Hinweis «Push nicht eingerichtet» oder «Letzte Erinnerung …» */
+function PushHinweis() {
+  const { stand } = usePushStand();
+  if (!stand || stand.art === 'nicht_unterstuetzt') return null;
+  const einrichten = (
+    <a className="hv-btn hv-btn-secondary" href={hashZu({ name: 'push' })}>
+      Push einrichten
+    </a>
+  );
+  if (stand.art === 'nicht_eingerichtet')
+    return <Notice tone="warn" title="Push nicht eingerichtet" action={einrichten} kompakt />;
+  if (stand.warnung48h)
+    return (
+      <Notice
+        tone="warn"
+        title="Seit 48 Stunden keine Erinnerung zugestellt"
+        action={
+          <a className="hv-btn hv-btn-secondary" href={hashZu({ name: 'push' })}>
+            Push prüfen
+          </a>
+        }
+      >
+        Akku-Optimierung für Chrome prüfen.
+      </Notice>
+    );
+  return stand.letzteZustellung ? <p>Letzte Erinnerung: {stand.letzteZustellung} zugestellt</p> : null;
 }
 
 /** Übergangsliste bis I1b: Kalibrierstand des Messgeräts (nur echt, G5, RR14) und Orte mit Messfälligkeit */

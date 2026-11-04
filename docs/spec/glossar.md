@@ -84,6 +84,10 @@ Stand 1.11.2026 · Auftrag 2 «Spezifikation». Bedeutungen stehen in Konzept v1
 | Kalibrierstand (Erstkalibrierung, gültig, fällig, überfällig) | `v_kalibrierung_faellig` | `Kalibrierstand`, `kalibrierStand()`, `istUnsicher()` |
 | Messfälligkeit | – | `Messfaelligkeit`, `messFaelligkeit()` |
 | Messeingabe (Ziffernblock) | – | `Messeingabe`, `eingabeTippen()` |
+| Sammel-Push, Lauf der Function | `push_versand` | `pushLauf()`, `sammelFaellig()`, `wiederholungErlaubt()` |
+| Tagesliste der Push (Übergang bis I1b-06) | – | `tagesliste()`, `pushText()`, `TagesEintrag` |
+| Push-Stand in Heute | `push_abo`, `push_versand` | `pushStand()`, `PushStand` |
+| Quittung der Push | `push_versand.angezeigt_am`, `geoeffnet_am` | `quittieren()`, `signaturText()` |
 | Ort aus dem Etikett-Code | – | `Ort`, `ortAufloesen()`, `messbareOrte()` |
 | Edge Functions | `push-taeglich`, `push-quittung`, `ki-tuete` | – |
 | Zugriff | `zugang`, `ist_tim()` | – |

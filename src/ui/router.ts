@@ -8,6 +8,7 @@ export type Route =
   | { name: 'anmelden' }
   | { name: 'muster' }
   | { name: 'schreibprobe' }
+  | { name: 'push' }
   | { name: 'messen'; code: string }
   | { name: 'kalibrieren'; datenart?: 'demo' | 'test' };
 
@@ -31,6 +32,8 @@ export function routeAusHash(hash: string): Route {
       return { name: 'muster' };
     case '/schreibprobe':
       return { name: 'schreibprobe' };
+    case '/push':
+      return { name: 'push' };
     default:
       return { name: 'heute' };
   }

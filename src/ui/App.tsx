@@ -6,6 +6,7 @@ import { Muster } from './masken/Muster.tsx';
 import { Schreibprobe } from './masken/Schreibprobe.tsx';
 import { Messen } from './masken/Messen.tsx';
 import { Kalibrieren } from './masken/Kalibrieren.tsx';
+import { Push } from './masken/Push.tsx';
 import { BuendelAnbieter } from './buendel.tsx';
 import { maskeFuer, useRoute } from './router.ts';
 import { SitzungAnbieter, useSitzung } from './sitzung.tsx';
@@ -26,6 +27,8 @@ function Masken() {
         <Messen code={maske.code} />
       ) : maske.name === 'kalibrieren' ? (
         <Kalibrieren {...(maske.datenart ? { datenart: maske.datenart } : {})} />
+      ) : maske.name === 'push' ? (
+        <Push />
       ) : maske.name === 'schreibprobe' ? (
         <Schreibprobe />
       ) : maske.name === 'anmelden' ? (

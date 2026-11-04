@@ -2,7 +2,8 @@
 # Ziel fest hydrovisor-dev; die Produktion migriert weiterhin nur deploy.yml.
 # Access-Token nur für hydrovisor-dev in der eigenen Umgebung dev (nur main, Befund Sicherheit 3); getrennt von production.
 # Eingabe zweig: Zweig, dessen supabase/migrations eingespielt wird (für Abnahme 1 vor dem Merge).
-# Konfiguration und CLI-Einstellungen kommen immer aus main; aus dem Zweig nur die Migrationsdateien.
+# Konfiguration und CLI-Einstellungen kommen immer aus main; aus dem Zweig nur die Migrationsdateien und mit
+# functions=true supabase/functions und src/ (die Functions importieren src/domain relativ, Plan 13 A9).
 # Aktionen per Commit angeheftet (Version im Kommentar).
 name: dev-migration
 
@@ -17,6 +18,10 @@ on:
         description: Nur anzeigen, was eingespielt würde
         type: boolean
         default: true
+      functions:
+        description: Danach die Edge Functions des Zweigs nach hydrovisor-dev ausliefern (Plan 13 A9)
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -62,3 +67,17 @@ jobs:
           TROCKEN: ${{ inputs.trockenlauf }}
         run: |
           if [ "$TROCKEN" = "true" ]; then node scripts/dev-migration.mjs --trocken; else node scripts/dev-migration.mjs; fi
+      - name: Edge Functions aus dem Zweig übernehmen
+        if: inputs.functions && !inputs.trockenlauf
+        run: |
+          rm -rf supabase/functions src
+          git checkout FETCH_HEAD -- supabase/functions src
+          ls supabase/functions
+      - uses: supabase/setup-cli@45a513f8c64c0bc8e0e3dfe572b5c95be85f6359 # v3.0.1
+        if: inputs.functions && !inputs.trockenlauf
+        with: { version: 3.0.0 }
+      - name: Edge Functions nach hydrovisor-dev (jede Function prüft Token, Geheimnis oder Signatur selbst)
+        if: inputs.functions && !inputs.trockenlauf
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: supabase functions deploy --project-ref "$DEV_PROJEKT" --no-verify-jwt

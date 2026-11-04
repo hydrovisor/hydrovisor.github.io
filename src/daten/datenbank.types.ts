@@ -2008,6 +2008,12 @@ isOneToOne: false
 "kalendertag":
 { Args: { "ts": string }; Returns: string
                            },
+"push_cron_ausloesen":
+{ Args: Record<PropertyKey, never>; Returns: number
+                           },
+"push_cron_pruefen":
+{ Args: { "geheimnis": string }; Returns: boolean
+                           },
 "topf_neu_beschriften":
 { Args: { "a": string,"b": string }; Returns: undefined
                            },

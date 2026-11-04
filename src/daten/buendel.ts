@@ -73,6 +73,13 @@ export const BUENDEL_TEILE: readonly Buendelteil[] = [
   tabelle('aufschub', { ohneStorno: true }),
   // Geräte-Ereignisse für Kalibrierstand und «unsicher» ohne Netz (R10.3, R5.2; Plan 12)
   tabelle('ereignis', { ohneStorno: true, typen: ['sonde_gereinigt', 'als_unsicher_markiert'] }),
+  // Push (Plan 13): Abos ohne Schlüssel, Versände für «Letzte Erinnerung» und #/push
+  {
+    name: 'push_abo',
+    spalten: 'id,geraet,endpoint,datenart,aktiv,letzter_fehler,erfasst_am',
+    ordnung: ['id'],
+  },
+  tabelle('push_versand'),
   // ohne telefon_vertretung und email_rueckfall: keine Personendaten im Gerätespeicher, die keine Maske braucht (Ü3)
   {
     name: 'einstellung',
