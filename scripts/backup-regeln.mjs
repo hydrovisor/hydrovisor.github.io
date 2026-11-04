@@ -126,7 +126,28 @@ export function probeSql(daten, tabellen) {
     .map((t) => `  select count(*) into n from public.${t}; z := z || jsonb_build_object('${t}', n);`)
     .join('\n');
   return [
-    "set local session_replication_role = 'replica';",
+    // In hosted Supabase darf postgres session_replication_role nicht setzen (hydrovisor-dev, 42501). Rückfall in
+    // derselben Transaktion: eigene Trigger aus, Fremdschlüssel aufgeschoben (nie geprüft, weil nie festgeschrieben).
+    // postgres besitzt alle Tabellen in public; HV_PROBE rollt auch diese Änderungen zurück.
+    'do $hv_vorbereitung$',
+    'declare',
+    '  r record;',
+    'begin',
+    '  begin',
+    "    set local session_replication_role = 'replica';",
+    '  exception when insufficient_privilege then',
+    '    for r in select c.relname from pg_class c join pg_namespace n on n.oid = c.relnamespace',
+    "             where n.nspname = 'public' and c.relkind in ('r', 'p') loop",
+    "      execute format('alter table public.%I disable trigger user', r.relname);",
+    '    end loop;',
+    '    for r in select c.relname, k.conname from pg_constraint k join pg_class c on c.oid = k.conrelid',
+    '             join pg_namespace n on n.oid = c.relnamespace',
+    "             where n.nspname = 'public' and k.contype = 'f' and not k.condeferrable loop",
+    "      execute format('alter table public.%I alter constraint %I deferrable initially deferred', r.relname, r.conname);",
+    '    end loop;',
+    '  end;',
+    'end $hv_vorbereitung$;',
+    'set constraints all deferred;',
     `truncate table ${namen.map((t) => `public.${t}`).join(', ')};`,
     daten,
     ';',

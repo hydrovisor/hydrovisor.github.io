@@ -49,7 +49,7 @@ Meldet das Skript «Im Ziel fehlen Migrationen des Stands», startet der Lead zu
    age -d -i <deine-identitaet> backup-JJJJ-MM-TT.tar.gz.age | tar -xz
    ```
 
-3. Neues Supabase-Projekt oder leeres `public`: zuerst die Migrationen aus dem Repository einspielen (`deploy.yml`), dann `sicherung/daten.sql` mit `psql` und `set session_replication_role = replica` laden.
+3. Neues Supabase-Projekt oder leeres `public`: zuerst die Migrationen aus dem Repository einspielen (`deploy.yml`), dann `sicherung/daten.sql` mit `psql` in einer Transaktion laden. `postgres` darf in Supabase `session_replication_role` nicht setzen. Deshalb vorher die eigenen Trigger abschalten (`alter table … disable trigger user`) und die Fremdschlüssel aufschieben, wie es die Probe in `scripts/backup-regeln.mjs` macht. Die Fremdschlüssel auf `auth.users` (Tabelle `zugang`) greifen erst nach der neuen Anmeldung. Der Lead bereitet das Skript im Ernstfall vor.
 4. Fotos aus `sicherung/storage/saattueten/` in den Bucket `saattueten` hochladen. Die Pfade bleiben gleich.
 5. Neu anmelden: Die Zeile in `zugang` entsteht nach Konzept 11.6. Die Konten aus `auth` sind nicht gesichert.
 6. Push neu einrichten (`docs/anleitung/push-einrichten.md`, mit dem bestehenden VAPID-Schlüssel) und `scripts/backup-einrichten.mjs` erneut ausführen.
