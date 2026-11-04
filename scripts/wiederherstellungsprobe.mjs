@@ -95,6 +95,19 @@ async function zustand(ausfuehrer) {
 }
 
 /** Verdeckte Eingabe ohne Echo (Einfügen erlaubt); Ctrl+C bricht ab */
+// Zwischenablage lesen für Ctrl-V in der verdeckten Eingabe (Windows); sonst leer.
+function zwischenablageLesen() {
+  if (process.platform !== 'win32') return '';
+  try {
+    return execFileSync('powershell.exe', ['-NoProfile', '-Command', 'Get-Clipboard -Raw'], {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    }).trim();
+  } catch {
+    return '';
+  }
+}
+
 function verdeckt(frage) {
   return new Promise((aufloesen) => {
     process.stdout.write(frage);
@@ -118,8 +131,18 @@ function verdeckt(frage) {
           process.stdout.write('\nAbgebrochen.\n');
           process.exit(1);
         }
-        if (z === '\u007f' || z === '\b') wert = wert.slice(0, -1);
-        else wert += z;
+        if (z === '\u007f' || z === '\b') {
+          if (wert) process.stdout.write('\b \b');
+          wert = wert.slice(0, -1);
+        } else if (z === '\u0016') {
+          // Ctrl-V kommt im Raw-Modus als Steuerzeichen an; die Zwischenablage selbst lesen (nur Windows)
+          const eingefuegt = zwischenablageLesen();
+          wert += eingefuegt;
+          process.stdout.write('*'.repeat(eingefuegt.length));
+        } else if (z >= ' ') {
+          wert += z;
+          process.stdout.write('*');
+        }
       }
     };
     ein.on('data', lesen);
