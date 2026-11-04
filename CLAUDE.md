@@ -56,7 +56,7 @@ Fakten nur aus dem Repository. Was nicht im Repository steht, fragst du Tim, sta
 
 ## Befehle
 
-Die Skripte stehen seit Paket I0-01 (Grundgerüst) in `package.json`; ihre Namen sind der Vertrag für `pr.yml`. `demo` ist bis I0-10 Platzhalter, `test:mutation` endet mit Warnung, solange die Kernmodule fehlen.
+Die Skripte stehen seit Paket I0-01 (Grundgerüst) in `package.json`; ihre Namen sind der Vertrag für `pr.yml`. `test:mutation` endet mit Warnung, solange die Kernmodule fehlen.
 
 | Zweck | Befehl |
 |---|---|
@@ -74,7 +74,7 @@ Die Skripte stehen seit Paket I0-01 (Grundgerüst) in `package.json`; ihre Namen
 | W0-Validator | `npm run w0:pruefen` (V1 bis V13 ohne Datenbank, `-- --kandidaten` für `kandidaten/`) |
 | Seed | `npm run seed -- --ziel lokal [--trocken]`; dev nur `gh workflow run dev-seed.yml -f zweig=<main\|paket/…> -f trockenlauf=true` (Entscheid 0007); Produktion nur `deploy.yml`, bis zum Scharfschalten `--trocken` |
 | Seed-Tests [SQL] | `npm run test:seed` (Vitest gegen die lokale Datenbank nach `supabase db reset`, Bericht `reports/vitest-seed.json`) |
-| Demo-Daten | `npm run demo -- --laden` / `--loeschen` (lokal, dev) |
+| Demo-Daten | `npm run demo -- --laden` / `--loeschen` (lokal; dev nur über `gh workflow run dev-seed.yml -f demo=laden -f trockenlauf=false`; ersetzt alle Demo- und Testdaten, lädt bei leerem Wissen zuerst `tests/fixtures/wissen`) |
 | AK-Abdeckung | `node scripts/ak-abdeckung.ts --issue <nr> [--pr <nr>] --berichte reports` (ohne `--pr` warnen [Gerät] und [Eval] nur) |
 | Rauchtest | `BASIS_URL=<adresse> ERWARTETER_COMMIT=<sha> npx playwright test -c playwright.rauchtest.config.ts` (in `deploy.yml` nach jedem Deploy; Rückfall-Probe: `deploy.yml` auf `main` mit `rueckfall_probe=true`, nur wenn `letzter-guter-stand` auf `main` zeigt) |
 | Entwurf Datenmodell prüfen | `bash docs/spec/pruefung/lauf.sh` (Docker, PostgreSQL 17) |

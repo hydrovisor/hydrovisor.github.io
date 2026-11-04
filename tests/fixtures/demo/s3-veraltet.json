@@ -1,0 +1,8 @@
+{
+  "kommentar": "S3 veraltet: 1.1 mit Nachfüllen nach der letzten Messung (UC7-AK10)",
+  "zeilen": [
+    {"tabelle":"naehrloesungsansatz","ref":"X-s3-ansatz","felder":{"platz_id":"@X-1.1","typ":"neuansatz","status":"abgeschlossen","begonnen_am":"jetzt-9d 18:00","abgeschlossen_am":"jetzt-9d 18:00","volumen_l":30,"gilt_ab":"jetzt-9d 18:00"}},
+    {"tabelle":"messung","ref":"X-s3-messung","felder":{"platz_id":"@X-1.1","messgeraet_id":"?messgeraet","messart":"rundgang","ph":6.2,"ec":1.85,"temperatur":20.2,"schnappschuss":{"betriebsart":"dwc"},"gilt_ab":"jetzt-3d 08:00"}},
+    {"tabelle":"naehrloesungsansatz","ref":"X-s3-nachfuellen","felder":{"platz_id":"@X-1.1","typ":"nachfuellen","status":"abgeschlossen","begonnen_am":"jetzt-1d 19:00","abgeschlossen_am":"jetzt-1d 19:00","volumen_l":30,"gilt_ab":"jetzt-1d 19:00","nachgefuellt_l":4}}
+  ]
+}

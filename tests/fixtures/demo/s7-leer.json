@@ -1,0 +1,7 @@
+{
+  "kommentar": "S7 leer: 2.2 ohne Pflanzung, nach dem Leeren ohne Lösung (R2.2, R5.4, RF7)",
+  "zeilen": [
+    {"tabelle":"naehrloesungsansatz","ref":"X-s7-ansatz","felder":{"platz_id":"@X-2.2","typ":"neuansatz","status":"abgeschlossen","begonnen_am":"jetzt-30d 18:00","abgeschlossen_am":"jetzt-30d 18:00","volumen_l":30,"gilt_ab":"jetzt-30d 18:00"}},
+    {"tabelle":"ereignis","ref":"X-s7-geleert","felder":{"typ":"geleert","platz_id":"@X-2.2","gilt_ab":"jetzt-2d 17:00"}}
+  ]
+}
