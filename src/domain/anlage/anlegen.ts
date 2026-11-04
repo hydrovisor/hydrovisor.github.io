@@ -51,14 +51,17 @@ export interface Fehler {
 
 const UHRZEIT = /^([01]\d|2[0-3]):[0-5]\d$/;
 
-export function anlagePruefen(e: AnlageEingabe, teile: Teile): Fehler[] {
+/** `eigeneId`: id der Anlage eines laufenden Vorgangs; sie zählt bei der Wiederholung nicht als vergeben */
+export function anlagePruefen(e: AnlageEingabe, teile: Teile, eigeneId?: string): Fehler[] {
   const f: Fehler[] = [];
   if (e.name.trim() === '') f.push({ feld: 'name', text: 'Gib der Anlage einen Namen.' });
   if (!KUERZEL_MUSTER.test(e.kuerzel))
     f.push({ feld: 'kuerzel', text: 'Kürzel: 1 bis 3 Grossbuchstaben, z. B. T.' });
   // eindeutig unter allen nicht stornierten Anlagen, auch inaktiven (Index anlage_kuerzel_aktiv)
   else if (
-    zeilen<AnlageZeile>(teile, 'anlage').some((a) => a.kuerzel === e.kuerzel && a.storniert_am === null)
+    zeilen<AnlageZeile>(teile, 'anlage').some(
+      (a) => a.kuerzel === e.kuerzel && a.storniert_am === null && a.id !== eigeneId,
+    )
   )
     f.push({ feld: 'kuerzel', text: `Kürzel ${e.kuerzel} ist schon vergeben.` });
   if (!UHRZEIT.test(e.lichtVon) || !UHRZEIT.test(e.lichtBis))
@@ -94,8 +97,9 @@ export function anlageVorgang(e: AnlageEingabe, ids: () => string): Schritt[] {
       kuerzel: e.kuerzel,
       standort: e.standort,
       datenart: 'echt',
-      licht_von: e.lichtVon,
-      licht_bis: e.lichtBis,
+      // time kommt als hh:mm:ss zurück; mit Sekunden gleicht die Wiederholung Wert für Wert (Runde 1, Befund 1)
+      licht_von: `${e.lichtVon}:00`,
+      licht_bis: `${e.lichtBis}:00`,
       luefter_einstellung: e.luefter.trim() === '' ? null : e.luefter.trim(),
       karbonathaerte_dh: e.karbonathaerte ?? null,
     },

@@ -54,10 +54,15 @@ export function AnlageNeu() {
 
   async function speichern() {
     const eingabe: AnlageEingabe = { ...e, ...(kh.trim() === '' ? {} : { karbonathaerte: zahl(kh) }) };
-    const f = anlagePruefen(eingabe, buendel?.teile);
+    const schluessel = JSON.stringify(eingabe);
+    // bei der Wiederholung zählt die eigene, vielleicht schon geschriebene Anlage nicht als vergeben (Runde 1, Befund 1)
+    const wiederholung = vorgang && vorgang.eingabe === schluessel ? vorgang : undefined;
+    const ersterSchritt = wiederholung?.schritte[0];
+    const eigeneId =
+      ersterSchritt?.art === 'neu' ? (ersterSchritt.felder['id'] as string | undefined) : undefined;
+    const f = anlagePruefen(eingabe, buendel?.teile, eigeneId);
     setFehler(f);
     if (f.length > 0) return;
-    const schluessel = JSON.stringify(eingabe);
     // gleiche Eingabe behält die Client-UUIDs (Wiederholung), eine geänderte bekommt neue
     const aktuell =
       vorgang && vorgang.eingabe === schluessel
@@ -73,6 +78,7 @@ export function AnlageNeu() {
   }
 
   const schreibfehler = ergebnis?.status === 'nicht_gespeichert' ? ergebnis.fehler : undefined;
+  const abweichend = ergebnis?.status === 'abweichend';
   return (
     <main className="hv-seite">
       <header className="hv-seite-kopf">
@@ -212,6 +218,12 @@ export function AnlageNeu() {
           Anlage speichern
         </Button>
       </form>
+      {abweichend ? (
+        <Notice tone="warn" title="Schon gespeichert">
+          Diese Anlage ist schon mit anderen Werten gespeichert; deine Änderung ist nicht übernommen. Öffne
+          die Anlage, um den gespeicherten Stand zu sehen.
+        </Notice>
+      ) : null}
       {schreibfehler ? (
         <Notice
           tone="danger"

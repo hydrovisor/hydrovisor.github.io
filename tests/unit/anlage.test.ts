@@ -12,7 +12,7 @@ import { heuteGruppiert, nachAnlage } from '../../src/domain/anlage/gruppen.ts';
 import { kuerzelAenderbar } from '../../src/domain/anlage/kuerzel.ts';
 import { fuellText, regalbild } from '../../src/domain/anlage/uebersicht.ts';
 import { messbareOrte } from '../../src/domain/ort.ts';
-import { ANLAGE_R, platzId, regalTeile, vereinen, weitereAnlage } from '../fixtures/regal.ts';
+import { ANLAGE_R, platzId, regalTeile, uid, vereinen, weitereAnlage } from '../fixtures/regal.ts';
 
 const JETZT = new Date('2026-12-10T08:00:00Z');
 const Z = 'Europe/Zurich';
@@ -134,13 +134,13 @@ describe('Kürzel', () => {
     expect(kuerzelAenderbar(teile, ANLAGE_R)).toBe(false);
   });
 
-  it('UC1-AK6 ein storniertes gedrucktes Etikett zählt nicht; Etiketten anderer Anlagen zählen nicht', () => {
+  it('UC1-AK6 auch ein storniertes gedrucktes Etikett zählt (wie der Trigger); Etiketten anderer Anlagen zählen nicht', () => {
     const teile = vereinen(regalTeile(JETZT), weitereAnlage('T', 'echt'));
     const tId = (teile['anlage']?.[1] as { id: string }).id;
     teile['etikett'] = [
       { platz_id: platzId('2.3'), gedruckt_am: '2026-12-01T10:00:00Z', storniert_am: '2026-12-02T10:00:00Z' },
     ];
-    expect(kuerzelAenderbar(teile, ANLAGE_R)).toBe(true);
+    expect(kuerzelAenderbar(teile, ANLAGE_R)).toBe(false);
     teile['etikett'] = [
       { platz_id: platzId('2.3'), gedruckt_am: '2026-12-01T10:00:00Z', storniert_am: null },
     ];
@@ -182,7 +182,9 @@ describe('Maske «Gefäss»', () => {
       unsicher: false,
       trend: 'vorher pH 6.20 · EC 1.32',
     });
-    expect(a?.pflanzen).toEqual([{ sorte: 'Lollo Rossa', anzahl: 3, phase: 'Wachstum', seitTagen: 30 }]);
+    expect(a?.pflanzen).toEqual([
+      { satzId: uid('27', 1), sorte: 'Lollo Rossa', anzahl: 3, phase: 'Wachstum', seitTagen: 30 },
+    ]);
     expect(a?.dosis).toEqual([
       { komponente: 'Grow', mlProL: '2.33' },
       { komponente: 'Micro', mlProL: '1.56' },
@@ -232,5 +234,101 @@ describe('Maske «Gefäss»', () => {
       code: 'R-W',
     });
     expect(gefaessAnsicht(regalTeile(JETZT), 'R-9.9', JETZT, Z)).toBeUndefined();
+  });
+});
+
+describe('Runde 1', () => {
+  it('UC1-AK5 Wiederholung nach Zeitüberschreitung: Server liefert time als hh:mm:ss, die Anlage gilt als gespeichert', async () => {
+    const { erstelleSchreiben } = await import('../../src/daten/schreiben.ts');
+    let n = 0;
+    const eingabe: AnlageEingabe = {
+      name: 'Zweites Regal',
+      kuerzel: 'T',
+      standort: 'indoor',
+      lichtVon: '06:00',
+      lichtBis: '21:00',
+      luefter: '',
+      bereiche: [
+        STANDARD_BEREICHE[0] ?? {
+          standardBetriebsart: 'dwc',
+          lichtleisten: 4,
+          lichtstunden: 15,
+          hoeheCm: 45,
+        },
+      ],
+    };
+    const schritte = anlageVorgang(eingabe, () => `00000000-0000-4000-8000-00000000000${++n}`);
+    // der Server hat beim ersten Versuch schon geschrieben: Upsert ignoriert das Duplikat, Lesen liefert die Zeile
+    const gespeichert = new Map(
+      schritte.map((s) => {
+        const f = s.art === 'neu' ? s.felder : { client_id: '' };
+        const zeile: Record<string, unknown> = { ...f };
+        if (zeile['licht_von']) zeile['licht_von'] = '06:00:00';
+        if (zeile['licht_bis']) zeile['licht_bis'] = '21:00:00';
+        return [f.client_id, zeile];
+      }),
+    );
+    const leer = { data: [], error: null, status: 201 };
+    const schreiben = erstelleSchreiben(
+      {
+        einfuegen: async () => leer,
+        lesen: async (_t, id) => ({ data: [gespeichert.get(id)], error: null, status: 200 }),
+        stornieren: async () => leer,
+      },
+      { appVersion: 'test', nachErfolg: () => {} },
+    );
+    const ergebnis = await schreiben(schritte, { jetzt: JETZT, zeitzone: Z });
+    expect(ergebnis.status).toBe('gespeichert');
+  });
+
+  it('UC1-AK5 bei der Wiederholung zählt die eigene, schon geschriebene Anlage nicht als vergeben', () => {
+    const teile = vereinen(regalTeile(JETZT), weitereAnlage('T', 'echt'));
+    const tId = (teile['anlage']?.[1] as { id: string }).id;
+    const e: AnlageEingabe = {
+      name: 'Anlage T',
+      kuerzel: 'T',
+      standort: 'indoor',
+      lichtVon: '06:00',
+      lichtBis: '21:00',
+      luefter: '',
+      bereiche: [...STANDARD_BEREICHE],
+    };
+    expect(anlagePruefen(e, teile).map((f) => f.feld)).toEqual(['kuerzel']);
+    expect(anlagePruefen(e, teile, tId)).toEqual([]);
+  });
+
+  it('UC1-AK2 Anzuchtbox zeigt ihre Sätze ohne Ortsereignis (platz_id leer)', () => {
+    const teile = regalTeile(JETZT);
+    teile['v_pflanzung_zustand'] = (teile['v_pflanzung_zustand'] as Record<string, unknown>[]).map((p) => ({
+      ...p,
+      platz_id: null,
+    }));
+    expect(gefaessAnsicht(teile, 'R-A1', JETZT, Z)?.pflanzen.map((p) => [p.sorte, p.anzahl])).toEqual([
+      ['Lollo Rossa', 3],
+    ]);
+    expect(gefaessAnsicht(teile, 'R-2.3', JETZT, Z)?.pflanzen).toEqual([]);
+  });
+
+  it('UC1-AK2 nach einer pH-Korrektur bleiben Zielbereich und Dosis vom Neuansatz; Marker nach Typ', () => {
+    const teile = regalTeile(JETZT);
+    (teile['naehrloesungsansatz'] as Record<string, unknown>[]).push({
+      id: 'ph-1',
+      platz_id: platzId('2.3'),
+      typ: 'ph_korrektur',
+      status: 'abgeschlossen',
+      begonnen_am: '2026-12-09T08:00:00Z',
+      schnappschuss: {},
+      storniert_am: null,
+    });
+    const a = gefaessAnsicht(teile, 'R-2.3', JETZT, Z);
+    expect(a?.dosis.map((d) => d.komponente)).toEqual(['Grow', 'Micro', 'Bloom']);
+    expect(a?.zielbereich?.quelle).toBe('Ansatz');
+    expect(a?.verlauf.flatMap((v) => v.marker)).toEqual(['pH-Korrektur', 'Ansatz']);
+  });
+
+  it('Verlauf zeigt den Füllstand bei Kratky', () => {
+    const teile = regalTeile(JETZT);
+    for (const m of teile['messung'] as Record<string, unknown>[]) m['fuellstand'] = 'unter_drittel';
+    expect(gefaessAnsicht(teile, 'R-2.3', JETZT, Z)?.verlauf[0]?.fuellstand).toBe('unter ⅓');
   });
 });

@@ -32,6 +32,8 @@ export function Gefaess({ code }: { code: string }) {
         <p>{liest ? 'Daten werden geladen' : `Ort ${code} nicht bekannt`}</p>
       </main>
     );
+  // Füllstand nur, wo er gemessen wird (Kratky, R4.10)
+  const mitFuellstand = a.verlauf.some((v) => v.fuellstand !== '–');
   return (
     <main className="hv-seite hv-gefaess" data-density="regal">
       <Kopf titel={a.kennung} unter={`Anlage ${a.kuerzel} · ${a.merkmale}`} />
@@ -79,7 +81,7 @@ export function Gefaess({ code }: { code: string }) {
         {a.pflanzen.length > 0 ? (
           <ul className="hv-gefaess-pflanzen" aria-label="Pflanzen">
             {a.pflanzen.map((p) => (
-              <li key={p.sorte}>
+              <li key={p.satzId}>
                 {p.anzahl} × {p.sorte} · {p.phase} · seit {p.seitTagen} {p.seitTagen === 1 ? 'Tag' : 'Tagen'}
               </li>
             ))}
@@ -108,6 +110,7 @@ export function Gefaess({ code }: { code: string }) {
                 <th scope="col">pH</th>
                 <th scope="col">EC</th>
                 <th scope="col">°C</th>
+                {mitFuellstand ? <th scope="col">Füllstand</th> : null}
               </tr>
             </thead>
             <tbody>
@@ -122,6 +125,7 @@ export function Gefaess({ code }: { code: string }) {
                   <td>{v.ph}</td>
                   <td>{v.ec}</td>
                   <td>{v.temp}</td>
+                  {mitFuellstand ? <td>{v.fuellstand}</td> : null}
                 </tr>
               ))}
             </tbody>

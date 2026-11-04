@@ -170,8 +170,20 @@ export function erstelleBuendelLaden(
       const teile: Record<string, readonly unknown[]> = Object.fromEntries(geladen);
       // letzter Ansatz je Ort (04 4.2, A7)
       const ansaetze = teile['naehrloesungsansatz'] as
-        { platz_id: string | null; begonnen_am: string }[] | undefined;
-      if (ansaetze) teile['naehrloesungsansatz'] = letzterJeOrt(ansaetze);
+        { platz_id: string | null; begonnen_am: string; typ?: string; status?: string }[] | undefined;
+      // dazu der letzte nicht abgebrochene Neuansatz oder Teilwechsel je Ort für Zielbereich und Dosis (Plan 20,
+      // Runde 1, Befund 4)
+      if (ansaetze)
+        teile['naehrloesungsansatz'] = [
+          ...new Set([
+            ...letzterJeOrt(ansaetze),
+            ...letzterJeOrt(
+              ansaetze.filter(
+                (a) => (a.typ === 'neuansatz' || a.typ === 'teilwechsel') && a.status !== 'abgebrochen',
+              ),
+            ),
+          ]),
+        ];
       // Positionen nur der letzten Ansätze je Ort (Plan 20)
       const letzte = new Set(
         (teile['naehrloesungsansatz'] as { id: string }[] | undefined)?.map((a) => a.id),

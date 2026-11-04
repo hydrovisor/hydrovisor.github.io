@@ -312,3 +312,32 @@ body {
   line-height: var(--text-heading-line);
   font-weight: var(--text-heading-weight);
 }
+
+/* Anlage anlegen (Plan 20): Wahlgruppen und zweispaltige Felder, nur mit Tokens */
+.hv-anlage-feldgruppe {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: 0;
+  padding: var(--space-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+}
+
+.hv-anlage-feldgruppe legend {
+  padding: 0 var(--space-1);
+  font-weight: 600;
+}
+
+.hv-anlage-wahlfeld {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--size-touch);
+}
+
+.hv-anlage-zweispaltig {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}

@@ -139,6 +139,8 @@ export function regalTeile(jetzt = new Date('2026-12-10T08:00:00Z')): Teile {
     gefaessmodell_id: MODELLE[g.modell]['id'],
     deckeltyp_id: uid('2f', DECKEL.indexOf(g.deckel) + 1),
     betriebsart: g.betriebsart,
+    // Stationen 4.1 bis 4.5 als Konstantpegel mit fester Dosis (R4.5)
+    feste_dosis: g.betriebsart === 'konstantpegel',
     betriebsvolumen_l: MODELLE[g.modell]['betriebsvolumen_l'],
     intervall_messen_d: 2,
     intervall_wechseln_d: g.wechsel,
@@ -150,7 +152,8 @@ export function regalTeile(jetzt = new Date('2026-12-10T08:00:00Z')): Teile {
     platz_id: platzId(b.kennung),
     typ: b.typ,
     platzzahl: 25,
-    position: i < 2 ? 'vorne' : 'hinten',
+    // A1 und A3 vorne, A2 und A4 hinten (Konzept 5.8)
+    position: i % 2 === 0 ? 'vorne' : 'hinten',
     ...o,
   }));
   // 3.3 noch in Prüfung, 1.2 ruht, die übrigen in Betrieb

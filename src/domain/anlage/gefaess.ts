@@ -25,10 +25,19 @@ export interface Gefaessansicht {
     unsicher: boolean;
     trend?: string;
   };
-  pflanzen: { sorte: string; anzahl: number; phase: string; seitTagen: number }[];
+  pflanzen: { satzId: string; sorte: string; anzahl: number; phase: string; seitTagen: number }[];
   dosis: { komponente: string; mlProL: string }[];
   hauptknopf?: { text: string; code: string };
-  verlauf: { tag: string; zeit: string; ph: string; ec: string; temp: string; marker: string[] }[];
+  verlauf: {
+    tag: string;
+    zeit: string;
+    ph: string;
+    ec: string;
+    temp: string;
+    /** Füllstand bei Kratky («über ⅓», «unter ⅓»), sonst «–» */
+    fuellstand: string;
+    marker: string[];
+  }[];
 }
 
 const BETRIEBSART: Record<string, string> = {
@@ -72,9 +81,19 @@ interface Ansatzzeile {
   platz_id: string;
   begonnen_am: string;
   typ: string;
+  status?: string;
   schnappschuss?: { zielbereich?: Record<string, number> };
   storniert_am: string | null;
 }
+
+const BASIS_TYPEN = new Set(['neuansatz', 'teilwechsel']);
+const FUELLSTAND: Record<string, string> = { ueber_drittel: 'über ⅓', unter_drittel: 'unter ⅓' };
+const ANSATZ_MARKER: Record<string, string> = {
+  neuansatz: 'Ansatz',
+  teilwechsel: 'Teilwechsel',
+  nachfuellen: 'nachgefüllt',
+  ph_korrektur: 'pH-Korrektur',
+};
 
 function tagText(zeitpunkt: Date, zeitzone: Zeitzone): string {
   const tag = kalendertag(zeitpunkt, zeitzone);
@@ -100,9 +119,13 @@ export function gefaessAnsicht(
   const unsicher = new Set(
     zeilen<{ messung_id: string }>(teile, 'v_messung_unsicher').map((u) => u.messung_id),
   );
-  const ansatz = zeilen<Ansatzzeile>(teile, 'naehrloesungsansatz')
+  const ansaetze = zeilen<Ansatzzeile>(teile, 'naehrloesungsansatz')
     .filter((a) => a.platz_id === ort.platzId && a.storniert_am === null)
-    .sort((a, b) => Date.parse(b.begonnen_am) - Date.parse(a.begonnen_am))[0];
+    .sort((a, b) => Date.parse(b.begonnen_am) - Date.parse(a.begonnen_am));
+  // letzter Ansatz für den Verlauf; Zielbereich und Dosis aus dem letzten nicht abgebrochenen Neuansatz oder
+  // Teilwechsel, wie v_fuellzustand (Runde 1, Befund 4)
+  const ansatz = ansaetze[0];
+  const basis = ansaetze.find((a) => BASIS_TYPEN.has(a.typ) && a.status !== 'abgebrochen');
 
   const ansicht: Gefaessansicht = {
     code,
@@ -134,7 +157,7 @@ export function gefaessAnsicht(
   }
 
   // Zielbereich aus dem Schnappschuss des letzten Ansatzes, sonst der letzten Messung (R2.5, A3)
-  const zAnsatz = ansatz?.schnappschuss?.zielbereich;
+  const zAnsatz = basis?.schnappschuss?.zielbereich;
   const zMessung = messungen.find((m) => m.schnappschuss?.zielbereich)?.schnappschuss?.zielbereich;
   const z = zAnsatz ?? zMessung;
   if (z)
@@ -162,17 +185,25 @@ export function gefaessAnsicht(
     };
   }
 
-  // Pflanzen am Platz: je Satz Anzahl, Phase und Tage seit der Saat (Pflanzdauer, A3)
+  // Pflanzen am Platz: je Satz Anzahl, Phase und Tage seit der Saat (Pflanzdauer, A3). Ohne Ortsereignis ist
+  // platz_id leer, die Pflanzung steht dann am Anzuchtort oder im Direktsaat-Gefäss des Satzes (Runde 1, Befund 3)
+  const saetze = zeilen<{
+    id: string;
+    sorte_id: string;
+    saatdatum: string;
+    anzuchtort_platz_id: string | null;
+    direktsaat_platz_id: string | null;
+    storniert_am: string | null;
+  }>(teile, 'satz');
+  const satzOrt = new Map(saetze.map((s) => [s.id, s.anzuchtort_platz_id ?? s.direktsaat_platz_id]));
   const zustaende = zeilen<{
     pflanzung_id: string;
     satz_id: string;
     phase: string;
     status: string;
     platz_id: string | null;
-  }>(teile, 'v_pflanzung_zustand').filter((p) => p.platz_id === ort.platzId && p.status === 'aktiv');
-  const saetze = zeilen<{ id: string; sorte_id: string; saatdatum: string; storniert_am: string | null }>(
-    teile,
-    'satz',
+  }>(teile, 'v_pflanzung_zustand').filter(
+    (p) => p.status === 'aktiv' && (p.platz_id ?? satzOrt.get(p.satz_id)) === ort.platzId,
   );
   const sorten = zeilen<{ sorte_id: string; name: string }>(teile, 'sorte');
   const heute = kalendertag(jetzt, zeitzone);
@@ -181,6 +212,7 @@ export function gefaessAnsicht(
     if (!satz) continue;
     const hier = zustaende.filter((p) => p.satz_id === satzId);
     ansicht.pflanzen.push({
+      satzId,
       sorte: sorten.find((s) => s.sorte_id === satz.sorte_id)?.name ?? 'Sorte',
       anzahl: hier.length,
       phase: PHASE[hier[0]?.phase ?? ''] ?? hier[0]?.phase ?? '',
@@ -188,8 +220,8 @@ export function gefaessAnsicht(
     });
   }
 
-  // Dosis je Komponente aus den Positionen des letzten Ansatzes (EK3, A3)
-  if (ansatz) {
+  // Dosis je Komponente aus den Positionen des letzten Neuansatzes oder Teilwechsels (EK3, A3)
+  if (basis) {
     const produkte = new Map(
       zeilen<{ produkt_id: string; name: string }>(teile, 'produkt').map((p) => [p.produkt_id, p.name]),
     );
@@ -201,7 +233,7 @@ export function gefaessAnsicht(
       bezugsvolumen_l: number | string;
       storniert_am: string | null;
     }>(teile, 'ansatz_position')) {
-      if (pos.ansatz_id !== ansatz.id || pos.storniert_am !== null || pos.produkt_id === 'ph_minus') continue;
+      if (pos.ansatz_id !== basis.id || pos.storniert_am !== null || pos.produkt_id === 'ph_minus') continue;
       const ml = Number(pos.ist_ml ?? pos.soll_ml) / Number(pos.bezugsvolumen_l);
       ansicht.dosis.push({
         komponente: produkte.get(pos.produkt_id) ?? pos.produkt_id,
@@ -238,15 +270,19 @@ export function gefaessAnsicht(
     ph: zahl(m.ph, 2),
     ec: zahl(m.ec, 2),
     temp: zahl(m.temperatur, 1),
+    fuellstand: m.fuellstand ? (FUELLSTAND[m.fuellstand] ?? m.fuellstand) : '–',
     marker: unsicher.has(m.id) ? ['unsicher'] : [],
   }));
-  if (ansatz)
+  for (const a of [ansatz, basis].filter(
+    (x, k, l): x is Ansatzzeile => x !== undefined && l.indexOf(x) === k,
+  ))
     eintraege.push({
-      zeit: new Date(ansatz.begonnen_am),
+      zeit: new Date(a.begonnen_am),
       ph: '–',
       ec: '–',
       temp: '–',
-      marker: [ansatz.typ === 'nachfuellen' ? 'nachgefüllt' : 'Ansatz'],
+      fuellstand: '–',
+      marker: [ANSATZ_MARKER[a.typ] ?? 'Ansatz'],
     });
   ansicht.verlauf = eintraege
     .sort((a, b) => b.zeit.getTime() - a.zeit.getTime())
