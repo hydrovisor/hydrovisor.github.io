@@ -1,161 +1,20 @@
 {
   "kommentar": "S6 Konflikt: 3.1 mit Nüsslisalat (Sorte Zwei, Direktsaat), Spinat (Sorte Drei) auf dieselben Töpfe reserviert (UC5-AK2)",
   "zeilen": [
-    {
-      "tabelle": "netztopf",
-      "ref": "X-topf-3.1.1",
-      "felder": {
-        "anlage_id": "@X",
-        "kennung": "3.1.1",
-        "groesse_mm": 50,
-        "heim_platz_id": "@X-3.1",
-        "heim_loch_nr": 1
-      }
-    },
-    {
-      "tabelle": "netztopf",
-      "ref": "X-topf-3.1.2",
-      "felder": {
-        "anlage_id": "@X",
-        "kennung": "3.1.2",
-        "groesse_mm": 50,
-        "heim_platz_id": "@X-3.1",
-        "heim_loch_nr": 2
-      }
-    },
-    {
-      "tabelle": "satz",
-      "ref": "X-s6-nuessli",
-      "felder": {
-        "sorte_id": "?sorte_schluessel.sorte_key=sorte-test-b-zwei",
-        "kulturform": "kopf",
-        "direktsaat_platz_id": "@X-3.1",
-        "anzahl_schwaemme": 2,
-        "samen_je_schwamm": 3,
-        "saatdatum": "heute-20",
-        "gilt_ab": "jetzt-20d 18:30"
-      }
-    },
-    {
-      "tabelle": "pflanzung",
-      "ref": "X-s6-n1",
-      "felder": { "satz_id": "@X-s6-nuessli", "gilt_ab": "jetzt-20d 18:30" }
-    },
-    {
-      "tabelle": "reservierung",
-      "ref": "X-s6-rn1",
-      "felder": {
-        "pflanzung_id": "@X-s6-n1",
-        "netztopf_id": "@X-topf-3.1.1",
-        "umsetzen_vorgabe_am": "heute-20",
-        "umsetzen_geplant_am": "heute-20",
-        "gilt_ab": "jetzt-20d 18:30"
-      }
-    },
-    {
-      "tabelle": "ereignis",
-      "ref": "X-s6-umsetzen-1",
-      "felder": {
-        "typ": "umsetzen",
-        "pflanzung_id": "@X-s6-n1",
-        "netztopf_id": "@X-topf-3.1.1",
-        "platz_id": "@X-3.1",
-        "daten": {
-          "von_platz_id": "@X-3.1",
-          "von_loch_nr": null,
-          "nach_platz_id": "@X-3.1",
-          "nach_loch_nr": 1
-        },
-        "gilt_ab": "jetzt-20d 18:35"
-      }
-    },
-    {
-      "tabelle": "pflanzung",
-      "ref": "X-s6-n2",
-      "felder": { "satz_id": "@X-s6-nuessli", "gilt_ab": "jetzt-20d 18:30" }
-    },
-    {
-      "tabelle": "reservierung",
-      "ref": "X-s6-rn2",
-      "felder": {
-        "pflanzung_id": "@X-s6-n2",
-        "netztopf_id": "@X-topf-3.1.2",
-        "umsetzen_vorgabe_am": "heute-20",
-        "umsetzen_geplant_am": "heute-20",
-        "gilt_ab": "jetzt-20d 18:30"
-      }
-    },
-    {
-      "tabelle": "ereignis",
-      "ref": "X-s6-umsetzen-2",
-      "felder": {
-        "typ": "umsetzen",
-        "pflanzung_id": "@X-s6-n2",
-        "netztopf_id": "@X-topf-3.1.2",
-        "platz_id": "@X-3.1",
-        "daten": {
-          "von_platz_id": "@X-3.1",
-          "von_loch_nr": null,
-          "nach_platz_id": "@X-3.1",
-          "nach_loch_nr": 2
-        },
-        "gilt_ab": "jetzt-20d 18:35"
-      }
-    },
-    {
-      "tabelle": "ereignis",
-      "ref": "X-s6-nuessli-anzucht",
-      "felder": {
-        "typ": "phase_antwort",
-        "satz_id": "@X-s6-nuessli",
-        "daten": { "phase": "anzucht", "antwort": "ja", "erwartet_am": "heute-14" },
-        "gilt_ab": "jetzt-14d 08:00"
-      }
-    },
-    {
-      "tabelle": "satz",
-      "ref": "X-s6-spinat",
-      "felder": {
-        "sorte_id": "?sorte_schluessel.sorte_key=sorte-test-c-drei",
-        "kulturform": "babyleaf",
-        "anzuchtort_platz_id": "@X-A1",
-        "anzahl_schwaemme": 2,
-        "samen_je_schwamm": 2,
-        "saatdatum": "heute-8",
-        "gilt_ab": "jetzt-8d 19:00"
-      }
-    },
-    {
-      "tabelle": "pflanzung",
-      "ref": "X-s6-s1",
-      "felder": { "satz_id": "@X-s6-spinat", "gilt_ab": "jetzt-8d 19:00" }
-    },
-    {
-      "tabelle": "reservierung",
-      "ref": "X-s6-rs1",
-      "felder": {
-        "pflanzung_id": "@X-s6-s1",
-        "netztopf_id": "@X-topf-3.1.1",
-        "umsetzen_vorgabe_am": "heute+2",
-        "umsetzen_geplant_am": "heute+2",
-        "gilt_ab": "jetzt-8d 19:00"
-      }
-    },
-    {
-      "tabelle": "pflanzung",
-      "ref": "X-s6-s2",
-      "felder": { "satz_id": "@X-s6-spinat", "gilt_ab": "jetzt-8d 19:00" }
-    },
-    {
-      "tabelle": "reservierung",
-      "ref": "X-s6-rs2",
-      "felder": {
-        "pflanzung_id": "@X-s6-s2",
-        "netztopf_id": "@X-topf-3.1.2",
-        "umsetzen_vorgabe_am": "heute+2",
-        "umsetzen_geplant_am": "heute+2",
-        "gilt_ab": "jetzt-8d 19:00"
-      }
-    }
+    {"tabelle":"netztopf","ref":"X-topf-3.1.1","felder":{"anlage_id":"@X","kennung":"3.1.1","groesse_mm":50,"heim_platz_id":"@X-3.1","heim_loch_nr":1}},
+    {"tabelle":"netztopf","ref":"X-topf-3.1.2","felder":{"anlage_id":"@X","kennung":"3.1.2","groesse_mm":50,"heim_platz_id":"@X-3.1","heim_loch_nr":2}},
+    {"tabelle":"satz","ref":"X-s6-nuessli","felder":{"sorte_id":"?sorte_schluessel.sorte_key=sorte-test-b-zwei","kulturform":"kopf","direktsaat_platz_id":"@X-3.1","anzahl_schwaemme":2,"samen_je_schwamm":3,"saatdatum":"heute-20","gilt_ab":"jetzt-20d 18:30"}},
+    {"tabelle":"pflanzung","ref":"X-s6-n1","felder":{"satz_id":"@X-s6-nuessli","gilt_ab":"jetzt-20d 18:30"}},
+    {"tabelle":"reservierung","ref":"X-s6-rn1","felder":{"pflanzung_id":"@X-s6-n1","netztopf_id":"@X-topf-3.1.1","umsetzen_vorgabe_am":"heute-20","umsetzen_geplant_am":"heute-20","gilt_ab":"jetzt-20d 18:30"}},
+    {"tabelle":"ereignis","ref":"X-s6-umsetzen-1","felder":{"typ":"umsetzen","pflanzung_id":"@X-s6-n1","netztopf_id":"@X-topf-3.1.1","platz_id":"@X-3.1","daten":{"von_platz_id":"@X-3.1","von_loch_nr":null,"nach_platz_id":"@X-3.1","nach_loch_nr":1},"gilt_ab":"jetzt-20d 18:35"}},
+    {"tabelle":"pflanzung","ref":"X-s6-n2","felder":{"satz_id":"@X-s6-nuessli","gilt_ab":"jetzt-20d 18:30"}},
+    {"tabelle":"reservierung","ref":"X-s6-rn2","felder":{"pflanzung_id":"@X-s6-n2","netztopf_id":"@X-topf-3.1.2","umsetzen_vorgabe_am":"heute-20","umsetzen_geplant_am":"heute-20","gilt_ab":"jetzt-20d 18:30"}},
+    {"tabelle":"ereignis","ref":"X-s6-umsetzen-2","felder":{"typ":"umsetzen","pflanzung_id":"@X-s6-n2","netztopf_id":"@X-topf-3.1.2","platz_id":"@X-3.1","daten":{"von_platz_id":"@X-3.1","von_loch_nr":null,"nach_platz_id":"@X-3.1","nach_loch_nr":2},"gilt_ab":"jetzt-20d 18:35"}},
+    {"tabelle":"ereignis","ref":"X-s6-nuessli-anzucht","felder":{"typ":"phase_antwort","satz_id":"@X-s6-nuessli","daten":{"phase":"anzucht","antwort":"ja","erwartet_am":"heute-14"},"gilt_ab":"jetzt-14d 08:00"}},
+    {"tabelle":"satz","ref":"X-s6-spinat","felder":{"sorte_id":"?sorte_schluessel.sorte_key=sorte-test-c-drei","kulturform":"babyleaf","anzuchtort_platz_id":"@X-A1","anzahl_schwaemme":2,"samen_je_schwamm":2,"saatdatum":"heute-8","gilt_ab":"jetzt-8d 19:00"}},
+    {"tabelle":"pflanzung","ref":"X-s6-s1","felder":{"satz_id":"@X-s6-spinat","gilt_ab":"jetzt-8d 19:00"}},
+    {"tabelle":"reservierung","ref":"X-s6-rs1","felder":{"pflanzung_id":"@X-s6-s1","netztopf_id":"@X-topf-3.1.1","umsetzen_vorgabe_am":"heute+2","umsetzen_geplant_am":"heute+2","gilt_ab":"jetzt-8d 19:00"}},
+    {"tabelle":"pflanzung","ref":"X-s6-s2","felder":{"satz_id":"@X-s6-spinat","gilt_ab":"jetzt-8d 19:00"}},
+    {"tabelle":"reservierung","ref":"X-s6-rs2","felder":{"pflanzung_id":"@X-s6-s2","netztopf_id":"@X-topf-3.1.2","umsetzen_vorgabe_am":"heute+2","umsetzen_geplant_am":"heute+2","gilt_ab":"jetzt-8d 19:00"}}
   ]
 }

@@ -1,48 +1,12 @@
 {
   "kommentar": "S8 Keimung: Satz mit 6 Schwämmen (Sorte Eins, Dunkelkeimer) in A3, Saat vor 5 Tagen (UC6-AK2)",
   "zeilen": [
-    {
-      "tabelle": "satz",
-      "ref": "X-s8-satz",
-      "felder": {
-        "sorte_id": "?sorte_schluessel.sorte_key=sorte-test-a-eins",
-        "kulturform": "dauerkultur_frucht",
-        "anzuchtort_platz_id": "@X-A3",
-        "anzahl_schwaemme": 6,
-        "samen_je_schwamm": 2,
-        "saatdatum": "heute-5",
-        "gilt_ab": "jetzt-5d 19:00"
-      }
-    },
-    {
-      "tabelle": "pflanzung",
-      "ref": "X-s8-p1",
-      "felder": { "satz_id": "@X-s8-satz", "gilt_ab": "jetzt-5d 19:00" }
-    },
-    {
-      "tabelle": "pflanzung",
-      "ref": "X-s8-p2",
-      "felder": { "satz_id": "@X-s8-satz", "gilt_ab": "jetzt-5d 19:00" }
-    },
-    {
-      "tabelle": "pflanzung",
-      "ref": "X-s8-p3",
-      "felder": { "satz_id": "@X-s8-satz", "gilt_ab": "jetzt-5d 19:00" }
-    },
-    {
-      "tabelle": "pflanzung",
-      "ref": "X-s8-p4",
-      "felder": { "satz_id": "@X-s8-satz", "gilt_ab": "jetzt-5d 19:00" }
-    },
-    {
-      "tabelle": "pflanzung",
-      "ref": "X-s8-p5",
-      "felder": { "satz_id": "@X-s8-satz", "gilt_ab": "jetzt-5d 19:00" }
-    },
-    {
-      "tabelle": "pflanzung",
-      "ref": "X-s8-p6",
-      "felder": { "satz_id": "@X-s8-satz", "gilt_ab": "jetzt-5d 19:00" }
-    }
+    {"tabelle":"satz","ref":"X-s8-satz","felder":{"sorte_id":"?sorte_schluessel.sorte_key=sorte-test-a-eins","kulturform":"dauerkultur_frucht","anzuchtort_platz_id":"@X-A3","anzahl_schwaemme":6,"samen_je_schwamm":2,"saatdatum":"heute-5","gilt_ab":"jetzt-5d 19:00"}},
+    {"tabelle":"pflanzung","ref":"X-s8-p1","felder":{"satz_id":"@X-s8-satz","gilt_ab":"jetzt-5d 19:00"}},
+    {"tabelle":"pflanzung","ref":"X-s8-p2","felder":{"satz_id":"@X-s8-satz","gilt_ab":"jetzt-5d 19:00"}},
+    {"tabelle":"pflanzung","ref":"X-s8-p3","felder":{"satz_id":"@X-s8-satz","gilt_ab":"jetzt-5d 19:00"}},
+    {"tabelle":"pflanzung","ref":"X-s8-p4","felder":{"satz_id":"@X-s8-satz","gilt_ab":"jetzt-5d 19:00"}},
+    {"tabelle":"pflanzung","ref":"X-s8-p5","felder":{"satz_id":"@X-s8-satz","gilt_ab":"jetzt-5d 19:00"}},
+    {"tabelle":"pflanzung","ref":"X-s8-p6","felder":{"satz_id":"@X-s8-satz","gilt_ab":"jetzt-5d 19:00"}}
   ]
 }
