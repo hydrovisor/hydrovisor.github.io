@@ -107,6 +107,7 @@ Rundgang, Abhakliste, Gefässprüfung und Timer speichern nach jedem Tipp ihren 
 | Quittung | Die Push-Nutzlast enthält `versand_id` und eine HMAC-Signatur. Der Service Worker meldet «angezeigt» beim Anzeigen, der Klick-Handler «geöffnet» an die Function `push-quittung`, die die Signatur prüft und `angezeigt_am` bzw. `geoeffnet_am` setzt (A: der Service Worker hat keinen Zugriff auf die Sitzung). |
 | Anzeige in Heute | «Letzte Erinnerung: heute 07:00 zugestellt» aus `push_versand.angezeigt_am`; nach 48 h ohne Zustellung Warnung mit Link zu den Akku-Einstellungen von Chrome. |
 | Tests | TP1 bis TP4 in `06_tests.md`; einmal `show cron.timezone` (Erwartung UTC). VAPID-Schlüssel werden nie neu erzeugt. |
+| Umsetzung I0-08 | Migration `20261104120000_push_cron.sql`: `push_cron_ausloesen()` liest `projekt_url` und `cron_geheimnis` aus Vault und ruft ohne beide nichts; `push_cron_pruefen(text)` (`security definer`, nur `service_role`) vergleicht den Header mit Vault. Kerne `pushLauf()` und `quittieren()` mit eingespritzter Uhr, Daten und Sender; Hüllen mit `npm:web-push@3.6.7` und `jsr:@supabase/supabase-js@2` ohne Import-Map. Bis I1b-06 zählt die Push mit `tagesliste()` (Kalibrierstand und Messfälligkeit, nur echt). Übergangsmaske `#/push` mit «Push einrichten», «Test-Push senden» (höchstens 10 je Tag) und den letzten 7 Versänden. Einrichtung durch Tim: `scripts/push-einrichten.ps1` (Plan 13), Push-Secrets nur in der Produktion (Prüfer Sicherheit 1, abweichend von Abschnitt 9). |
 
 ## 6 KI-Aufruf (UC4)
 
@@ -155,7 +156,7 @@ Rundgang, Abhakliste, Gefässprüfung und Timer speichern nach jedem Tipp ihren 
 | Supabase-Secrets (je Projekt) | `ANTHROPIC_API_KEY`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`, `RESEND_API_KEY`, `EMAIL_EMPFAENGER`, `PUSH_QUITTUNG_SCHLUESSEL` | Functions (Tim) |
 | Supabase Vault | `cron_geheimnis` | pg_cron → Function |
 
-Das VAPID-Paar ist in `hydrovisor-dev` und in der Produktion dasselbe (nie neu erzeugen); der öffentliche Teil steht zusätzlich als `VITE_VAPID_PUBLIC_KEY` in GitHub und Cloudflare. Der Anthropic-Schlüssel stammt aus dem Arbeitsbereich «hydrovisor» der Claude Console (Ausgabenlimit RR8); in `hydrovisor-dev` ist es der Schlüssel «hydrovisor-dev-2», die Produktion erhält ihren eigenen Schlüssel vor I2-05.
+Das VAPID-Paar und `PUSH_QUITTUNG_SCHLUESSEL` stehen nur in der Produktion (nie neu erzeugen); `hydrovisor-dev` erhält keine Push-Secrets, weil der Agent dort Functions ausliefern kann (Plan 13, Prüfer Sicherheit 1). Der öffentliche Teil steht zusätzlich als `VITE_VAPID_PUBLIC_KEY` in GitHub; die Vorschau zeigt «Push in dieser Umgebung nicht verfügbar». Der Anthropic-Schlüssel stammt aus dem Arbeitsbereich «hydrovisor» der Claude Console (Ausgabenlimit RR8); in `hydrovisor-dev` ist es der Schlüssel «hydrovisor-dev-2», die Produktion erhält ihren eigenen Schlüssel vor I2-05.
 
 Keine Repository-Secrets (damit `pr.yml` keine erreicht), keine Schlüssel im Code, im Repository oder in Testdaten. Tim setzt alle Secrets selbst; der Agent bereitet die Namen vor.
 

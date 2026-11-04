@@ -225,8 +225,58 @@ export const supabaseAdapter: Schreibadapter = {
       .abortSignal(signal),
 };
 
+// Push-Abo (Plan 13; Plan 11 A10): ohne client_id, Upsert auf endpoint, idempotent; ein erneutes Abo setzt aktiv
+// wieder auf true. Datenart bleibt der Default echt der Spalte (A1). Fehler wie schreiben().
+export interface AboEingabe {
+  endpoint: string;
+  p256dh: string;
+  auth_schluessel: string;
+  geraet: string;
+}
+
+export interface AboAdapter {
+  upsert(zeile: Record<string, unknown>, signal: AbortSignal): Promise<Antwort>;
+}
+
+export function erstelleAboSchreiben(
+  adapter: AboAdapter,
+  bindung: { appVersion: string; nachErfolg?: () => void },
+): (
+  abo: AboEingabe,
+) => Promise<{ status: 'gespeichert' } | { status: 'nicht_gespeichert'; fehler: Schreibfehler }> {
+  return async (abo) => {
+    const zeile = { ...abo, aktiv: true, letzter_fehler: null, app_version: bindung.appVersion };
+    try {
+      await mitZeitlimit((signal) => adapter.upsert(zeile, signal));
+      bindung.nachErfolg?.();
+      return { status: 'gespeichert' };
+    } catch (fehler) {
+      if (fehler instanceof Abbruch) return { status: 'nicht_gespeichert', fehler: fehler.fehler };
+      return { status: 'nicht_gespeichert', fehler: fehlerEinordnen(alsRoh(fehler)) };
+    }
+  };
+}
+
+export const supabaseAboAdapter: AboAdapter = {
+  upsert: async (zeile, signal) =>
+    (supabase as unknown as { from(t: string): Abfrage })
+      .from('push_abo')
+      .upsert(zeile, { onConflict: 'endpoint' })
+      .abortSignal(signal),
+};
+
+export const aboSchreiben = erstelleAboSchreiben(supabaseAboAdapter, {
+  appVersion: APP_VERSION,
+  nachErfolg: () => buendelNeuLaden(),
+});
+
 // Nach jedem erfolgreichen Schreiben lädt die Oberfläche das Bündel neu (04 4.2); sie meldet sich hier an
 const nachErfolgHoerer = new Set<() => void>();
+/** Bündel neu laden lassen, z. B. nach einem Test-Push (Plan 13) */
+export function buendelNeuLaden(): void {
+  nachErfolgHoerer.forEach((h) => h());
+}
+
 export function beiErfolg(hoerer: () => void): () => void {
   nachErfolgHoerer.add(hoerer);
   return () => nachErfolgHoerer.delete(hoerer);
