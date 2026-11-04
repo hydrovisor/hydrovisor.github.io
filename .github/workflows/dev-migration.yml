@@ -83,5 +83,5 @@ jobs:
         # --no-verify-jwt nur für die Functions mit eigener Prüfung (Prüfer Sicherheit 4); weitere Functions ohne die Option
         run: |
           for f in push-taeglich push-quittung ki-tuete; do
-            if [ -d "supabase/functions/$f" ]; then supabase functions deploy "$f" --project-ref "$DEV_PROJEKT" --no-verify-jwt; fi
+            if [ -d "supabase/functions/$f" ]; then supabase functions deploy "$f" --project-ref "$DEV_PROJEKT" --no-verify-jwt --yes; fi
           done
