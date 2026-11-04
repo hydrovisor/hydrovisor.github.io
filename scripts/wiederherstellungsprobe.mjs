@@ -42,7 +42,7 @@ const identitaetDatei = argument('--identitaet');
 const archivDatei = argument('--archiv');
 
 if (ziel !== 'dev' && ziel !== 'lokal') throw new Error(`--ziel nur dev oder lokal, nicht ${ziel}`);
-if (standArg && !/^backup-\d{4}-\d{2}-\d{2}$/.test(standArg))
+if (standArg && !/^backup-\d{4}-\d{2}-\d{2}(-\d{4})?$/.test(standArg))
   throw new Error(`--stand ungültig: ${standArg}`);
 if (ziel === 'dev') {
   if (!process.stdin.isTTY || !process.stdout.isTTY) {
@@ -219,12 +219,12 @@ try {
   let archiv;
   if (archivDatei) {
     archiv = new Uint8Array(await readFile(archivDatei));
-    stand ??= (/backup-\d{4}-\d{2}-\d{2}/.exec(archivDatei) ?? ['lokal'])[0];
+    stand ??= (/backup-\d{4}-\d{2}-\d{2}(-\d{4})?/.exec(archivDatei) ?? ['lokal'])[0];
   } else {
     stand ??= JSON.parse(
       befehl('gh', ['release', 'view', '--repo', BACKUP_REPO, '--json', 'tagName']),
     ).tagName;
-    if (!/^backup-\d{4}-\d{2}-\d{2}$/.test(stand)) throw new Error(`Unerwarteter Stand: ${stand}`);
+    if (!/^backup-\d{4}-\d{2}-\d{2}(-\d{4})?$/.test(stand)) throw new Error(`Unerwarteter Stand: ${stand}`);
     console.log(`Lade ${stand} aus ${BACKUP_REPO} ...`);
     befehl('gh', [
       'release',
