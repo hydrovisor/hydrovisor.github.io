@@ -114,6 +114,7 @@ Vorschau: Cloudflare Pages `hydrovisor-vorschau` baut jeden Zweig (`<zweig>.hydr
 - [0003 Typen im Pull Request erzeugt](docs/entscheide/0003-typen-im-pull-request.md)
 - [0004 Workflows vor dem Grundgerüst](docs/entscheide/0004-workflows-vor-dem-grundgeruest.md)
 - [0005 Workflows startet der Lead](docs/entscheide/0005-workflows-durch-den-lead.md)
+- [0009 Default-Modell für das Lesen der Saattüten](docs/entscheide/0009-ki-default-modell.md)
 - [0008 Merge ohne Einzelbestätigung (bis auf Widerruf)](docs/entscheide/0008-merge-ohne-einzelbestaetigung.md)
 - [0006 Migrationen nach hydrovisor-dev und Zugang ohne Handgriff](docs/entscheide/0006-dev-migration-und-zugang.md)
 - [0007 Seed: Ladeskript, Ziele und [SQL]-Tests](docs/entscheide/0007-seed-ziele.md)
