@@ -65,3 +65,6 @@ tests/unit/push-abo.test.ts
 tests/e2e/push.spec.ts
 tests/unit/push-stand-runde1.test.ts
 supabase/tests/database/10_push_cron_rechte.test.sql
+# I0-11 Backup scharf (#16)
+supabase/tests/database/11_backup.test.sql
+tests/unit/backup-regeln.test.ts
