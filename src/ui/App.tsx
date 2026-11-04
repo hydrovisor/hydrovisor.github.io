@@ -7,6 +7,9 @@ import { Schreibprobe } from './masken/Schreibprobe.tsx';
 import { Messen } from './masken/Messen.tsx';
 import { Kalibrieren } from './masken/Kalibrieren.tsx';
 import { Push } from './masken/Push.tsx';
+import { Anlage } from './masken/Anlage.tsx';
+import { AnlageNeu } from './masken/AnlageNeu.tsx';
+import { Gefaess } from './masken/Gefaess.tsx';
 import { BuendelAnbieter } from './buendel.tsx';
 import { maskeFuer, useRoute } from './router.ts';
 import { SitzungAnbieter, useSitzung } from './sitzung.tsx';
@@ -28,6 +31,12 @@ function Masken() {
         <Messen code={maske.code} />
       ) : maske.name === 'kalibrieren' ? (
         <Kalibrieren {...(maske.datenart ? { datenart: maske.datenart } : {})} />
+      ) : maske.name === 'gefaess' ? (
+        <Gefaess code={maske.code} />
+      ) : maske.name === 'anlage' ? (
+        <Anlage {...(maske.kuerzel ? { kuerzel: maske.kuerzel } : {})} />
+      ) : maske.name === 'anlage-neu' ? (
+        <AnlageNeu />
       ) : maske.name === 'push' ? (
         <Push />
       ) : maske.name === 'schreibprobe' ? (

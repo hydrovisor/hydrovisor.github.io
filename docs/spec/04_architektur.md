@@ -59,7 +59,7 @@ Der Router wertet beim Erstaufruf und bei jedem `hashchange` dieselbe Funktion a
 | `#/umsetzen/:satz` | Umsetzen | Regal |
 | `#/pflanze/:pflanzung` | Pflanzenansicht (Satz oder Topf) | Regal |
 | `#/pruefen/:code` | Gefäss prüfen, Schritte 1 bis 3 | Regal |
-| `#/anlage`, `#/vorlagen`, `#/gefaess-neu`, `#/sorten`, `#/etiketten`, `#/einstellungen`, `#/info`, `#/druck/:art` | Schreibtisch-Masken und Druckansichten (Etikettenbogen, Notfallblatt, Vertretungsblatt) | Schreibtisch |
+| `#/anlage` (`?a=<Kürzel>` wählt die Anlage), `#/anlage/neu` (Anlage anlegen, Plan 20), `#/vorlagen`, `#/gefaess-neu`, `#/sorten`, `#/etiketten`, `#/einstellungen`, `#/info`, `#/druck/:art` | Schreibtisch-Masken und Druckansichten (Etikettenbogen, Notfallblatt, Vertretungsblatt) | Schreibtisch |
 
 Codes statt UUIDs in der Adresse (`R-2.3`), damit Etikett, Kopfzeile und Adresse gleich lesbar sind. Unbekannte Route → Heute.
 
@@ -79,7 +79,7 @@ schreiben<T>(tabelle: Erfassungstabelle, datensatz: T & { client_id: string }): 
 
 ### 4.2 Lesen und Offline-Bündel
 
-- Beim Start und nach jedem erfolgreichen Schreiben lädt der Client ein Bündel in IndexedDB (`buendel`): Anlage mit Bereichen, Plätzen und aktiven Gefässen, Deckeltypen, gültige Sorten mit `v_sollwert`, `art_kulturform`, Saatempfehlungen, Duengerschema, aktive Sätze, Pflanzungen und Reservierungen mit Zustand, letzte Messungen je Ort (14 Tage), letzter Ansatz je Ort, Kalibrierung und `v_kalibrierung_faellig`, Aufschübe, Einstellungen, Wissenseinträge.
+- Beim Start und nach jedem erfolgreichen Schreiben lädt der Client ein Bündel in IndexedDB (`buendel`): Anlage mit Bereichen, Plätzen und aktiven Gefässen, Deckeltypen, gültige Sorten mit `v_sollwert`, `art_kulturform`, Saatempfehlungen, Duengerschema, aktive Sätze, Pflanzungen und Reservierungen mit Zustand, letzte Messungen je Ort (14 Tage), letzter Ansatz je Ort, dazu der letzte nicht abgebrochene Neuansatz oder Teilwechsel je Ort mit seinen Positionen (Plan 20), Kalibrierung und `v_kalibrierung_faellig`, Aufschübe, Einstellungen, Wissenseinträge.
 - Ohne Netz zeigen Heute, Gefäss und Pflanze das Bündel mit «Stand: hh:mm» (TO6).
 - Aufgaben rechnet `faelligeAufgaben()` im Client aus dem Bündel (R5.1).
 

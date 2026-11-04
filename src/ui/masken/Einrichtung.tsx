@@ -23,6 +23,12 @@ function Aktion({ punkt, starten }: { punkt: Punkt; starten: () => void }) {
     ) : (
       <span className="hv-check-menge">Läuft, hakt sich nach 12 Stunden selbst ab</span>
     );
+  if (z.art === 'anlage-neu')
+    return (
+      <a className="hv-btn hv-btn-secondary" href={hashZu({ name: 'anlage-neu' })}>
+        {punkt.knopf}
+      </a>
+    );
   if (z.art === 'kalibrieren')
     return (
       <a className="hv-btn hv-btn-secondary" href={hashZu({ name: 'kalibrieren' })}>

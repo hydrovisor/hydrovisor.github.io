@@ -69,6 +69,8 @@ export const BUENDEL_TEILE: readonly Buendelteil[] = [
   tabelle('messung', { ohneStorno: true, fensterTage: 14 }),
   sicht('v_messung_unsicher', ['messung_id']),
   tabelle('naehrloesungsansatz', { ohneStorno: true }),
+  // Dosis je Komponente in der Maske «Gefäss»; nach dem Laden auf die letzten Ansätze gekürzt (Plan 20)
+  tabelle('ansatz_position', { ohneStorno: true }),
   tabelle('kalibrierung', { ohneStorno: true }),
   sicht('v_kalibrierung_faellig', ['messgeraet_id', 'datenart']),
   tabelle('messgeraet'),
@@ -168,8 +170,26 @@ export function erstelleBuendelLaden(
       const teile: Record<string, readonly unknown[]> = Object.fromEntries(geladen);
       // letzter Ansatz je Ort (04 4.2, A7)
       const ansaetze = teile['naehrloesungsansatz'] as
-        { platz_id: string | null; begonnen_am: string }[] | undefined;
-      if (ansaetze) teile['naehrloesungsansatz'] = letzterJeOrt(ansaetze);
+        { platz_id: string | null; begonnen_am: string; typ?: string; status?: string }[] | undefined;
+      // dazu der letzte nicht abgebrochene Neuansatz oder Teilwechsel je Ort für Zielbereich und Dosis (Plan 20,
+      // Runde 1, Befund 4)
+      if (ansaetze)
+        teile['naehrloesungsansatz'] = [
+          ...new Set([
+            ...letzterJeOrt(ansaetze),
+            ...letzterJeOrt(
+              ansaetze.filter(
+                (a) => (a.typ === 'neuansatz' || a.typ === 'teilwechsel') && a.status !== 'abgebrochen',
+              ),
+            ),
+          ]),
+        ];
+      // Positionen nur der letzten Ansätze je Ort (Plan 20)
+      const letzte = new Set(
+        (teile['naehrloesungsansatz'] as { id: string }[] | undefined)?.map((a) => a.id),
+      );
+      const positionen = teile['ansatz_position'] as { ansatz_id: string }[] | undefined;
+      if (positionen) teile['ansatz_position'] = positionen.filter((p) => letzte.has(p.ansatz_id));
       // v_messung_unsicher hat kein gilt_ab: auf die Messungen im Fenster beschränken (Runde 1, Befund 9)
       const imFenster = new Set((teile['messung'] as { id: string }[] | undefined)?.map((m) => m.id));
       const unsicher = teile['v_messung_unsicher'] as { messung_id: string }[] | undefined;
