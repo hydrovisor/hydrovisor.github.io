@@ -107,6 +107,15 @@ describe('Einrichtungs-Checkliste', () => {
     expect(erledigte(ohneStatus)).toEqual([1, 2, 3, 4, 5, 6, 7]);
   });
 
+  it('UC0-AK1 Punkt 8: ruhende Gefässe zählen nicht, ein ruhendes allein reicht nicht', () => {
+    const ruht = einrichtungsTeile(8);
+    ruht['v_gefaess_status'] = [{ gefaess_id: ID.gefaess, status: 'ruht' }];
+    expect(erledigte(ruht)).toEqual([1, 2, 3, 4, 5, 6, 7]);
+    const betrieb = einrichtungsTeile(8);
+    betrieb['v_gefaess_status'] = [{ gefaess_id: ID.gefaess, status: 'in_betrieb' }];
+    expect(erledigte(betrieb)).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
+  });
+
   it('UC0-AK1 aktiv ist der erste offene Punkt, auch wenn spätere schon erfüllt sind', () => {
     const teile = einrichtungsTeile(5);
     delete teile['kalibrierung'];
@@ -137,7 +146,7 @@ describe('Thema (W7)', () => {
 });
 
 describe('Restzeit der Checkliste', () => {
-  it('ab einer Stunde mit Stunden', () => {
+  it('UC0-AK1 Restzeit ab einer Stunde mit Stunden', () => {
     expect(restzeit(EINWEICHEN_MS, 0)).toBe('12:00:00');
     expect(restzeit(3_600_000, 1_000)).toBe('59:59');
     expect(restzeit(3_661_000, 0)).toBe('1:01:01');

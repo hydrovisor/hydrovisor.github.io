@@ -22,7 +22,16 @@ const ohneStorno = { storniert_am: null };
 export function einrichtungsTeile(stufe: number, datenart: 'echt' | 'demo' | 'test' = 'echt'): Teile {
   const t: Teile = {};
   const ab = (n: number) => stufe >= n;
-  t['messgeraet'] = [{ id: ID.messgeraet, name: 'Messstift', u_ec: 0.05, u_ph: 0.05 }];
+  t['messgeraet'] = [
+    {
+      id: ID.messgeraet,
+      modell: 'Aquamaster P160 Pro2',
+      einheit: 'mS/cm',
+      dezimalen: 2,
+      u_ec: 0.05,
+      u_ph: 0.05,
+    },
+  ];
   if (ab(1))
     t['anlage'] = [{ id: ID.anlage, kuerzel: 'R', name: 'Regal', datenart, aktiv: true, ...ohneStorno }];
   if (ab(3))
@@ -97,7 +106,7 @@ export function einrichtungsTeile(stufe: number, datenart: 'echt' | 'demo' | 'te
   if (ab(7))
     t['etikett'] = [ID.platzGefaess, ID.platzAnzucht, ID.platzW].map((platzId, i) => ({
       id: `1a000000-0000-4000-8000-00000000007${i}`,
-      code: `R-${i}`,
+      code: ['R-2.3', 'R-A1', 'R-W'][i],
       platz_id: platzId,
       gedruckt_am: '2026-12-02T10:00:00Z',
       ...ohneStorno,

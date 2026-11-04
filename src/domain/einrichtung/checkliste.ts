@@ -118,8 +118,12 @@ export function einrichtungsStand(teile: Teile, jetzt: Date, einweichenEnde?: nu
       s.status,
     ]),
   );
+  // Schritte 1 bis 3 bestanden haben nur «in Betrieb» und «in Betrieb (Volumen offen)»; ruhende und entfernte
+  // Gefässe zählen nicht mit (Prüfer Runde 1, Befund 1)
+  const zuPruefen = gefaesse.filter((g) => !['ruht', 'entfernt'].includes(status.get(g.id) ?? 'in_pruefung'));
   const geprueft =
-    gefaesse.length > 0 && gefaesse.every((g) => (status.get(g.id) ?? 'in_pruefung') !== 'in_pruefung');
+    zuPruefen.length > 0 &&
+    zuPruefen.every((g) => ['in_betrieb', 'in_betrieb_volumen_offen'].includes(status.get(g.id) ?? ''));
 
   const gesaet = aktiv(
     zeilen<{ anzuchtort_platz_id: string | null; direktsaat_platz_id: string | null } & MitStorno>(

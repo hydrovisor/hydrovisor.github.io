@@ -116,7 +116,7 @@ test('UC0-AK1 Demo-Daten haken nichts ab, Punkte ohne Ablauf zeigen «Ablauf fol
     'offen',
     'offen',
   ]);
-  await expect(liste(page).getByText('Ablauf folgt (I1a-02)')).toBeVisible();
+  await expect(liste(page).getByText('Ablauf folgt mit einer der nächsten Versionen')).toBeVisible();
 });
 
 test('UC0-AK6 Thema standardmässig Hell, auch bei dunklem Systemmodus', async ({ page }) => {

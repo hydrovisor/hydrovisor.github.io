@@ -35,7 +35,7 @@ function Aktion({ punkt, starten }: { punkt: Punkt; starten: () => void }) {
         {punkt.knopf}
       </a>
     );
-  return <span className="hv-check-menge">Ablauf folgt ({z.paket})</span>;
+  return <span className="hv-check-menge">Ablauf folgt mit einer der nächsten Versionen</span>;
 }
 
 export function Einrichtung() {
