@@ -331,7 +331,6 @@ function BoxFormular({
   ) => (
     <TextField
       label={label}
-      unit="mm"
       inputMode="numeric"
       value={e[schluessel]}
       error={fehlerZu(verstoesse, feld)}
@@ -366,7 +365,7 @@ function BoxFormular({
         setzen={(w) => aendern({ form: w })}
         fehler={fehlerZu(verstoesse, 'form')}
       />
-      <p className="hv-vorlagen-angabe">Innenmasse</p>
+      <p className="hv-vorlagen-angabe">Innenmasse in mm</p>
       <div className="hv-vorlagen-dreispaltig">
         {zahlfeld('Länge', 'laengeMm', 'innen_l_mm')}
         {zahlfeld('Breite', 'breiteMm', 'innen_b_mm')}
