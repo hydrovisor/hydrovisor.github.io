@@ -49,9 +49,17 @@ $uebernehmen = [bool]($variablen | Where-Object { $_.name -eq 'VITE_VAPID_PUBLIC
 $prod = (gh variable get SUPABASE_PROJECT_REF_PROD).Trim()
 Pruefen 'gh variable get SUPABASE_PROJECT_REF_PROD'
 if (-not $prod) { throw 'Repository-Variable SUPABASE_PROJECT_REF_PROD fehlt' }
-$secrets = npx --yes supabase@3.0.0 secrets list --project-ref $prod
-Pruefen 'supabase secrets list (vorher: npx supabase login)'
-$quittungBesteht = [bool]($secrets -match 'PUSH_QUITTUNG_SCHLUESSEL')
+# Namen der Secrets als JSON statt als Text: «-match» auf der Textausgabe war bei Tims Lauf unzuverlässig (#68)
+function SecretNamen {
+  $json = npx --yes supabase@3.0.0 secrets list --project-ref $prod --output json
+  Pruefen 'supabase secrets list (vorher: npx supabase login)'
+  $liste = $json | Out-String | ConvertFrom-Json
+  # Leere Ausgabe ergäbe unter PowerShell 5.1 $null und damit «kein Secret»: dann lieber abbrechen (Regel 3)
+  if ($null -eq $liste) { throw 'supabase secrets list lieferte kein JSON' }
+  return @($liste | ForEach-Object { $_.name })
+}
+$secrets = SecretNamen
+$quittungBesteht = $secrets -contains 'PUSH_QUITTUNG_SCHLUESSEL'
 
 if ($uebernehmen) {
   Write-Host 'VITE_VAPID_PUBLIC_KEY ist schon gesetzt. Das Skript übernimmt den bestehenden Schlüssel und erzeugt keinen neuen.'
@@ -62,6 +70,10 @@ if ($uebernehmen) {
   $zeiger = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($eingabe)
   try { $privat = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($zeiger).Trim() }
   finally { [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($zeiger) }
+  if ($privat -notmatch '^[A-Za-z0-9_-]{43}$') {
+    Write-Host 'Abbruch: Der private VAPID-Schlüssel hat nicht die Form von 43 Zeichen base64url. Nichts wurde gesetzt.'
+    exit 1
+  }
   $abgeleitet = OeffentlichZu $privat
   if (-not $abgeleitet -or $abgeleitet -ne $oeffentlich) {
     Write-Host 'Abbruch: Der private Schlüssel passt nicht zu VITE_VAPID_PUBLIC_KEY. Nichts wurde gesetzt.'
@@ -70,11 +82,11 @@ if ($uebernehmen) {
   }
   Write-Host 'Der private Schlüssel passt zum öffentlichen.'
   $vapid = [pscustomobject]@{ publicKey = $oeffentlich; privateKey = $privat }
-  if ($secrets -match 'VAPID_(PUBLIC|PRIVATE)_KEY') {
+  if (($secrets -contains 'VAPID_PUBLIC_KEY') -or ($secrets -contains 'VAPID_PRIVATE_KEY')) {
     Write-Host 'In der Produktion besteht schon ein VAPID-Secret. Es wird mit dem geprüften Paar überschrieben.'
   }
 } else {
-  if ($secrets -match 'VAPID_(PUBLIC|PRIVATE)_KEY') {
+  if (($secrets -contains 'VAPID_PUBLIC_KEY') -or ($secrets -contains 'VAPID_PRIVATE_KEY')) {
     Write-Host 'Abbruch: In der Produktion besteht schon ein VAPID-Schlüssel, aber VITE_VAPID_PUBLIC_KEY fehlt (CLAUDE.md Regel 3).'
     exit 1
   }
@@ -103,11 +115,26 @@ if (-not $quittungBesteht) { $zeilen += "PUSH_QUITTUNG_SCHLUESSEL=$quittung" }
 $datei = New-TemporaryFile
 try {
   $zeilen | Set-Content -Path $datei -Encoding ASCII
-  npx --yes supabase@3.0.0 secrets set --project-ref $prod --env-file $datei.FullName | Out-Null
-  Pruefen 'supabase secrets set'
+  # Unter PowerShell 5.1 mit ErrorActionPreference Stop bricht jede Zeile auf stderr ab, auch bei Exit 0 (Prüfer #74)
+  $alt = $ErrorActionPreference
+  $ErrorActionPreference = 'Continue'
+  try {
+    $ausgabe = npx --yes supabase@3.0.0 secrets set --project-ref $prod --env-file $datei.FullName 2>&1 |
+      ForEach-Object { "$_" } | Out-String
+    $code = $LASTEXITCODE
+  } finally {
+    $ErrorActionPreference = $alt
+  }
+  if ($code -ne 0) { Write-Host $ausgabe; throw "supabase secrets set fehlgeschlagen (Exit $code)" }
 } finally {
   Remove-Item $datei -Force
 }
+
+# Abgleich danach: Alle vier Namen müssen in der Produktion stehen, sonst laut abbrechen (#68)
+$nachher = SecretNamen
+$fehlend = @('VAPID_PUBLIC_KEY', 'VAPID_PRIVATE_KEY', 'VAPID_SUBJECT', 'PUSH_QUITTUNG_SCHLUESSEL') | Where-Object { $nachher -notcontains $_ }
+if ($fehlend) { throw "Nach «secrets set» fehlen in der Produktion: $($fehlend -join ', ')" }
+Write-Host 'Geprüft: Alle vier Secrets stehen in der Produktion.'
 
 if (-not $uebernehmen) {
   Write-Host 'Setze die GitHub-Variable VITE_VAPID_PUBLIC_KEY (öffentlich) ...'
