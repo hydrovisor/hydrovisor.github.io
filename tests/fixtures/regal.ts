@@ -1,6 +1,8 @@
 // Teile des Bündels (Form von PostgREST) für das Regal R nach Konzept 5.2 (Plan 20): 4 Bereiche, 13 Gefässe
 // (davon 5 Stationen auf Ebene 4), Anzuchtboxen A1 bis A4, Messstelle W. Dazu eine Lösung, Messungen, ein Ansatz mit
 // Positionen und ein Satz in 2.3. Ohne Personendaten. Gemeinsam für Unit und E2E.
+// Plan 21: Vorlagen mit Innenmassen, Deckel mit Lochbild (Konzept 5.3, 5.4), Netztöpfe je Loch (ohne S8, A5),
+// Etiketten je Platz, Ereignisse gefaess_erfasst, Gefässprüfung und Ruhe passend zu v_gefaess_status; leeresRegal().
 
 type Zeile = Record<string, unknown>;
 export type Teile = Record<string, Zeile[]>;
@@ -71,84 +73,268 @@ export const platzId = (kennung: string, anlage = ANLAGE_R) => {
 };
 export const gefaessId = (kennung: string) => uid('2c', GEFAESSE.findIndex((g) => g.kennung === kennung) + 1);
 
+/** Vorlagen der Boxen mit Innenmassen in mm (A: Innenmasse geschätzt; Betriebsvolumen wie bisher) */
 const MODELLE: Record<Ortdef['modell'], Zeile> = {
-  rako: { id: uid('2d', 1), name: 'Rako 40 × 30 × 22', form: 'rechteckig', betriebsvolumen_l: 9, ...o },
-  halb: { id: uid('2d', 2), name: 'Rako 30 × 20 × 12', form: 'rechteckig', betriebsvolumen_l: 3, ...o },
-  leni: { id: uid('2d', 3), name: 'Leni Flori 36', form: 'oval', betriebsvolumen_l: 2.3, ...o },
+  rako: {
+    id: uid('2d', 1),
+    client_id: uid('2d', 1),
+    name: 'Rako 40 × 30 × 22',
+    form: 'rechteckig',
+    innen_l_mm: 365,
+    innen_b_mm: 265,
+    innen_h_mm: 200,
+    nennvolumen_l: 19,
+    betriebsvolumen_l: 9,
+    ...o,
+  },
+  // 270 × 180 × 110 mm = 5 346 000 mm³ = 5.346 l (Grenze für UC3-AK2)
+  halb: {
+    id: uid('2d', 2),
+    client_id: uid('2d', 2),
+    name: 'Rako 30 × 20 × 12',
+    form: 'rechteckig',
+    innen_l_mm: 270,
+    innen_b_mm: 180,
+    innen_h_mm: 110,
+    nennvolumen_l: 5,
+    betriebsvolumen_l: 3,
+    ...o,
+  },
+  leni: {
+    id: uid('2d', 3),
+    client_id: uid('2d', 3),
+    name: 'Leni Flori 36',
+    form: 'oval',
+    innen_l_mm: 350,
+    innen_b_mm: 120,
+    innen_h_mm: 100,
+    nennvolumen_l: 3.7,
+    betriebsvolumen_l: 2.3,
+    ...o,
+  },
+};
+export const modellId = (modell: Ortdef['modell']) => MODELLE[modell]['id'] as string;
+
+/**
+ * Deckel und Platten nach Konzept 5.3 und 5.4: Löcher je Reihe von vorne nach hinten und Topfdurchmesser.
+ * D6 und S5 stehen so im Konzept; die Aufteilung in Reihen von D1, D2, D3, D4 und S8 ist angenommen (A),
+ * Lochzahl und Grösse folgen Konzept 5.3 (D1 4 × 8, D2 6 × 8, D3 8 × 5, D4 2 × 8, S8 4 × 8 in einer Reihe).
+ */
+export const DECKELTYPEN: Record<string, { topfdurchmesser_mm: 50 | 80; loecher_je_reihe: number[] }> = {
+  D1: { topfdurchmesser_mm: 80, loecher_je_reihe: [2, 2] },
+  D2: { topfdurchmesser_mm: 80, loecher_je_reihe: [2, 2, 2] },
+  D3: { topfdurchmesser_mm: 50, loecher_je_reihe: [2, 2, 2, 2] },
+  D4: { topfdurchmesser_mm: 80, loecher_je_reihe: [2] },
+  D6: { topfdurchmesser_mm: 50, loecher_je_reihe: [2, 2, 2] },
+  S8: { topfdurchmesser_mm: 80, loecher_je_reihe: [4] },
+  S5: { topfdurchmesser_mm: 50, loecher_je_reihe: [1, 2, 1, 2, 1, 2, 1, 2, 1] },
 };
 const DECKEL = ['D1', 'D2', 'D3', 'D4', 'D6', 'S8', 'S5'];
+export const deckelId = (name: string) => uid('2f', DECKEL.indexOf(name) + 1);
+const lochzahl = (name: string) => (DECKELTYPEN[name]?.loecher_je_reihe ?? []).reduce((a, b) => a + b, 0);
+
+/** Netztöpfe je Loch mit Heimplatz (Konzept 5.4); 4.2 und 4.3 (S8, feste Dosis, 80 mm) ohne eigene Töpfe (A5) */
+const TOEPFE = GEFAESSE.filter((g) => g.deckel !== 'S8').flatMap((g) =>
+  Array.from({ length: lochzahl(g.deckel) }, (_, i) => ({
+    gefaess: g,
+    loch: i + 1,
+    kennung: `${g.kennung}.${i + 1}`,
+  })),
+);
+export const netztopfId = (kennung: string) => uid('31', TOEPFE.findIndex((t) => t.kennung === kennung) + 1);
+
+const BETRIEBSART_BEREICH = ['dwc', 'dwc', 'kratky_belueftet', 'konstantpegel'];
+/** Luftpumpen nach Konzept 5.2 */
+const PUMPE: Record<string, string> = {
+  '1.1': 'P1',
+  '1.2': 'P1',
+  '2.1': 'P2',
+  '2.2': 'P2',
+  '2.3': 'P2',
+  '3.1': 'P3',
+  '3.2': 'P3',
+  '3.3': 'P3',
+  '4.1': 'P4',
+  '4.2': 'P4',
+  '4.3': 'P4',
+  '4.4': 'P4',
+  '4.5': 'P3',
+};
+
+/** Anlage R, Bereiche mit Standard-Betriebsart, Vorlagen für Box und Deckel, Messgerät */
+function stammdaten(): Teile {
+  return {
+    anlage: [
+      {
+        id: ANLAGE_R,
+        kuerzel: 'R',
+        name: 'Indoor-Regal',
+        datenart: 'echt',
+        aktiv: true,
+        standort: 'indoor',
+        ec_wasser_annahme: 0.5,
+        ...o,
+      },
+    ],
+    bereich: [1, 2, 3, 4].map((n) => ({
+      id: uid('2e', n),
+      anlage_id: ANLAGE_R,
+      nummer: n,
+      name: `Ebene ${n}`,
+      standard_betriebsart: BETRIEBSART_BEREICH[n - 1],
+      ...o,
+    })),
+    gefaessmodell: Object.values(MODELLE).map((m) => ({ ...m })),
+    deckeltyp: DECKEL.map((name, i) => ({
+      id: uid('2f', i + 1),
+      client_id: uid('2f', i + 1),
+      name,
+      ...DECKELTYPEN[name],
+      service_oeffnung: true,
+      ...o,
+    })),
+    messgeraet: [{ id: uid('23', 1), modell: 'Aquamaster P160 Pro2', u_ec: 0.05, u_ph: 0.05 }],
+  };
+}
+
+/** Anlage R mit Bereichen und Vorlagen, ohne Plätze, Gefässe, Anzuchtorte und W (Start des Assistenten) */
+export function leeresRegal(): Teile {
+  return {
+    ...stammdaten(),
+    platz: [],
+    etikett: [],
+    gefaess: [],
+    anzuchtort: [],
+    netztopf: [],
+    ereignis: [],
+    v_gefaess_status: [],
+    v_fuellzustand: [],
+    satz: [],
+    pflanzung: [],
+    v_pflanzung_zustand: [],
+    v_reservierung_aktiv: [],
+    messung: [],
+    v_messung_unsicher: [],
+    naehrloesungsansatz: [],
+    ansatz_position: [],
+  };
+}
 
 /** Regal R mit 4 Bereichen, 13 Gefässen, 4 Anzuchtboxen, W. `jetzt` bestimmt die Zeitstempel relativ. */
 export function regalTeile(jetzt = new Date('2026-12-10T08:00:00Z')): Teile {
   const vor = (tage: number, stunden = 0) =>
     new Date(jetzt.getTime() - (tage * 24 + stunden) * 3600_000).toISOString();
-  const t: Teile = {};
-  t['anlage'] = [
-    {
-      id: ANLAGE_R,
-      kuerzel: 'R',
-      name: 'Indoor-Regal',
-      datenart: 'echt',
-      aktiv: true,
-      standort: 'indoor',
-      ec_wasser_annahme: 0.5,
-      ...o,
-    },
-  ];
-  t['bereich'] = [1, 2, 3, 4].map((n) => ({
-    id: uid('2e', n),
-    anlage_id: ANLAGE_R,
-    nummer: n,
-    name: `Ebene ${n}`,
-    ...o,
-  }));
-  t['gefaessmodell'] = Object.values(MODELLE);
-  t['deckeltyp'] = DECKEL.map((name, i) => ({ id: uid('2f', i + 1), name, ...o }));
+  const t: Teile = stammdaten();
+  const position = (kennung: string) => Number(kennung.split('.')[1]);
   t['platz'] = [
     ...GEFAESSE.map((g) => ({
       id: platzId(g.kennung),
+      client_id: platzId(g.kennung),
       anlage_id: ANLAGE_R,
       bereich_id: uid('2e', g.bereich),
       kennung: g.kennung,
       rolle: 'gefaess',
+      position: position(g.kennung),
       aktiv: true,
       ...o,
     })),
     ...BOXEN.map((b) => ({
       id: platzId(b.kennung),
+      client_id: platzId(b.kennung),
       anlage_id: ANLAGE_R,
       bereich_id: uid('2e', 4),
       kennung: b.kennung,
       rolle: 'anzuchtort',
+      position: null,
       aktiv: true,
       ...o,
     })),
     {
       id: platzId('W'),
+      client_id: platzId('W'),
       anlage_id: ANLAGE_R,
       bereich_id: null,
       kennung: 'W',
       rolle: 'messstelle',
+      position: null,
       aktiv: true,
       ...o,
     },
   ];
+  // Etikett je Platz (Code aus Kürzel und Kennung), noch nicht gedruckt; Anzuchtboxen 55 × 25 (Konzept 5.4)
+  t['etikett'] = (t['platz'] as { id: string; kennung: string; rolle: string }[]).map((p, i) => ({
+    id: uid('32', i + 1),
+    client_id: uid('32', i + 1),
+    code: `R-${p.kennung}`,
+    platz_id: p.id,
+    format: p.rolle === 'anzuchtort' ? '55x25' : '70x42_3',
+    gedruckt_am: null,
+    ...o,
+  }));
   t['gefaess'] = GEFAESSE.map((g) => ({
     id: gefaessId(g.kennung),
+    client_id: gefaessId(g.kennung),
     platz_id: platzId(g.kennung),
     gefaessmodell_id: MODELLE[g.modell]['id'],
-    deckeltyp_id: uid('2f', DECKEL.indexOf(g.deckel) + 1),
+    deckeltyp_id: deckelId(g.deckel),
     betriebsart: g.betriebsart,
     // Stationen 4.1 bis 4.5 als Konstantpegel mit fester Dosis (R4.5)
     feste_dosis: g.betriebsart === 'konstantpegel',
+    luftpumpe: PUMPE[g.kennung] ?? null,
     betriebsvolumen_l: MODELLE[g.modell]['betriebsvolumen_l'],
     intervall_messen_d: 2,
+    intervall_nachfuellen_d: g.betriebsart.startsWith('kratky') ? null : 2,
     intervall_wechseln_d: g.wechsel,
+    naechster_wechsel_am: null,
+    gueltig_von: vor(40),
     gueltig_bis: null,
     ...o,
   }));
+  t['netztopf'] = TOEPFE.map((tp, i) => ({
+    id: uid('31', i + 1),
+    client_id: uid('31', i + 1),
+    anlage_id: ANLAGE_R,
+    kennung: tp.kennung,
+    groesse_mm: DECKELTYPEN[tp.gefaess.deckel]?.topfdurchmesser_mm,
+    heim_platz_id: platzId(tp.gefaess.kennung),
+    heim_loch_nr: tp.loch,
+    aktiv: true,
+    ...o,
+  }));
+  // Ereignisse passend zu v_gefaess_status: alle vor 40 Tagen erfasst; ausser 3.3 am Tag danach geprüft
+  // (Schritte 1 bis 4); 1.2 ruht seit 5 Tagen
+  let n = 0;
+  const ereignis = (typ: string, kennung: string, gilt: string, daten: Record<string, unknown> = {}) => {
+    n += 1;
+    return {
+      id: uid('33', n),
+      client_id: uid('33', n),
+      typ,
+      platz_id: platzId(kennung),
+      daten,
+      gilt_ab: gilt,
+      ...o,
+    };
+  };
+  t['ereignis'] = [
+    ...GEFAESSE.map((g) => ereignis('gefaess_erfasst', g.kennung, vor(40))),
+    ...GEFAESSE.filter((g) => g.kennung !== '3.3').flatMap((g) =>
+      [1, 2, 3, 4].map((schritt) =>
+        ereignis(
+          'gefaesspruefung',
+          g.kennung,
+          vor(39),
+          schritt === 4
+            ? { schritt, ok: true, volumen_gezaehlt_l: MODELLE[g.modell]['betriebsvolumen_l'] }
+            : { schritt, ok: true },
+        ),
+      ),
+    ),
+    ereignis('ruhe', '1.2', vor(5), { gesetzt: true }),
+  ];
   t['anzuchtort'] = BOXEN.map((b, i) => ({
     id: uid('20', i + 1),
+    client_id: uid('20', i + 1),
     platz_id: platzId(b.kennung),
     typ: b.typ,
     platzzahl: 25,
@@ -201,7 +387,6 @@ export function regalTeile(jetzt = new Date('2026-12-10T08:00:00Z')): Teile {
     { produkt_id: 'micro_hard_water', name: 'Micro' },
     { produkt_id: 'bloom', name: 'Bloom' },
   ];
-  t['messgeraet'] = [{ id: uid('23', 1), modell: 'Aquamaster P160 Pro2', u_ec: 0.05, u_ph: 0.05 }];
   const messung = (n: number, tage: number, ph: number, ec: number, bewertung: string) => ({
     id: uid('24', n),
     platz_id: platzId('2.3'),
@@ -256,6 +441,7 @@ export function regalTeile(jetzt = new Date('2026-12-10T08:00:00Z')): Teile {
     platz_id: platzId('2.3'),
     loch_nr: n,
   }));
+  t['v_reservierung_aktiv'] = [];
   return t;
 }
 
