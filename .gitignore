@@ -157,3 +157,6 @@ seed-bericht.md
 test-results/
 playwright-report/
 .stryker-tmp/
+
+# Originalfotos der Saattüten für den KI-Eval (mögliche GPS-Daten, CLAUDE.md Regel 6; Plan 14)
+data/eval/fotos/

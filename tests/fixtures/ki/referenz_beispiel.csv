@@ -1,0 +1,25 @@
+sorte_zeile_id,feld,soll
+sorte-eval-a,name,Rote Probe
+sorte-eval-a,art,Salat|Lactuca sativa
+sorte-eval-a,keimart,Lichtkeimer
+sorte-eval-a,keimtemperatur,15 bis 20 °C
+sorte-eval-a,keimdauer,7-14
+sorte-eval-a,kulturdauer,50-70
+sorte-eval-a,aussaatfenster,3-8
+sorte-eval-a,hersteller,Beispiel Saaten
+sorte-eval-b,name,Grüne Welle
+sorte-eval-b,art,Basilikum|Ocimum basilicum
+sorte-eval-b,keimart,licht
+sorte-eval-b,keimtemperatur,20-25
+sorte-eval-b,keimdauer,5 bis 10 Tage
+sorte-eval-b,kulturdauer,60-80
+sorte-eval-b,aussaatfenster,nicht auf der Tüte
+sorte-eval-b,hersteller,Beispiel Saaten
+sorte-eval-c,name,Kleine Sonne
+sorte-eval-c,art,Tomate|Solanum lycopersicum
+sorte-eval-c,keimart,Dunkelkeimer
+sorte-eval-c,keimtemperatur,22-26
+sorte-eval-c,keimdauer,7-14
+sorte-eval-c,kulturdauer,nicht auf der Tüte
+sorte-eval-c,aussaatfenster,2-4
+sorte-eval-c,hersteller,nicht auf der Tüte

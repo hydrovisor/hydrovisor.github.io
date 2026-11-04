@@ -70,3 +70,32 @@ supabase/tests/database/11_backup.test.sql
 tests/unit/backup-regeln.test.ts
 # Fehler #65 Tabellenrechte
 supabase/tests/database/12_tabellenrechte.test.sql
+# I0-09 KI-Eval (#14)
+supabase/functions/ki-tuete/jpeg_test.ts
+supabase/functions/ki-tuete/kern_test.ts
+supabase/functions/ki-tuete/modell_test.ts
+tests/unit/ki-anfrage.test.ts
+tests/unit/ki-eval.test.ts
+tests/unit/ki-schema.test.ts
+tests/unit/ki-uebernahme.test.ts
+tests/fixtures/ki/antwort_gueltig.json
+tests/fixtures/ki/antwort_ph.json
+tests/fixtures/ki/antwort_ungueltig.json
+tests/fixtures/ki/antworten/sorte-eval-a.claude-haiku-5-5.json
+tests/fixtures/ki/antworten/sorte-eval-a.claude-sonnet-5-5.json
+tests/fixtures/ki/antworten/sorte-eval-b.claude-haiku-5-5.json
+tests/fixtures/ki/antworten/sorte-eval-b.claude-sonnet-5-5.json
+tests/fixtures/ki/antworten/sorte-eval-c.claude-haiku-5-5.json
+tests/fixtures/ki/antworten/sorte-eval-c.claude-sonnet-5-5.json
+tests/fixtures/ki/fehler_529.json
+tests/fixtures/ki/fotos/sorte-eval-a-1.jpg
+tests/fixtures/ki/fotos/sorte-eval-a-2.jpg
+tests/fixtures/ki/fotos/sorte-eval-b-1.jpg
+tests/fixtures/ki/fotos/sorte-eval-b-2.jpg
+tests/fixtures/ki/fotos/sorte-eval-c-1.jpg
+tests/fixtures/ki/fotos/sorte-eval-c-2.jpg
+tests/fixtures/ki/jpeg_1568x10.jpg
+tests/fixtures/ki/jpeg_1600x10.jpg
+tests/fixtures/ki/referenz_beispiel.csv
+# I0-09 Runde 1 (#14)
+tests/unit/ki-eval-runde1.test.ts

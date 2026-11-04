@@ -88,6 +88,10 @@ Stand 1.11.2026 · Auftrag 2 «Spezifikation». Bedeutungen stehen in Konzept v1
 | Tagesliste der Push (Übergang bis I1b-06) | – | `tagesliste()`, `pushText()`, `TagesEintrag` |
 | Push-Stand in Heute | `push_abo`, `push_versand` | `pushStand()`, `PushStand` |
 | Quittung der Push | `push_versand.angezeigt_am`, `geoeffnet_am` | `quittieren()`, `signaturText()` |
+| Tütenfelder (Schema der Saattüte) | `ki_feld` | `TuetenFelder`, `TUETEN_SCHEMA`, `antwortPruefen()`, `feldTexte()` |
+| Tüte lesen (KI-Aufruf mit Ausweichmodell) | `ki_aufruf` | `tueteLesen()`, `KiErgebnis`, `ModellRufer` |
+| Übernahme ins Formular, Feldstatus | `ki_feldprotokoll.status` | `kiUebernehmen()`, `feldStatus()` |
+| Bewertung im Eval | `ki_feldprotokoll.bewertung_eval` | `feldBewerten()`, `auswerten()`, `defaultWaehlen()` |
 | Ort aus dem Etikett-Code | – | `Ort`, `ortAufloesen()`, `messbareOrte()` |
 | Edge Functions | `push-taeglich`, `push-quittung`, `ki-tuete` | – |
 | Zugriff | `zugang`, `ist_tim()` | – |

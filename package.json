@@ -19,6 +19,7 @@
     "preview": "vite preview",
     "seed": "node scripts/seed.ts",
     "w0:pruefen": "node scripts/w0-pruefen.ts",
+    "eval:tueten": "node scripts/ki-eval.ts",
     "demo": "node scripts/demo.ts"
   },
   "dependencies": {
