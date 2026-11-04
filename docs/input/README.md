@@ -6,7 +6,7 @@ Der Agent liest nur, was im Repository liegt (Konzept Kapitel 16). Fakten stehen
 
 | Datei | Quelle | Stand der Quelle | Übernahme |
 |---|---|---|---|
-| `konzept_v1.2.md` | «Hydrovisor – Definitives Fachkonzept v1.0.md», im Repository zu v1.1 und v1.2 fortgeschrieben | Kopf 29.10.2026, Errata E1 bis E5 bis 31.10.2026; v1.1 mit Erratum E6 und v1.2 mit Erratum E7 vom 1.11.2026 | v1.0 1:1 bis auf die Anonymisierung (siehe unten); v1.1 mit Tims Entscheiden vom 1.11.2026 in Text und Anhang B.2, Zeilennummern wie v1.0; v1.0 liegt im Git-Verlauf |
+| `konzept_v1.3.md` | «Hydrovisor – Definitives Fachkonzept v1.0.md», im Repository zu v1.1 bis v1.3 fortgeschrieben | Kopf 29.10.2026, Errata E1 bis E5 bis 31.10.2026; v1.1 mit Erratum E6 und v1.2 mit Erratum E7 vom 1.11.2026; v1.3 mit Erratum E8 vom 4.11.2026 | v1.0 1:1 bis auf die Anonymisierung (siehe unten); v1.1 mit Tims Entscheiden vom 1.11.2026 in Text und Anhang B.2, Zeilennummern wie v1.0; v1.0 liegt im Git-Verlauf |
 | `use_cases_f4.md` | aus Fassung 3 (Google Doc, 23.10.2026, Nachträge bis 28.10.2026) auf Konzept v1.0 nachgeführt | 31.10.2026 | von einem Agenten nachgeführt und unabhängig geprüft; jede Änderung mit Beleg im Konzept (Tabelle «Änderungen gegenüber Fassung 3»). **10 offene Entscheide** sind im Text als «Entscheid Tim offen» (E-F4-1 bis E-F4-10) markiert |
 | `use_cases_f4_bericht.md` | Bericht zur Nachführung | 31.10.2026 | Umfang der Änderungen, Status der Prüfbefunde, Unsicherheiten im Konzept selbst (mit Zeilen), Liste der Entscheide E-F4-1 bis E-F4-10. Verweist auf Fassung 3; diese liegt nur noch im Git-Verlauf (Commit 9e6cecc) |
 | `duengeplan_v1.6.md` | «Düngeplan TriPart V1.6.md» | 29.10.2026 | 1:1 bis auf die Anonymisierung (siehe unten) |
@@ -19,7 +19,7 @@ Der Agent liest nur, was im Repository liegt (Konzept Kapitel 16). Fakten stehen
 
 ## Anonymisierung (öffentliches Repository)
 
-In `konzept_v1.2.md` und `duengeplan_v1.6.md` sind Nachname, Wohngemeinde und Name des Wasserversorgers ersetzt («Tim», «am Wohnort», «Wasserversorger»); sonst sind beide Dateien unverändert. Die Wasserwerte (Calcium, Magnesium, Härte) bleiben, weil der Düngerrechner sie braucht. Die Originale liegen bei Tim.
+In `konzept_v1.3.md` und `duengeplan_v1.6.md` sind Nachname, Wohngemeinde und Name des Wasserversorgers ersetzt («Tim», «am Wohnort», «Wasserversorger»); sonst sind beide Dateien unverändert. Die Wasserwerte (Calcium, Magnesium, Härte) bleiben, weil der Düngerrechner sie braucht. Die Originale liegen bei Tim.
 
 ## Bewusst nicht übernommen
 
