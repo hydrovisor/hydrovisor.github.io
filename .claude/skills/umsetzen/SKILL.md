@@ -1,6 +1,6 @@
 ---
 name: umsetzen
-description: Paketablauf nach Konzept 12.3 für ein Issue aus docs/plaene/pakete.md – Zweig, Plan, Planfreigabe, rote Tests, Umsetzung, Prüfer, Pull Request, Abnahme und Merge nach Tims Bestätigung. Aufruf /umsetzen <issue>; setzt nach einem Unterbruch am letzten Stand fort.
+description: Paketablauf nach Konzept 12.3 für ein Issue aus docs/plaene/pakete.md – Zweig, Plan, Planfreigabe, rote Tests, Umsetzung, Prüfer, Pull Request, Abnahme und Merge durch den Lead (Entscheid 0008). Aufruf /umsetzen <issue>; setzt nach einem Unterbruch am letzten Stand fort.
 argument-hint: <issue-nummer>
 ---
 
@@ -48,8 +48,8 @@ Beim Fortsetzen: `gh issue view` zeigt Label `plan-frei` und Tims Kommentar «Pl
 1. `git push -u origin paket/<issue>-<kurz>`; Pull Request mit `.github/pull_request_template.md`, alle Pflichtfelder ausgefüllt (Paketklasse, Schätzung, Tims Minuten, Runden, Prüferbefunde, Modell und Denkstufe, Verbrauch `/usage`); `Closes #<issue>`; Labels am Pull Request: Klasse (`routine`, `fachlogik` oder `kern`; `kern` löst den Mutationstest aus), `db-lock` bei Änderungen in `supabase/migrations`, `abnahme-wartet`.
 2. Prüftor in GitHub abwarten (Job `pruefstor`).
 3. Abnahme 1: Tim prüft in der Vorschau `<zweig>.hydrovisor-vorschau.pages.dev` und schreibt den Abnahmekommentar nach `.github/abnahme_vorlage.md`; [Gerät]-AK am Regal bekommen `offen-regal` (höchstens 20 offen). Danach entfernt der Lead das Label `abnahme-wartet`; das löst das Prüftor neu aus, und die AK-Abdeckung liest die [Gerät]-Nummern aus dem Kommentar.
-4. **Kurzzusammenfassung, was der Merge auslöst** (Dateien, Workflows, Migration mit Freigabe, Supabase, Vorschau, Folgen für andere Zweige) und **anhalten**.
-5. Erst nach Tims ausdrücklichem «Ja» im Chat: `gh pr merge <nr> --squash`. Danach Abnahme 2 in der installierten App (Info-Seite zeigt den Commit).
+4. **Kurzzusammenfassung, was der Merge auslöst** (Dateien, Workflows, Migration mit Freigabe, Supabase, Vorschau, Folgen für andere Zweige) in den Pull Request.
+5. Merge durch den Lead ohne Einzelbestätigung (Entscheid 0008, bis Tim widerruft): Prüftor grün, Prüfer «bestanden», Abnahme 1 kommentiert, dann `gh pr merge <nr> --squash` und Tim das Endprodukt melden. Bei einer Migration danach anhalten für Tims Freigabe von `deploy.yml` in `production`. Danach Abnahme 2 in der installierten App (Info-Seite zeigt den Commit). Nach einem Widerruf: erst nach Tims ausdrücklichem «Ja» im Chat.
 
 ## 6 Statuskommentar (nach jedem Schritt und am Sitzungsende)
 
