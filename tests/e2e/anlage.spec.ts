@@ -5,6 +5,8 @@ import { regalTeile, vereinen, weitereAnlage, type Teile } from '../fixtures/reg
 import { authNachbilden, sitzungSpeichern } from './hilfen.ts';
 import { restNachbilden } from './rest.ts';
 
+const JETZT = new Date('2026-12-10T08:00:00Z');
+
 async function mitDaten(
   page: Page,
   start: Teile,
@@ -24,6 +26,8 @@ async function mitDaten(
       }
     },
   );
+  // feste Uhr: Lösungsalter und Pflanzdauer sind Kalendertage in Zürich (G2), unabhängig von Laufzeit und Sommerzeit
+  await page.clock.setFixedTime(JETZT);
   await page.goto(pfad);
   return { geschrieben };
 }
@@ -38,7 +42,7 @@ async function ohneScrollen(page: Page, ort: Locator): Promise<void> {
 test('UC1-AK1 Übersicht mit 13 Gefässen, 4 Anzuchtboxen und W ohne Scrollen, Kacheln 72 × 80, Kennung 28 sp, Ebene 4 in drei Gruppen', async ({
   page,
 }) => {
-  await mitDaten(page, regalTeile(new Date()), '/#/anlage');
+  await mitDaten(page, regalTeile(JETZT), '/#/anlage');
   const regal = page.getByRole('list', { name: 'Regalbild Indoor-Regal' });
   await expect(regal).toBeVisible();
   await expect(regal.locator('.hv-regal-titel')).toHaveText([
@@ -89,7 +93,7 @@ test('UC1-AK1 Übersicht mit 13 Gefässen, 4 Anzuchtboxen und W ohne Scrollen, K
 test('UC1-AK2 Maske Gefäss: Kopf, Zustand und Hauptknopf ohne Scrollen; Pflanzdauer, Phase, Zielbereich, Dosis je Komponente', async ({
   page,
 }) => {
-  await mitDaten(page, regalTeile(new Date()), '/#/gefaess/R-2.3');
+  await mitDaten(page, regalTeile(JETZT), '/#/gefaess/R-2.3');
   const kopf = page.getByRole('heading', { name: '2.3', level: 1 });
   await expect(kopf).toBeVisible();
   await expect(page.getByText('Anlage R · DWC · 9 l')).toBeVisible();
@@ -98,7 +102,7 @@ test('UC1-AK2 Maske Gefäss: Kopf, Zustand und Hauptknopf ohne Scrollen; Pflanzd
   await expect(zustand.getByText('pH 5.8–6.3 · EC 1.0–1.4 · 18–22 °C')).toBeVisible();
   await expect(zustand.getByText('pH 6.40 · EC 1.45 · 20.5 °C')).toBeVisible();
   await expect(zustand.getByText('Grow 2.33 · Micro 1.56 · Bloom 0.78 ml/L')).toBeVisible();
-  await expect(zustand.getByText(/^3 × Lollo Rossa · Wachstum · seit \d+ Tagen$/)).toBeVisible();
+  await expect(zustand.getByText('3 × Lollo Rossa · Wachstum · seit 30 Tagen')).toBeVisible();
   const haupt = page.getByRole('link', { name: /Messen$/ });
   await expect(haupt).toBeVisible();
   for (const ort of [kopf, zustand, haupt]) await ohneScrollen(page, ort);
@@ -113,7 +117,7 @@ test('UC1-AK2 Maske Gefäss: Kopf, Zustand und Hauptknopf ohne Scrollen; Pflanzd
 });
 
 test('UC1-AK4 kein Status nur über Farbe in Übersicht und Gefäss', async ({ page }) => {
-  await mitDaten(page, regalTeile(new Date()), '/#/anlage');
+  await mitDaten(page, regalTeile(JETZT), '/#/anlage');
   const regal = page.getByRole('list', { name: 'Regalbild Indoor-Regal' });
   await expect(regal.getByRole('button', { name: /^3\.3/ }).getByText('nicht geprüft')).toBeVisible();
   await expect(regal.getByRole('button', { name: /^1\.2/ }).getByText('ruht')).toBeVisible();
@@ -131,7 +135,7 @@ test('UC1-AK4 kein Status nur über Farbe in Übersicht und Gefäss', async ({ p
 test('UC1-AK5 zweite echte Anlage T anlegen: R unverändert, Heute gruppiert erst danach; X und Y gruppieren nicht', async ({
   page,
 }) => {
-  const start = vereinen(regalTeile(new Date()), weitereAnlage('X', 'demo'), weitereAnlage('Y', 'test'));
+  const start = vereinen(regalTeile(JETZT), weitereAnlage('X', 'demo'), weitereAnlage('Y', 'test'));
   const { geschrieben } = await mitDaten(page, start, '/#/heute');
   await expect(page.getByRole('heading', { name: 'Heute', level: 1 })).toBeVisible();
   await expect(page.getByRole('button', { name: /^X-2\.3/ })).toBeVisible();
