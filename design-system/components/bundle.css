@@ -227,6 +227,13 @@ button.hv-tile { cursor: pointer; touch-action: manipulation; }
 .hv-loch-reserviert { border-style: dashed; border-color: var(--brand); }
 .hv-loch-gewaehlt { background: var(--brand); border-color: var(--brand); color: var(--on-brand); }
 [data-density="regal"] .hv-loch { width: var(--size-touch-regal); height: var(--size-touch-regal); min-width: var(--size-touch-regal); }
+/* Rahmen um die Grafik: breite Reihen scrollen waagrecht, statt unter size-loch zu schrumpfen (UC2-AK3) */
+.hv-deckel-rahmen { max-width: 100%; overflow-x: auto; }
+.hv-deckel-rahmen > .hv-deckel { max-width: none; }
+/* Kantenbeschriftung «hinten» oben und «vorne · Gang» unten (column-reverse: erstes Kind unten) */
+.hv-deckel-kante { margin: 0; text-align: center; font-size: var(--text-caption-size); color: var(--ink-muted); }
+/* Marke Service-Öffnung an der Vorderkante: Text, nicht nur Form */
+.hv-deckel-service { align-self: flex-start; padding: 0 var(--space-2); border: 2px dashed var(--line-control); border-radius: var(--radius-sm); font-size: var(--text-caption-size); color: var(--ink-muted); }
 
 /* Echo des Ziffernblocks nimmt ohne Inhalt keinen Platz ein (Messmaske ohne Scrollen, Plan 12) */
 .hv-numpad-echo:empty { display: none; }

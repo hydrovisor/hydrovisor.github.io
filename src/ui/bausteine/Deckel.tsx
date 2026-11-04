@@ -1,4 +1,7 @@
-// Baustein Deckel (design-system/components/Deckel.md): Loch 1 vorne links, zeilenweise nach hinten
+// Baustein Deckel (design-system/components/Deckel.md): Loch 1 vorne links, zeilenweise nach hinten; Nummern,
+// Reihen und Randlöcher aus lochbild() (eine Quelle mit Vorlagen und Assistent, Plan 19)
+import { lochbild } from '../../domain/vorlagen/lochbild.ts';
+
 export interface Loch {
   nr: number;
   text?: string;
@@ -16,36 +19,55 @@ export function Deckel({
   reihen,
   loecher,
   onLoch,
+  kanten,
+  serviceOeffnung,
 }: {
   /** Löcher je Reihe von vorne nach hinten, z. B. [2, 2, 2] */
   reihen: number[];
   loecher: Loch[];
   onLoch?: (nr: number) => void;
+  /** Beschriftung «hinten» oben und «vorne · Gang» unten */
+  kanten?: boolean;
+  /** Marke «Service-Öffnung» an der Vorderkante */
+  serviceOeffnung?: boolean;
 }) {
-  // erste Lochnummer je Reihe: Summe der Löcher in den Reihen davor
-  const start = reihen.map((_, i) => reihen.slice(0, i).reduce((a, b) => a + b, 0));
+  const alle = lochbild(reihen);
   return (
-    <div className="hv-deckel" role="group" aria-label="Deckel">
-      {reihen.map((anzahl, i) => (
-        <div key={i} className="hv-deckel-reihe">
-          {Array.from({ length: anzahl }, (_, j) => {
-            const nr = (start[i] ?? 0) + j + 1;
-            const loch = loecher.find((l) => l.nr === nr) ?? { nr, zustand: 'frei' as const };
-            const klasse = loch.zustand === 'frei' ? 'hv-loch' : `hv-loch hv-loch-${loch.zustand}`;
-            return (
-              <button
-                key={nr}
-                type="button"
-                className={klasse}
-                aria-label={`Loch ${nr}, ${ZUSTAND_TEXT[loch.zustand]}`}
-                onClick={() => onLoch?.(nr)}
-              >
-                {loch.text ?? nr}
-              </button>
-            );
-          })}
-        </div>
-      ))}
+    <div className="hv-deckel-rahmen">
+      {/* column-reverse: das erste Kind liegt unten (vorne) */}
+      <div className="hv-deckel" role="group" aria-label="Deckel">
+        {kanten || serviceOeffnung ? (
+          <div className="hv-deckel-reihe">
+            {serviceOeffnung ? <span className="hv-deckel-service">Service-Öffnung</span> : null}
+            {kanten ? <p className="hv-deckel-kante">vorne · Gang</p> : null}
+          </div>
+        ) : null}
+        {reihen.map((_, i) => (
+          <div key={i} className="hv-deckel-reihe">
+            {alle
+              .filter((l) => l.reihe === i + 1)
+              .map((l) => {
+                const loch = loecher.find((x) => x.nr === l.nr) ?? { nr: l.nr, zustand: 'frei' as const };
+                const klasse = loch.zustand === 'frei' ? 'hv-loch' : `hv-loch hv-loch-${loch.zustand}`;
+                return (
+                  <button
+                    key={l.nr}
+                    type="button"
+                    className={klasse}
+                    aria-label={`Loch ${l.nr}, ${ZUSTAND_TEXT[loch.zustand]}`}
+                    data-reihe={l.reihe}
+                    data-randloch={l.randloch ? 'ja' : 'nein'}
+                    data-gangkante={l.gangkante ? 'ja' : 'nein'}
+                    onClick={() => onLoch?.(l.nr)}
+                  >
+                    {loch.text ?? l.nr}
+                  </button>
+                );
+              })}
+          </div>
+        ))}
+        {kanten ? <p className="hv-deckel-kante">hinten</p> : null}
+      </div>
     </div>
   );
 }
