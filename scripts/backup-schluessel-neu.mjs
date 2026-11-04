@@ -75,7 +75,9 @@ function verdeckt(frage) {
 }
 
 const rl = createInterface({ input: process.stdin, output: process.stdout });
-const ja = (await rl.question('Neues Schlüsselpaar für das Backup erzeugen? Zum Bestätigen «ja» eingeben: ')).trim();
+const ja = (
+  await rl.question('Neues Schlüsselpaar für das Backup erzeugen? Zum Bestätigen «ja» eingeben: ')
+).trim();
 rl.close();
 if (ja !== 'ja') {
   console.log('Abgebrochen. Nichts wurde gesetzt.');
@@ -87,13 +89,19 @@ const empfaenger = await identityToRecipient(identitaet);
 
 try {
   zwischenablage(identitaet);
-  console.log('\nSchritt 1 von 2: Der PRIVATE Schlüssel liegt in der Zwischenablage (74 Zeichen, beginnt mit AGE-SECRET-KEY-1).');
-  console.log('Lege im Passwortmanager einen neuen Eintrag an, zum Beispiel «Hydrovisor Backup age-Schlüssel»,');
+  console.log(
+    '\nSchritt 1 von 2: Der PRIVATE Schlüssel liegt in der Zwischenablage (74 Zeichen, beginnt mit AGE-SECRET-KEY-1).',
+  );
+  console.log(
+    'Lege im Passwortmanager einen neuen Eintrag an, zum Beispiel «Hydrovisor Backup age-Schlüssel»,',
+  );
   console.log('und füge ihn dort mit Ctrl-V als Passwort ein. Speichern.');
   console.log('Ohne diesen Schlüssel lässt sich kein Backup mehr öffnen.');
 
   for (;;) {
-    console.log('\nSchritt 2 von 2: Kopiere den Schlüssel jetzt AUS DEM PASSWORTMANAGER und füge ihn hier ein.');
+    console.log(
+      '\nSchritt 2 von 2: Kopiere den Schlüssel jetzt AUS DEM PASSWORTMANAGER und füge ihn hier ein.',
+    );
     zwischenablage(' ');
     const kontrolle = await verdeckt('Schlüssel aus dem Passwortmanager einfügen (Ctrl-V), dann Enter: ');
     if (kontrolle === identitaet) break;
