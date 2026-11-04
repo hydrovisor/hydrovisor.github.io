@@ -6,25 +6,38 @@ Datum 4.11.2026 · Entscheid von Tim · ergänzt `0005-workflows-durch-den-lead.
 
 **Entscheid.** Der Lead führt das Projekt selbständig und fragt Tim nicht nach Zwischenschritten. Ohne Rückfrage erledigt er:
 - **Code und Zweige:** committen, auf Zweige pushen, Pull Requests eröffnen und mergen (Bedingungen aus Entscheid 0008).
-- **Workflows:** starten und Läufe von `dev-migration.yml` freigeben (Entscheid 0005).
+- **Workflows:** starten (Entscheid 0005) und Läufe von `dev-migration.yml` freigeben (Entscheid 0006).
 - **Terminal:** Befehle im Terminal-Panel und in eigenen Shells ausführen, auch Installationen und Skripte. Davon ausgenommen sind die Sperren.
 - **Browser und Desktop:** Masken ausfüllen, Dashboards lesen und Einstellungen in `hydrovisor-dev`, GitHub und Cloudflare prüfen. Nie im Produktionsprojekt und nie mit Schlüsseln.
 - **Planfreigabe für Fachlogik mit Migration:** Der Lead setzt `plan-frei` selbst, nachdem der Planer fertig ist. Er nennt im Statuskommentar die Migration und die Annahmen.
-- **Eskalation nach zwei Prüfrunden:** Der Lead entscheidet selbst, ob er eine dritte Runde fährt, den Plan ändert oder das Paket teilt. Den Entscheid hält er im Issue fest.
+- **Abnahme 1 in der Vorschau:** Der Lead prüft im eingebauten Browser mit 360 × 640, bei Paketen ohne Maske über Tests und Trockenlauf. Er schreibt den Kommentar nach `.github/abnahme_vorlage.md` mit «Prüfer: Lead». [Gerät]-AK setzt er dabei immer auf «offen-regal», nie auf «ok»; sie belegt erst Tim am Honor mit Abnahme 2. Damit erfüllt auch der Kommentar des Leads die Merge-Bedingung «Abnahme 1 kommentiert» aus Entscheid 0008.
+- **Eskalation nach zwei Prüfrunden:** Der Lead entscheidet selbst, ob er eine dritte Runde fährt, den Plan ändert oder das Paket teilt. Den Entscheid hält er im Issue fest. Die Hebung auf Fable oder auf eine höhere Denkstufe bleibt bei Tim (Konzept 12.2, Fable-Grenze).
 - **Technische Details, die das Repository offenlässt:** Der Lead entscheidet und kennzeichnet sie mit (A).
-- **Wiederaufnahme eines halbfertigen Zweigs:** Der Lead sichert die Arbeit zuerst auf einem Sicherungszweig. Tim muss er dafür nicht fragen.
+- **Wiederaufnahme eines halbfertigen Zweigs:** Der Lead sichert die Arbeit zuerst auf einem Sicherungszweig. Schon gepushte Commits nimmt er mit `git revert` zurück, ohne Force-Push. Tim muss er dafür nicht fragen.
 
 Tims Handgriffe bündelt der Lead in **einer** Nachricht oder in **einem** Skript, das alle Schlüsselabfragen nacheinander stellt. Ergebnisse prüft der Lead selbst über Protokolle, Releases, Listen und Berichtsdateien. Er bittet Tim nicht um eine Rückmeldung.
 
 **Bleibt bei Tim (ganz wichtig oder nicht übertragbar):**
 1. **Schlüssel und Anmeldungen.** Dazu gehören Secrets, API-Schlüssel, Tokens, der `age`-Schlüssel, VAPID, der Supabase-Login und Passwörter. Der Agent darf sie technisch nicht lesen und nicht eingeben, auch nicht mit Erlaubnis (CLAUDE.md Regeln 2 und 3).
 2. **Produktion.** Darunter fallen der Zugriff auf das Produktionsprojekt (Sperr-Hook), die Freigabe von `deploy.yml` in der Umgebung `production` und die Produktions-Migration.
-3. **Planfreigabe der Kern-Pakete.** Das sind die Aufgaben-Rechnung (I1b) und die Passungs-Empfehlung (I2-4).
-4. **Abnahme 2 am Honor.** Sie braucht das Gerät.
+3. **Planfreigabe der Kern-Pakete und der Fehler gegen eine Referenzdatei.** Darunter fallen alle Pakete der Klasse K in `docs/plaene/pakete.md` (derzeit I1b-02 und I2-04) und die Kern-Pool-Posten nach Konzept 13.4. Ebenso jedes Fachlogik-Fehler-Issue aus einer Abweichung von `tests/golden/duengerrechner_referenz.csv` oder `data/eval/tueten_referenz.csv` (Konzept 12.5).
+4. **Abnahme 2 am Honor und die [Gerät]-AK.** Dafür braucht es das Gerät.
 5. **Endgültiges Löschen und Force-Push.**
 6. **Fachliche Fakten und Inhalte des Konzepts,** die nicht im Repository stehen. Neue Konzeptfassungen gehören dazu.
 7. **Änderungen an den Sperren:** `.claude/settings.json`, `.claude/hooks/` und `.mcp.json`.
 
-**Widerruf.** Ein Satz von Tim im Chat genügt.
+**Abweichung vom Konzept v1.3.** Mit diesem Entscheid überträgt Tim als Product Owner drei Kontrollpunkte auf den Lead, die das Konzept ihm zuweist:
+- die Planfreigabe für Fachlogik mit Migration (12.2, 12.3);
+- Abnahme 1 (12.1, 12.3, 12.5);
+- die Frage nach zwei Prüfrunden (12.2, 12.3).
 
-**Folgen.** Angepasst sind `CLAUDE.md` (Einleitung, Paketablauf, Arbeitsweise und Liste der Entscheide) und der Skill `/umsetzen` (Schritte Wiederaufnahme, Planfreigabe und Eskalation). Die Sperren bleiben unverändert.
+Die Abweichung gilt ab sofort. Bis zur nächsten Konzeptfassung geht dieser Entscheid den genannten Stellen vor; dort wird sie als Eintrag in Anhang B.2 nachgeführt. Wie im Konzept bleiben Abnahme 2 und die Planfreigabe der Kern-Pakete.
+
+**Widerruf.** Ein Satz von Tim im Chat genügt. Danach gelten wieder die Konzeptstellen und die Entscheide 0005, 0006 und 0008.
+
+**Folgen.**
+- `CLAUDE.md`: Einleitung, Regel 4 (Merge und Deploy), Paketablauf und Liste der Entscheide angepasst.
+- Skill `/umsetzen`: Schritte 0.3, 1.4, 2, 4.3 und 5.3 angepasst.
+- `.github/abnahme_vorlage.md`: Feld «Prüfer» ergänzt.
+- Die Entscheide 0001, 0005 und 0006 haben einen Nachtrag.
+- Die Sperren bleiben unverändert.

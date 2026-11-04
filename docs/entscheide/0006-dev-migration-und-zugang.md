@@ -19,3 +19,5 @@ Datum 3.11.2026 · Entscheid des Lead im Auftrag von Tim (Chat: «Löse das Prob
 **Verworfen.** Kontoweiter Supabase-Connector (erreicht die Produktion, Regel 4); eigenes Secret für die dev-Datenbank (Tims Handgriff, den er vermeiden will); Trigger «erstes Konto wird Tim» (dauerhafte Regel, ein versehentliches Konto würde Eigentümer).
 
 **Umsetzung.** Pull Request zu #9 mit Workflow, Migration, pgTAP `08_zugang_migration.test.sql` und Nachführung von `CLAUDE.md`.
+
+**Nachtrag 4.11.2026.** Abgelöst durch Entscheid 0008 (Merge durch den Lead) und Entscheid 0010 (Abnahme 1 durch den Lead, selbständiges Arbeiten), bis Tim widerruft. Nach einem Widerruf gilt wieder dieser Entscheid.

@@ -11,3 +11,5 @@ Datum 1.11.2026 · Entscheid von Tim im Chat («Du kannst zukünftig die Workflo
 - Unverändert bleiben die übrigen Sperren (Push auf `main`, Force-Push, `supabase db push`, `supabase link`, `--linked`, fremde Projekt-Referenzen).
 
 **Umsetzung.** `CLAUDE.md` Regel 4 und Abschnitt «Sperren» (Lead). Deny-Regeln `gh workflow run` in `.claude/settings.json`, Abfrage in `.claude/hooks/sperre.mjs` und der Fall im Hook-Test `.claude/hooks/sperre.test.mjs` entfernt Tim selbst, weil der Agent diese Dateien nicht schreiben darf (Patch vom Lead, im Pull Request angewendet).
+
+**Nachtrag 4.11.2026.** Abgelöst durch Entscheid 0008 (Merge durch den Lead) und Entscheid 0010 (Abnahme 1 durch den Lead, selbständiges Arbeiten), bis Tim widerruft. Nach einem Widerruf gilt wieder dieser Entscheid.
