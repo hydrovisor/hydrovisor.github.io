@@ -29,7 +29,10 @@ function KennungText({
     const messen = () => {
       if (!aktiv) return;
       el.style.setProperty('--hv-label-id-size', `${MESS_MM}mm`);
-      const breiteMm = el.scrollWidth / PX_JE_MM / MESS_MM;
+      // Breite des Textes selbst, nicht der Spalte (Prüfer Runde 1, Befund 1)
+      const bereich = document.createRange();
+      bereich.selectNodeContents(el);
+      const breiteMm = bereich.getBoundingClientRect().width / PX_JE_MM / MESS_MM;
       const groesse = breiteMm > 0 ? Math.min(hoechstMm, spalteMm / breiteMm) : hoechstMm;
       // leicht abgerundet, damit Rundungen der Darstellung nicht über die Spalte führen
       el.style.setProperty('--hv-label-id-size', `${Math.floor(groesse * 100) / 100}mm`);

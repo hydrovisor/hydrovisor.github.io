@@ -109,7 +109,7 @@ a:hover { color: var(--brand-strong); }
 .hv-label-code { font-size: 2.8mm; line-height: 1; font-weight: 600; letter-spacing: .02em; font-variant-numeric: tabular-nums; }
 .hv-label-text { flex: none; width: var(--label-id-width); min-width: 0; display: flex; flex-direction: column; gap: 0.8mm; }
 /* --hv-label-id-size setzt die App aus der Breite der Kennung: min(label-id-max, label-id-width / Textbreite bei 1 mm Schriftgrösse) */
-.hv-label-id { font-size: var(--hv-label-id-size, var(--label-id-max)); line-height: 1; font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.hv-label-id { align-self: flex-start; max-width: 100%; font-size: var(--hv-label-id-size, var(--label-id-max)); line-height: 1; font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .hv-label-line { font-size: 2.6mm; line-height: 1.25; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* Anzuchtbox: 55 × 25 mm, aus einem Bogenfeld zugeschnitten */
 .hv-label-small { width: var(--label-small-width); height: var(--label-small-height); padding: 1mm var(--label-padding-x); }

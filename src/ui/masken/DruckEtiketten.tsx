@@ -35,14 +35,22 @@ export function DruckEtiketten({ route }: { route: Druckroute }) {
   const [meldung, setMeldung] = useState<{ ok: boolean; text: string }>();
 
   async function bestaetigen() {
-    setSendet(true);
-    const antwort = await schreiben(
-      gedrucktVorgang(
-        liste.map((z) => z.etikett),
-        jetzt(),
-      ),
-      { jetzt: jetzt(), zeitzone: ZEITZONE },
+    // ohne Client-UUID lässt sich der Stand nicht setzen: nicht als Erfolg melden (Prüfer Runde 1, Befund 4)
+    const ohneId = liste.filter((z) => !z.gedruckt && !z.etikett.client_id).map((z) => z.code);
+    if (ohneId.length > 0) {
+      setMeldung({ ok: false, text: `Nicht bestätigt: ${ohneId.join(', ')} ohne Client-UUID` });
+      return;
+    }
+    const vorgang = gedrucktVorgang(
+      liste.map((z) => z.etikett),
+      jetzt(),
     );
+    if (vorgang.length === 0) {
+      setMeldung({ ok: true, text: 'Schon als gedruckt bestätigt' });
+      return;
+    }
+    setSendet(true);
+    const antwort = await schreiben(vorgang, { jetzt: jetzt(), zeitzone: ZEITZONE });
     setSendet(false);
     setMeldung(
       antwort.status === 'gespeichert'
