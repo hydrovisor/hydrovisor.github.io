@@ -90,8 +90,19 @@ export function Gefaess({ code }: { code: string }) {
         {a.pflanzen.length > 0 ? (
           <ul className="hv-gefaess-pflanzen" aria-label="Pflanzen">
             {a.pflanzen.map((p) => (
-              <li key={p.satzId}>
-                {p.anzahl} × {p.sorte} · {p.phase} · seit {p.seitTagen} {p.seitTagen === 1 ? 'Tag' : 'Tagen'}
+              <li key={p.satzId} className={p.keimung ? 'hv-gefaess-pflanze' : undefined}>
+                <span>
+                  {p.anzahl} × {p.sorte} · {p.phase} · seit {p.seitTagen}{' '}
+                  {p.seitTagen === 1 ? 'Tag' : 'Tagen'}
+                </span>
+                {p.keimung ? (
+                  <a
+                    className="hv-btn hv-btn-secondary hv-btn-compact"
+                    href={hashZu({ name: 'keimung', satz: p.satzId })}
+                  >
+                    Keimung prüfen
+                  </a>
+                ) : null}
               </li>
             ))}
           </ul>
