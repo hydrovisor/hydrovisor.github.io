@@ -125,7 +125,11 @@ test('UC1-AK4 kein Status nur über Farbe in Übersicht und Gefäss', async ({ p
     expect((await badge.innerText()).trim()).not.toBe('');
 
   await page.goto('/#/gefaess/R-2.3');
-  const bewertung = page.getByRole('region', { name: 'Zustand' }).locator('.hv-badge');
+  // seit I1a-04 steht daneben der Prüfstatus «in Betrieb, geprüft am …» als zweiter Badge (Plan 21)
+  const bewertung = page
+    .getByRole('region', { name: 'Zustand' })
+    .locator('.hv-badge')
+    .filter({ hasText: 'Knapp daneben' });
   await expect(bewertung).toHaveText('Knapp daneben');
   await expect(bewertung.locator('.hv-status-icon')).toHaveCount(1);
   await page.goto('/#/gefaess/R-3.3');

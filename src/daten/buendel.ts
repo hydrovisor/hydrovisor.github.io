@@ -12,6 +12,8 @@ import { supabase } from './supabase.ts';
 export interface Buendelteil {
   /** Tabelle oder Sicht, zugleich Schlüssel in `teile` */
   name: string;
+  /** abweichende Tabelle, wenn zwei Teile dieselbe Tabelle lesen (Plan 21 A13) */
+  tabelle?: string;
   spalten: string;
   /** stabile Sortierung für die Seiten */
   ordnung: readonly string[];
@@ -77,6 +79,15 @@ export const BUENDEL_TEILE: readonly Buendelteil[] = [
   tabelle('aufschub', { ohneStorno: true }),
   // Geräte-Ereignisse für Kalibrierstand und «unsicher» ohne Netz (R10.3, R5.2; Plan 12)
   tabelle('ereignis', { ohneStorno: true, typen: ['sonde_gereinigt', 'als_unsicher_markiert'] }),
+  // Ereignisse am Platz für Prüfstatus, Prüfprotokoll, «entfernt am» und Wiederherstellen (Plan 21 A13)
+  {
+    name: 'ereignis_platz',
+    tabelle: 'ereignis',
+    spalten: '*',
+    ordnung: ['id'],
+    ohneStorno: true,
+    typen: ['gefaess_erfasst', 'gefaesspruefung', 'box_deckel_tausch', 'entfernt', 'geleert', 'ruhe'],
+  },
   // Push (Plan 13): Abos ohne Schlüssel, Versände für «Letzte Erinnerung» und #/push
   {
     name: 'push_abo',
@@ -230,7 +241,7 @@ const ungebunden = supabase as unknown as {
 export const supabaseBuendeladapter: Buendeladapter = {
   istTim: async (signal) => ungebunden.rpc('ist_tim').abortSignal(signal),
   seite: async (teil, { von, bis }, kontext, signal) => {
-    let abfrage = ungebunden.from(teil.name).select(teil.spalten);
+    let abfrage = ungebunden.from(teil.tabelle ?? teil.name).select(teil.spalten);
     if (teil.ohneStorno) abfrage = abfrage.is('storniert_am', null);
     if (teil.gueltig) abfrage = abfrage.is('gueltig_bis', null);
     if (teil.typen) abfrage = abfrage.in('typ', teil.typen);

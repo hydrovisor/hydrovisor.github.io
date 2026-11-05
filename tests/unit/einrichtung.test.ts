@@ -84,7 +84,10 @@ describe('Einrichtungs-Checkliste', () => {
 
   it('UC0-AK1 Punkt 4 öffnet die Messstelle W, sobald sie erfasst ist', () => {
     const teile = einrichtungsTeile(3);
-    expect(einrichtungsStand(teile, JETZT).punkte[3]?.ziel).toEqual({ art: 'folgt', paket: 'I1a-04' });
+    expect(einrichtungsStand(teile, JETZT).punkte[3]?.ziel).toEqual({
+      art: 'gefaess-neu',
+      rolle: 'messstelle',
+    });
     teile['platz'] = [
       {
         id: ID.platzW,

@@ -11,6 +11,7 @@ import { gefaessAnsicht } from '../../src/domain/anlage/gefaess.ts';
 import { heuteGruppiert, nachAnlage } from '../../src/domain/anlage/gruppen.ts';
 import { kuerzelAenderbar } from '../../src/domain/anlage/kuerzel.ts';
 import { fuellText, regalbild } from '../../src/domain/anlage/uebersicht.ts';
+import { erstelleSchreiben } from '../../src/daten/schreiben.ts';
 import { messbareOrte } from '../../src/domain/ort.ts';
 import { ANLAGE_R, platzId, regalTeile, uid, vereinen, weitereAnlage } from '../fixtures/regal.ts';
 
@@ -239,7 +240,6 @@ describe('Maske «Gefäss»', () => {
 
 describe('Runde 1', () => {
   it('UC1-AK5 Wiederholung nach Zeitüberschreitung: Server liefert time als hh:mm:ss, die Anlage gilt als gespeichert', async () => {
-    const { erstelleSchreiben } = await import('../../src/daten/schreiben.ts');
     let n = 0;
     const eingabe: AnlageEingabe = {
       name: 'Zweites Regal',

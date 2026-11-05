@@ -122,9 +122,9 @@ test('UC0-AK1 Demo-Daten haken nichts ab, Punkt 1 öffnet «Anlage anlegen»', a
 });
 
 test('UC0-AK1 ein Punkt ohne Ablauf zeigt «Ablauf folgt»', async ({ page }) => {
-  // Punkt 5 hat seit I1a-03 einen Ablauf (Plan 19); Punkt 6 folgt mit I1a-04
-  await heuteMit(page, () => einrichtungsTeile(5));
-  await expect(page.getByRole('heading', { name: 'Einrichtung · 5 von 9 erledigt' })).toBeVisible();
+  // Punkt 5 hat seit I1a-03 einen Ablauf (Plan 19), Punkt 6 seit I1a-04 (Plan 21); Punkt 7 folgt mit I1a-05
+  await heuteMit(page, () => einrichtungsTeile(6));
+  await expect(page.getByRole('heading', { name: 'Einrichtung · 6 von 9 erledigt' })).toBeVisible();
   await expect(liste(page).getByText('Ablauf folgt mit einer der nächsten Versionen')).toBeVisible();
 });
 

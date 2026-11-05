@@ -1,10 +1,18 @@
 // Maske «Gefäss» (UC1, 05_masken.md 3.3; Plan 20): Kontext Regal. Ohne Scrollen sichtbar: Kopf, Zustand und
 // Hauptknopf; darunter der Verlauf als Zahlenreihe mit Ereignismarkern (ohne Diagramm).
 import { useState } from 'react';
-import { gefaessAnsicht } from '../../domain/anlage/gefaess.ts';
+import { neueClientId, schreiben } from '../../daten/schreiben.ts';
+import { leerenVorgang } from '../../domain/anlage/aendern.ts';
+import { gefaessAnsicht, type Gefaessansicht } from '../../domain/anlage/gefaess.ts';
+import { ereignisseAm, ms, type Teile } from '../../domain/anlage/teile.ts';
+import type { Vorgang } from '../../domain/datenpfad/erfassung.ts';
+import { ortAufloesen } from '../../domain/ort.ts';
 import { ZEITZONE } from '../../domain/zeit.ts';
+import { Button } from '../bausteine/Button.tsx';
+import { Notice } from '../bausteine/Notice.tsx';
 import { StatusBadge } from '../bausteine/StatusBadge.tsx';
 import { useBuendel } from '../buendel.tsx';
+import { jetzt } from '../bundeldaten.ts';
 import { hashZu } from '../router.ts';
 
 function Kopf({ titel, unter }: { titel: string; unter?: string }) {
@@ -23,8 +31,8 @@ function Kopf({ titel, unter }: { titel: string; unter?: string }) {
 
 export function Gefaess({ code }: { code: string }) {
   const { buendel, liest } = useBuendel();
-  const [jetzt] = useState(() => new Date(Date.now()));
-  const a = buendel ? gefaessAnsicht(buendel.teile, code, jetzt, ZEITZONE) : undefined;
+  const [zeitpunkt] = useState(() => jetzt());
+  const a = buendel ? gefaessAnsicht(buendel.teile, code, zeitpunkt, ZEITZONE) : undefined;
   if (!a)
     return (
       <main className="hv-seite hv-gefaess" data-density="regal">
@@ -37,6 +45,7 @@ export function Gefaess({ code }: { code: string }) {
   return (
     <main className="hv-seite hv-gefaess" data-density="regal">
       <Kopf titel={a.kennung} unter={`Anlage ${a.kuerzel} · ${a.merkmale}`} />
+      {a.entfernt ? <Notice tone="warn" title={a.entfernt} kompakt /> : null}
       <section className="hv-gefaess-zustand" aria-label="Zustand">
         {a.pruefstatus || a.loesung ? (
           <p className="hv-gefaess-zeile">
@@ -90,7 +99,7 @@ export function Gefaess({ code }: { code: string }) {
           <p className="hv-gefaess-zeile">Keine Pflanzen</p>
         ) : null}
       </section>
-      {a.hauptknopf ? (
+      {a.hauptknopf && !a.entfernt ? (
         <a
           className="hv-btn hv-btn-primary hv-gefaess-haupt"
           href={hashZu({ name: 'messen', code: a.hauptknopf.code })}
@@ -98,6 +107,7 @@ export function Gefaess({ code }: { code: string }) {
           {a.hauptknopf.text}
         </a>
       ) : null}
+      {a.nebenknoepfe.length > 0 && buendel ? <Nebenknoepfe a={a} teile={buendel.teile} /> : null}
       {a.verlauf.length > 0 ? (
         <section aria-labelledby="verlauf-titel" className="hv-gefaess-verlauf">
           <h2 id="verlauf-titel" className="hv-gefaess-h2">
@@ -133,5 +143,74 @@ export function Gefaess({ code }: { code: string }) {
         </section>
       ) : null}
     </main>
+  );
+}
+
+/** Nebenknöpfe (Plan 21): Prüfen und Ändern führen in ihre Masken, Leeren und Wiederherstellen schreiben sofort */
+function Nebenknoepfe({ a, teile }: { a: Gefaessansicht; teile: Teile }) {
+  const [sendet, setSendet] = useState(false);
+  const [fehler, setFehler] = useState<string>();
+  // je Handlung derselbe Vorgang bis zum Erfolg: eine Wiederholung sendet dieselbe Client-UUID (Prüfer Runde 1, Befund 3)
+  const [vorgaenge, setVorgaenge] = useState<Record<string, Vorgang>>({});
+  const platzId = ortAufloesen(a.code, (teile ?? {}) as Record<string, readonly unknown[]>)?.platzId;
+  async function senden(art: string, bauen: () => Vorgang) {
+    const vorgang = vorgaenge[art] ?? bauen();
+    setVorgaenge((v) => ({ ...v, [art]: vorgang }));
+    setSendet(true);
+    const antwort = await schreiben(vorgang, { jetzt: jetzt(), zeitzone: ZEITZONE });
+    setSendet(false);
+    setFehler(antwort.status === 'nicht_gespeichert' ? antwort.fehler.text : undefined);
+    if (antwort.status === 'gespeichert')
+      setVorgaenge((v) => Object.fromEntries(Object.entries(v).filter(([k]) => k !== art)));
+  }
+  return (
+    <nav className="hv-gefaess-neben" aria-label="Weitere Handlungen">
+      {a.nebenknoepfe.map((k) =>
+        k.art === 'pruefen' ? (
+          <a key={k.art} className="hv-btn hv-btn-secondary" href={hashZu({ name: 'pruefen', code: a.code })}>
+            {k.text}
+          </a>
+        ) : k.art === 'aendern' ? (
+          <a
+            key={k.art}
+            className="hv-btn hv-btn-secondary"
+            href={hashZu({ name: 'gefaess-aendern', code: a.code })}
+          >
+            {k.text}
+          </a>
+        ) : k.art === 'leeren' ? (
+          <Button
+            key={k.art}
+            variant="secondary"
+            disabled={sendet || !platzId}
+            onClick={() =>
+              platzId && void senden('leeren', () => leerenVorgang(platzId, neueClientId(), jetzt()))
+            }
+          >
+            {k.text}
+          </Button>
+        ) : (
+          <Button
+            key={k.art}
+            variant="secondary"
+            disabled={sendet || !platzId}
+            onClick={() => {
+              // Wiederherstellen = Storno des Ereignisses entfernt (Plan 21 A10)
+              const e = platzId
+                ? ereignisseAm(teile, platzId, 'entfernt').sort((x, y) => ms(y.gilt_ab) - ms(x.gilt_ab))[0]
+                : undefined;
+              const clientId = (e as { client_id?: string | null } | undefined)?.client_id ?? e?.id;
+              if (clientId)
+                void senden('wiederherstellen', () => [
+                  { art: 'storno', tabelle: 'ereignis', clientId, grund: 'rueckgaengig' },
+                ]);
+            }}
+          >
+            {k.text}
+          </Button>
+        ),
+      )}
+      {fehler ? <Notice tone="danger" title={fehler} kompakt /> : null}
+    </nav>
   );
 }
