@@ -425,3 +425,10 @@ body {
 .hv-saeen-fuss > .hv-btn {
   flex: 1;
 }
+
+.hv-saeen-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}

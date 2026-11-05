@@ -470,6 +470,7 @@ function SatzKarte({
   onBox: (platzId: string) => void;
   onMenge: (m: Menge) => void;
 }) {
+  const [boxOffen, setBoxOffen] = useState(false);
   const ziel = spaeter ? 'Ziel später' : `${s.zieltoepfe} ${s.zieltoepfe === 1 ? 'Zieltopf' : 'Zieltöpfe'}`;
   const keimrate = s.keimrate
     ? `Keimrate ${zahl2(s.keimrate.p)} (${s.keimrate.herkunft === 'beobachtet' ? 'beobachtet' : s.keimrate.herkunft === 'packung' ? 'Packung' : 'Art'})${
@@ -490,18 +491,27 @@ function SatzKarte({
       </p>
       {s.direktsaat ? (
         <p>Direktsaat</p>
-      ) : boxListe.length > 1 ? (
+      ) : (
+        <div className="hv-saeen-box">
+          <p>{s.box ? `Box ${s.box.kennung} · ${BOXTYP[s.box.typ]}` : 'Keine Anzuchtbox'}</p>
+          {boxListe.length > 1 && !boxOffen ? (
+            <Button variant="ghost" size="compact" onClick={() => setBoxOffen(true)}>
+              Box wechseln
+            </Button>
+          ) : null}
+        </div>
+      )}
+      {boxOffen ? (
         <Choice
           label={`Anzuchtbox ${s.name}`}
           zeile
           optionen={boxListe.map((b) => ({ wert: b.platzId, titel: `${b.kennung} · ${BOXTYP[b.typ]}` }))}
           gewaehlt={s.box ? [s.box.platzId] : []}
-          onWahl={onBox}
+          onWahl={(id) => {
+            onBox(id);
+            setBoxOffen(false);
+          }}
         />
-      ) : s.box ? (
-        <p>
-          {s.box.kennung} · {BOXTYP[s.box.typ]}
-        </p>
       ) : null}
       {s.box?.hinweis ? <p className="hv-saeen-hinweis">{s.box.hinweis}</p> : null}
       <Stepper
