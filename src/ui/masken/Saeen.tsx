@@ -9,6 +9,11 @@ import { boxBelegung } from '../../domain/anzucht/kapazitaet.ts';
 import type { Vorgang } from '../../domain/datenpfad/erfassung.ts';
 import { ortAufloesen } from '../../domain/ort.ts';
 import {
+  duplizierbareSaetze,
+  satzDuplizieren,
+  type SatzKopieWahl,
+} from '../../domain/pflanzung/duplizieren.ts';
+import {
   boxenAus,
   KULTURFORM_NAME,
   saatEingabePruefen,
@@ -75,6 +80,13 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
   // Teil des Vorgangs schon gespeichert: Eingabe fest, nur derselbe Vorgang erneut (Prüfer Runde 1, Befund 8)
   const [teilweise, setTeilweise] = useState(false);
   const [fertig, setFertig] = useState<{ vorgang: Vorgang; text: string; zurueck?: boolean }>();
+  // Plan 25: «Satz duplizieren» – Original, Hinweise und Satzgrösse, solange seine Sorte gewählt ist (A14)
+  const [kopie, setKopie] = useState<{
+    satzId: string;
+    sorteId: string;
+    hinweise: string[];
+    satzgroesse?: string;
+  }>();
   // gleicher Vorgang bei Wiederholung derselben Eingabe (TO2)
   const letzter = useRef<{ schluessel: string; vorgang: Vorgang } | undefined>(undefined);
 
@@ -96,7 +108,14 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
   const zielG = ziele.find((z) => z.platzId === zielPlatzId);
   const heute = kalendertag(jetzt(), ZEITZONE);
   const saatdatum = tagPlus(heute, -rueck);
-  const einstieg: SaatEingabe['einstieg'] = von === 'gefaess' ? 'gefaess' : scanBox ? 'scan' : 'heute';
+  const kopieAktiv = kopie && gewaehlt.includes(kopie.sorteId) ? kopie : undefined;
+  const einstieg: SaatEingabe['einstieg'] = kopieAktiv
+    ? 'duplizieren'
+    : von === 'gefaess'
+      ? 'gefaess'
+      : scanBox
+        ? 'scan'
+        : 'heute';
 
   const eingabe: SaatEingabe | undefined = anlageId
     ? {
@@ -119,6 +138,7 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
             ...(zieltopfIds.length === 0 ? { pflanzenOhneZiel: m.pflanzen ?? 1 } : {}),
             ...(m.samen !== undefined ? { samenJeSchwamm: m.samen } : {}),
             ...(m.schwaemme !== undefined ? { schwaemme: m.schwaemme } : {}),
+            ...(kopieAktiv && kopieAktiv.sorteId === id ? { kopiertVon: kopieAktiv.satzId } : {}),
           };
         }),
       }
@@ -169,6 +189,47 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
       </main>
     );
   }
+
+  /** Plan 25: Maske aus einem Satz vorbelegen und in Schritt 2 springen */
+  function duplizieren(wahl: SatzKopieWahl) {
+    if (!teile) return;
+    const v = satzDuplizieren(teile, wahl.satzId, begonnen, jetzt(), ZEITZONE);
+    const s = v?.eingabe.saetze[0];
+    if (!v || !s) return;
+    setGewaehlt([s.sorteId]);
+    setKulturform({ [s.sorteId]: s.kulturform });
+    setBoxen(s.boxPlatzId ? { [s.sorteId]: s.boxPlatzId } : {});
+    setMengen({
+      [s.sorteId]: {
+        samen: s.samenJeSchwamm,
+        schwaemme: s.schwaemme,
+        ...(s.pflanzenOhneZiel !== undefined ? { pflanzen: s.pflanzenOhneZiel } : {}),
+      },
+    });
+    setZielWahl(v.ziel?.platzId);
+    setToepfe(new Map(s.zieltopfIds.map((id) => [id, 1])));
+    setSpaeter(false);
+    setRueck(0);
+    setAktiv(1);
+    setKopie({
+      satzId: wahl.satzId,
+      sorteId: s.sorteId,
+      hinweise: v.hinweise,
+      ...(v.satzgroesse ? { satzgroesse: v.satzgroesse.text } : {}),
+    });
+    setSchritt(2);
+  }
+
+  const kopieHinweise = kopieAktiv
+    ? [...kopieAktiv.hinweise, ...(kopieAktiv.satzgroesse ? [kopieAktiv.satzgroesse] : [])].map((h) => (
+        <Notice
+          key={h}
+          kompakt
+          tone={h.includes('belegt') || h.includes('nicht') || h.includes('fehlt') ? 'warn' : 'info'}
+          title={h}
+        />
+      ))
+    : null;
 
   function sorteUmschalten(id: string) {
     setGewaehlt((g) => (g.includes(id) ? g.filter((x) => x !== id) : [...g, id]));
@@ -276,10 +337,28 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
   const schrittText = <p className="hv-saeen-schritt">Schritt {schritt} von 3</p>;
 
   if (schritt === 1) {
+    const kopien = duplizierbareSaetze(teile, anlageId);
     return (
       <main className="hv-seite hv-saeen" data-density="regal">
         {kopf}
         {schrittText}
+        {kopien.length > 0 ? (
+          <section className="hv-saeen-satz" aria-label="Satz duplizieren">
+            <h2 className="hv-saeen-satz-titel">Satz duplizieren</h2>
+            {kopien.map((k) => (
+              <div key={k.satzId} className="hv-saeen-box">
+                <p>{k.text}</p>
+                <Button
+                  variant="secondary"
+                  aria-label={`${k.name} vom ${tagKurz(k.saatdatum)} duplizieren`}
+                  onClick={() => duplizieren(k)}
+                >
+                  Duplizieren
+                </Button>
+              </div>
+            ))}
+          </section>
+        ) : null}
         <div className="hv-choice" role="group" aria-label="Sorten">
           {sorten.map((s) => (
             <div key={s.sorteId} className="hv-saeen-sorte">
@@ -323,7 +402,14 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
 
   if (schritt === 2) {
     // Zustand als Text, nie nur über Farbe (Prüfer Runde 1, Befunde 4, 5 und 9)
-    const toepfeZiel = zielG ? zieltoepfe(teile, zielG.platzId, toepfe) : [];
+    // Plan 25 (R11.2): Zieltöpfe am Umsetzdatum der aktiven Sorte; Nachfolge-Töpfe sind wählbar
+    const umsetzenAb = umsetzenAbVon(teile, aktiveSorte?.artId);
+    const umsetzenAm = zielG?.direktsaat
+      ? saatdatum
+      : umsetzenAb === undefined
+        ? undefined
+        : tagPlus(saatdatum, umsetzenAb);
+    const toepfeZiel = zielG ? zieltoepfe(teile, zielG.platzId, toepfe, umsetzenAm, zielG.direktsaat) : [];
     const mitTopf: Loch[] = toepfeZiel.map((t): Loch => {
       const name = t.marke
         ? sorten.find((s) => s.sorteId === gewaehlt[(t.marke as number) - 1])?.name
@@ -347,6 +433,13 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
         nr: t.lochNr,
         zustand: t.zustand,
         ...(t.marke && name ? { marke: { ziffer: t.marke, name } } : {}),
+        // Nachfolge-Topf: Datum statt Nummer, Zustand als Text (Status nie nur über Farbe)
+        ...(t.belegtBis && t.zustand === 'frei'
+          ? {
+              text: tagKurz(t.belegtBis),
+              zustandName: `frei als Nachfolge, belegt bis ${tagKurz(t.belegtBis)}`,
+            }
+          : {}),
         // A13: die aktive Sorte kann ohne «Umsetzen ab» nicht malen (Runde 3, Befunde 2 und 3)
         ...(!aktivMalbar && (t.zustand === 'frei' || t.zustand === 'gewaehlt')
           ? { nichtWaehlbar: true, zustandName: `${ZUSTAND_A13[t.zustand]}, Umsetzdatum fehlt` }
@@ -376,6 +469,7 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
       <main className="hv-seite hv-saeen" data-density="regal">
         {kopf}
         {schrittText}
+        {kopieHinweise}
         <Choice
           label="Zielgefäss"
           zeile
@@ -473,6 +567,7 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
     <main className="hv-seite hv-saeen" data-density="regal">
       {kopf}
       {schrittText}
+      {kopieHinweise}
       <Stepper
         label="Gesät"
         wert={-rueck}
@@ -526,6 +621,13 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
       </div>
     </main>
   );
+}
+
+function umsetzenAbVon(teile: Teile, artId: string | undefined): number | undefined {
+  const d = ((teile?.['art'] ?? []) as { art_id: string; umsetzen_ab_d: number | null }[]).find(
+    (a) => a.art_id === artId,
+  )?.umsetzen_ab_d;
+  return d === null || d === undefined ? undefined : Number(d);
 }
 
 function umsetzenBekannt(teile: Teile, artId: string | undefined): boolean {
