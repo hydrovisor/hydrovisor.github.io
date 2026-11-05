@@ -127,6 +127,13 @@ describe('Einrichtungs-Checkliste', () => {
     expect(stand.punkte[4]?.zustand).toBe('erledigt');
   });
 
+  it('UC0-AK1 Punkt 9 «Erste Aussaat» öffnet seit I1a-06 Säen (Plan 23)', () => {
+    const punkt = einrichtungsStand(einrichtungsTeile(8), JETZT).punkte[8];
+    expect(punkt?.titel).toBe('Erste Aussaat');
+    expect(punkt?.zustand).toBe('aktiv');
+    expect(punkt?.ziel).toEqual({ art: 'saeen' });
+  });
+
   it('UC0-AK1 ein gemerkter Abschluss hält die Liste weg (A4)', () => {
     expect(checklisteZeigen(einrichtungsStand(einrichtungsTeile(6), JETZT), true)).toBe(false);
   });

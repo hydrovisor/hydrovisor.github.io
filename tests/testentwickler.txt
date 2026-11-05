@@ -119,3 +119,11 @@ tests/unit/router-etikett.test.ts
 tests/e2e/etikett.spec.ts
 tests/e2e/etikett-druck.spec.ts
 tests/seed/inbetriebnahme.test.ts
+# I1a-06 Säen (#23)
+tests/fixtures/saeen.ts
+tests/unit/saatmenge.test.ts
+tests/unit/anzucht-kapazitaet.test.ts
+tests/unit/anzucht-termine.test.ts
+tests/unit/saeen.test.ts
+tests/seed/saeen.test.ts
+tests/e2e/saeen.spec.ts
