@@ -1,5 +1,6 @@
 // Baustein Tile (design-system/components/Tile.md): Kachel für Messwert und Ort
-import type { ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
+import { Button } from './Button.tsx';
 import { StatusIcon } from './StatusIcon.tsx';
 
 type Bewertung = 'ok' | 'warn' | 'danger';
@@ -9,6 +10,8 @@ interface MesswertProps {
   wert?: string;
   ton?: Bewertung;
   trend?: string;
+  /** Trendzeile mit Kennzeichen «veraltet» (Tile.md, R10.3) */
+  veraltet?: boolean;
   /** Lage auf der Spur in Prozent der Breite */
   spur?: { von: number; bis: number; vorher?: number; neu?: number };
   aktiv?: boolean;
@@ -22,6 +25,7 @@ export function MesswertKachel({
   wert,
   ton,
   trend,
+  veraltet,
   spur,
   aktiv,
   kompakt,
@@ -37,7 +41,18 @@ export function MesswertKachel({
         {ton ? <StatusIcon ton={ton} /> : null}
       </span>
       <span className={wert ? 'hv-tile-value' : 'hv-tile-value hv-tile-value-leer'}>{wert || '–'}</span>
-      {trend ? <span className="hv-tile-trend">{trend}</span> : null}
+      {trend ? (
+        <span className="hv-tile-trend">
+          {veraltet ? (
+            <span className="hv-tile-trend-veraltet">
+              <Uhr />
+              {trend}
+            </span>
+          ) : (
+            trend
+          )}
+        </span>
+      ) : null}
       {spur ? (
         <span className="hv-tile-spur" aria-hidden="true">
           <span
@@ -92,13 +107,95 @@ const STATUSWORT: Record<Bewertung, string> = {
   danger: 'Ausserhalb',
 };
 
-/** Ergebniszone der Messmaske: Statuswort in voller Breite */
-export function Ergebnis({ ton, children }: { ton: Bewertung; children?: ReactNode }) {
+function Uhr() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth={2}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5l3 2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+/** Zeile der Ergebniszone: Statuswort in voller Breite, Wert rechts */
+export function Ergebnis({ ton, wert, children }: { ton: Bewertung; wert?: string; children?: ReactNode }) {
   return (
     <div className={`hv-ergebnis hv-ergebnis-${ton}`} role="status">
       <StatusIcon ton={ton} />
       <span>{STATUSWORT[ton]}</span>
+      {wert ? <span className="hv-ergebnis-wert">{wert}</span> : null}
       {children}
     </div>
+  );
+}
+
+export interface ErgebnisHinweis {
+  folge: string;
+  massnahme: string;
+  text?: string;
+  ton: 'info' | 'warn' | 'danger';
+}
+
+/** Ergebniszone (Tile.md): ersetzt den Ziffernblock in dessen Höhe */
+export function Ergebniszone({
+  zeilen,
+  hinweise,
+  ohneBewertung,
+}: {
+  zeilen: { ton: Bewertung; wert: string }[];
+  hinweise: ErgebnisHinweis[];
+  ohneBewertung?: boolean;
+}) {
+  return (
+    <section className="hv-ergebniszone" aria-label="Ergebnis">
+      {ohneBewertung ? (
+        <p className="hv-ergebnis-leer">Kein Zielbereich: Werte werden ohne Bewertung gespeichert</p>
+      ) : (
+        zeilen.map((z) => <Ergebnis key={z.wert} ton={z.ton} wert={z.wert} />)
+      )}
+      {hinweise.slice(0, 2).map((h) => (
+        <p
+          key={`${h.folge}${h.massnahme}`}
+          className={
+            h.ton === 'info' ? 'hv-ergebnis-hinweis' : `hv-ergebnis-hinweis hv-ergebnis-hinweis-${h.ton}`
+          }
+        >
+          <strong>{h.folge}.</strong> {h.massnahme}.{h.text ? ` ${h.text}` : ''}
+        </p>
+      ))}
+    </section>
+  );
+}
+
+/** Rückfrage vor dem Speichern (Tile.md, R10.3): Sperre 400 ms am Ja-Knopf (U13) */
+export function Rueckfrage({
+  frage,
+  nein,
+  ja,
+  onNein,
+  onJa,
+}: {
+  frage: string;
+  nein: string;
+  ja: string;
+  onNein: () => void;
+  onJa: () => void;
+}) {
+  const [gesperrt, setGesperrt] = useState(true);
+  useEffect(() => {
+    const t = setTimeout(() => setGesperrt(false), 400);
+    return () => clearTimeout(t);
+  }, [frage]);
+  return (
+    <section className="hv-rueckfrage" role="alertdialog" aria-label="Rückfrage">
+      <p className="hv-rueckfrage-frage">{frage}</p>
+      <div className="hv-rueckfrage-knoepfe">
+        <Button variant="secondary" onClick={onNein}>
+          {nein}
+        </Button>
+        <Button disabled={gesperrt} onClick={onJa}>
+          {ja}
+        </Button>
+      </div>
+    </section>
   );
 }

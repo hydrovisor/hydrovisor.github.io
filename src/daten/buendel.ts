@@ -56,6 +56,7 @@ export const BUENDEL_TEILE: readonly Buendelteil[] = [
   sicht('v_fuellzustand', ['platz_id']),
   // Leitungswasser-EC je Anlage für Punkt 4 der Einrichtung, unabhängig vom 14-Tage-Fenster (Plan 18)
   sicht('v_ec_wasser', ['anlage_id']),
+  sicht('v_zielbereich', ['platz_id']),
   // Wissen (gültige Fassung)
   ...['sorte', 'art', 'art_kulturform', 'saatempfehlung', 'duengerschema', 'wissenseintrag'].map((n) =>
     tabelle(n, { gueltig: true }),

@@ -180,3 +180,29 @@ export function speichernMoeglich(e: Messeingabe): boolean {
   const w = messwerte(e);
   return w.ph !== null || w.ec !== null || w.temperatur !== null;
 }
+
+/** Werte in ganzen Hundertsteln direkt aus dem Text, nur Felder aus `felder` mit Text (G3; Plan 26) */
+export function messwerteHundertstel(e: Messeingabe): Partial<Record<Groesse, number>> {
+  const r: Partial<Record<Groesse, number>> = {};
+  for (const g of e.felder) {
+    const h = hundertstel(e.text[g]);
+    if (h !== null) r[g] = h;
+  }
+  return r;
+}
+
+/** alle Dezimalen nach FELDREGEL getippt (pH «6.2», EC «1.25», °C «20.5») */
+export function feldVollstaendig(e: Messeingabe, feld: Groesse): boolean {
+  return zerlegen(e.text[feld]).nach.length >= FELDREGEL[feld].dezimalen;
+}
+
+/**
+ * Übergang zur Ergebniszone (U1; Plan 26 A21): die Taste machte das letzte Feld vollständig, oder «weiter» auf dem
+ * letzten Feld bei mindestens einem Wert.
+ */
+export function eingabeAbgeschlossen(vorher: Messeingabe, nachher: Messeingabe, taste: Taste): boolean {
+  const letztes = vorher.felder[vorher.felder.length - 1];
+  if (letztes === undefined) return false;
+  if (taste === 'weiter') return vorher.aktiv === letztes && speichernMoeglich(nachher);
+  return !feldVollstaendig(vorher, letztes) && feldVollstaendig(nachher, letztes);
+}
