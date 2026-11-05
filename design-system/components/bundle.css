@@ -259,3 +259,36 @@ button.hv-tile { cursor: pointer; touch-action: manipulation; }
 
 /* Kachel kompakt: ohne reservierten Platz für das Statussymbol (Erfassung ohne Bewertung, Plan 12) */
 .hv-tile-kompakt .hv-tile-kopf { min-height: 0; }
+
+/* Deckel im Malmodus (Säen, Plan 23): Reihenkopf links jeder Reihe und Marke der Sorte im gewählten Loch */
+.hv-deckel-reihenkopf { box-sizing: border-box; width: var(--size-loch); height: var(--size-loch); min-width: var(--size-loch); padding: 0; border-radius: var(--radius-sm); border: 2px solid var(--line-control); background: var(--surface-raised); color: var(--ink-muted);
+  font-size: var(--text-caption-size); font-weight: 700; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; touch-action: manipulation; }
+[data-density="regal"] .hv-deckel-reihenkopf { width: var(--size-touch-regal); height: var(--size-touch-regal); min-width: var(--size-touch-regal); }
+.hv-loch-marke { font-size: var(--text-text-regal-size); }
+.hv-loch[aria-disabled="true"] { cursor: not-allowed; }
+
+/* Wahlliste: Optionen als Knöpfe mit aria-pressed und Häkchen, Zustand nie nur über Farbe (Plan 23) */
+.hv-choice { display: flex; flex-direction: column; gap: var(--space-2); }
+.hv-choice-zeile { flex-direction: row; flex-wrap: wrap; }
+.hv-choice-item { display: flex; align-items: center; gap: var(--space-3); min-height: var(--size-touch); padding: var(--space-2) var(--space-4); border-radius: var(--radius-md); border: 2px solid var(--line-control); background: var(--surface-raised); color: var(--ink);
+  text-align: left; font: inherit; cursor: pointer; touch-action: manipulation; }
+[data-density="regal"] .hv-choice-item { min-height: var(--size-touch-regal); }
+.hv-choice-item[aria-pressed="true"] { background: var(--brand-soft); border-color: var(--brand); }
+.hv-choice-item:disabled { cursor: not-allowed; color: var(--ink-muted); background: var(--surface-sunken); }
+.hv-choice-check { flex: none; width: var(--size-icon); height: var(--size-icon); border-radius: var(--radius-sm); border: 2px solid var(--line-control); display: inline-flex; align-items: center; justify-content: center; color: var(--on-brand); }
+.hv-choice-item[aria-pressed="true"] .hv-choice-check { background: var(--brand); border-color: var(--brand); }
+.hv-choice-check svg { width: 100%; height: 100%; }
+.hv-choice-text { display: flex; flex-direction: column; }
+.hv-choice-titel { font-weight: 600; }
+.hv-choice-zusatz { font-size: var(--text-caption-size); color: var(--ink-muted); }
+
+/* Stepper: − Wert + ohne Systemtastatur, Grenzen deaktivieren den Knopf (Plan 23) */
+.hv-stepper { display: grid; grid-template-columns: 1fr auto auto auto; align-items: center; gap: var(--space-2); }
+.hv-stepper-label { font-weight: 600; }
+.hv-stepper-knopf { box-sizing: border-box; width: var(--size-touch); height: var(--size-touch); padding: 0; border-radius: var(--radius-md); border: 2px solid var(--line-control); background: var(--surface-raised); color: var(--ink);
+  font-size: var(--text-value-size); font-weight: 700; cursor: pointer; touch-action: manipulation; }
+[data-density="regal"] .hv-stepper-knopf { width: var(--size-touch-regal); height: var(--size-touch-regal); }
+.hv-stepper-knopf:disabled { cursor: not-allowed; color: var(--ink-muted); background: var(--surface-sunken); }
+.hv-stepper-wert { min-width: 3ch; text-align: center; font-size: var(--text-value-size); line-height: var(--text-value-line); font-weight: 700; font-variant-numeric: tabular-nums; }
+[data-density="regal"] .hv-stepper-wert { font-size: var(--text-value-regal-size); line-height: var(--text-value-regal-line); }
+.hv-stepper-hinweis { grid-column: 1 / -1; font-size: var(--text-caption-size); color: var(--ink-muted); }

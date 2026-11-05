@@ -25,7 +25,8 @@ export type Route =
       versatzY: number;
       test: boolean;
     }
-  | { name: 'saeen'; box?: string }
+  // Plan 23 (A3): Box ohne von = Scan; von=gefaess aus der Maske Gefäss
+  | { name: 'saeen'; box?: string; ziel?: string; von?: 'gefaess' }
   | { name: 'anlage'; kuerzel?: string }
   | { name: 'anlage-neu' }
   | { name: 'vorlagen' }
@@ -46,8 +47,15 @@ export function routeAusHash(hash: string): Route {
   const etikett = /^\/e\/([A-Za-z0-9.-]+)$/.exec(pfad);
   if (etikett?.[1]) return { name: 'etikett', code: decodeURIComponent(etikett[1]) };
   if (pfad === '/saeen') {
-    const box = new URLSearchParams(abfrage).get('box');
-    return box && CODE.test(box) ? { name: 'saeen', box } : { name: 'saeen' };
+    const p = new URLSearchParams(abfrage);
+    const box = p.get('box');
+    const ziel = p.get('ziel');
+    return {
+      name: 'saeen',
+      ...(box && CODE.test(box) ? { box } : {}),
+      ...(ziel && CODE.test(ziel) ? { ziel } : {}),
+      ...(p.get('von') === 'gefaess' ? { von: 'gefaess' as const } : {}),
+    };
   }
   if (pfad === '/etiketten') {
     const p = new URLSearchParams(abfrage);
@@ -140,7 +148,14 @@ export function hashZu(route: Route): string {
     return `#/gefaess/${route.code}/aendern${route.teil ? `?teil=${route.teil}` : ''}`;
   if (route.name === 'pruefen') return `#/pruefen/${route.code}${route.scan ? '?scan=1' : ''}`;
   if (route.name === 'etikett') return `#/e/${route.code}`;
-  if (route.name === 'saeen') return route.box ? `#/saeen?box=${route.box}` : '#/saeen';
+  if (route.name === 'saeen') {
+    const teile = [
+      route.box ? `box=${route.box}` : '',
+      route.ziel ? `ziel=${route.ziel}` : '',
+      route.von ? `von=${route.von}` : '',
+    ].filter(Boolean);
+    return teile.length > 0 ? `#/saeen?${teile.join('&')}` : '#/saeen';
+  }
   if (route.name === 'etiketten') {
     const p = new URLSearchParams();
     if (route.kuerzel) p.set('a', route.kuerzel);

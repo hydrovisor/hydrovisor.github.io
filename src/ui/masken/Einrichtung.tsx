@@ -65,6 +65,12 @@ function Aktion({ punkt, starten }: { punkt: Punkt; starten: () => void }) {
         {punkt.knopf}
       </a>
     );
+  if (z.art === 'saeen')
+    return (
+      <a className="hv-btn hv-btn-secondary" href={hashZu({ name: 'saeen' })}>
+        {punkt.knopf}
+      </a>
+    );
   if (z.art === 'messen')
     return (
       <a className="hv-btn hv-btn-secondary" href={hashZu({ name: 'messen', code: z.code })}>

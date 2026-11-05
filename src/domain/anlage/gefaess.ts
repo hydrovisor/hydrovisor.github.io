@@ -31,7 +31,7 @@ export interface Gefaessansicht {
   dosis: { komponente: string; mlProL: string }[];
   hauptknopf?: { text: string; code: string };
   /** Plan 21: Nebenknöpfe «Prüfen», «Ändern», «Leeren» (nur bei Lösung), «Wiederherstellen» (bis 7 Tage) */
-  nebenknoepfe: { art: 'pruefen' | 'aendern' | 'leeren' | 'wiederherstellen'; text: string }[];
+  nebenknoepfe: { art: 'pruefen' | 'aendern' | 'leeren' | 'wiederherstellen' | 'saeen'; text: string }[];
   /** «Gefäss 2.3 entfernt am 10.12.» (R9.2) */
   entfernt?: string;
   verlauf: {
@@ -180,6 +180,8 @@ export function gefaessAnsicht(
       if (roh === 'in_pruefung') ansicht.nebenknoepfe.push({ art: 'pruefen', text: 'Prüfen' });
       ansicht.nebenknoepfe.push({ art: 'aendern', text: 'Ändern' });
       if (fuellNeben === 'loesung') ansicht.nebenknoepfe.push({ art: 'leeren', text: 'Leeren' });
+      // Plan 23: Säen in Gefässe ohne feste Dosis (UC5 Auslöser)
+      if (!g.feste_dosis) ansicht.nebenknoepfe.push({ art: 'saeen', text: 'Säen' });
     }
     const fuell = zeilen<{ platz_id: string; fuellzustand: string; letzter_ansatz: string | null }>(
       teile,
@@ -187,6 +189,9 @@ export function gefaessAnsicht(
     ).find((f) => f.platz_id === ort.platzId);
     ansicht.loesung = fuellText(fuell, g.intervall_wechseln_d, jetzt, zeitzone);
   }
+
+  // Plan 23: eine Anzuchtbox zeigt «Säen» (05 Abschnitt 2)
+  if (box) ansicht.nebenknoepfe.push({ art: 'saeen', text: 'Säen' });
 
   // Zielbereich aus dem Schnappschuss des letzten Ansatzes, sonst der letzten Messung (R2.5, A3)
   const zAnsatz = basis?.schnappschuss?.zielbereich;

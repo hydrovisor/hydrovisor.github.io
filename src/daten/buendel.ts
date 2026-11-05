@@ -68,6 +68,10 @@ export const BUENDEL_TEILE: readonly Buendelteil[] = [
   tabelle('pflanzung', { ohneStorno: true }),
   sicht('v_pflanzung_zustand', ['pflanzung_id']),
   tabelle('v_reservierung_aktiv', { ohneStorno: true }),
+  // Säen (Plan 23): Packungen, Keimrate je Packung (nur echt, G5), aktueller Platz je Topf
+  tabelle('saatgut', { ohneStorno: true }),
+  sicht('v_keimrate', ['saatgut_id']),
+  sicht('v_netztopf_platz', ['netztopf_id']),
   tabelle('messung', { ohneStorno: true, fensterTage: 14 }),
   sicht('v_messung_unsicher', ['messung_id']),
   tabelle('naehrloesungsansatz', { ohneStorno: true }),

@@ -369,3 +369,59 @@ body {
   border-radius: var(--radius-lg);
   background: var(--surface-raised);
 }
+
+/* Säen (Regal, Plan 23): Schrittanzeige, Satzkarten, Knopfleiste fest unten im Daumenbereich (A16) */
+.hv-saeen {
+  gap: var(--space-3);
+}
+
+.hv-saeen-schritt {
+  color: var(--ink-muted);
+  font-weight: 600;
+}
+
+.hv-saeen-sorte {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.hv-saeen-satz {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.hv-saeen-satz-titel {
+  font-weight: 700;
+}
+
+.hv-saeen-zeile,
+.hv-saeen-hinweis {
+  font-size: var(--text-caption-size);
+  color: var(--ink-muted);
+}
+
+.hv-saeen-station {
+  font-weight: 600;
+}
+
+.hv-saeen-bestaetigung {
+  font-size: var(--text-status-regal-size);
+  line-height: var(--text-status-regal-line);
+  font-weight: 700;
+}
+
+.hv-saeen-fuss {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  gap: var(--space-2);
+  margin-top: auto;
+  padding: var(--space-2) 0 calc(var(--space-2) + env(safe-area-inset-bottom));
+  background: var(--surface);
+}
+
+.hv-saeen-fuss > .hv-btn {
+  flex: 1;
+}

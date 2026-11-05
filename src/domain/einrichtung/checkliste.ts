@@ -13,6 +13,8 @@ export type Punktziel =
   | { art: 'etiketten'; kuerzel?: string }
   | { art: 'messen'; code: string }
   | { art: 'einweichen' }
+  /** Säen (Plan 23) */
+  | { art: 'saeen' }
   /** Ablauf folgt mit dem genannten Paket (Plan 18 A6) */
   | { art: 'folgt'; paket: string };
 
@@ -219,7 +221,7 @@ export function einrichtungsStand(teile: Teile, jetzt: Date, einweichenEnde?: nu
       titel: 'Erste Aussaat',
       knopf: 'Aussaat erfassen',
       erledigt: gesaet,
-      ziel: { art: 'folgt', paket: 'I1a-06' },
+      ziel: { art: 'saeen' },
     },
   ];
   const ersterOffener = roh.find((p) => !p.erledigt)?.nr;
