@@ -140,3 +140,14 @@ tests/unit/keimung-termine.test.ts
 tests/unit/router-keimung.test.ts
 tests/seed/keimung.test.ts
 tests/e2e/keimung.spec.ts
+# I2-01 Umsetzen einfach (#33)
+tests/fixtures/umsetzen.ts
+tests/unit/umsetzen.test.ts
+tests/unit/verschieben.test.ts
+tests/unit/topf-deckel.test.ts
+tests/unit/umsetzen-nebenwirkungen.test.ts
+tests/unit/router-umsetzen.test.ts
+supabase/tests/database/14_umsetzen.test.sql
+tests/e2e/umsetzen.spec.ts
+tests/e2e/verschieben.spec.ts
+tests/e2e/anzucht-ablauf.spec.ts
