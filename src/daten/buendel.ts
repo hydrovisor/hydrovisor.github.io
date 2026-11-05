@@ -62,6 +62,8 @@ export const BUENDEL_TEILE: readonly Buendelteil[] = [
   ),
   tabelle('kulturgruppe'),
   tabelle('produkt'),
+  // k je Komponente für die Einstellungen (Plan 32); gültig ist je Produkt die jüngste Zeile
+  tabelle('k_faktor', { ohneStorno: true }),
   sicht('v_sollwert', ['sorte_id', 'phase', 'groesse']),
   // Betrieb
   tabelle('satz', { ohneStorno: true }),
