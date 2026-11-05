@@ -40,6 +40,7 @@ const KEIMART: Record<string, string> = {
 };
 const BOXTYP: Record<string, string> = { box_licht: 'Lichtkeimer', box_dunkel: 'Dunkelkeimer' };
 const SPERRE_MS = 400;
+const ZUSTAND_A13 = { frei: 'frei', gewaehlt: 'gewählt' } as const;
 
 interface Menge {
   samen?: number | undefined;
@@ -346,8 +347,10 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
         nr: t.lochNr,
         zustand: t.zustand,
         ...(t.marke && name ? { marke: { ziffer: t.marke, name } } : {}),
-        // A13: die aktive Sorte kann ohne «Umsetzen ab» nicht malen (Runde 2, Befund 3)
-        ...(!aktivMalbar && t.zustand === 'frei' ? { nichtWaehlbar: true } : {}),
+        // A13: die aktive Sorte kann ohne «Umsetzen ab» nicht malen (Runde 3, Befunde 2 und 3)
+        ...(!aktivMalbar && (t.zustand === 'frei' || t.zustand === 'gewaehlt')
+          ? { nichtWaehlbar: true, zustandName: `${ZUSTAND_A13[t.zustand]}, Umsetzdatum fehlt` }
+          : {}),
       };
     });
     const ohneTopf: Loch[] = zielG
@@ -416,7 +419,7 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
                 const t = toepfeZiel.find((x) => x.lochNr === nr);
                 if (t && passt(t) && aktivMalbar) lochTippen(t.netztopfId);
               }}
-              onReihe={reiheTippen}
+              {...(aktivMalbar ? { onReihe: reiheTippen } : {})}
               kanten
             />
             <Button variant="secondary" disabled={!aktivMalbar} onClick={alleFreien}>
@@ -580,7 +583,7 @@ function SatzKarte({
           ) : null}
         </div>
       )}
-      {boxOffen ? (
+      {boxOffen && !gesperrt ? (
         <Choice
           label={`Anzuchtbox ${s.name}`}
           zeile
