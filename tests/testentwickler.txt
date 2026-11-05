@@ -110,3 +110,12 @@ tests/unit/gefaess-aendern.test.ts
 tests/unit/gefaess-pruefung.test.ts
 tests/e2e/gefaess.spec.ts
 tests/fixtures/sichten.ts
+# I1a-05 Etiketten (#22)
+tests/unit/etikett.test.ts
+tests/unit/etikett-bogen.test.ts
+tests/unit/etikett-aufloesen.test.ts
+tests/unit/datenpfad-setzen.test.ts
+tests/unit/router-etikett.test.ts
+tests/e2e/etikett.spec.ts
+tests/e2e/etikett-druck.spec.ts
+tests/seed/inbetriebnahme.test.ts
