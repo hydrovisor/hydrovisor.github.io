@@ -9,6 +9,7 @@ export function Stepper({
   onWert,
   anzeige,
   hinweis,
+  gesperrt,
 }: {
   label: string;
   wert: number;
@@ -17,6 +18,8 @@ export function Stepper({
   onWert: (neu: number) => void;
   anzeige?: (wert: number) => string;
   hinweis?: string;
+  /** beide Knöpfe deaktiviert, z. B. nach einem Teilerfolg beim Speichern */
+  gesperrt?: boolean;
 }) {
   return (
     <div className="hv-stepper" role="group" aria-label={label}>
@@ -25,7 +28,7 @@ export function Stepper({
         type="button"
         className="hv-stepper-knopf"
         aria-label={`${label} weniger`}
-        disabled={wert <= min}
+        disabled={gesperrt === true || wert <= min}
         onClick={() => onWert(Math.max(min, wert - 1))}
       >
         −
@@ -37,7 +40,7 @@ export function Stepper({
         type="button"
         className="hv-stepper-knopf"
         aria-label={`${label} mehr`}
-        disabled={wert >= max}
+        disabled={gesperrt === true || wert >= max}
         onClick={() => onWert(Math.min(max, wert + 1))}
       >
         +

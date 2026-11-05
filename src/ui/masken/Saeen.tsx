@@ -346,6 +346,8 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
         nr: t.lochNr,
         zustand: t.zustand,
         ...(t.marke && name ? { marke: { ziffer: t.marke, name } } : {}),
+        // A13: die aktive Sorte kann ohne «Umsetzen ab» nicht malen (Runde 2, Befund 3)
+        ...(!aktivMalbar && t.zustand === 'frei' ? { nichtWaehlbar: true } : {}),
       };
     });
     const ohneTopf: Loch[] = zielG
@@ -473,6 +475,7 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
         wert={-rueck}
         min={-30}
         max={0}
+        gesperrt={teilweise}
         onWert={(w) => (teilweise ? undefined : setRueck(-w))}
         anzeige={(w) => (w === 0 ? `Heute, ${tagKurz(heute)}` : tagKurz(tagPlus(heute, w)))}
       />
@@ -484,6 +487,7 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
           boxListe={boxListe}
           onBox={(id) => (teilweise ? undefined : setBoxen((alt) => ({ ...alt, [s.sorteId]: id })))}
           zielKennung={zielG?.kennung ?? ''}
+          gesperrt={teilweise}
           onMenge={(m) => menge(s.sorteId, m)}
         />
       ))}
@@ -502,6 +506,13 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
         <Notice key={h} kompakt tone="info" title={h} />
       ))}
       {fehler.length > 0 ? <Notice kompakt tone="danger" title={fehler.join(' · ')} /> : null}
+      {teilweise ? (
+        <Notice
+          kompakt
+          tone="warn"
+          title="Teil gespeichert: Eingaben bleiben fest, «Säen speichern» sendet den Rest"
+        />
+      ) : null}
       <div className="hv-saeen-fuss">
         <Button variant="secondary" disabled={teilweise} onClick={() => setSchritt(2)}>
           Zurück
@@ -525,6 +536,7 @@ function SatzKarte({
   s,
   spaeter,
   zielKennung,
+  gesperrt,
   boxListe,
   onBox,
   onMenge,
@@ -532,6 +544,7 @@ function SatzKarte({
   s: SatzVorschlag;
   spaeter: boolean;
   zielKennung: string;
+  gesperrt: boolean;
   boxListe: ReturnType<typeof boxenAus>;
   onBox: (platzId: string) => void;
   onMenge: (m: Menge) => void;
@@ -560,7 +573,7 @@ function SatzKarte({
       ) : (
         <div className="hv-saeen-box">
           <p>{s.box ? `Box ${s.box.kennung} · ${BOXTYP[s.box.typ]}` : 'Keine Anzuchtbox'}</p>
-          {boxListe.length > 1 && !boxOffen ? (
+          {boxListe.length > 1 && !boxOffen && !gesperrt ? (
             <Button variant="ghost" size="compact" onClick={() => setBoxOffen(true)}>
               Box wechseln
             </Button>
@@ -582,6 +595,7 @@ function SatzKarte({
       {s.box?.hinweis ? <p className="hv-saeen-hinweis">{s.box.hinweis}</p> : null}
       <Stepper
         label="Samen je Schwamm"
+        gesperrt={gesperrt}
         wert={s.samenJeSchwamm}
         min={1}
         max={Math.max(20, s.samenJeSchwamm)}
@@ -591,6 +605,7 @@ function SatzKarte({
       {s.direktsaat ? null : (
         <Stepper
           label="Schwämme"
+          gesperrt={gesperrt}
           wert={s.schwaemme}
           min={Math.max(1, spaeter ? 1 : s.zieltoepfe)}
           max={Math.min(100, Math.max(25, s.schwaemme))}
@@ -601,6 +616,7 @@ function SatzKarte({
       {spaeter ? (
         <Stepper
           label="Pflanzen"
+          gesperrt={gesperrt}
           wert={s.zieltoepfe}
           min={1}
           max={25}

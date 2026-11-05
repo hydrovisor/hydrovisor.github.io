@@ -295,8 +295,14 @@ body {
 }
 
 /* Heute: Gruppen je Anlage ab zwei echten Anlagen (UC1-AK5, Plan 20) */
+/* Kopfzeile Heute: die Navigation bricht auf 360 dp unter das Logo um, kein waagrechtes Wischen (Plan 23, Runde 2) */
+.hv-heute-kopf {
+  flex-wrap: wrap;
+}
+
 .hv-heute-nav {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--space-1);
 }
 

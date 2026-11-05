@@ -253,7 +253,9 @@ button.hv-tile { cursor: pointer; touch-action: manipulation; }
 
 /* Hinweis kompakt: einzeilig mit der Aktion rechts (Regal-Masken mit festem Platzbudget, Plan 12) */
 .hv-notice-kompakt { align-items: center; padding: var(--space-2) var(--space-3); }
-.hv-notice-kompakt .hv-notice-body { flex: 1; flex-direction: row; align-items: center; gap: var(--space-2); }
+.hv-notice-kompakt .hv-notice-body { flex: 1; flex-direction: row; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+/* passt die Aktion nicht neben den Titel, bricht sie um statt überzustehen (360 dp, Plan 23 Runde 2) */
+.hv-notice-kompakt .hv-notice-title { flex: 1 1 auto; min-width: 0; }
 .hv-notice-kompakt .hv-notice-text { flex: 1; }
 .hv-notice-kompakt .hv-notice-action { padding-top: 0; }
 
@@ -289,6 +291,6 @@ button.hv-tile { cursor: pointer; touch-action: manipulation; }
   font-size: var(--text-value-size); font-weight: 700; cursor: pointer; touch-action: manipulation; }
 [data-density="regal"] .hv-stepper-knopf { width: var(--size-touch-regal); height: var(--size-touch-regal); }
 .hv-stepper-knopf:disabled { cursor: not-allowed; color: var(--ink-muted); background: var(--surface-sunken); }
-.hv-stepper-wert { min-width: 3ch; text-align: center; font-size: var(--text-value-size); line-height: var(--text-value-line); font-weight: 700; font-variant-numeric: tabular-nums; }
+.hv-stepper-wert { min-width: 3ch; white-space: nowrap; text-align: center; font-size: var(--text-value-size); line-height: var(--text-value-line); font-weight: 700; font-variant-numeric: tabular-nums; }
 [data-density="regal"] .hv-stepper-wert { font-size: var(--text-value-regal-size); line-height: var(--text-value-regal-line); }
 .hv-stepper-hinweis { grid-column: 1 / -1; font-size: var(--text-caption-size); color: var(--ink-muted); }

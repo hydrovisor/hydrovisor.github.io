@@ -8,7 +8,7 @@ export interface Loch {
   zustand: 'frei' | 'belegt' | 'reserviert' | 'gewaehlt';
   /** Malmodus (Säen): Ziffer und Name der Sorte im gewählten Loch */
   marke?: { ziffer: number; name: string };
-  /** belegt oder reserviert: aria-disabled, kein Tipp */
+  /** nicht wählbar (belegt, reserviert, kein Topf, falsche Grösse, Sorte ohne «Umsetzen ab»): aria-disabled, kein Tipp */
   nichtWaehlbar?: boolean;
   /** Zustandswort im zugänglichen Namen statt des Zustands, z. B. «kein Topf» oder «5 cm, passt nicht» */
   zustandName?: string;
