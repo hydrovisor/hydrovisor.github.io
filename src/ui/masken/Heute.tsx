@@ -60,6 +60,9 @@ export function Heute() {
           <a className="hv-btn hv-btn-ghost hv-btn-compact" href={hashZu({ name: 'anlage' })}>
             Anlage öffnen
           </a>
+          <a className="hv-btn hv-btn-ghost hv-btn-compact" href={hashZu({ name: 'saeen' })}>
+            Säen
+          </a>
           <a className="hv-btn hv-btn-ghost hv-btn-compact" href={hashZu({ name: 'info' })}>
             Info öffnen
           </a>

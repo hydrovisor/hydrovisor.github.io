@@ -12,7 +12,7 @@ import {
 } from '../anlage/teile.ts';
 import { keimdauerTyp, stationsVorschau, type GeplanterSatz } from '../anzucht/kapazitaet.ts';
 import type { Schritt, Verstoss, Vorgang } from '../datenpfad/erfassung.ts';
-import { keimrate, saatmenge, type Empfehlung, type Keimrate } from '../saatmenge/saatmenge.ts';
+import { keimrate, keimrateArt, saatmenge, type Empfehlung, type Keimrate } from '../saatmenge/saatmenge.ts';
 import { kalendertag, tagPlus, tageZwischen, versatz, type Zeitzone } from '../zeit.ts';
 
 export type Kulturform =
@@ -54,6 +54,7 @@ interface ArtZeile {
   kulturformen_erlaubt: string[];
   kulturform_vorgabe: string | null;
   umsetzen_ab_d: number | null;
+  standard_keimfaehigkeit?: number | string | null;
   gueltig_bis?: string | null;
 }
 interface SatzZeile {
@@ -481,7 +482,8 @@ function satzVorschlag(teile: Teile, e: SaatEingabe, s: SatzEingabe): SatzVorsch
   const gefunden = direktsaat ? undefined : boxFuer(teile, e.anlageId, wahl.keimart, s.boxPlatzId);
   const box = gefunden?.platzId ? gefunden : undefined;
   const saatgutId = packungVon(teile, s.sorteId);
-  const rate = keimrate(teile, saatgutId);
+  // ohne Packung (oder ohne Zeile in v_keimrate) gilt der Standard der Art (R12.2, Prüfer Runde 1 Befund 1)
+  const rate = keimrate(teile, saatgutId) ?? keimrateArt(art?.standard_keimfaehigkeit);
   const empfehlung = empfehlungFuer(teile, s.sorteId, sorte.art_id, s.kulturform);
   const zieltoepfe = s.zieltopfIds.length > 0 ? s.zieltopfIds.length : Math.max(1, s.pflanzenOhneZiel ?? 1);
   const vorschlag = saatmenge({
@@ -540,6 +542,8 @@ export function saatVorschlag(
     if (!s.keimrate) hinweise.add(`${s.name}: Keimrate unbekannt`);
     if (!s.empfehlung) hinweise.add(`${s.name}: Keine Saatempfehlung`);
     if (s.box?.hinweis) hinweise.add(s.box.hinweis);
+    if (!s.direktsaat && s.keimdauer.typ === undefined && keimdauerTyp(teile, s.sorteId) === undefined)
+      hinweise.add(`${s.name}: Keimdauer fehlt, keine Stationsvorschau`);
   }
   const geplant: GeplanterSatz[] = saetze.map((s) => ({
     sorte: s.name,

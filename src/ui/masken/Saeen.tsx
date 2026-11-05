@@ -20,6 +20,7 @@ import {
   zieltoepfe,
   type SaatEingabe,
   type SatzVorschlag,
+  type Zieltopf,
 } from '../../domain/pflanzung/saeen.ts';
 import { lochbild } from '../../domain/vorlagen/lochbild.ts';
 import { kalendertag, tagKurz, tagPlus, ZEITZONE } from '../../domain/zeit.ts';
@@ -70,6 +71,8 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
   const [boxen, setBoxen] = useState<Record<string, string>>({});
   const [sendet, setSendet] = useState(false);
   const [fehler, setFehler] = useState<string[]>([]);
+  // Teil des Vorgangs schon gespeichert: Eingabe fest, nur derselbe Vorgang erneut (Prüfer Runde 1, Befund 8)
+  const [teilweise, setTeilweise] = useState(false);
   const [fertig, setFertig] = useState<{ vorgang: Vorgang; text: string; zurueck?: boolean }>();
   // gleicher Vorgang bei Wiederholung derselben Eingabe (TO2)
   const letzter = useRef<{ schluessel: string; vorgang: Vorgang } | undefined>(undefined);
@@ -182,14 +185,35 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
     });
   }
 
+  /** Topf passt zum Satz: nicht belegt oder reserviert, bei Anzucht 8 cm (Konzept 5.8, A5) */
+  function passt(t: Zieltopf): boolean {
+    if (t.zustand === 'belegt' || t.zustand === 'reserviert') return false;
+    return zielG?.direktsaat === true || t.groesseMm === 80;
+  }
+
+  /** A13: ohne «Umsetzen ab» der Art keine Zieltöpfe bei Anzucht (Prüfer Runde 1, Befund 6) */
+  const aktiveSorte = sorten.find((s) => s.sorteId === gewaehlt[aktiv - 1]);
+  const aktivMalbar =
+    zielG?.direktsaat === true || (aktiveSorte !== undefined && umsetzenBekannt(teile, aktiveSorte.artId));
+
+  function alleFreien() {
+    if (!teile || !zielG || !aktivMalbar) return;
+    const frei = zieltoepfe(teile, zielG.platzId, toepfe).filter((t) => t.zustand === 'frei' && passt(t));
+    setToepfe((alt) => {
+      const neu = new Map(alt);
+      for (const t of frei) neu.set(t.netztopfId, aktiv);
+      return neu;
+    });
+  }
+
   function reiheTippen(reihe: number) {
-    if (!teile || !zielG) return;
+    if (!teile || !zielG || !aktivMalbar) return;
     const nr = new Set(
       lochbild(zielG.reihen)
         .filter((l) => l.reihe === reihe)
         .map((l) => l.nr),
     );
-    const inReihe = zieltoepfe(teile, zielG.platzId, toepfe).filter((t) => nr.has(t.lochNr));
+    const inReihe = zieltoepfe(teile, zielG.platzId, toepfe).filter((t) => nr.has(t.lochNr) && passt(t));
     const frei = inReihe.filter((t) => t.zustand === 'frei');
     setToepfe((alt) => {
       const neu = new Map(alt);
@@ -201,6 +225,10 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
 
   async function speichern() {
     if (!teile || !eingabe || sendet) return;
+    if (teilweise && letzter.current) {
+      await senden(letzter.current.vorgang);
+      return;
+    }
     const verstoesse = saatEingabePruefen(teile, eingabe, jetzt(), ZEITZONE);
     if (verstoesse.length > 0) {
       setFehler(verstoesse.map((v) => v.grund));
@@ -212,12 +240,17 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
         ? letzter.current.vorgang
         : saatVorgang(teile, eingabe, neueClientId, jetzt(), ZEITZONE);
     letzter.current = { schluessel, vorgang };
+    await senden(vorgang);
+  }
+
+  async function senden(vorgang: Vorgang) {
     setSendet(true);
     const antwort = await schreiben(vorgang, { jetzt: jetzt(), zeitzone: ZEITZONE });
     // Sperre 400 ms gegen Doppeltipp (Aktionsknopf, NumPad.md)
     setTimeout(() => setSendet(false), SPERRE_MS);
     if (antwort.status !== 'gespeichert') {
       setFehler([antwort.status === 'nicht_gespeichert' ? antwort.fehler.text : 'Nicht gespeichert']);
+      if (antwort.status === 'nicht_gespeichert' && antwort.bestaetigt > 0) setTeilweise(true);
       return;
     }
     const saetze = vorgang.filter((s) => s.tabelle === 'satz').length;
@@ -288,19 +321,45 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
   }
 
   if (schritt === 2) {
-    const loecher: Loch[] = zielG
-      ? zieltoepfe(teile, zielG.platzId, toepfe).map((t) => {
-          const name = t.marke
-            ? sorten.find((s) => s.sorteId === gewaehlt[(t.marke as number) - 1])?.name
-            : undefined;
-          return {
-            nr: t.lochNr,
-            zustand: t.zustand,
-            ...(t.marke && name ? { marke: { ziffer: t.marke, name } } : {}),
-            ...(t.zustand === 'belegt' || t.zustand === 'reserviert' ? { nichtWaehlbar: true } : {}),
-          };
-        })
+    // Zustand als Text, nie nur über Farbe (Prüfer Runde 1, Befunde 4, 5 und 9)
+    const toepfeZiel = zielG ? zieltoepfe(teile, zielG.platzId, toepfe) : [];
+    const mitTopf: Loch[] = toepfeZiel.map((t): Loch => {
+      const name = t.marke
+        ? sorten.find((s) => s.sorteId === gewaehlt[(t.marke as number) - 1])?.name
+        : undefined;
+      if (t.zustand === 'belegt' || t.zustand === 'reserviert')
+        return {
+          nr: t.lochNr,
+          zustand: t.zustand,
+          text: t.zustand === 'belegt' ? 'bel.' : 'res.',
+          nichtWaehlbar: true,
+        };
+      if (!passt(t))
+        return {
+          nr: t.lochNr,
+          zustand: 'frei',
+          text: `${t.groesseMm / 10} cm`,
+          nichtWaehlbar: true,
+          zustandName: `${t.groesseMm / 10} cm, passt nicht`,
+        };
+      return {
+        nr: t.lochNr,
+        zustand: t.zustand,
+        ...(t.marke && name ? { marke: { ziffer: t.marke, name } } : {}),
+      };
+    });
+    const ohneTopf: Loch[] = zielG
+      ? lochbild(zielG.reihen)
+          .filter((l) => !toepfeZiel.some((t) => t.lochNr === l.nr))
+          .map((l) => ({
+            nr: l.nr,
+            zustand: 'frei',
+            text: '–',
+            nichtWaehlbar: true,
+            zustandName: 'kein Topf',
+          }))
       : [];
+    const loecher = [...mitTopf, ...ohneTopf];
     const hinweisUmsetzen =
       zielG && !zielG.direktsaat
         ? gewaehlt
@@ -342,7 +401,7 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
                 zeile
                 optionen={gewaehlt.map((id, i) => ({
                   wert: String(i + 1),
-                  titel: `${i + 1} ${sorten.find((s) => s.sorteId === id)?.name ?? ''}`,
+                  titel: `S${i + 1} ${sorten.find((s) => s.sorteId === id)?.name ?? ''}`,
                 }))}
                 gewaehlt={[String(aktiv)]}
                 onWahl={(w) => setAktiv(Number(w))}
@@ -352,12 +411,15 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
               reihen={zielG.reihen}
               loecher={loecher}
               onLoch={(nr) => {
-                const t = zieltoepfe(teile, zielG.platzId, toepfe).find((x) => x.lochNr === nr);
-                if (t && t.zustand !== 'belegt' && t.zustand !== 'reserviert') lochTippen(t.netztopfId);
+                const t = toepfeZiel.find((x) => x.lochNr === nr);
+                if (t && passt(t) && aktivMalbar) lochTippen(t.netztopfId);
               }}
               onReihe={reiheTippen}
               kanten
             />
+            <Button variant="secondary" disabled={!aktivMalbar} onClick={alleFreien}>
+              Alle freien wählen
+            </Button>
           </>
         ) : null}
         <div className="hv-saeen-fuss">
@@ -399,7 +461,8 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
       return b.belegt > b.platzzahl ? `${kennung}: ${b.belegt} von ${b.platzzahl} Würfeln` : '';
     })
     .filter(Boolean);
-  const menge = (id: string, m: Menge) => setMengen((alt) => ({ ...alt, [id]: { ...alt[id], ...m } }));
+  const menge = (id: string, m: Menge) =>
+    teilweise ? undefined : setMengen((alt) => ({ ...alt, [id]: { ...alt[id], ...m } }));
 
   return (
     <main className="hv-seite hv-saeen" data-density="regal">
@@ -410,7 +473,7 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
         wert={-rueck}
         min={-30}
         max={0}
-        onWert={(w) => setRueck(-w)}
+        onWert={(w) => (teilweise ? undefined : setRueck(-w))}
         anzeige={(w) => (w === 0 ? `Heute, ${tagKurz(heute)}` : tagKurz(tagPlus(heute, w)))}
       />
       {saetze.map((s) => (
@@ -419,7 +482,8 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
           s={s}
           spaeter={(eingabe?.saetze.find((x) => x.sorteId === s.sorteId)?.zieltopfIds.length ?? 0) === 0}
           boxListe={boxListe}
-          onBox={(id) => setBoxen((alt) => ({ ...alt, [s.sorteId]: id }))}
+          onBox={(id) => (teilweise ? undefined : setBoxen((alt) => ({ ...alt, [s.sorteId]: id })))}
+          zielKennung={zielG?.kennung ?? ''}
           onMenge={(m) => menge(s.sorteId, m)}
         />
       ))}
@@ -439,7 +503,7 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
       ))}
       {fehler.length > 0 ? <Notice kompakt tone="danger" title={fehler.join(' · ')} /> : null}
       <div className="hv-saeen-fuss">
-        <Button variant="secondary" onClick={() => setSchritt(2)}>
+        <Button variant="secondary" disabled={teilweise} onClick={() => setSchritt(2)}>
           Zurück
         </Button>
         <Button disabled={sendet || saetze.length === 0} onClick={() => void speichern()}>
@@ -460,12 +524,14 @@ function umsetzenBekannt(teile: Teile, artId: string | undefined): boolean {
 function SatzKarte({
   s,
   spaeter,
+  zielKennung,
   boxListe,
   onBox,
   onMenge,
 }: {
   s: SatzVorschlag;
   spaeter: boolean;
+  zielKennung: string;
   boxListe: ReturnType<typeof boxenAus>;
   onBox: (platzId: string) => void;
   onMenge: (m: Menge) => void;
@@ -490,7 +556,7 @@ function SatzKarte({
         {s.name} · {KULTURFORM_NAME[s.kulturform] ?? s.kulturform} · {ziel}
       </p>
       {s.direktsaat ? (
-        <p>Direktsaat</p>
+        <p>Direktsaat in {zielKennung}</p>
       ) : (
         <div className="hv-saeen-box">
           <p>{s.box ? `Box ${s.box.kennung} · ${BOXTYP[s.box.typ]}` : 'Keine Anzuchtbox'}</p>

@@ -52,6 +52,12 @@ export function keimrate(teile: Teile, saatgutId: string | undefined): Keimrate 
   return { p, herkunft };
 }
 
+/** Rückfall ohne Packung: Standard-Keimfähigkeit der Art, begrenzt (R12.2 «sonst Standard der Art») */
+export function keimrateArt(standard: number | string | null | undefined): Keimrate | undefined {
+  if (standard === null || standard === undefined) return undefined;
+  return { p: Math.min(P_MAX, Math.max(P_MIN, Number(standard))), herkunft: 'art' };
+}
+
 /**
  * R12.1: Samen je Schwamm s = min(⌈ln 0.1 / ln(1 − p)⌉, Obergrenze), mindestens 1; mit «Pflanzen stehen lassen» > 1
  * die Samen der Empfehlung. Schwamm-Keimrate q = 1 − (1 − p)^s; Schwämme m = ⌈Z / q⌉, bei q ≥ 0.99 m = Z, höchstens

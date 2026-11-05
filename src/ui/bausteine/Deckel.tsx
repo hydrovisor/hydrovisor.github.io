@@ -10,6 +10,8 @@ export interface Loch {
   marke?: { ziffer: number; name: string };
   /** belegt oder reserviert: aria-disabled, kein Tipp */
   nichtWaehlbar?: boolean;
+  /** Zustandswort im zugänglichen Namen statt des Zustands, z. B. «kein Topf» oder «5 cm, passt nicht» */
+  zustandName?: string;
 }
 
 const ZUSTAND_TEXT = {
@@ -68,9 +70,9 @@ export function Deckel({
                 const klasse = loch.zustand === 'frei' ? 'hv-loch' : `hv-loch hv-loch-${loch.zustand}`;
                 const marke = 'marke' in loch ? loch.marke : undefined;
                 const gesperrt = 'nichtWaehlbar' in loch && loch.nichtWaehlbar === true;
-                const name = marke
-                  ? `Loch ${l.nr}, ${ZUSTAND_TEXT[loch.zustand]} für ${marke.name}`
-                  : `Loch ${l.nr}, ${ZUSTAND_TEXT[loch.zustand]}`;
+                const wort =
+                  ('zustandName' in loch ? loch.zustandName : undefined) ?? ZUSTAND_TEXT[loch.zustand];
+                const name = marke ? `Loch ${l.nr}, ${wort} für ${marke.name}` : `Loch ${l.nr}, ${wort}`;
                 return (
                   <button
                     key={l.nr}
@@ -83,7 +85,7 @@ export function Deckel({
                     data-gangkante={l.gangkante ? 'ja' : 'nein'}
                     onClick={() => (gesperrt ? undefined : onLoch?.(l.nr))}
                   >
-                    {marke ? marke.ziffer : (loch.text ?? l.nr)}
+                    {marke ? `S${marke.ziffer}` : (loch.text ?? l.nr)}
                   </button>
                 );
               })}
