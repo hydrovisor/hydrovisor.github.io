@@ -260,7 +260,7 @@ create table public.deckeltyp (
   storniert_am timestamptz
 );
 comment on table public.deckeltyp is
-  'Vorlage Deckel oder Pflanzplatte: Löcher je Reihe von vorne nach hinten; Loch 1 vorne links, zeilenweise nummeriert; Randlöcher abgeleitet (8.1 Regel 9). D1, D2, D3, D4, D6, S8, S5.';
+  'Vorlage Deckel oder Pflanzplatte: Löcher je Reihe von vorne nach hinten; Loch 1 vorne links, spaltenweise nummeriert (Konzept v1.4, E9); Randlöcher abgeleitet (8.1 Regel 9). D1, D2, D3, D4, D6, S8, S5.';
 
 create table public.gefaess (
   id uuid primary key default gen_random_uuid(),

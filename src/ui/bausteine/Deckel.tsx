@@ -1,4 +1,4 @@
-// Baustein Deckel (design-system/components/Deckel.md): Loch 1 vorne links, zeilenweise nach hinten; Nummern,
+// Baustein Deckel (design-system/components/Deckel.md): Loch 1 vorne links, spaltenweise von vorne nach hinten; Nummern,
 // Reihen und Randlöcher aus lochbild() (eine Quelle mit Vorlagen und Assistent, Plan 19)
 import { lochbild } from '../../domain/vorlagen/lochbild.ts';
 
