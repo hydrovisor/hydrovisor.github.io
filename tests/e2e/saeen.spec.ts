@@ -223,3 +223,52 @@ test('UC5 Maske ohne Systemtastatur (kein input mit Tastatur)', async ({ page })
   expect((speichern?.y ?? 0) + (speichern?.height ?? 0)).toBeLessThanOrEqual(640);
   expect(speichern?.height ?? 0).toBeGreaterThanOrEqual(68);
 });
+
+test('TO8 Säen ohne Netz: «nicht gespeichert», Schritt 3 mit Eingaben bleibt, erneut senden speichert genau einen Vorgang', async ({
+  page,
+  context,
+}) => {
+  const m = await mitDaten(page, regal(), '/#/saeen?box=R-A1');
+  // ohne Netz: das Gerät ist offline und jeder Schreibzugriff scheitert wie ohne Verbindung (auch an page.route)
+  let ohneNetz = false;
+  const versucht: string[] = [];
+  await page.route('http://127.0.0.1:54321/rest/v1/**', async (route) => {
+    const anfrage = route.request();
+    if (ohneNetz && anfrage.method() !== 'GET') {
+      const roh = (anfrage.postDataJSON() ?? {}) as Record<string, unknown> | Record<string, unknown>[];
+      for (const z of Array.isArray(roh) ? roh : [roh]) versucht.push(String(z['client_id']));
+      return route.abort('internetdisconnected');
+    }
+    return route.fallback();
+  });
+
+  await tipp(m, sorteWahl(page, 'Lollo Rossa'));
+  await tipp(m, knopf(page, 'Weiter'));
+  await tipp(m, zielgefaess(page, '2.3'));
+  await tipp(m, reihe(page, 1));
+  await tipp(m, knopf(page, 'Weiter'));
+  await expect(page.getByText('Schritt 3 von 3')).toBeVisible();
+
+  ohneNetz = true;
+  await context.setOffline(true);
+  await tipp(m, knopf(page, 'Säen speichern'));
+  await expect(page.getByRole('alert').filter({ hasText: /nicht gespeichert/ })).toBeVisible();
+  await expect(page.getByText('Schritt 3 von 3')).toBeVisible();
+  await expect(page.getByText(/Lollo Rossa/).first()).toBeVisible();
+  await expect(knopf(page, 'Säen speichern')).toBeVisible();
+  await expect(page.getByText(/Gespeichert: /)).toHaveCount(0);
+  expect(m.geschrieben).toEqual([]);
+
+  // Netz zurück: erneut speichern schickt dieselben client_id (TO2)
+  await context.setOffline(false);
+  ohneNetz = false;
+  await tipp(m, knopf(page, 'Säen speichern'));
+  await expect(page.getByText(/Gespeichert: 1 Satz/)).toBeVisible();
+  await expect.poll(() => zeilenVon(m, 'reservierung').length).toBe(2);
+  expect(zeilenVon(m, 'pflanzvorgang')).toHaveLength(1);
+  expect(zeilenVon(m, 'satz')).toHaveLength(1);
+  const ids = m.geschrieben.map(([t, z]) => `${t}:${String(z['client_id'])}`);
+  expect(new Set(ids).size).toBe(ids.length);
+  const geschrieben = new Set(m.geschrieben.map(([, z]) => String(z['client_id'])));
+  for (const id of versucht) expect(geschrieben.has(id), id).toBe(true);
+});

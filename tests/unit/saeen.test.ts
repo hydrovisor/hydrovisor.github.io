@@ -522,3 +522,47 @@ describe('UC5 Säen', () => {
     expect(knoepfe('R-4.4').map((k) => k.art)).not.toContain('saeen');
   });
 });
+
+describe('R12.2 Rückfall der Keimrate (Prüfer Runde 1)', () => {
+  /** Eichblatt allein, 3 Zieltöpfe in 2.1, ohne Packung */
+  function ohnePackung(): { t: Teile; e: SaatEingabe } {
+    const t = saatTeile(JETZT);
+    t['saatgut'] = (t['saatgut'] ?? []).filter((z) => z['id'] !== PACKUNG.eichblatt);
+    t['v_keimrate'] = (t['v_keimrate'] ?? []).filter((z) => z['saatgut_id'] !== PACKUNG.eichblatt);
+    const e = eingabe({
+      saetze: [
+        {
+          sorteId: SORTE.eichblatt,
+          kulturform: 'kopf',
+          boxPlatzId: platzId('A1'),
+          zieltopfIds: toepfe('2.1.1', '2.1.2', '2.1.3'),
+        },
+      ],
+    });
+    return { t, e };
+  }
+
+  it('R12.2 ohne Packung gilt die Keimfähigkeit der Art', () => {
+    const { t, e } = ohnePackung();
+    const [satz] = saatVorschlag(t, e, JETZT, Z).saetze;
+    // Salat standard_keimfaehigkeit 0.8 (begrenzt 0.3 bis 0.98)
+    expect(satz?.keimrate).toEqual({ p: 0.8, herkunft: 'art' });
+    // s = ⌈ln 0.1 / ln 0.2⌉ = ⌈1.43⌉ = 2, q = 0.96, m = ⌈3 / 0.96⌉ = 4
+    expect(satz?.vorschlag.samenJeSchwamm).toBe(2);
+    expect(satz?.vorschlag.schwammKeimrate).toBeCloseTo(0.96, 6);
+    expect(satz?.vorschlag.schwaemme).toBe(4);
+    const [zeile] = neue(vorgang(t, e), 'satz');
+    expect(zeile).toMatchObject({ sorte_id: SORTE.eichblatt, samen_je_schwamm: 2, anzahl_schwaemme: 4 });
+    expect(zeile?.['saatgut_id'] ?? null).toBeNull();
+  });
+
+  it('R12.2 ohne Packung und ohne Keimfähigkeit der Art: Keimrate unbekannt', () => {
+    const { t, e } = ohnePackung();
+    t['art'] = (t['art'] ?? []).map((a) =>
+      a['art_id'] === 'lactuca_sativa' ? { ...a, standard_keimfaehigkeit: null } : a,
+    );
+    const v = saatVorschlag(t, e, JETZT, Z);
+    expect(v.saetze[0]?.keimrate).toBeUndefined();
+    expect(v.hinweise).toContain('Eichblatt: Keimrate unbekannt');
+  });
+});
