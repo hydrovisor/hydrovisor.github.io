@@ -136,3 +136,11 @@ tests/unit/keimung-termine.test.ts
 tests/unit/router-keimung.test.ts
 tests/seed/keimung.test.ts
 tests/e2e/keimung.spec.ts
+# I1b-02 Aufgaben-Rechnung (#27)
+tests/unit/aufgaben-fixture.ts
+tests/unit/aufgaben-schluessel.test.ts
+tests/unit/aufgaben-regeln.test.ts
+tests/unit/aufgaben-aufschub.test.ts
+tests/unit/aufgaben-fuellzustand.test.ts
+tests/unit/aufgaben-zeit.test.ts
+supabase/functions/push-taeglich/aufgaben_test.ts
