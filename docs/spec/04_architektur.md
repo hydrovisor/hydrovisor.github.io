@@ -55,7 +55,7 @@ Der Router wertet beim Erstaufruf und bei jedem `hashchange` dieselbe Funktion a
 | `#/messen/:code` | Messmaske (auch `R-W`, pH-Kontrolle `#/messen/geraet`) | Regal |
 | `#/kalibrieren` | Messgerät kalibrieren mit Gegenprobe; `?datenart=demo` oder `test` für Demo- und Testanlagen (Plan 12, Ergänzung I0-07) | Regal |
 | `#/ansatz/:code` | Rechner und Abhakliste (Neuansatz, Nachfüllen, Teilwechsel, pH-Korrektur) | Regal |
-| `#/saeen` (`?box=R-A1`, `?ziel=R-2.3`) | Säen | Regal |
+| `#/saeen` (`?box=R-A1`, `?ziel=R-2.3`, `&von=gefaess`) | Säen; Box ohne `von` ist der Scan (Einstieg `scan`), `von=gefaess` aus der Maske «Gefäss», sonst `heute` (Plan 23 A3) | Regal |
 | `#/keimung/:satz` | Keimung prüfen | Regal |
 | `#/umsetzen/:satz` | Umsetzen | Regal |
 | `#/pflanze/:pflanzung` | Pflanzenansicht (Satz oder Topf) | Regal |

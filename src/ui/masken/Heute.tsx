@@ -54,11 +54,14 @@ export function Heute() {
   const ablauf = ablaufOffen === undefined ? 'unbekannt' : ablaufOffen ? 'offen' : 'keiner';
   return (
     <main className="hv-seite" data-density="regal" data-ablauf={ablauf}>
-      <header className="hv-seite-kopf">
+      <header className="hv-seite-kopf hv-heute-kopf">
         <Logo height={32} />
         <nav className="hv-heute-nav" aria-label="Navigation">
           <a className="hv-btn hv-btn-ghost hv-btn-compact" href={hashZu({ name: 'anlage' })}>
             Anlage öffnen
+          </a>
+          <a className="hv-btn hv-btn-ghost hv-btn-compact" href={hashZu({ name: 'saeen' })}>
+            Säen
           </a>
           <a className="hv-btn hv-btn-ghost hv-btn-compact" href={hashZu({ name: 'info' })}>
             Info öffnen

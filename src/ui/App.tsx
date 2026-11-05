@@ -58,7 +58,11 @@ function Masken() {
       ) : maske.name === 'druck-etiketten' ? (
         <DruckEtiketten route={maske} />
       ) : maske.name === 'saeen' ? (
-        <Saeen {...(maske.box ? { box: maske.box } : {})} />
+        <Saeen
+          {...(maske.box ? { box: maske.box } : {})}
+          {...(maske.ziel ? { ziel: maske.ziel } : {})}
+          {...(maske.von ? { von: maske.von } : {})}
+        />
       ) : maske.name === 'gefaess' ? (
         <Gefaess code={maske.code} />
       ) : maske.name === 'anlage' ? (

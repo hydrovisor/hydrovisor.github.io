@@ -178,6 +178,18 @@ function Nebenknoepfe({ a, teile }: { a: Gefaessansicht; teile: Teile }) {
           >
             {k.text}
           </a>
+        ) : k.art === 'saeen' ? (
+          <a
+            key={k.art}
+            className="hv-btn hv-btn-secondary"
+            href={hashZu(
+              a.rolle === 'anzuchtort'
+                ? { name: 'saeen', box: a.code, von: 'gefaess' }
+                : { name: 'saeen', ziel: a.code, von: 'gefaess' },
+            )}
+          >
+            {k.text}
+          </a>
         ) : k.art === 'leeren' ? (
           <Button
             key={k.art}

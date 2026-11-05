@@ -7,6 +7,7 @@
 //   | { name: 'druck-etiketten'; kuerzel: string; codes: string[]; start: number; versatzX: number;
 //       versatzY: number; test: boolean }                                 // #/druck/etiketten?…
 //   | { name: 'saeen'; box?: string }                                     // #/saeen?box=R-A1
+//   Plan 23 (A3): | { name: 'saeen'; box?: string; ziel?: string; von?: 'gefaess' } // #/saeen?ziel=R-2.3&von=gefaess
 //   | { name: 'pruefen'; code: string; scan?: true }                      // #/pruefen/R-2.3?scan=1
 //   Ungültige Werte fallen auf den Standard: Startfeld ausserhalb 1 bis 21 → 1, Kürzel nicht 1 bis 3 Grossbuchstaben
 //   → ohne Kürzel.
@@ -89,5 +90,22 @@ describe('UC14 Routen (Plan 22)', () => {
     // Kürzel klein: nicht die Anlage «r»
     const klein = routeAusHash(ersetzt(hash, 'R', 'r')) as unknown as Record<string, unknown>;
     expect(klein['kuerzel']).not.toBe('r');
+  });
+
+  it('UC5-AK1 #/saeen?ziel=R-2.3&von=gefaess hin und zurück (Plan 23 A3)', () => {
+    const route = { name: 'saeen', ziel: 'R-2.3', von: 'gefaess' } as unknown as Route;
+    expect(routeAusHash('#/saeen?ziel=R-2.3&von=gefaess')).toEqual(route);
+    expect(hin(route)).toEqual(route);
+    const mitBox = { name: 'saeen', box: 'R-A1', von: 'gefaess' } as unknown as Route;
+    expect(routeAusHash('#/saeen?box=R-A1&von=gefaess')).toEqual(mitBox);
+    expect(hin(mitBox)).toEqual(mitBox);
+    // der Scan bleibt genau { name: 'saeen', box } (UC14-AK2)
+    expect(routeAusHash('#/saeen?box=R-A1')).toEqual({ name: 'saeen', box: 'R-A1' });
+  });
+
+  it('UC5-AK1 #/saeen: von mit anderem Wert und ungültiges Ziel fallen weg', () => {
+    expect(routeAusHash('#/saeen?ziel=R-2.3&von=heute')).toEqual({ name: 'saeen', ziel: 'R-2.3' });
+    expect(routeAusHash('#/saeen?ziel=R-2.3&von=x')).toEqual({ name: 'saeen', ziel: 'R-2.3' });
+    expect(routeAusHash('#/saeen?ziel=2.3')).toEqual({ name: 'saeen' });
   });
 });

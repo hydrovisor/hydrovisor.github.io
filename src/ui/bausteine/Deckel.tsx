@@ -6,6 +6,12 @@ export interface Loch {
   nr: number;
   text?: string;
   zustand: 'frei' | 'belegt' | 'reserviert' | 'gewaehlt';
+  /** Malmodus (Säen): Ziffer und Name der Sorte im gewählten Loch */
+  marke?: { ziffer: number; name: string };
+  /** nicht wählbar (belegt, reserviert, kein Topf, falsche Grösse, Sorte ohne «Umsetzen ab»): aria-disabled, kein Tipp */
+  nichtWaehlbar?: boolean;
+  /** Zustandswort im zugänglichen Namen statt des Zustands, z. B. «kein Topf» oder «5 cm, passt nicht» */
+  zustandName?: string;
 }
 
 const ZUSTAND_TEXT = {
@@ -19,6 +25,7 @@ export function Deckel({
   reihen,
   loecher,
   onLoch,
+  onReihe,
   kanten,
   serviceOeffnung,
 }: {
@@ -26,6 +33,8 @@ export function Deckel({
   reihen: number[];
   loecher: Loch[];
   onLoch?: (nr: number) => void;
+  /** Reihenkopf links jeder Reihe (1 = vorne) */
+  onReihe?: (reihe: number) => void;
   /** Beschriftung «hinten» oben und «vorne · Gang» unten */
   kanten?: boolean;
   /** Marke «Service-Öffnung» an der Vorderkante */
@@ -44,23 +53,39 @@ export function Deckel({
         ) : null}
         {reihen.map((_, i) => (
           <div key={i} className="hv-deckel-reihe">
+            {onReihe ? (
+              <button
+                type="button"
+                className="hv-deckel-reihenkopf"
+                aria-label={`Reihe ${i + 1} wählen`}
+                onClick={() => onReihe(i + 1)}
+              >
+                R{i + 1}
+              </button>
+            ) : null}
             {alle
               .filter((l) => l.reihe === i + 1)
               .map((l) => {
                 const loch = loecher.find((x) => x.nr === l.nr) ?? { nr: l.nr, zustand: 'frei' as const };
                 const klasse = loch.zustand === 'frei' ? 'hv-loch' : `hv-loch hv-loch-${loch.zustand}`;
+                const marke = 'marke' in loch ? loch.marke : undefined;
+                const gesperrt = 'nichtWaehlbar' in loch && loch.nichtWaehlbar === true;
+                const wort =
+                  ('zustandName' in loch ? loch.zustandName : undefined) ?? ZUSTAND_TEXT[loch.zustand];
+                const name = marke ? `Loch ${l.nr}, ${wort} für ${marke.name}` : `Loch ${l.nr}, ${wort}`;
                 return (
                   <button
                     key={l.nr}
                     type="button"
-                    className={klasse}
-                    aria-label={`Loch ${l.nr}, ${ZUSTAND_TEXT[loch.zustand]}`}
+                    className={marke ? `${klasse} hv-loch-marke` : klasse}
+                    aria-label={name}
+                    aria-disabled={gesperrt ? true : undefined}
                     data-reihe={l.reihe}
                     data-randloch={l.randloch ? 'ja' : 'nein'}
                     data-gangkante={l.gangkante ? 'ja' : 'nein'}
-                    onClick={() => onLoch?.(l.nr)}
+                    onClick={() => (gesperrt ? undefined : onLoch?.(l.nr))}
                   >
-                    {loch.text ?? l.nr}
+                    {marke ? `S${marke.ziffer}` : (loch.text ?? l.nr)}
                   </button>
                 );
               })}

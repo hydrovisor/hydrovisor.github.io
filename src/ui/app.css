@@ -294,12 +294,18 @@ body {
   text-align: right;
 }
 
-/* Heute: Gruppen je Anlage ab zwei echten Anlagen (UC1-AK5, Plan 20) */
+/* Kopfzeile Heute: die Navigation bricht auf 360 dp unter das Logo um, kein waagrechtes Wischen (Plan 23, Runde 2) */
+.hv-heute-kopf {
+  flex-wrap: wrap;
+}
+
 .hv-heute-nav {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--space-1);
 }
 
+/* Heute: Gruppen je Anlage ab zwei echten Anlagen (UC1-AK5, Plan 20) */
 .hv-heute-gruppe {
   display: flex;
   flex-direction: column;
@@ -368,4 +374,67 @@ body {
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   background: var(--surface-raised);
+}
+
+/* Säen (Regal, Plan 23): Schrittanzeige, Satzkarten, Knopfleiste fest unten im Daumenbereich (A16) */
+.hv-saeen {
+  gap: var(--space-3);
+}
+
+.hv-saeen-schritt {
+  color: var(--ink-muted);
+  font-weight: 600;
+}
+
+.hv-saeen-sorte {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.hv-saeen-satz {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.hv-saeen-satz-titel {
+  font-weight: 700;
+}
+
+.hv-saeen-zeile,
+.hv-saeen-hinweis {
+  font-size: var(--text-caption-size);
+  color: var(--ink-muted);
+}
+
+.hv-saeen-station {
+  font-weight: 600;
+}
+
+.hv-saeen-bestaetigung {
+  font-size: var(--text-status-regal-size);
+  line-height: var(--text-status-regal-line);
+  font-weight: 700;
+}
+
+.hv-saeen-fuss {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  gap: var(--space-2);
+  margin-top: auto;
+  padding: var(--space-2) 0 calc(var(--space-2) + env(safe-area-inset-bottom));
+  background: var(--surface);
+}
+
+.hv-saeen-fuss > .hv-btn {
+  flex: 1;
+}
+
+.hv-saeen-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
 }
