@@ -100,7 +100,10 @@ interface NetztopfPlatzZeile {
 }
 interface NetztopfZeile {
   id: string;
+  kennung: string;
   groesse_mm: number;
+  heim_platz_id: string;
+  heim_loch_nr: number;
   aktiv?: boolean;
   storniert_am: string | null;
 }
@@ -286,6 +289,8 @@ export interface Zieltopf {
   marke?: number;
   /** Nachfolge-Topf (Plan 25): frei am Umsetzdatum, bis dahin belegt bis zu diesem Tag */
   belegtBis?: string;
+  /** Plan 33 (R1-2): Heimtopf steht anderswo, «2.1.2 auf 4.2.1»; nicht wählbar */
+  abwesend?: string;
 }
 
 function belegungImGefaess(teile: Teile, platzId: string) {
@@ -315,7 +320,7 @@ export function zieltoepfe(
       .map((n) => [n.id, Number(n.groesse_mm)]),
   );
   const b = belegungImGefaess(teile, platzId);
-  return zeilen<NetztopfPlatzZeile>(teile, 'v_netztopf_platz')
+  const liste: Zieltopf[] = zeilen<NetztopfPlatzZeile>(teile, 'v_netztopf_platz')
     .filter((n) => n.platz_id === platzId && n.loch_nr !== null && groesse.has(n.netztopf_id))
     .sort((a, c) => Number(a.loch_nr) - Number(c.loch_nr))
     .map((n) => {
@@ -356,6 +361,30 @@ export function zieltoepfe(
         ...(zustand === 'gewaehlt' && marke !== undefined ? { marke } : {}),
       };
     });
+  // abwesender Heimtopf (z. B. 8-cm-Zieltopf auf der Station) an seinem Heimloch, nicht wählbar (Plan 33, R1-2)
+  const stehend = new Set(liste.map((z) => z.lochNr));
+  const kennungen = new Map(
+    zeilen<{ id: string; kennung: string }>(teile, 'platz').map((p) => [p.id, p.kennung]),
+  );
+  const reserviert = new Set(
+    zeilen<{ netztopf_id: string }>(teile, 'v_reservierung_aktiv').map((r) => r.netztopf_id),
+  );
+  for (const n of zeilen<NetztopfZeile>(teile, 'netztopf')) {
+    if (n.storniert_am !== null || n.aktiv === false || n.heim_platz_id !== platzId) continue;
+    const heimLoch = Number(n.heim_loch_nr);
+    if (stehend.has(heimLoch)) continue;
+    const ort = zeilen<NetztopfPlatzZeile>(teile, 'v_netztopf_platz').find((x) => x.netztopf_id === n.id);
+    if (!ort || ort.platz_id === platzId) continue;
+    liste.push({
+      lochNr: heimLoch,
+      netztopfId: n.id,
+      kennung: n.kennung,
+      groesseMm: Number(n.groesse_mm),
+      zustand: reserviert.has(n.id) ? 'reserviert' : 'belegt',
+      abwesend: `${n.kennung} auf ${kennungen.get(ort.platz_id ?? '') ?? ''}.${String(ort.loch_nr)}`,
+    });
+  }
+  return liste.sort((a, c) => a.lochNr - c.lochNr);
 }
 
 // ---------------------------------------------------------------------------------------------------------------
