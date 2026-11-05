@@ -127,3 +127,7 @@ tests/unit/anzucht-termine.test.ts
 tests/unit/saeen.test.ts
 tests/seed/saeen.test.ts
 tests/e2e/saeen.spec.ts
+# I1a-08 Satz duplizieren (#25)
+tests/fixtures/duplizieren.ts
+tests/unit/duplizieren.test.ts
+tests/e2e/saeen-duplizieren.spec.ts
