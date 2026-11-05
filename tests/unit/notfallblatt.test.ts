@@ -83,3 +83,30 @@ describe('Vertretungsblatt (Konzept 11.7, Annahme 12)', () => {
     expect(vertretungKontakt('Platzhalter')).toBe('Bei Fragen: Platzhalter');
   });
 });
+
+describe('Notfallblatt Runde 1 (Befunde 5 bis 7)', () => {
+  it('Reihenfolge Micro, Grow, Bloom auch mit den echten Produktnamen; nicht dosierte Komponente entfällt; kleine Dosis nie 0', () => {
+    const t = regalTeile(JETZT);
+    t['produkt'] = [
+      { produkt_id: 'grow', name: 'TriPart Grow' },
+      { produkt_id: 'micro_hard_water', name: 'TriPart Micro' },
+      { produkt_id: 'bloom', name: 'TriPart Bloom' },
+    ];
+    for (const p of t['ansatz_position'] ?? []) {
+      if (p['produkt_id'] === 'bloom') p['ist_ml'] = 0;
+      if (p['produkt_id'] === 'micro_hard_water') p['ist_ml'] = 0.18; // 0.02 ml/L · 10 l = 0.2 ml
+    }
+    const z = notfallblatt(t, 'R', JETZT, ZEITZONE).zeilen.find((x) => x.kennung === '2.3');
+    expect(z?.dosisJeKanne).toBe('TriPart Micro 0.5 ml · TriPart Grow 23.5 ml');
+  });
+
+  it('Laufweg der Anlage bestimmt die Reihenfolge, übrige Gefässe danach nach Code', () => {
+    const t = regalTeile(JETZT);
+    const anlage = (t['anlage'] ?? [])[0];
+    if (!anlage) throw new Error('Anlage fehlt');
+    anlage['laufweg'] = ['4.5', '2.3', '1.1'];
+    const kennungen = notfallblatt(t, 'R', JETZT, ZEITZONE).zeilen.map((x) => x.kennung);
+    expect(kennungen.slice(0, 4)).toEqual(['4.5', '2.3', '1.1', '1.2']);
+    expect(kennungen).toHaveLength(13);
+  });
+});

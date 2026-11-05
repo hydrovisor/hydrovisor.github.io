@@ -322,6 +322,11 @@ export type Einstellungsergebnis =
   | { status: 'gespeichert'; zeile?: Record<string, unknown> }
   | { status: 'nicht_gespeichert'; fehler: Schreibfehler };
 
+/** Lesen hat eigene Texte: ein Lesefehler ist kein «nicht gespeichert» (Plan 32 Runde 1 Befund 2) */
+export const TEXT_NICHT_GELESEN = 'Nur mit Netz lesbar, Seite neu laden';
+export type Leseergebnis =
+  { status: 'gelesen'; zeile: Record<string, unknown> } | { status: 'nicht_gelesen'; text: string };
+
 export function erstelleEinstellungSchreiben(
   adapter: EinstellungAdapter,
   bindung: { nachErfolg?: () => void },
@@ -331,16 +336,15 @@ export function erstelleEinstellungSchreiben(
     id: string,
     felder: Record<string, unknown>,
   ) => Promise<Einstellungsergebnis>;
-  lesen: (tabelle: Einstellungstabelle, id: string, spalten: string) => Promise<Einstellungsergebnis>;
+  lesen: (tabelle: Einstellungstabelle, id: string, spalten: string) => Promise<Leseergebnis>;
 } {
   const ausfuehren = async (
     anfrage: (signal: AbortSignal) => Promise<Antwort>,
-    nachErfolg: boolean,
   ): Promise<Einstellungsergebnis> => {
     try {
       const [zeile] = zeilenAus(await mitZeitlimit(anfrage));
       if (!zeile) throw new Abbruch({ art: 'abgelehnt', wiederholbar: false, text: TEXT_NICHT_GEFUNDEN });
-      if (nachErfolg) bindung.nachErfolg?.();
+      bindung.nachErfolg?.();
       return { status: 'gespeichert', zeile };
     } catch (fehler) {
       if (fehler instanceof Abbruch) return { status: 'nicht_gespeichert', fehler: fehler.fehler };
@@ -348,8 +352,15 @@ export function erstelleEinstellungSchreiben(
     }
   };
   return {
-    aendern: (tabelle, id, felder) => ausfuehren((s) => adapter.aendern(tabelle, id, felder, s), true),
-    lesen: (tabelle, id, spalten) => ausfuehren((s) => adapter.lesen(tabelle, id, spalten, s), false),
+    aendern: (tabelle, id, felder) => ausfuehren((s) => adapter.aendern(tabelle, id, felder, s)),
+    lesen: async (tabelle, id, spalten) => {
+      try {
+        const [zeile] = zeilenAus(await mitZeitlimit((s) => adapter.lesen(tabelle, id, spalten, s)));
+        return zeile ? { status: 'gelesen', zeile } : { status: 'nicht_gelesen', text: TEXT_NICHT_GELESEN };
+      } catch {
+        return { status: 'nicht_gelesen', text: TEXT_NICHT_GELESEN };
+      }
+    },
   };
 }
 

@@ -138,7 +138,7 @@ test('Konzept 11.7 Notfallblatt: eine Zeile je Gefäss, Vertretungsblatt mit Kon
 
 test('Heute führt zu den Einstellungen, die Einstellungen zum Notfallblatt', async ({ page }) => {
   await mitDaten(page, '/#/heute');
-  await page.getByRole('link', { name: 'Einstellungen' }).click();
+  await page.getByRole('link', { name: 'Einstellungen öffnen' }).click();
   await expect(page.getByRole('heading', { name: 'Einstellungen' })).toBeVisible();
   await page.getByRole('link', { name: 'Notfallblatt drucken' }).click();
   await expect(page.getByRole('region', { name: 'Stand je Gefäss' })).toBeVisible();

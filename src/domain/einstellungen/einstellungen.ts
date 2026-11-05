@@ -90,7 +90,9 @@ export function kSatzPruefen(
     return { art: 'abgelehnt', kWirksam: neu, fehler: 'k wirksam nur 0.20 bis 0.45: nicht übernehmbar' };
   const alt = kWirksam(bisher);
   const prozent = Math.round((Math.abs(neu - alt) / alt) * 1000) / 10;
-  if (prozent > 20)
+  // «über 20 %» ungerundet in Millionsteln geprüft; der gerundete Wert nur für den Text (Befund 8)
+  const millionstel = (x: number) => Math.round(x * 1e6);
+  if (5 * millionstel(Math.abs(neu - alt)) > millionstel(alt))
     return {
       art: 'rueckfrage',
       kWirksam: neu,
@@ -132,7 +134,9 @@ export function messmittelPruefen(text: string): Pruefung<number[]> {
     .map((t) => t.trim())
     .filter(Boolean);
   const werte = teile.map(zahl);
-  if (werte.length === 0 || werte.some((w) => w === undefined || w < 0.1 || w > 999.9))
+  // höchstens eine Dezimale wie die Spalte numeric(5,1) (Befund 9)
+  const zuGenau = teile.some((t) => (t.replace(',', '.').split('.')[1] ?? '').length > 1);
+  if (zuGenau || werte.length === 0 || werte.some((w) => w === undefined || w < 0.1 || w > 999.9))
     return { ok: false, fehler: 'Messmittel als ml-Werte, etwa «1 5 20 60»' };
   const sortiert = [...new Set(werte as number[])].sort((a, b) => a - b);
   return { ok: true, wert: sortiert };
@@ -140,6 +144,33 @@ export function messmittelPruefen(text: string): Pruefung<number[]> {
 
 type Zeile = Record<string, unknown>;
 const teil = (t: Teile | undefined, name: string) => (t?.[name] ?? []) as readonly Zeile[];
+
+const QUELLE: Readonly<Record<string, string>> = {
+  startwert: 'Startwert',
+  becherversuch: 'Becherversuch',
+  vorschlag_uebernommen: 'Vorschlag übernommen',
+  zurueckgesetzt: 'zurückgesetzt',
+};
+
+/** «gültig ab» und Quelle je Komponente für die Anzeige (UC0, R4.1; Befund 4); ohne Zeile «Startwert 0.3» */
+export function kHerkunftAus(teile: Teile | undefined, zeitzone: string): Record<Komponente, string> {
+  const r = { grow: 'Startwert', micro_hard_water: 'Startwert', bloom: 'Startwert' };
+  const zeit = (z: Zeile) => Date.parse(String(z['gilt_ab']));
+  for (const c of KOMPONENTEN) {
+    const z = teil(teile, 'k_faktor')
+      .filter((x) => x['produkt_id'] === c && (x['storniert_am'] ?? null) === null)
+      .sort((a, b) => zeit(b) - zeit(a))[0];
+    if (!z) continue;
+    const tag = new Intl.DateTimeFormat('de-CH', {
+      timeZone: zeitzone,
+      day: 'numeric',
+      month: 'numeric',
+      year: 'numeric',
+    }).format(new Date(String(z['gilt_ab'])));
+    r[c] = `gültig ab ${tag} · ${QUELLE[String(z['quelle'])] ?? String(z['quelle'])}`;
+  }
+  return r;
+}
 
 /** gültiges k je Komponente: jüngste nicht stornierte Zeile, sonst Startwert 0.3 (Tabellenkommentar k_faktor) */
 export function kAus(teile: Teile | undefined): Record<Komponente, number> {

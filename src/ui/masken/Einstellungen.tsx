@@ -13,6 +13,7 @@ import {
   kannenBeispiel,
   kannePruefen,
   kAus,
+  kHerkunftAus,
   kSatzPruefen,
   kVorgang,
   kWirksam,
@@ -168,6 +169,7 @@ function Formulare({ e, geraet }: { e: Zeile; geraet: Zeile | undefined }) {
 
   // k je Komponente (R4.1)
   const kBisher = kAus(teile);
+  const kHerkunft = kHerkunftAus(teile, ZEITZONE);
   const [k, setK] = useState<Record<Komponente, string>>(() => ({
     grow: kBisher.grow.toFixed(3),
     micro_hard_water: kBisher.micro_hard_water.toFixed(3),
@@ -245,9 +247,11 @@ function Formulare({ e, geraet }: { e: Zeile; geraet: Zeile | undefined }) {
     let aktiv = true;
     void einstellungSchreiben.lesen('einstellung', id, 'id,telefon_vertretung').then((r) => {
       if (!aktiv) return;
-      if (r.status === 'gespeichert') setTelefon(text(r.zeile?.['telefon_vertretung']));
-      else melden('telefon', { ok: false, text: r.fehler.text });
-      setTelefonGeladen(true);
+      // nur nach erfolgreichem Lesen darf gespeichert werden, sonst überschriebe ein leeres Feld die Nummer (Befund 1)
+      if (r.status === 'gelesen') {
+        setTelefon(text(r.zeile['telefon_vertretung']));
+        setTelefonGeladen(true);
+      } else melden('telefon', { ok: false, text: `Telefonnummer: ${r.text}` });
     });
     return () => {
       aktiv = false;
@@ -334,6 +338,7 @@ function Formulare({ e, geraet }: { e: Zeile; geraet: Zeile | undefined }) {
             key={c}
             label={KOMPONENTE_NAME[c]}
             unit="mS/cm je ml/L"
+            hint={kHerkunft[c]}
             inputMode="decimal"
             value={k[c]}
             onChange={(ev) => {
@@ -433,7 +438,7 @@ function Formulare({ e, geraet }: { e: Zeile; geraet: Zeile | undefined }) {
                   disabled={sendet}
                   onClick={() => void ruheSchalten(o.platzId, !ruht)}
                 >
-                  {ruht ? 'Ruht · aufheben' : 'Ruhen lassen'}
+                  {ruht ? 'Ruhe aufheben' : 'Ruhen lassen'}
                 </Button>
               </li>
             );

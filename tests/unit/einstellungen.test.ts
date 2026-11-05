@@ -5,6 +5,7 @@ import {
   kannenBeispiel,
   kannePruefen,
   kAus,
+  kHerkunftAus,
   kSatzPruefen,
   kVorgang,
   kWirksam,
@@ -175,6 +176,41 @@ describe('Übrige Einstellungen', () => {
         gilt_ab: jetzt.toISOString(),
         daten: { gesetzt: true },
       },
+    });
+  });
+});
+
+describe('Einstellungen Runde 1 (Befunde 4, 8, 9)', () => {
+  it('UC0-AK4 knapp über 20 % braucht die Rückfrage, auch wenn der gerundete Wert 20.0 % zeigt', () => {
+    // bisher 0.3, neu k_wirksam 0.36001 → 20.003 %
+    const bisher = { grow: 0.3, micro_hard_water: 0.3, bloom: 0.3 };
+    expect(kSatzPruefen({ grow: '0.36002', micro_hard_water: '0.36', bloom: '0.36' }, bisher).art).toBe(
+      'rueckfrage',
+    );
+    expect(kSatzPruefen({ grow: '0.36', micro_hard_water: '0.36', bloom: '0.36' }, bisher).art).toBe('ok');
+  });
+
+  it('Messmittel mit höchstens einer Dezimale', () => {
+    expect(messmittelPruefen('2.5 20')).toEqual({ ok: true, wert: [2.5, 20] });
+    expect(messmittelPruefen('2.25 20')).toMatchObject({ ok: false });
+  });
+
+  it('k je Komponente mit «gültig ab» und Quelle', () => {
+    const teile = {
+      k_faktor: [
+        {
+          produkt_id: 'grow',
+          wert: 0.32,
+          gilt_ab: '2026-12-01T10:00:00Z',
+          quelle: 'becherversuch',
+          storniert_am: null,
+        },
+      ],
+    };
+    expect(kHerkunftAus(teile, 'Europe/Zurich')).toEqual({
+      grow: 'gültig ab 1.12.2026 · Becherversuch',
+      micro_hard_water: 'Startwert',
+      bloom: 'Startwert',
     });
   });
 });

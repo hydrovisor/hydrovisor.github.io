@@ -68,7 +68,7 @@ export function Heute() {
             Info öffnen
           </a>
           <a className="hv-btn hv-btn-ghost hv-btn-compact" href={hashZu({ name: 'einstellungen' })}>
-            Einstellungen
+            Einstellungen öffnen
           </a>
         </nav>
       </header>

@@ -9,6 +9,7 @@ import {
 } from '../../domain/einstellungen/notfallblatt.ts';
 import { ZEITZONE } from '../../domain/zeit.ts';
 import { Button } from '../bausteine/Button.tsx';
+import { Notice } from '../bausteine/Notice.tsx';
 import { useBuendel } from '../buendel.tsx';
 import { hashZu } from '../router.ts';
 
@@ -33,16 +34,18 @@ export function Notfallblatt({ kuerzel }: { kuerzel?: string }) {
   const anlage = anlageWahl(teile, kuerzel);
   const einstellungId = (teile?.['einstellung']?.[0] as Zeile | undefined)?.['id'];
   const [telefon, setTelefon] = useState<string | null>(null);
+  const [telefonFehler, setTelefonFehler] = useState<string>();
   const [geoeffnet] = useState(() => Date.now());
 
   useEffect(() => {
     if (typeof einstellungId !== 'string') return;
     let aktiv = true;
     void einstellungSchreiben.lesen('einstellung', einstellungId, 'id,telefon_vertretung').then((r) => {
-      if (aktiv && r.status === 'gespeichert') {
-        const t = r.zeile?.['telefon_vertretung'];
+      if (!aktiv) return;
+      if (r.status === 'gelesen') {
+        const t = r.zeile['telefon_vertretung'];
         setTelefon(typeof t === 'string' ? t : null);
-      }
+      } else setTelefonFehler(`Telefonnummer nicht geladen: ${r.text}`);
     });
     return () => {
       aktiv = false;
@@ -65,6 +68,12 @@ export function Notfallblatt({ kuerzel }: { kuerzel?: string }) {
         <a className="hv-btn hv-btn-ghost" href={hashZu({ name: 'einstellungen' })}>
           Zu den Einstellungen
         </a>
+        {/* in der Steuerung, die nicht gedruckt wird (Befund 2) */}
+        {telefonFehler ? (
+          <Notice kompakt tone="warn">
+            {telefonFehler}
+          </Notice>
+        ) : null}
       </div>
       <div className="hv-druck-vorschau">
         <section className="hv-blatt" aria-label="Stand je Gefäss">

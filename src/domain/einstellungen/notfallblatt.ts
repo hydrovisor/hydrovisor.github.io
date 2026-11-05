@@ -25,8 +25,43 @@ export interface Notfallblatt {
 type Zeile = Record<string, unknown>;
 const teil = (t: Teile, name: string) => (t[name] ?? []) as readonly Zeile[];
 
-/** Reihenfolge der Komponenten auf dem Blatt (Notfallblatt.md: Micro, Grow, Bloom) */
-const REIHE = ['Micro', 'Grow', 'Bloom'];
+/** Reihenfolge der Komponenten auf dem Blatt (Notfallblatt.md: Micro, Grow, Bloom), nach produkt_id (Befund 5) */
+const REIHE = ['micro_hard_water', 'grow', 'bloom'];
+
+/**
+ * Dosis je Kanne aus den Positionen des letzten gültigen Neuansatzes oder Teilwechsels, ungerundet gerechnet und
+ * erst am Schluss auf 0.5 ml; eine dosierte Komponente nie unter 0.5 ml, eine nicht dosierte entfällt (Befund 6).
+ */
+function dosisJeKanne(teile: Teile, platzId: string, kanne: number): string {
+  const basis = teil(teile, 'naehrloesungsansatz')
+    .filter(
+      (a) =>
+        a['platz_id'] === platzId &&
+        (a['typ'] === 'neuansatz' || a['typ'] === 'teilwechsel') &&
+        a['status'] !== 'abgebrochen' &&
+        (a['storniert_am'] ?? null) === null,
+    )
+    .sort((a, b) => Date.parse(String(b['begonnen_am'])) - Date.parse(String(a['begonnen_am'])))[0];
+  if (!basis) return '–';
+  const namen = new Map(
+    teil(teile, 'produkt').map((p) => [p['produkt_id'], String(p['name'] ?? p['produkt_id'])]),
+  );
+  const teile_ = teil(teile, 'ansatz_position')
+    .filter(
+      (p) =>
+        p['ansatz_id'] === basis['id'] &&
+        (p['storniert_am'] ?? null) === null &&
+        REIHE.includes(String(p['produkt_id'])),
+    )
+    .map((p) => ({
+      id: String(p['produkt_id']),
+      ml: (Number(p['ist_ml'] ?? p['soll_ml']) / Number(p['bezugsvolumen_l'])) * kanne,
+    }))
+    .filter((p) => Number.isFinite(p.ml) && p.ml > 0)
+    .sort((a, b) => REIHE.indexOf(a.id) - REIHE.indexOf(b.id))
+    .map((p) => `${namen.get(p.id) ?? p.id} ${Math.max(0.5, aufHalbe(p.ml)).toFixed(1)} ml`);
+  return teile_.length > 0 ? teile_.join(' · ') : '–';
+}
 
 /** Vertretungsblatt (Konzept 11.7): feste Regeln; die letzte Zeile nennt die Nummer nur zur Laufzeit */
 export const VERTRETUNG_REGELN = [
@@ -70,19 +105,23 @@ function naechsterWechsel(teile: Teile, platzId: string, zeitzone: Zeitzone): st
 export function notfallblatt(teile: Teile, kuerzel: string, jetzt: Date, zeitzone: Zeitzone): Notfallblatt {
   const kanne = Number(teil(teile, 'einstellung')[0]?.['kannengroesse_l'] ?? 10);
   const zeilen: Blattzeile[] = [];
-  for (const ort of messbareOrte(teile)) {
+  // Laufweg-Reihenfolge der Anlage (Notfallblatt.md, Befund 7), übrige Gefässe danach nach Code (A)
+  const laufweg = (teil(teile, 'anlage').find((x) => x['kuerzel'] === kuerzel)?.['laufweg'] ??
+    []) as unknown[];
+  const rang = (kennung: string) => {
+    const i = laufweg.indexOf(kennung);
+    return i < 0 ? laufweg.length : i;
+  };
+  const orte = [...messbareOrte(teile)].sort((a, b) => rang(a.kennung) - rang(b.kennung));
+  for (const ort of orte) {
     if (ort.rolle !== 'gefaess' || !ort.code.startsWith(`${kuerzel}-`)) continue;
     const a = gefaessAnsicht(teile, ort.code, jetzt, zeitzone);
     if (!a || a.entfernt) continue;
-    const dosis = [...a.dosis]
-      .sort((x, y) => REIHE.indexOf(x.komponente) - REIHE.indexOf(y.komponente))
-      // keine Komponente auf 0 gerundet (CLAUDE.md «Zahlen»)
-      .map((d) => `${d.komponente} ${Math.max(0.5, aufHalbe(Number(d.mlProL) * kanne)).toFixed(1)} ml`);
     zeilen.push({
       kennung: ort.kennung,
       betriebsart: betriebsartName(ort.betriebsart ?? ''),
       zielbereich: a.zielbereich ? `pH ${a.zielbereich.ph} · EC ${a.zielbereich.ec}` : '–',
-      dosisJeKanne: dosis.length > 0 ? dosis.join(' · ') : '–',
+      dosisJeKanne: dosisJeKanne(teile, ort.platzId, kanne),
       letzteMessung: a.letzteMessung ? `${a.letzteMessung.wann} · ${a.letzteMessung.werte}` : '–',
       naechsterWechsel: naechsterWechsel(teile, ort.platzId, zeitzone),
     });
