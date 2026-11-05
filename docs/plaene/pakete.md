@@ -99,7 +99,7 @@ I2 liegt rund 2 PT unter der Konzept-Verteilung, weil das Datenmodell aus I0 all
 - I0-03 vor allen Paketen mit Datenbank; I0-04 vor jeder Erfassung in der App; I0-01 vor allem Code; DS-01 vor I0-07 und I1a; I1b-02 vor I1b-05 und I1b-06; I1b-03 vor I1b-04 und I2-02; I1a-06 vor I2-01 und I2-04.
 - Migrationen nie parallel (`db-lock`): I0-03, dann I0-08, dann gegebenenfalls I0-11, dann I1b-06.
 - Parallel höchstens 2 Routine-Pakete ohne Migration in eigenen Worktrees (Konzept 12.1), z. B. I0-06 und DS-01 neben dem laufenden Hauptpaket; nie neben einem Paket mit Migration in derselben Datenbank.
-- Kern-Pakete nur mit mindestens 50 % freiem Wochenkontingent am Beginn eines 5-Stunden-Fensters; höchstens 4 Fable-Pläne (I0-03, I0-04, I1b-02, I2-04) plus Eskalationen.
+- Kern-Pakete, solange höchstens 95 % des Wochenkontingents verbraucht sind (Entscheid 0011); höchstens 4 Fable-Pläne (I0-03, I0-04, I1b-02, I2-04) plus Eskalationen.
 
 ## Vergleiche für die Projektarbeit (Konzept 12.7)
 
