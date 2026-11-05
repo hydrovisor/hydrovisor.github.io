@@ -115,6 +115,8 @@ function Messmaske({ ort }: { ort: Ort }) {
   const [eingabe, setEingabe] = useState<Messeingabe>(() => eingabeStart(felder));
   const aktuell = useRef(eingabe);
   const [zone, setZone] = useState<Zone>('eingabe');
+  // «Ja, speichern» gilt für genau diese Eingabe; jede Änderung verlangt die Rückfrage neu (R10.3)
+  const [bestaetigt, setBestaetigt] = useState(false);
   const [fuellstand, setFuellstand] = useState<'ueber_drittel' | 'unter_drittel'>();
   const [ergebnis, setErgebnis] = useState<Schreibergebnis>();
   const [sendet, setSendet] = useState(false);
@@ -167,6 +169,7 @@ function Messmaske({ ort }: { ort: Ort }) {
     const nachher = eingabeTippen(vorher, t);
     aktuell.current = nachher;
     setEingabe(nachher);
+    setBestaetigt(false);
     setErgebnis(undefined);
     if (!messstelle && eingabeAbgeschlossen(vorher, nachher, t)) setZone('ergebnis');
   }
@@ -180,11 +183,11 @@ function Messmaske({ ort }: { ort: Ort }) {
 
   function speichernTippen() {
     // Rückfrage erst beim Speichern (A22)
-    if (auswertung?.sprung) {
+    if (auswertung?.sprung && !bestaetigt) {
       setZone('rueckfrage');
       return;
     }
-    void senden(false);
+    void senden(bestaetigt);
   }
 
   async function senden(sprungBestaetigt: boolean) {
@@ -309,7 +312,7 @@ function Messmaske({ ort }: { ort: Ort }) {
         tone="danger"
         action={
           fehler.wiederholbar ? (
-            <Button variant="secondary" size="compact" disabled={sendet} onClick={() => void senden(false)}>
+            <Button variant="secondary" size="compact" disabled={sendet} onClick={speichernTippen}>
               Erneut senden
             </Button>
           ) : undefined
@@ -434,7 +437,10 @@ function Messmaske({ ort }: { ort: Ort }) {
           nein="Wert ändern"
           ja="Ja, speichern"
           onNein={() => waehlen(sprung.groesse)}
-          onJa={() => void senden(true)}
+          onJa={() => {
+            setBestaetigt(true);
+            void senden(true);
+          }}
         />
       ) : zone === 'ergebnis' && auswertung ? (
         <div className="hv-numpad">
