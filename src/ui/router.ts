@@ -27,6 +27,8 @@ export type Route =
     }
   // Plan 23 (A3): Box ohne von = Scan; von=gefaess aus der Maske Gefäss
   | { name: 'saeen'; box?: string; ziel?: string; von?: 'gefaess' }
+  // Plan 24: Keimung prüfen je Satz (04 Abschnitt 3)
+  | { name: 'keimung'; satz: string }
   | { name: 'anlage'; kuerzel?: string }
   | { name: 'anlage-neu' }
   | { name: 'vorlagen' }
@@ -34,6 +36,7 @@ export type Route =
 
 const KUERZEL = /^[A-Z]{1,3}$/;
 const CODE = /^[A-Z]{1,3}-[A-Za-z0-9.]+$/;
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** Druckversatz in mm: −5.0 bis +5.0, sonst 0 (Plan 22 A6) */
 function versatzAus(wert: string | null): number {
@@ -46,6 +49,8 @@ export function routeAusHash(hash: string): Route {
   const [pfad = '', abfrage = ''] = hash.replace(/^#/, '').split('?');
   const etikett = /^\/e\/([A-Za-z0-9.-]+)$/.exec(pfad);
   if (etikett?.[1]) return { name: 'etikett', code: decodeURIComponent(etikett[1]) };
+  const keimung = /^\/keimung\/([^/]+)$/.exec(pfad);
+  if (keimung?.[1]) return UUID.test(keimung[1]) ? { name: 'keimung', satz: keimung[1] } : { name: 'heute' };
   if (pfad === '/saeen') {
     const p = new URLSearchParams(abfrage);
     const box = p.get('box');
@@ -148,6 +153,7 @@ export function hashZu(route: Route): string {
     return `#/gefaess/${route.code}/aendern${route.teil ? `?teil=${route.teil}` : ''}`;
   if (route.name === 'pruefen') return `#/pruefen/${route.code}${route.scan ? '?scan=1' : ''}`;
   if (route.name === 'etikett') return `#/e/${route.code}`;
+  if (route.name === 'keimung') return `#/keimung/${route.satz}`;
   if (route.name === 'saeen') {
     const teile = [
       route.box ? `box=${route.box}` : '',

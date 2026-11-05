@@ -346,7 +346,7 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
           <section className="hv-saeen-satz" aria-label="Satz duplizieren">
             <h2 className="hv-saeen-satz-titel">Satz duplizieren</h2>
             {kopien.map((k) => (
-              <div key={k.satzId} className="hv-saeen-box">
+              <div key={k.satzId} className="hv-saeen-box hv-saeen-kopie">
                 <p>{k.text}</p>
                 <Button
                   variant="secondary"
