@@ -4,6 +4,7 @@ import { messFaelligkeit } from '../messung/faelligkeit.ts';
 import { ortAufloesen } from '../ort.ts';
 import { pruefStand } from '../etikett/pruefung.ts';
 import { kalendertag, tagKurz, tageZwischen, uhrzeit, type Zeitzone } from '../zeit.ts';
+import { keimungOffen } from '../pflanzung/keimung.ts';
 import { wiederherstellbar } from './entfernen.ts';
 import { anzuchtortAm, ereignisseAm, gefaessAm, gefaessStatus, ms, zeilen, type Teile } from './teile.ts';
 import { fuellText, statusBadge } from './uebersicht.ts';
@@ -27,7 +28,15 @@ export interface Gefaessansicht {
     unsicher: boolean;
     trend?: string;
   };
-  pflanzen: { satzId: string; sorte: string; anzahl: number; phase: string; seitTagen: number }[];
+  /** keimung: Knopf «Keimung prüfen» je Satz in der Anzuchtbox oder im Direktsaat-Gefäss (Plan 24 A12) */
+  pflanzen: {
+    satzId: string;
+    sorte: string;
+    anzahl: number;
+    phase: string;
+    seitTagen: number;
+    keimung?: boolean;
+  }[];
   dosis: { komponente: string; mlProL: string }[];
   hauptknopf?: { text: string; code: string };
   /** Plan 21: Nebenknöpfe «Prüfen», «Ändern», «Leeren» (nur bei Lösung), «Wiederherstellen» (bis 7 Tage) */
@@ -254,6 +263,10 @@ export function gefaessAnsicht(
       anzahl: hier.length,
       phase: PHASE[hier[0]?.phase ?? ''] ?? hier[0]?.phase ?? '',
       seitTagen: tageZwischen(satz.saatdatum, heute),
+      // nur gesetzt, wenn wahr (Vergleiche bestehender Tests auf die ganze Zeile)
+      ...(satzOrt.get(satzId) === ort.platzId && keimungOffen(teile, satzId, jetzt, zeitzone)
+        ? { keimung: true }
+        : {}),
     });
   }
 

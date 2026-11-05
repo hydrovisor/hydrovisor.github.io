@@ -7,6 +7,7 @@ import { kalibrierStand, kalibrierText } from '../../domain/kalibrierung/stand.t
 import { messFaelligkeit, type Messfaelligkeit } from '../../domain/messung/faelligkeit.ts';
 import { heuteGruppiert, nachAnlage } from '../../domain/anlage/gruppen.ts';
 import { pruefAufgaben } from '../../domain/etikett/pruefung.ts';
+import { keimAufgaben } from '../../domain/pflanzung/keimung.ts';
 import { messbareOrte } from '../../domain/ort.ts';
 import { tagKurz, ZEITZONE } from '../../domain/zeit.ts';
 import { OrtKachel } from '../bausteine/Tile.tsx';
@@ -86,6 +87,7 @@ export function Heute() {
       {zeigen ? <NeueVersionHinweis /> : null}
       {buendel && !keinZugang ? <PushHinweis /> : null}
       {buendel && !keinZugang ? <Pruefaufgaben /> : null}
+      {buendel && !keinZugang ? <Keimaufgaben jetzt={new Date(jetzt)} /> : null}
       {buendel ? <Uebersicht jetzt={new Date(jetzt)} /> : null}
     </main>
   );
@@ -211,6 +213,27 @@ function Pruefaufgaben() {
             {a.titel} · {a.kennung}
           </span>
           <a className="hv-btn hv-btn-secondary" href={hashZu({ name: 'pruefen', code: a.code })}>
+            Prüfen
+          </a>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/** Aufgabe «Keimung prüfen» je fälligem Satz, bis zur Aufgaben-Rechnung in I1b-02 (Plan 24, wie Plan 21 A7) */
+function Keimaufgaben({ jetzt }: { jetzt: Date }) {
+  const { buendel } = useBuendel();
+  const aufgaben = keimAufgaben(buendel?.teile, jetzt, ZEITZONE);
+  if (aufgaben.length === 0) return null;
+  return (
+    <ul className="hv-aufgaben" aria-label="Keimprüfungen">
+      {aufgaben.map((a) => (
+        <li key={a.satzId} className="hv-aufgabe">
+          <span className="hv-aufgabe-text">
+            {a.text} · {a.ort}
+          </span>
+          <a className="hv-btn hv-btn-secondary" href={hashZu({ name: 'keimung', satz: a.satzId })}>
             Prüfen
           </a>
         </li>
