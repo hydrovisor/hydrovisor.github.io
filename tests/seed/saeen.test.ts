@@ -156,7 +156,7 @@ async function einfuegen(tx: Db, vorgang: Vorgang): Promise<void> {
       .join(', ');
     await tx.unsafe(
       `insert into public.${s.tabelle} (${spalten})
-       select ${spalten} from json_populate_record(null::public.${s.tabelle}, $1::json)`,
+       select ${spalten} from json_populate_record(null::public.${s.tabelle}, $1::text::json)`,
       [JSON.stringify(zeile)],
     );
   }
