@@ -76,23 +76,28 @@ export function kSatzPruefen(
   eingabe: Readonly<Record<Komponente, string>>,
   bisher: Readonly<Record<Komponente, number>>,
 ): KPruefung {
+  // k je Komponente in Tausendsteln wie die Spalte numeric(4,3); k_wirksam exakt als Ganzzahl
+  // n6 = 3·g + 2·m + 1·b = 6000 · k_wirksam (Anteile 3 : 2 : 1 aus 1.8 : 1.2 : 0.6; Runde 2 Befund 1)
   const k = {} as Record<Komponente, number>;
   for (const c of KOMPONENTEN) {
-    const wert = zahl(eingabe[c]);
+    const t = eingabe[c].trim().replace(',', '.');
+    const wert = zahl(t);
     if (wert === undefined || wert <= 0 || wert >= 1)
       return { art: 'abgelehnt', fehler: 'k je Komponente zwischen 0 und 1 mS/cm je ml/L' };
+    if ((t.split('.')[1] ?? '').length > 3)
+      return { art: 'abgelehnt', fehler: 'k mit höchstens drei Dezimalen' };
     k[c] = wert;
   }
-  const neu = kWirksam(k);
-  // auf Tausendstel gerundet vergleichen, damit 0.2 und 0.45 als Grenze genau gelten
-  const r = Math.round(neu * 1000);
-  if (r < 200 || r > 450)
+  const n6 = (x: Readonly<Record<Komponente, number>>) =>
+    3 * Math.round(x.grow * 1000) + 2 * Math.round(x.micro_hard_water * 1000) + Math.round(x.bloom * 1000);
+  const neu6 = n6(k);
+  const neu = neu6 / 6000;
+  if (neu6 < 1200 || neu6 > 2700)
     return { art: 'abgelehnt', kWirksam: neu, fehler: 'k wirksam nur 0.20 bis 0.45: nicht übernehmbar' };
-  const alt = kWirksam(bisher);
-  const prozent = Math.round((Math.abs(neu - alt) / alt) * 1000) / 10;
-  // «über 20 %» ungerundet in Millionsteln geprüft; der gerundete Wert nur für den Text (Befund 8)
-  const millionstel = (x: number) => Math.round(x * 1e6);
-  if (5 * millionstel(Math.abs(neu - alt)) > millionstel(alt))
+  const alt6 = n6(bisher);
+  const prozent = Math.round((Math.abs(neu6 - alt6) / alt6) * 1000) / 10;
+  // «über 20 %» exakt: 5 · |Δ| > bisher; der gerundete Wert nur für den Text
+  if (5 * Math.abs(neu6 - alt6) > alt6)
     return {
       art: 'rueckfrage',
       kWirksam: neu,

@@ -181,13 +181,24 @@ describe('Übrige Einstellungen', () => {
 });
 
 describe('Einstellungen Runde 1 (Befunde 4, 8, 9)', () => {
-  it('UC0-AK4 knapp über 20 % braucht die Rückfrage, auch wenn der gerundete Wert 20.0 % zeigt', () => {
-    // bisher 0.3, neu k_wirksam 0.36001 → 20.003 %
-    const bisher = { grow: 0.3, micro_hard_water: 0.3, bloom: 0.3 };
-    expect(kSatzPruefen({ grow: '0.36002', micro_hard_water: '0.36', bloom: '0.36' }, bisher).art).toBe(
+  it('UC0-AK4 genau 20 % ohne, knapp darüber mit Rückfrage; Grenze 0.45 exakt; höchstens drei Dezimalen', () => {
+    // bisher 0.3 / 0.3 / 0.305 → k_wirksam 0.300833…; neu dreimal 0.361 → genau +20 %
+    const bisher = { grow: 0.3, micro_hard_water: 0.3, bloom: 0.305 };
+    expect(kSatzPruefen({ grow: '0.361', micro_hard_water: '0.361', bloom: '0.361' }, bisher).art).toBe('ok');
+    expect(kSatzPruefen({ grow: '0.362', micro_hard_water: '0.361', bloom: '0.361' }, bisher).art).toBe(
       'rueckfrage',
     );
-    expect(kSatzPruefen({ grow: '0.36', micro_hard_water: '0.36', bloom: '0.36' }, bisher).art).toBe('ok');
+    // 0.45 / 0.45 / 0.451 → k_wirksam 0.450167: über der Grenze
+    expect(
+      kSatzPruefen(
+        { grow: '0.45', micro_hard_water: '0.45', bloom: '0.451' },
+        { grow: 0.44, micro_hard_water: 0.44, bloom: 0.44 },
+      ),
+    ).toMatchObject({ art: 'abgelehnt' });
+    expect(kSatzPruefen({ grow: '0.3605', micro_hard_water: '0.36', bloom: '0.36' }, K03)).toEqual({
+      art: 'abgelehnt',
+      fehler: 'k mit höchstens drei Dezimalen',
+    });
   });
 
   it('Messmittel mit höchstens einer Dezimale', () => {

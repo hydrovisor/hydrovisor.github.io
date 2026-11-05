@@ -64,7 +64,10 @@ export function Notfallblatt({ kuerzel }: { kuerzel?: string }) {
   return (
     <main className="hv-druck">
       <div className="hv-druck-steuerung">
-        <Button onClick={() => window.print()}>Drucken</Button>
+        {/* ohne gelesene Telefonnummer kein Druck: das Blatt sagte sonst «eintragen», obwohl eine Nummer da ist */}
+        <Button disabled={telefonFehler !== undefined} onClick={() => window.print()}>
+          Drucken
+        </Button>
         <a className="hv-btn hv-btn-ghost" href={hashZu({ name: 'einstellungen' })}>
           Zu den Einstellungen
         </a>

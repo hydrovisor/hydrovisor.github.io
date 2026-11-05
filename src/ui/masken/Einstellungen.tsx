@@ -258,6 +258,7 @@ function Formulare({ e, geraet }: { e: Zeile; geraet: Zeile | undefined }) {
     };
   }, [id]);
   function telefonSpeichern() {
+    if (!telefonGeladen) return;
     const t = telefon.trim();
     if (t.length > 40) return melden('telefon', { ok: false, text: 'Höchstens 40 Zeichen' });
     void aendern('telefon', 'einstellung', id, { telefon_vertretung: t === '' ? null : t });
@@ -456,6 +457,7 @@ function Formulare({ e, geraet }: { e: Zeile; geraet: Zeile | undefined }) {
           label="Telefonnummer fürs Vertretungsblatt"
           hint="Nur in der Datenbank, nie im Gerätespeicher"
           type="tel"
+          disabled={!telefonGeladen}
           autoComplete="off"
           value={telefon}
           onChange={(ev) => setTelefon(ev.target.value)}

@@ -110,3 +110,20 @@ describe('Notfallblatt Runde 1 (Befunde 5 bis 7)', () => {
     expect(kennungen).toHaveLength(13);
   });
 });
+
+describe('Notfallblatt Runde 2 (Befund 5)', () => {
+  it('nächster Wechsel ab dem letzten Neuansatz, auch wenn danach ein Teilwechsel lief', () => {
+    const t = regalTeile(JETZT);
+    (t['naehrloesungsansatz'] ??= []).push({
+      id: '21000000-0000-4000-8000-000000000099',
+      platz_id: (t['naehrloesungsansatz'] ?? [])[0]?.['platz_id'],
+      typ: 'teilwechsel',
+      status: 'abgeschlossen',
+      begonnen_am: '2026-12-05T08:00:00.000Z',
+      storniert_am: null,
+    });
+    expect(
+      notfallblatt(t, 'R', JETZT, ZEITZONE).zeilen.find((x) => x.kennung === '2.3')?.naechsterWechsel,
+    ).toBe('12.12.');
+  });
+});
