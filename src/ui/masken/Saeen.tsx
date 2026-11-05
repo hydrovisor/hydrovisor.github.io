@@ -342,23 +342,6 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
       <main className="hv-seite hv-saeen" data-density="regal">
         {kopf}
         {schrittText}
-        {kopien.length > 0 ? (
-          <section className="hv-saeen-satz" aria-label="Satz duplizieren">
-            <h2 className="hv-saeen-satz-titel">Satz duplizieren</h2>
-            {kopien.map((k) => (
-              <div key={k.satzId} className="hv-saeen-box hv-saeen-kopie">
-                <p>{k.text}</p>
-                <Button
-                  variant="secondary"
-                  aria-label={`${k.name} vom ${tagKurz(k.saatdatum)} duplizieren`}
-                  onClick={() => duplizieren(k)}
-                >
-                  Duplizieren
-                </Button>
-              </div>
-            ))}
-          </section>
-        ) : null}
         <div className="hv-choice" role="group" aria-label="Sorten">
           {sorten.map((s) => (
             <div key={s.sorteId} className="hv-saeen-sorte">
@@ -391,6 +374,24 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
             </div>
           ))}
         </div>
+        {/* Plan 25 A15: unter der Sortenliste, damit die Sortenwahl zuerst kommt */}
+        {kopien.length > 0 ? (
+          <section className="hv-saeen-satz" aria-label="Satz duplizieren">
+            <h2 className="hv-saeen-satz-titel">Satz duplizieren</h2>
+            {kopien.map((k) => (
+              <div key={k.satzId} className="hv-saeen-box hv-saeen-kopie">
+                <p>{k.text}</p>
+                <Button
+                  variant="secondary"
+                  aria-label={`${k.name} vom ${tagKurz(k.saatdatum)} duplizieren`}
+                  onClick={() => duplizieren(k)}
+                >
+                  Duplizieren
+                </Button>
+              </div>
+            ))}
+          </section>
+        ) : null}
         <div className="hv-saeen-fuss">
           <Button block disabled={gewaehlt.length === 0} onClick={() => setSchritt(2)}>
             Weiter
