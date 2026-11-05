@@ -81,7 +81,8 @@ for (const typ of LOCHBILDER) {
       boxen.push(b);
     }
 
-    // Nummern zeilenweise: Loch n liegt in der Reihe aus dem Lochbild (Reihe 1 = vorne = unten)
+    // Nummern spaltenweise (E9): Loch n liegt in der Reihe aus dem Lochbild (Reihe 1 = vorne = unten), erst die
+    // linke Spalte von vorne nach hinten, dann die nächste
     const yJeReihe: number[] = [];
     for (const [i, reihe] of typ.nummern.entries()) {
       for (const nr of reihe) await expect(loch(page, nr)).toHaveAttribute('data-reihe', String(i + 1));

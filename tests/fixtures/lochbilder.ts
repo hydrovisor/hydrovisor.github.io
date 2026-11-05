@@ -9,7 +9,11 @@ export interface Lochbildtyp {
   /** Eingabe im Feld «Löcher je Reihe» (von vorne nach hinten) */
   eingabe: string;
   reihen: number[];
-  /** erwartete Lochnummern je Reihe, Reihe 1 = vorne (Gangkante), jeweils von links nach rechts */
+  /**
+   * erwartete Lochnummern je Reihe, Reihe 1 = vorne (Gangkante), jeweils von links nach rechts; spaltenweise
+   * nummeriert (Konzept v1.4 5.4, Erratum E9): Loch 1 vorne links, erst die linke Spalte von vorne nach hinten,
+   * dann die nächste Spalte (Spalte = Stelle des Lochs in seiner Reihe von links)
+   */
   nummern: number[][];
 }
 
@@ -21,8 +25,8 @@ export const LOCHBILDER: readonly Lochbildtyp[] = [
     eingabe: '2, 2',
     reihen: [2, 2],
     nummern: [
-      [1, 2],
-      [3, 4],
+      [1, 3],
+      [2, 4],
     ],
   },
   {
@@ -32,8 +36,8 @@ export const LOCHBILDER: readonly Lochbildtyp[] = [
     eingabe: '3, 3',
     reihen: [3, 3],
     nummern: [
-      [1, 2, 3],
-      [4, 5, 6],
+      [1, 3, 5],
+      [2, 4, 6],
     ],
   },
   {
@@ -51,8 +55,8 @@ export const LOCHBILDER: readonly Lochbildtyp[] = [
     eingabe: '4, 4',
     reihen: [4, 4],
     nummern: [
-      [1, 2, 3, 4],
-      [5, 6, 7, 8],
+      [1, 3, 5, 7],
+      [2, 4, 6, 8],
     ],
   },
   {
@@ -62,9 +66,9 @@ export const LOCHBILDER: readonly Lochbildtyp[] = [
     eingabe: '2, 2, 2',
     reihen: [2, 2, 2],
     nummern: [
-      [1, 2],
-      [3, 4],
-      [5, 6],
+      [1, 4],
+      [2, 5],
+      [3, 6],
     ],
   },
   {
@@ -81,7 +85,7 @@ export const LOCHBILDER: readonly Lochbildtyp[] = [
     topfdurchmesserMm: 50,
     eingabe: '1, 2, 1, 2, 1, 2, 1, 2, 1',
     reihen: [1, 2, 1, 2, 1, 2, 1, 2, 1],
-    nummern: [[1], [2, 3], [4], [5, 6], [7], [8, 9], [10], [11, 12], [13]],
+    nummern: [[1], [2, 10], [3], [4, 11], [5], [6, 12], [7], [8, 13], [9]],
   },
 ];
 
