@@ -202,7 +202,7 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
     setMengen({
       [s.sorteId]: {
         samen: s.samenJeSchwamm,
-        schwaemme: s.schwaemme,
+        ...(s.schwaemme !== undefined ? { schwaemme: s.schwaemme } : {}),
         ...(s.pflanzenOhneZiel !== undefined ? { pflanzen: s.pflanzenOhneZiel } : {}),
       },
     });
@@ -233,6 +233,8 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
 
   function sorteUmschalten(id: string) {
     setGewaehlt((g) => (g.includes(id) ? g.filter((x) => x !== id) : [...g, id]));
+    // Abwählen der Sorte des Duplikats verwirft die Kopie (Plan 25 A14, Runde 1 Befund 4)
+    if (kopie?.sorteId === id && gewaehlt.includes(id)) setKopie(undefined);
     setToepfe(new Map());
     setAktiv(1);
   }
@@ -258,9 +260,18 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
   const aktivMalbar =
     zielG?.direktsaat === true || (aktiveSorte !== undefined && umsetzenBekannt(teile, aktiveSorte.artId));
 
+  /** Umsetzdatum der aktiven Sorte (R11.2): Malmodus, «Alle freien» und Reihentipp prüfen gleich (Runde 1 Befund 2) */
+  function umsetzenAktiv(): string | undefined {
+    if (zielG?.direktsaat) return saatdatum;
+    const ab = umsetzenAbVon(teile, aktiveSorte?.artId);
+    return ab === undefined ? undefined : tagPlus(saatdatum, ab);
+  }
+
   function alleFreien() {
     if (!teile || !zielG || !aktivMalbar) return;
-    const frei = zieltoepfe(teile, zielG.platzId, toepfe).filter((t) => t.zustand === 'frei' && passt(t));
+    const frei = zieltoepfe(teile, zielG.platzId, toepfe, umsetzenAktiv(), zielG.direktsaat).filter(
+      (t) => t.zustand === 'frei' && passt(t),
+    );
     setToepfe((alt) => {
       const neu = new Map(alt);
       for (const t of frei) neu.set(t.netztopfId, aktiv);
@@ -275,7 +286,9 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
         .filter((l) => l.reihe === reihe)
         .map((l) => l.nr),
     );
-    const inReihe = zieltoepfe(teile, zielG.platzId, toepfe).filter((t) => nr.has(t.lochNr) && passt(t));
+    const inReihe = zieltoepfe(teile, zielG.platzId, toepfe, umsetzenAktiv(), zielG.direktsaat).filter(
+      (t) => nr.has(t.lochNr) && passt(t),
+    );
     const frei = inReihe.filter((t) => t.zustand === 'frei');
     setToepfe((alt) => {
       const neu = new Map(alt);
@@ -404,12 +417,7 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
   if (schritt === 2) {
     // Zustand als Text, nie nur über Farbe (Prüfer Runde 1, Befunde 4, 5 und 9)
     // Plan 25 (R11.2): Zieltöpfe am Umsetzdatum der aktiven Sorte; Nachfolge-Töpfe sind wählbar
-    const umsetzenAb = umsetzenAbVon(teile, aktiveSorte?.artId);
-    const umsetzenAm = zielG?.direktsaat
-      ? saatdatum
-      : umsetzenAb === undefined
-        ? undefined
-        : tagPlus(saatdatum, umsetzenAb);
+    const umsetzenAm = umsetzenAktiv();
     const toepfeZiel = zielG ? zieltoepfe(teile, zielG.platzId, toepfe, umsetzenAm, zielG.direktsaat) : [];
     const mitTopf: Loch[] = toepfeZiel.map((t): Loch => {
       const name = t.marke

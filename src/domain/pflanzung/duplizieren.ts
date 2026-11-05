@@ -352,7 +352,8 @@ export function satzDuplizieren(
     zieltopfIds,
     ...(zieltopfIds.length === 0 ? { pflanzenOhneZiel: Math.max(1, original.toepfe.length) } : {}),
     samenJeSchwamm: Number(satz.samen_je_schwamm),
-    schwaemme: Number(satz.anzahl_schwaemme),
+    // Direktsaat: Schwämme = Zieltöpfe wie in Säen (A10, Runde 1 Befund 1)
+    ...(direktsaat ? {} : { schwaemme: Number(satz.anzahl_schwaemme) }),
     kopiertVon: satz.id,
   };
   const zielPlatzId = zielG && (zieltopfIds.length > 0 || direktsaat) ? zielG.platzId : undefined;
