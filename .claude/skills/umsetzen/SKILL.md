@@ -13,7 +13,7 @@ Zustand nur in Git und im Issue. Beim Aufruf zuerst den Stand bestimmen, dann am
 1. `gh issue view $ARGUMENTS --json number,title,labels,body,comments` lesen: Paketklasse (Routine, Fachlogik, Kern), Migration ja/nein, AK-Liste, Labels (`plan-wartet`, `plan-frei`, `runde-1`, `runde-2`, `abnahme-wartet`, `db-lock`).
 2. Zweig `paket/<issue>-<kurz>` (höchstens 28 Zeichen) vorhanden? Plandatei `docs/plaene/<issue>.md` vorhanden? Letzter Statuskommentar im Issue?
 3. Halbfertiger Zweig ohne passenden Statuskommentar: zuerst einen Sicherungszweig `sicherung/<issue>-<datum>` vom aktuellen Stand pushen. Dann die Commits nach dem letzten Statuskommentar zurücknehmen: noch nicht gepusht mit `git reset`, schon gepusht mit `git revert --no-edit <status>..HEAD` und normalem Push, nie mit Force-Push. Das geschieht ohne Rückfrage (Entscheid 0010). Danach die lokale Datenbank mit `supabase db reset` neu aufbauen.
-4. Kern-Paket: nur starten, wenn mindestens 50 % des Wochenkontingents frei sind und ein 5-Stunden-Fenster beginnt; sonst Tim melden und anhalten.
+4. Kern-Paket: starten, solange höchstens 95 % des Wochenkontingents verbraucht sind (Entscheid 0011); ist das 5-Stunden-Fenster voll, bis zu seinem Ende warten; über 95 % kein neues Paket, laufendes sauber anhalten und Tim melden.
 5. I1b- oder I2-Paket: `gh issue list --label offen-regal --state open --json number --jq length` zählen; bei mehr als 20 offenen Einträgen kein neues Paket starten, Tim melden und anhalten (Konzept 12.4, E5).
 
 ## 1 Zweig und Plan

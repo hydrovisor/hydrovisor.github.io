@@ -91,7 +91,7 @@ Die Skripte stehen seit Paket I0-01 (Grundgerüst) in `package.json`; ihre Namen
 4. Pull Request mit Vorlage, Label `abnahme-wartet`; Abnahme 1 durch den Lead in der Vorschau ([Gerät]-AK bleiben offen bis Abnahme 2); Kurzzusammenfassung; Merge durch den Lead (Entscheid 0008); Abnahme 2 in der installierten App.
 5. Statuskommentar im Issue nach jedem Planschritt und am Sitzungsende; Entscheide als Datei in `docs/entscheide/`.
 
-Paketklassen, Rollen und Modelle: Konzept 12.2. Kern-Pakete: Datenmodell mit Zugriffsregeln (I0), Datenpfad mit Offline-Bündel (I0), Aufgaben-Rechnung (I1b), Passungs-Empfehlung (I2-4). Kern nur starten, wenn mindestens 50 % des Wochenkontingents frei sind; Verbrauch (`/usage`) ins Issue. Kein neues I1b- oder I2-Paket, solange mehr als 20 `offen-regal`-Einträge offen sind.
+Paketklassen, Rollen und Modelle: Konzept 12.2. Kern-Pakete: Datenmodell mit Zugriffsregeln (I0), Datenpfad mit Offline-Bündel (I0), Aufgaben-Rechnung (I1b), Passungs-Empfehlung (I2-4). Kern starten, solange höchstens 95 % des Wochenkontingents verbraucht sind ([Entscheid 0011](docs/entscheide/0011-kontingent-95-prozent.md)); Verbrauch (`get_usage` oder `/usage`) ins Issue. Kein neues I1b- oder I2-Paket, solange mehr als 20 `offen-regal`-Einträge offen sind.
 
 ## Sperren (Konzept 12.4)
 
@@ -121,6 +121,8 @@ Vorschau: Cloudflare Pages `hydrovisor-vorschau` baut jeden Zweig (`<zweig>.hydr
 - [0008 Merge ohne Einzelbestätigung (bis auf Widerruf)](docs/entscheide/0008-merge-ohne-einzelbestaetigung.md)
 - [0009 Default-Modell für das Lesen der Saattüten](docs/entscheide/0009-ki-default-modell.md)
 - [0010 Der Lead arbeitet selbständig durch](docs/entscheide/0010-lead-arbeitet-selbstaendig.md)
+- [0011 Kern-Pakete bis 95 % Kontingent, fachliche Lücken mit (A)](docs/entscheide/0011-kontingent-95-prozent.md)
+- [0012 Referenzdatei Rechner und Push-Migration durch den Lead (Ausnahme)](docs/entscheide/0012-referenzdatei-und-push-migration.md)
 - Übrige Entscheide vom 1.11.2026: `docs/spec/00_rueckfragen.md` (R1 bis R13, W1 bis W14, Annahmen 1 bis 16)
 
 ## Arbeitsweise in der Sitzung
