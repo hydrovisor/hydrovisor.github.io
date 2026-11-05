@@ -53,7 +53,9 @@ export function fuellText(
 /** Badge des Prüfstatus: «nicht geprüft» solange in Prüfung, «ruht» (UC1 Ablauf Übersicht) */
 export function statusBadge(status: string | undefined): string | undefined {
   if (status === 'in_pruefung') return 'nicht geprüft';
+  if (status === 'in_betrieb_volumen_offen') return 'Volumen offen';
   if (status === 'ruht') return 'ruht';
+  if (status === 'entfernt') return 'entfernt';
   return undefined;
 }
 

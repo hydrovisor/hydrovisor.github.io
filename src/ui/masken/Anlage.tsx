@@ -80,6 +80,14 @@ export function Anlage({ kuerzel }: { kuerzel?: string }) {
             : ' (fest seit dem ersten Etikettendruck)'}
         </p>
       ) : null}
+      {anlage ? (
+        <a
+          className="hv-btn hv-btn-secondary"
+          href={hashZu({ name: 'gefaess-neu', kuerzel: anlage.kuerzel })}
+        >
+          Gefäss erfassen
+        </a>
+      ) : null}
       <a className="hv-btn hv-btn-secondary" href={hashZu({ name: 'anlage-neu' })}>
         Anlage anlegen
       </a>

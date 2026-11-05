@@ -36,6 +36,14 @@ export interface GefaessZeile {
   intervall_wechseln_d: number | null;
   gueltig_bis: string | null;
   storniert_am: string | null;
+  // Plan 21: alle Spalten der Belegung für die Kopie beim Ändern
+  client_id?: string | null;
+  deckeltyp_id?: string;
+  feste_dosis?: boolean;
+  luftpumpe?: string | null;
+  intervall_nachfuellen_d?: number | null;
+  naechster_wechsel_am?: string | null;
+  gueltig_von?: string;
 }
 export interface AnzuchtortZeile {
   platz_id: string;
@@ -84,3 +92,86 @@ export function gefaessStatus(teile: Teile, gefaessId: string): string | undefin
 export function nachKennung(a: { kennung: string }, b: { kennung: string }): number {
   return a.kennung.localeCompare(b.kennung, 'de', { numeric: true });
 }
+
+// Plan 21: Vorlagen, Netztöpfe, Ereignisse am Platz
+
+export interface GefaessmodellZeile {
+  id: string;
+  name: string;
+  form: string;
+  innen_l_mm: number;
+  innen_b_mm: number;
+  innen_h_mm: number;
+  betriebsvolumen_l: number | string;
+  storniert_am: string | null;
+}
+export interface DeckeltypZeile {
+  id: string;
+  name: string;
+  topfdurchmesser_mm: number;
+  loecher_je_reihe: readonly number[];
+  storniert_am: string | null;
+}
+export interface NetztopfZeile {
+  id: string;
+  client_id?: string | null;
+  anlage_id: string;
+  kennung: string;
+  groesse_mm: number;
+  heim_platz_id: string;
+  heim_loch_nr: number;
+  aktiv: boolean;
+  storniert_am: string | null;
+}
+export interface EreignisZeile {
+  id: string;
+  typ: string;
+  platz_id: string | null;
+  daten?: Record<string, unknown> | null;
+  gilt_ab: string;
+  storniert_am: string | null;
+}
+
+export function gefaessmodell(teile: Teile, id: string): GefaessmodellZeile | undefined {
+  return zeilen<GefaessmodellZeile>(teile, 'gefaessmodell').find(
+    (m) => m.id === id && m.storniert_am === null,
+  );
+}
+
+export function deckeltyp(teile: Teile, id: string): DeckeltypZeile | undefined {
+  return zeilen<DeckeltypZeile>(teile, 'deckeltyp').find((d) => d.id === id && d.storniert_am === null);
+}
+
+/** aktive Netztöpfe mit diesem Heimplatz */
+export function toepfeAm(teile: Teile, platzId: string): NetztopfZeile[] {
+  return zeilen<NetztopfZeile>(teile, 'netztopf').filter(
+    (n) => n.storniert_am === null && n.aktiv !== false && n.heim_platz_id === platzId,
+  );
+}
+
+/**
+ * Ereignisse am Platz, nicht storniert. Das Bündel lädt die Platz-Ereignisse als Teil `ereignis_platz`
+ * (Plan 21 A13), die Geräte-Ereignisse als `ereignis`; beide aus derselben Tabelle, nach id entdoppelt.
+ */
+export function ereignisseAm(teile: Teile, platzId: string, typ?: string): EreignisZeile[] {
+  const gesehen = new Set<string>();
+  const ergebnis: EreignisZeile[] = [];
+  for (const e of [
+    ...zeilen<EreignisZeile>(teile, 'ereignis'),
+    ...zeilen<EreignisZeile>(teile, 'ereignis_platz'),
+  ]) {
+    if (gesehen.has(e.id)) continue;
+    gesehen.add(e.id);
+    if (e.storniert_am === null && e.platz_id === platzId && (typ === undefined || e.typ === typ))
+      ergebnis.push(e);
+  }
+  return ergebnis;
+}
+
+/** Kürzel der Anlage eines Platzes */
+export function kuerzelVon(teile: Teile, anlageId: string): string {
+  return zeilen<AnlageZeile>(teile, 'anlage').find((a) => a.id === anlageId)?.kuerzel ?? '';
+}
+
+/** Zeitpunkt-Vergleich für ISO-Texte */
+export const ms = (iso: string | null | undefined) => (iso ? Date.parse(iso) : Number.NaN);

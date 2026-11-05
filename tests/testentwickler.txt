@@ -104,3 +104,9 @@ tests/fixtures/lochbilder.ts
 tests/unit/vorlagen.test.ts
 tests/e2e/vorlagen.spec.ts
 supabase/tests/database/13_vorlagen_regal.test.sql
+# I1a-04 Gefäss erfassen (#21)
+tests/unit/gefaess-erfassen.test.ts
+tests/unit/gefaess-aendern.test.ts
+tests/unit/gefaess-pruefung.test.ts
+tests/e2e/gefaess.spec.ts
+tests/fixtures/sichten.ts

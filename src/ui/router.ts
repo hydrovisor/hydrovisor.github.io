@@ -11,6 +11,9 @@ export type Route =
   | { name: 'push' }
   | { name: 'messen'; code: string }
   | { name: 'gefaess'; code: string }
+  | { name: 'gefaess-aendern'; code: string; teil?: 'deckel' }
+  | { name: 'gefaess-neu'; kuerzel?: string; rolle?: 'gefaess' | 'anzuchtort' | 'messstelle' }
+  | { name: 'pruefen'; code: string }
   | { name: 'anlage'; kuerzel?: string }
   | { name: 'anlage-neu' }
   | { name: 'vorlagen' }
@@ -21,6 +24,25 @@ export function routeAusHash(hash: string): Route {
   const [pfad = '', abfrage = ''] = hash.replace(/^#/, '').split('?');
   const messen = /^\/messen\/([A-Za-z0-9.-]+)$/.exec(pfad);
   if (messen?.[1]) return { name: 'messen', code: decodeURIComponent(messen[1]) };
+  const aendern = /^\/gefaess\/([A-Za-z0-9.-]+)\/aendern$/.exec(pfad);
+  if (aendern?.[1]) {
+    const teil = new URLSearchParams(abfrage).get('teil');
+    return teil === 'deckel'
+      ? { name: 'gefaess-aendern', code: decodeURIComponent(aendern[1]), teil }
+      : { name: 'gefaess-aendern', code: decodeURIComponent(aendern[1]) };
+  }
+  const pruefen = /^\/pruefen\/([A-Za-z0-9.-]+)$/.exec(pfad);
+  if (pruefen?.[1]) return { name: 'pruefen', code: decodeURIComponent(pruefen[1]) };
+  if (pfad === '/gefaess-neu') {
+    const p = new URLSearchParams(abfrage);
+    const kuerzel = p.get('a');
+    const rolle = p.get('rolle');
+    return {
+      name: 'gefaess-neu',
+      ...(kuerzel && /^[A-Z]{1,3}$/.test(kuerzel) ? { kuerzel } : {}),
+      ...(rolle === 'gefaess' || rolle === 'anzuchtort' || rolle === 'messstelle' ? { rolle } : {}),
+    };
+  }
   const gefaess = /^\/gefaess\/([A-Za-z0-9.-]+)$/.exec(pfad);
   if (gefaess?.[1]) return { name: 'gefaess', code: decodeURIComponent(gefaess[1]) };
   if (pfad === '/anlage/neu') return { name: 'anlage-neu' };
@@ -52,9 +74,24 @@ export function routeAusHash(hash: string): Route {
   }
 }
 
+/** wechselt zur Maske (ausserhalb der Komponenten, damit der React-Compiler keine globale Änderung sieht) */
+export function oeffnen(route: Route): void {
+  window.location.hash = hashZu(route);
+}
+
 export function hashZu(route: Route): string {
   if (route.name === 'messen') return `#/messen/${route.code}`;
   if (route.name === 'gefaess') return `#/gefaess/${route.code}`;
+  if (route.name === 'gefaess-aendern')
+    return `#/gefaess/${route.code}/aendern${route.teil ? `?teil=${route.teil}` : ''}`;
+  if (route.name === 'pruefen') return `#/pruefen/${route.code}`;
+  if (route.name === 'gefaess-neu') {
+    const p = new URLSearchParams();
+    if (route.kuerzel) p.set('a', route.kuerzel);
+    if (route.rolle) p.set('rolle', route.rolle);
+    const q = p.toString();
+    return `#/gefaess-neu${q ? `?${q}` : ''}`;
+  }
   if (route.name === 'anlage-neu') return '#/anlage/neu';
   if (route.name === 'anlage' && route.kuerzel) return `#/anlage?a=${route.kuerzel}`;
   if (route.name === 'kalibrieren' && route.datenart) return `#/kalibrieren?datenart=${route.datenart}`;

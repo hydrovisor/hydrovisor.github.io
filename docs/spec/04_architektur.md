@@ -51,6 +51,7 @@ Der Router wertet beim Erstaufruf und bei jedem `hashchange` dieselbe Funktion a
 | `#/rundgang` | Rundgang (Ort für Ort) | Regal |
 | `#/e/:code` | Etikett-Auflösung nach R9.2 → leitet weiter, schreibt `etikett_aufruf` | – |
 | `#/gefaess/:code` | Maske «Gefäss» (auch Stationen) | Regal |
+| `#/gefaess/:code/aendern` (`?teil=deckel`) | Gefäss ändern und entfernen (Plan 21) | Schreibtisch |
 | `#/messen/:code` | Messmaske (auch `R-W`, pH-Kontrolle `#/messen/geraet`) | Regal |
 | `#/kalibrieren` | Messgerät kalibrieren mit Gegenprobe; `?datenart=demo` oder `test` für Demo- und Testanlagen (Plan 12, Ergänzung I0-07) | Regal |
 | `#/ansatz/:code` | Rechner und Abhakliste (Neuansatz, Nachfüllen, Teilwechsel, pH-Korrektur) | Regal |
