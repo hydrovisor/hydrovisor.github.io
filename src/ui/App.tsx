@@ -14,6 +14,10 @@ import { GefaessAendern } from './masken/GefaessAendern.tsx';
 import { GefaessNeu } from './masken/GefaessNeu.tsx';
 import { GefaessPruefen } from './masken/GefaessPruefen.tsx';
 import { Vorlagen } from './masken/Vorlagen.tsx';
+import { DruckEtiketten } from './masken/DruckEtiketten.tsx';
+import { EtikettAufloesen } from './masken/EtikettAufloesen.tsx';
+import { Etiketten } from './masken/Etiketten.tsx';
+import { Saeen } from './masken/Saeen.tsx';
 import { BuendelAnbieter } from './buendel.tsx';
 import { maskeFuer, useRoute } from './router.ts';
 import { SitzungAnbieter, useSitzung } from './sitzung.tsx';
@@ -43,7 +47,18 @@ function Masken() {
           {...(maske.rolle ? { rolle: maske.rolle } : {})}
         />
       ) : maske.name === 'pruefen' ? (
-        <GefaessPruefen code={maske.code} />
+        <GefaessPruefen code={maske.code} {...(maske.scan ? { scan: true } : {})} />
+      ) : maske.name === 'etikett' ? (
+        <EtikettAufloesen code={maske.code} />
+      ) : maske.name === 'etiketten' ? (
+        <Etiketten
+          {...(maske.kuerzel ? { kuerzel: maske.kuerzel } : {})}
+          {...(maske.codes ? { codes: maske.codes } : {})}
+        />
+      ) : maske.name === 'druck-etiketten' ? (
+        <DruckEtiketten route={maske} />
+      ) : maske.name === 'saeen' ? (
+        <Saeen {...(maske.box ? { box: maske.box } : {})} />
       ) : maske.name === 'gefaess' ? (
         <Gefaess code={maske.code} />
       ) : maske.name === 'anlage' ? (

@@ -13,15 +13,66 @@ export type Route =
   | { name: 'gefaess'; code: string }
   | { name: 'gefaess-aendern'; code: string; teil?: 'deckel' }
   | { name: 'gefaess-neu'; kuerzel?: string; rolle?: 'gefaess' | 'anzuchtort' | 'messstelle' }
-  | { name: 'pruefen'; code: string }
+  | { name: 'pruefen'; code: string; scan?: true }
+  | { name: 'etikett'; code: string }
+  | { name: 'etiketten'; kuerzel?: string; codes?: string[] }
+  | {
+      name: 'druck-etiketten';
+      kuerzel: string;
+      codes: string[];
+      start: number;
+      versatzX: number;
+      versatzY: number;
+      test: boolean;
+    }
+  | { name: 'saeen'; box?: string }
   | { name: 'anlage'; kuerzel?: string }
   | { name: 'anlage-neu' }
   | { name: 'vorlagen' }
   | { name: 'kalibrieren'; datenart?: 'demo' | 'test' };
 
+const KUERZEL = /^[A-Z]{1,3}$/;
+const CODE = /^[A-Z]{1,3}-[A-Za-z0-9.]+$/;
+
+/** Druckversatz in mm: −5.0 bis +5.0, sonst 0 (Plan 22 A6) */
+function versatzAus(wert: string | null): number {
+  const w = Number(wert ?? '0');
+  return Number.isFinite(w) && Math.abs(w) <= 5 ? Math.round(w * 10) / 10 : 0;
+}
+
 /** Unbekannte oder leere Route → Heute */
 export function routeAusHash(hash: string): Route {
   const [pfad = '', abfrage = ''] = hash.replace(/^#/, '').split('?');
+  const etikett = /^\/e\/([A-Za-z0-9.-]+)$/.exec(pfad);
+  if (etikett?.[1]) return { name: 'etikett', code: decodeURIComponent(etikett[1]) };
+  if (pfad === '/saeen') {
+    const box = new URLSearchParams(abfrage).get('box');
+    return box && CODE.test(box) ? { name: 'saeen', box } : { name: 'saeen' };
+  }
+  if (pfad === '/etiketten') {
+    const p = new URLSearchParams(abfrage);
+    const kuerzel = p.get('a');
+    const codes = p.getAll('code').filter((c) => CODE.test(c));
+    return {
+      name: 'etiketten',
+      ...(kuerzel && KUERZEL.test(kuerzel) ? { kuerzel } : {}),
+      ...(codes.length > 0 ? { codes } : {}),
+    };
+  }
+  if (pfad === '/druck/etiketten') {
+    const p = new URLSearchParams(abfrage);
+    const kuerzel = p.get('a') ?? '';
+    const start = Number(p.get('start') ?? '1');
+    return {
+      name: 'druck-etiketten',
+      kuerzel: KUERZEL.test(kuerzel) ? kuerzel : '',
+      codes: p.getAll('code').filter((c) => CODE.test(c)),
+      start: Number.isInteger(start) && start >= 1 && start <= 21 ? start : 1,
+      versatzX: versatzAus(p.get('x')),
+      versatzY: versatzAus(p.get('y')),
+      test: p.get('test') === '1',
+    };
+  }
   const messen = /^\/messen\/([A-Za-z0-9.-]+)$/.exec(pfad);
   if (messen?.[1]) return { name: 'messen', code: decodeURIComponent(messen[1]) };
   const aendern = /^\/gefaess\/([A-Za-z0-9.-]+)\/aendern$/.exec(pfad);
@@ -32,14 +83,17 @@ export function routeAusHash(hash: string): Route {
       : { name: 'gefaess-aendern', code: decodeURIComponent(aendern[1]) };
   }
   const pruefen = /^\/pruefen\/([A-Za-z0-9.-]+)$/.exec(pfad);
-  if (pruefen?.[1]) return { name: 'pruefen', code: decodeURIComponent(pruefen[1]) };
+  if (pruefen?.[1])
+    return new URLSearchParams(abfrage).get('scan') === '1'
+      ? { name: 'pruefen', code: decodeURIComponent(pruefen[1]), scan: true }
+      : { name: 'pruefen', code: decodeURIComponent(pruefen[1]) };
   if (pfad === '/gefaess-neu') {
     const p = new URLSearchParams(abfrage);
     const kuerzel = p.get('a');
     const rolle = p.get('rolle');
     return {
       name: 'gefaess-neu',
-      ...(kuerzel && /^[A-Z]{1,3}$/.test(kuerzel) ? { kuerzel } : {}),
+      ...(kuerzel && KUERZEL.test(kuerzel) ? { kuerzel } : {}),
       ...(rolle === 'gefaess' || rolle === 'anzuchtort' || rolle === 'messstelle' ? { rolle } : {}),
     };
   }
@@ -48,7 +102,7 @@ export function routeAusHash(hash: string): Route {
   if (pfad === '/anlage/neu') return { name: 'anlage-neu' };
   if (pfad === '/anlage') {
     const kuerzel = new URLSearchParams(abfrage).get('a');
-    return kuerzel && /^[A-Z]{1,3}$/.test(kuerzel) ? { name: 'anlage', kuerzel } : { name: 'anlage' };
+    return kuerzel && KUERZEL.test(kuerzel) ? { name: 'anlage', kuerzel } : { name: 'anlage' };
   }
   if (pfad === '/kalibrieren') {
     const datenart = new URLSearchParams(abfrage).get('datenart');
@@ -84,7 +138,26 @@ export function hashZu(route: Route): string {
   if (route.name === 'gefaess') return `#/gefaess/${route.code}`;
   if (route.name === 'gefaess-aendern')
     return `#/gefaess/${route.code}/aendern${route.teil ? `?teil=${route.teil}` : ''}`;
-  if (route.name === 'pruefen') return `#/pruefen/${route.code}`;
+  if (route.name === 'pruefen') return `#/pruefen/${route.code}${route.scan ? '?scan=1' : ''}`;
+  if (route.name === 'etikett') return `#/e/${route.code}`;
+  if (route.name === 'saeen') return route.box ? `#/saeen?box=${route.box}` : '#/saeen';
+  if (route.name === 'etiketten') {
+    const p = new URLSearchParams();
+    if (route.kuerzel) p.set('a', route.kuerzel);
+    for (const c of route.codes ?? []) p.append('code', c);
+    const q = p.toString();
+    return `#/etiketten${q ? `?${q}` : ''}`;
+  }
+  if (route.name === 'druck-etiketten') {
+    const p = new URLSearchParams();
+    p.set('a', route.kuerzel);
+    for (const c of route.codes) p.append('code', c);
+    p.set('start', String(route.start));
+    p.set('x', String(route.versatzX));
+    p.set('y', String(route.versatzY));
+    if (route.test) p.set('test', '1');
+    return `#/druck/etiketten?${p.toString()}`;
+  }
   if (route.name === 'gefaess-neu') {
     const p = new URLSearchParams();
     if (route.kuerzel) p.set('a', route.kuerzel);

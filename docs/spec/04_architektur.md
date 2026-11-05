@@ -49,7 +49,7 @@ Der Router wertet beim Erstaufruf und bei jedem `hashchange` dieselbe Funktion a
 | `#/anmelden` | Anmeldung | Schreibtisch |
 | `#/heute` | Heute (Start, Einrichtungs-Checkliste, Karten, Rundgang starten) | Regal |
 | `#/rundgang` | Rundgang (Ort für Ort) | Regal |
-| `#/e/:code` | Etikett-Auflösung nach R9.2 → leitet weiter, schreibt `etikett_aufruf` | – |
+| `#/e/:code` | Etikett-Auflösung nach R9.2 → ersetzt die Adresse durch das Ziel (Gefäss, Säen mit Box, Messmaske W, bei offener Prüfung `#/pruefen/:code?scan=1`), schreibt je Aufruf `etikett_aufruf` im Hintergrund; bei «entfernt» und «unbekannt» Hinweis (Plan 22) | Regal |
 | `#/gefaess/:code` | Maske «Gefäss» (auch Stationen) | Regal |
 | `#/gefaess/:code/aendern` (`?teil=deckel`) | Gefäss ändern und entfernen (Plan 21) | Schreibtisch |
 | `#/messen/:code` | Messmaske (auch `R-W`, pH-Kontrolle `#/messen/geraet`) | Regal |
@@ -59,8 +59,8 @@ Der Router wertet beim Erstaufruf und bei jedem `hashchange` dieselbe Funktion a
 | `#/keimung/:satz` | Keimung prüfen | Regal |
 | `#/umsetzen/:satz` | Umsetzen | Regal |
 | `#/pflanze/:pflanzung` | Pflanzenansicht (Satz oder Topf) | Regal |
-| `#/pruefen/:code` | Gefäss prüfen, Schritte 1 bis 3 | Regal |
-| `#/anlage` (`?a=<Kürzel>` wählt die Anlage), `#/anlage/neu` (Anlage anlegen, Plan 20), `#/vorlagen`, `#/gefaess-neu`, `#/sorten`, `#/etiketten`, `#/einstellungen`, `#/info`, `#/druck/:art` | Schreibtisch-Masken und Druckansichten (Etikettenbogen, Notfallblatt, Vertretungsblatt) | Schreibtisch |
+| `#/pruefen/:code` (`?scan=1`) | Gefäss prüfen, Schritte 1 bis 3; mit `scan` gilt der Scan als Schritt 1, danach ersetzt die Maske die Adresse ohne `scan` (Plan 22 A4) | Regal |
+| `#/anlage` (`?a=<Kürzel>` wählt die Anlage), `#/anlage/neu` (Anlage anlegen, Plan 20), `#/vorlagen`, `#/gefaess-neu`, `#/sorten`, `#/etiketten` (`?a=<Kürzel>&code=<Code>`), `#/einstellungen`, `#/info`, `#/druck/:art` (Etiketten: `#/druck/etiketten?a=&code=…&start=&x=&y=&test=1`, Plan 22) | Schreibtisch-Masken und Druckansichten (Etikettenbogen, Notfallblatt, Vertretungsblatt) | Schreibtisch |
 
 Codes statt UUIDs in der Adresse (`R-2.3`), damit Etikett, Kopfzeile und Adresse gleich lesbar sind. Unbekannte Route → Heute.
 
@@ -76,6 +76,8 @@ schreiben<T>(tabelle: Erfassungstabelle, datensatz: T & { client_id: string }): 
 - `app_version`, `client_zeit` (Gerätezeit) und `gilt_ab` setzt `schreiben()`; `erfasst_am` setzt die Datenbank.
 - Fehler bleiben sichtbar: «Kein Netz, nicht gespeichert, erneut senden»; die Eingaben bleiben (TO8). Ein endgültig abgelehnter Eintrag wird nie verworfen, sondern bleibt in Heute mit «Als Text kopieren» (11.4).
 - Storno statt Löschen: «Rückgängig» und «löschen» setzen `storniert_am` und `storno_grund`.
+- **Setzen (Plan 22 A2):** Ein Schritt `setzen` ändert nur Spalten aus `SETZBAR` (heute nur `etikett.gedruckt_am`) und nur, solange sie leer sind (`update … where client_id = … and gedruckt_am is null`); 0 Zeilen mit schon gesetztem Feld gelten als bestätigt (TO2), die erste Bestätigung bleibt stehen. Andere Tabellen und Felder lehnt `vorgangPruefen` vor dem Senden ab.
+- **Scan-Protokoll (Plan 22 A3):** Die Zeile `etikett_aufruf` schreibt `#/e/:code` im Hintergrund; ein Fehler bleibt unsichtbar und hält die Weiterleitung nicht auf, weil die Zeile nur der Kennzahl Etiketten dient (Konzept 14.5).
 - **Warteschlange (Q14):** Ab dem Ausbau speichert `schreiben()` zuerst in IndexedDB (`warteschlange`, Zustände wartet, gesendet, fehlgeschlagen) und sendet bei Netz; Aufrufer ändern sich nicht. Heute zeigt die Zahl wartender Einträge und warnt ab 24 h (TO5). Die Warteschlange sendet erst nach einem Update der App.
 
 ### 4.2 Lesen und Offline-Bündel

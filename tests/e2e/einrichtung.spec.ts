@@ -122,10 +122,20 @@ test('UC0-AK1 Demo-Daten haken nichts ab, Punkt 1 öffnet «Anlage anlegen»', a
 });
 
 test('UC0-AK1 ein Punkt ohne Ablauf zeigt «Ablauf folgt»', async ({ page }) => {
-  // Punkt 5 hat seit I1a-03 einen Ablauf (Plan 19), Punkt 6 seit I1a-04 (Plan 21); Punkt 7 folgt mit I1a-05
+  // Punkt 5 hat seit I1a-03 einen Ablauf (Plan 19), Punkt 6 seit I1a-04 (Plan 21), Punkt 7 seit I1a-05 (Plan 22);
+  // Punkt 9 «Erste Aussaat» folgt mit I1a-06
+  await heuteMit(page, () => einrichtungsTeile(8));
+  await expect(page.getByRole('heading', { name: 'Einrichtung · 8 von 9 erledigt' })).toBeVisible();
+  await expect(liste(page).getByText('Ablauf folgt mit einer der nächsten Versionen')).toBeVisible();
+});
+
+test('UC0-AK1 Punkt 7 öffnet seit I1a-05 die Etiketten der Anlage', async ({ page }) => {
   await heuteMit(page, () => einrichtungsTeile(6));
   await expect(page.getByRole('heading', { name: 'Einrichtung · 6 von 9 erledigt' })).toBeVisible();
-  await expect(liste(page).getByText('Ablauf folgt mit einer der nächsten Versionen')).toBeVisible();
+  await expect(liste(page).getByText('Ablauf folgt mit einer der nächsten Versionen')).toHaveCount(0);
+  await liste(page).getByRole('link', { name: 'Etiketten drucken' }).click();
+  await expect(page).toHaveURL(/#\/etiketten\?a=R$/);
+  await expect(page.getByRole('heading', { name: 'Etiketten', level: 1 })).toBeVisible();
 });
 
 test('UC0-AK1 Punkt 5 öffnet seit I1a-03 die Vorlagen', async ({ page }) => {

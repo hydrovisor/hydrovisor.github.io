@@ -52,6 +52,9 @@ const BETRIEBSART: Record<string, string> = {
   kratky_belueftet: 'Kratky belüftet',
   kratky: 'Kratky',
 };
+
+/** Name der Betriebsart wie im Kopf der Maske «Gefäss» (auch auf dem Etikett, Plan 22) */
+export const betriebsartName = (betriebsart: string): string => BETRIEBSART[betriebsart] ?? betriebsart;
 const PHASE: Record<string, string> = {
   keimung: 'Keimung',
   anzucht: 'Anzucht',

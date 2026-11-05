@@ -50,6 +50,15 @@ function Aktion({ punkt, starten }: { punkt: Punkt; starten: () => void }) {
         {punkt.knopf}
       </a>
     );
+  if (z.art === 'etiketten')
+    return (
+      <a
+        className="hv-btn hv-btn-secondary"
+        href={hashZu({ name: 'etiketten', ...(z.kuerzel ? { kuerzel: z.kuerzel } : {}) })}
+      >
+        {punkt.knopf}
+      </a>
+    );
   if (z.art === 'kalibrieren')
     return (
       <a className="hv-btn hv-btn-secondary" href={hashZu({ name: 'kalibrieren' })}>

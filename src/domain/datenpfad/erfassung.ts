@@ -56,9 +56,18 @@ const OHNE_STORNO: ReadonlySet<Erfassungstabelle> = new Set<Erfassungstabelle>([
 
 export type StornoGrund = 'rueckgaengig' | 'korrektur' | 'fehleingabe';
 
+/**
+ * Spalten, die ein Schritt «setzen» ändern darf, je nur solange sie leer sind (Plan 22 A2): ein Stand, der kein
+ * Ereignis ist und einmal gesetzt stehen bleibt. Sonst gilt Storno plus neue Zeile.
+ */
+export const SETZBAR: Readonly<Partial<Record<Erfassungstabelle, readonly string[]>>> = {
+  etikett: ['gedruckt_am'],
+};
+
 export type Schritt =
   | { art: 'neu'; tabelle: Erfassungstabelle; felder: Record<string, unknown> & { client_id: string } }
-  | { art: 'storno'; tabelle: Erfassungstabelle; clientId: string; grund: StornoGrund };
+  | { art: 'storno'; tabelle: Erfassungstabelle; clientId: string; grund: StornoGrund }
+  | { art: 'setzen'; tabelle: 'etikett'; clientId: string; felder: { gedruckt_am: string } };
 
 export type Vorgang = readonly Schritt[];
 
@@ -91,7 +100,7 @@ export function zeileVorbereiten(
 
 const leer = (wert: unknown) => typeof wert !== 'string' || wert.trim() === '';
 
-/** Verstösse vor dem Senden: fehlende client_id, Ereignisdaten (Plan 9 F5) */
+/** Verstösse vor dem Senden: fehlende client_id, Ereignisdaten (Plan 9 F5), setzen nur nach SETZBAR (Plan 22 A2) */
 export function vorgangPruefen(vorgang: Vorgang): Verstoss[] {
   const verstoesse: Verstoss[] = [];
   vorgang.forEach((schritt, i) => {
@@ -100,6 +109,18 @@ export function vorgangPruefen(vorgang: Vorgang): Verstoss[] {
       if (leer(schritt.clientId)) verstoesse.push({ feld: 'client_id', grund: `${wo}: client_id fehlt` });
       if (OHNE_STORNO.has(schritt.tabelle))
         verstoesse.push({ feld: 'storniert_am', grund: `${wo}: kann nicht storniert werden` });
+      return;
+    }
+    if (schritt.art === 'setzen') {
+      if (leer(schritt.clientId)) verstoesse.push({ feld: 'client_id', grund: `${wo}: client_id fehlt` });
+      const erlaubt = SETZBAR[schritt.tabelle as Erfassungstabelle] ?? [];
+      const felder = Object.keys((schritt.felder ?? {}) as Record<string, unknown>);
+      if (erlaubt.length === 0)
+        verstoesse.push({ feld: 'tabelle', grund: `${wo}: setzen ist hier nicht erlaubt` });
+      else if (felder.length === 0) verstoesse.push({ feld: 'felder', grund: `${wo}: kein Feld zum Setzen` });
+      for (const feld of felder)
+        if (!erlaubt.includes(feld))
+          verstoesse.push({ feld, grund: `${wo}: ${feld} kann nicht gesetzt werden` });
       return;
     }
     if (leer(schritt.felder.client_id))
