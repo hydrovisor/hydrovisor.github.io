@@ -1,4 +1,4 @@
-# 0011 Kern-Pakete bis 95 % Kontingent
+# 0011 Kern-Pakete bis 95 % Kontingent, fachliche Lücken mit (A)
 
 Datum 5.11.2026 · Entscheid von Tim · ändert Konzept 12.4 (Kern-Start) und ergänzt Entscheid 0010
 
@@ -11,6 +11,8 @@ Datum 5.11.2026 · Entscheid von Tim · ändert Konzept 12.4 (Kern-Start) und er
 - Ist das 5-Stunden-Fenster voll, wartet der Lead bis zu seinem Ende und arbeitet dann weiter.
 - Sind mehr als 95 % des Wochenkontingents verbraucht, beginnt der Lead kein neues Paket. Ein laufendes bringt er an einen sauberen Zwischenstand: Commit, Statuskommentar und Übergabenotiz.
 - Den Verbrauch liest der Lead mit dem Werkzeug `get_usage` der Desktop-App oder mit `/usage` und schreibt ihn wie bisher ins Issue.
+
+**Fachliche Lücken (Tims Antwort im Chat am selben Abend: «Ja, mit (A) annehmen»).** Fehlt im Repository eine fachliche Angabe, die ein Paket braucht, hält der Lead das Paket nicht an. Er trifft eine begründete Annahme und kennzeichnet sie mit (A) im Plan und im Code. Alle solchen Annahmen listet er im Issue gesammelt unter «Fachliche Annahmen zur Bestätigung durch Tim». Bestätigt Tim eine Annahme nicht, folgt die Korrektur als eigenes Fehler-Issue. Entscheid 0010, Punkt 6 bleibt sonst bestehen: Neue Konzeptfassungen und Fakten zur Anlage liefert Tim.
 
 Unverändert gelten die Planfreigabe der Kern-Pakete durch Tim (Entscheid 0010, Punkt 3), die zwei parallelen Prüfer, der Mutationstest und die Grenze von höchstens 4 Fable-Plänen.
 

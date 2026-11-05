@@ -121,7 +121,7 @@ Vorschau: Cloudflare Pages `hydrovisor-vorschau` baut jeden Zweig (`<zweig>.hydr
 - [0008 Merge ohne Einzelbestätigung (bis auf Widerruf)](docs/entscheide/0008-merge-ohne-einzelbestaetigung.md)
 - [0009 Default-Modell für das Lesen der Saattüten](docs/entscheide/0009-ki-default-modell.md)
 - [0010 Der Lead arbeitet selbständig durch](docs/entscheide/0010-lead-arbeitet-selbstaendig.md)
-- [0011 Kern-Pakete bis 95 % Kontingent](docs/entscheide/0011-kontingent-95-prozent.md)
+- [0011 Kern-Pakete bis 95 % Kontingent, fachliche Lücken mit (A)](docs/entscheide/0011-kontingent-95-prozent.md)
 - Übrige Entscheide vom 1.11.2026: `docs/spec/00_rueckfragen.md` (R1 bis R13, W1 bis W14, Annahmen 1 bis 16)
 
 ## Arbeitsweise in der Sitzung
