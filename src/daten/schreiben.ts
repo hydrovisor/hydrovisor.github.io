@@ -42,6 +42,13 @@ export interface Schreibadapter {
     felder: { storniert_am: string; storno_grund?: StornoGrund },
     signal: AbortSignal,
   ): Promise<Antwort>;
+  /** nur Spalten aus SETZBAR, nur solange leer (Plan 22 A2) */
+  setzen(
+    tabelle: Erfassungstabelle,
+    clientId: string,
+    felder: Record<string, unknown>,
+    signal: AbortSignal,
+  ): Promise<Antwort>;
 }
 
 /** Zeitlimit je Anfrage; danach gilt der Ausgang als unklar (A3, Gerätetest T5 kann es ändern) */
@@ -175,6 +182,26 @@ export function erstelleSchreiben(
           clientIds.push(schritt.clientId);
           continue;
         }
+        if (schritt.art === 'setzen') {
+          // nur ein leeres Feld wird gesetzt: die erste Bestätigung bleibt stehen, eine Wiederholung bleibt ohne
+          // Wirkung (Plan 22 A2, TO2)
+          const felder: Record<string, unknown> = { ...schritt.felder };
+          const geaendert = zeilenAus(
+            await mitZeitlimit((s) => adapter.setzen(schritt.tabelle, schritt.clientId, felder, s)),
+          );
+          if (geaendert.length === 0) {
+            const [vorhanden] = zeilenAus(
+              await mitZeitlimit((s) => adapter.lesen(schritt.tabelle, schritt.clientId, s)),
+            );
+            const gesetzt =
+              vorhanden !== undefined &&
+              Object.keys(felder).every((f) => vorhanden[f] !== null && vorhanden[f] !== undefined);
+            if (!gesetzt)
+              throw new Abbruch({ art: 'abgelehnt', wiederholbar: false, text: TEXT_NICHT_GEFUNDEN });
+          }
+          clientIds.push(schritt.clientId);
+          continue;
+        }
         const zeile = zeileVorbereiten(schritt, kontext, bindung.appVersion);
         const zurueck = zeilenAus(await mitZeitlimit((s) => adapter.einfuegen(schritt.tabelle, zeile, s)));
         if (zurueck.length === 0) {
@@ -223,6 +250,12 @@ export const supabaseAdapter: Schreibadapter = {
       .is('storniert_am', null)
       .select('client_id')
       .abortSignal(signal),
+  setzen: async (t, clientId, felder, signal) => {
+    // je gesetzte Spalte der Filter «noch leer» (SETZBAR, Plan 22 A2)
+    let abfrage = tabelle(t).update(felder).eq('client_id', clientId);
+    for (const feld of Object.keys(felder)) abfrage = abfrage.is(feld, null);
+    return abfrage.select('client_id').abortSignal(signal);
+  },
 };
 
 // Push-Abo (Plan 13; Plan 11 A10): ohne client_id, Upsert auf endpoint, idempotent; ein erneutes Abo setzt aktiv

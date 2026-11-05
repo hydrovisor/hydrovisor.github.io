@@ -181,7 +181,7 @@ export function GefaessNeu({ kuerzel, rolle: startRolle }: { kuerzel?: string; r
     setSchritt(rolle === 'gefaess' ? schritt + 1 : 4);
   }
 
-  async function speichern() {
+  async function speichern(drucken = false) {
     const e = eingabe();
     if (!e || !anlage) return;
     const f = erfassenPruefen(teile, e);
@@ -199,9 +199,12 @@ export function GefaessNeu({ kuerzel, rolle: startRolle }: { kuerzel?: string; r
     setErgebnis(antwort);
     if (antwort.status === 'gespeichert' && vorschlag?.code)
       oeffnen(
-        rolle === 'messstelle'
-          ? { name: 'anlage', kuerzel: anlage.kuerzel }
-          : { name: 'gefaess', code: vorschlag.code },
+        // «Speichern und Etikett drucken» öffnet die Etiketten mit diesem Code (Plan 21 A6, Plan 22)
+        drucken
+          ? { name: 'etiketten', kuerzel: anlage.kuerzel, codes: [vorschlag.code] }
+          : rolle === 'messstelle'
+            ? { name: 'anlage', kuerzel: anlage.kuerzel }
+            : { name: 'gefaess', code: vorschlag.code },
       );
   }
 
@@ -414,6 +417,9 @@ export function GefaessNeu({ kuerzel, rolle: startRolle }: { kuerzel?: string; r
           ))}
           <Button block disabled={sendet} onClick={() => void speichern()}>
             Speichern
+          </Button>
+          <Button block variant="secondary" disabled={sendet} onClick={() => void speichern(true)}>
+            Speichern und Etikett drucken
           </Button>
         </div>
       )}

@@ -10,6 +10,7 @@ export type Punktziel =
   /** Prüfschritte 1 bis 3 eines Gefässes (Plan 21) */
   | { art: 'pruefen'; code: string }
   | { art: 'vorlagen' }
+  | { art: 'etiketten'; kuerzel?: string }
   | { art: 'messen'; code: string }
   | { art: 'einweichen' }
   /** Ablauf folgt mit dem genannten Paket (Plan 18 A6) */
@@ -151,6 +152,7 @@ export function einrichtungsStand(teile: Teile, jetzt: Date, einweichenEnde?: nu
     })
     .filter((c) => c !== '')
     .sort((a, b) => a.localeCompare(b, 'de', { numeric: true }))[0];
+  const ersteKuerzel = anlagen.map((a) => a.kuerzel).sort()[0];
   const w = messstellen[0];
   const wCode = w ? `${kuerzel.get(w.anlage_id) ?? ''}-${w.kennung}` : undefined;
 
@@ -203,7 +205,7 @@ export function einrichtungsStand(teile: Teile, jetzt: Date, einweichenEnde?: nu
       titel: 'Etiketten drucken und anbringen',
       knopf: 'Etiketten drucken',
       erledigt: etiketten,
-      ziel: { art: 'folgt', paket: 'I1a-05' },
+      ziel: ersteKuerzel ? { art: 'etiketten', kuerzel: ersteKuerzel } : { art: 'etiketten' },
     },
     {
       nr: 8,

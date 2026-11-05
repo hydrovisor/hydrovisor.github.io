@@ -1,7 +1,7 @@
 // Gefäss prüfen, Schritte 1 bis 3 (R9.3, 05_masken.md 3.8; Plan 21): Kontext Regal (68 dp), ohne Systemtastatur.
 // Jeder Tipp ist ein eigener Vorgang mit einem Ereignis gefaesspruefung; der Stand kommt nach dem Neuladen aus den
 // Ereignissen (A11).
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { neueClientId, schreiben } from '../../daten/schreiben.ts';
 import { deckeltyp, gefaessAm } from '../../domain/anlage/teile.ts';
 import { toepfe } from '../../domain/anlage/erfassen.ts';
@@ -16,7 +16,12 @@ import { useBuendel } from '../buendel.tsx';
 import { jetzt } from '../bundeldaten.ts';
 import { hashZu } from '../router.ts';
 
-export function GefaessPruefen({ code }: { code: string }) {
+/** Adresse ohne ?scan=1 ersetzen, damit ein Neuladen kein zweites Ereignis schreibt (Plan 22 A4) */
+function scanAbschliessen(code: string): void {
+  window.location.replace(hashZu({ name: 'pruefen', code }));
+}
+
+export function GefaessPruefen({ code, scan = false }: { code: string; scan?: boolean }) {
   const { buendel, liest } = useBuendel();
   const teile = buendel?.teile;
   const ort = teile ? ortAufloesen(code, teile) : undefined;
@@ -25,6 +30,31 @@ export function GefaessPruefen({ code }: { code: string }) {
   const [lokal, setLokal] = useState<number>();
   const [sendet, setSendet] = useState(false);
   const [fehler, setFehler] = useState<string>();
+  const scanErledigt = useRef(false);
+  const platzBereit = ort && teile && gefaessAm(teile, ort.platzId) ? ort.platzId : undefined;
+  const scanSchritt = platzBereit ? pruefStand(teile, platzBereit).naechsterSchritt : undefined;
+
+  // Scan des Etiketts = Prüfschritt 1 «richtiges Gefäss» (R9.3, Plan 22 A4): einmal schreiben, dann Schritt 2
+  useEffect(() => {
+    if (!scan || !platzBereit || !ort || scanErledigt.current) return;
+    scanErledigt.current = true;
+    if (scanSchritt !== 1) {
+      scanAbschliessen(code);
+      return;
+    }
+    const kennung = ort.kennung;
+    void (async () => {
+      const antwort = await schreiben(pruefschrittVorgang(platzBereit, 1, true, neueClientId(), jetzt()), {
+        jetzt: jetzt(),
+        zeitzone: ZEITZONE,
+      });
+      if (antwort.status === 'gespeichert') {
+        setMeldung(kennungPruefen(kennung, kennung));
+        setLokal(2);
+      } else setFehler(antwort.status === 'nicht_gespeichert' ? antwort.fehler.text : 'Schon gespeichert');
+      scanAbschliessen(code);
+    })();
+  }, [scan, platzBereit, scanSchritt, ort, code]);
 
   const kopf = (
     <header className="hv-messen-kopf">

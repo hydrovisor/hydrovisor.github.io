@@ -127,6 +127,14 @@ a:hover { color: var(--brand-strong); }
 .hv-sheet-cell { width: var(--label-width); height: var(--label-height); transform: translate(var(--hv-versatz-x, 0mm), var(--hv-versatz-y, 0mm)); }
 .hv-sheet-test .hv-sheet-cell { outline: 0.2mm dashed var(--label-ink); outline-offset: -0.1mm; }
 
+/* Druckansicht (Plan 22): Steuerleiste nur am Bildschirm, Vorschau seitlich scrollbar; im Druck nur die Bögen am
+   Seitenursprung, der letzte ohne Seitenumbruch */
+.hv-druck { box-sizing: border-box; min-height: 100dvh; background: var(--surface); color: var(--ink); font-family: var(--font-sans); }
+.hv-druck-steuerung { box-sizing: border-box; display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); padding: var(--space-4); }
+.hv-druck-steuerung > * { flex: 0 1 auto; }
+.hv-druck-vorschau { overflow-x: auto; padding: 0 var(--space-4) var(--space-4); display: flex; flex-direction: column; gap: var(--space-4); }
+.hv-druck-vorschau .hv-sheet { flex: none; box-shadow: 0 0 0 1px var(--line); }
+
 /* Notfallblatt «Stand je Gefäss» und Vertretungsblatt (A4, schwarz auf weiss) */
 .hv-blatt { width: 210mm; min-height: 297mm; box-sizing: border-box; padding: var(--page-margin); background: var(--label-paper); color: var(--label-ink); font-family: var(--font-sans);
   font-size: 11pt; line-height: 1.35; -webkit-print-color-adjust: exact; print-color-adjust: exact; display: flex; flex-direction: column; gap: 5mm; }
@@ -138,7 +146,12 @@ a:hover { color: var(--brand-strong); }
 .hv-blatt-kennung { font-size: 16pt; font-weight: 700; white-space: nowrap; }
 .hv-blatt-regeln { margin: 0; padding-left: 6mm; display: flex; flex-direction: column; gap: 2mm; font-size: 14pt; }
 .hv-blatt-verboten { font-weight: 700; }
-@media print { @page { size: A4; margin: 0; } body { background: #fff; } .hv-sheet, .hv-blatt { break-after: page; } }
+@media print { @page { size: A4; margin: 0; } body { background: #fff; } .hv-sheet, .hv-blatt { break-after: page; }
+  .hv-sheet:last-child, .hv-blatt:last-child { break-after: auto; }
+  .hv-druck { min-height: 0; background: #fff; }
+  .hv-druck-steuerung { display: none; }
+  .hv-druck-vorschau { display: block; overflow: visible; padding: 0; }
+  .hv-druck-vorschau .hv-sheet { box-shadow: none; } }
 
 /* Dichte «regal»: Regal-Masken; Tippflächen 68 dp über tokens.css, Text 21 sp */
 [data-density="regal"] { font-size: var(--text-text-regal-size); line-height: var(--text-text-regal-line); }

@@ -81,12 +81,20 @@ export function Anlage({ kuerzel }: { kuerzel?: string }) {
         </p>
       ) : null}
       {anlage ? (
-        <a
-          className="hv-btn hv-btn-secondary"
-          href={hashZu({ name: 'gefaess-neu', kuerzel: anlage.kuerzel })}
-        >
-          Gefäss erfassen
-        </a>
+        <div className="hv-anlage-zweispaltig">
+          <a
+            className="hv-btn hv-btn-secondary"
+            href={hashZu({ name: 'gefaess-neu', kuerzel: anlage.kuerzel })}
+          >
+            Gefäss erfassen
+          </a>
+          <a
+            className="hv-btn hv-btn-secondary"
+            href={hashZu({ name: 'etiketten', kuerzel: anlage.kuerzel })}
+          >
+            Etiketten drucken
+          </a>
+        </div>
       ) : null}
       <a className="hv-btn hv-btn-secondary" href={hashZu({ name: 'anlage-neu' })}>
         Anlage anlegen

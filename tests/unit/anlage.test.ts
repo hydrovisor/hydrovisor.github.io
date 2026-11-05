@@ -274,6 +274,7 @@ describe('Runde 1', () => {
         einfuegen: async () => leer,
         lesen: async (_t, id) => ({ data: [gespeichert.get(id)], error: null, status: 200 }),
         stornieren: async () => leer,
+        setzen: async () => leer,
       },
       { appVersion: 'test', nachErfolg: () => {} },
     );
