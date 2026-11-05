@@ -181,7 +181,8 @@ export function keimbilanz(
       .filter((a) => a.datenart === 'echt')
       .map((a) => a.id),
   );
-  // jüngste je Pflanzung; bei gleichem gilt_ab gilt die später gelesene (neue Schritte zuletzt)
+  // jüngste je Pflanzung; bei gleichem gilt_ab gilt die später gelesene (neue Schritte zuletzt), v_keimrate zählt
+  // dann beide (Plan 24 A23, praktisch nicht erreichbar)
   const juengste = new Map<string, KeimEreignis>();
   for (const k of keimungenMit(teile, neu)) {
     const id = k.pflanzung_id as string;

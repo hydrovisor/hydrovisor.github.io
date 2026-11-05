@@ -255,7 +255,8 @@ function lageVon(teile: Teile, satzId: string, jetzt: Date, zeitzone: Zeitzone):
       const inKeimung = (z?.phase ?? 'keimung') === 'keimung';
       if (status === 'aktiv' && inKeimung && (gekeimt === undefined || gekeimt === 0)) s.zustand = 'offen';
       else if (gekeimt !== undefined) s.gekeimt = gekeimt;
-      if (station) s.station = station;
+      // nur aktive Schwämme stehen auf einem Stationsplatz (wie freieStationsloecher(), Runde 1 Befund 5)
+      if (station && status === 'aktiv') s.station = station;
     }
     return s;
   });
@@ -375,10 +376,12 @@ export function keimEingabePruefen(
   const lage = lageVon(teile, eingabe.satzId, jetzt, zeitzone);
   if (!lage) return [{ feld: 'satz', grund: 'Satz nicht bekannt' }];
   const v: Verstoss[] = [];
-  if (eingabe.keimtempEingehalten === undefined)
-    v.push({ feld: 'keimtemp_eingehalten', grund: 'Keimtemperatur eingehalten: Ja oder Nein wählen' });
   const mitWert = eingabe.werte.filter((w) => w.gekeimt !== 'offen');
-  if (mitWert.length === 0) v.push({ feld: 'samen_gekeimt', grund: 'Mindestens einen Schwamm eintragen' });
+  // ein reiner Stationsschritt (gekeimte Schwämme später stellen) braucht weder Wert noch Keimtemperatur (Runde 1 Befund 1)
+  if (mitWert.length > 0 && eingabe.keimtempEingehalten === undefined)
+    v.push({ feld: 'keimtemp_eingehalten', grund: 'Keimtemperatur eingehalten: Ja oder Nein wählen' });
+  if (mitWert.length === 0 && eingabe.station.length === 0)
+    v.push({ feld: 'samen_gekeimt', grund: 'Mindestens einen Schwamm eintragen' });
   const gesehen = new Set<string>();
   for (const w of eingabe.werte) {
     const s = lage.schwaemme.find((x) => x.pflanzungId === w.pflanzungId);
@@ -591,15 +594,23 @@ export function keimVorgang(
         }),
       );
   }
-  for (const st of eingabe.station)
+  for (const st of eingabe.station) {
+    // Konzept 8.1 Regel 10: Tomate, Chili und Basilikum (8 cm) gehen mit ihrem Zieltopf auf die Station, dessen
+    // Heimplatz im Zielgefäss bleibt (Runde 1 Befund 2)
+    const topf =
+      lage.groesse === 80
+        ? lage.schwaemme.find((x) => x.pflanzungId === st.pflanzungId)?.zieltopf
+        : undefined;
     schritte.push(
       neu(ids(), {
         typ: 'verschieben',
         pflanzung_id: st.pflanzungId,
+        ...(topf ? { netztopf_id: topf.netztopfId } : {}),
         gilt_ab: giltAb,
         daten: { von_platz_id: lage.ort.platzId, nach_platz_id: st.platzId, nach_loch_nr: st.lochNr },
       }),
     );
+  }
   return schritte;
 }
 

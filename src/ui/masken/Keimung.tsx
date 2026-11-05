@@ -75,7 +75,7 @@ export function Keimung({ satz }: { satz: string }) {
   );
 
   if (!teile) {
-    // Überschrift erst mit dem Bündel: so sieht, wer auf sie wartet, den geladenen Stand (A16)
+    // Überschrift erst mit dem Bündel: so sieht, wer auf sie wartet, den geladenen Stand (Plan 24 A17)
     return (
       <main className="hv-seite hv-keimung" data-density="regal" aria-busy="true">
         <header className="hv-seite-kopf">
@@ -188,7 +188,10 @@ export function Keimung({ satz }: { satz: string }) {
       : ohneStation;
   const zusammenfassung = keimZusammenfassung(teile, ohneStation);
   const frage = `Keimtemperatur ${a.keimtemp ? `${a.keimtemp} ` : ''}eingehalten?`;
-  const bereit = keimtemp !== undefined && ohneStation.werte.some((w) => w.gekeimt !== 'offen');
+  // ohne offene Schwämme bleibt ein reiner Stationsschritt für gekeimte Schwämme in der Box (Runde 1 Befund 1)
+  const nurStation = offene.length === 0 && (vorschlag?.zuweisung.length ?? 0) > 0;
+  const bereit =
+    nurStation || (keimtemp !== undefined && ohneStation.werte.some((w) => w.gekeimt !== 'offen'));
 
   async function speichern() {
     if (!teile || sendet) return;
@@ -426,7 +429,7 @@ export function Keimung({ satz }: { satz: string }) {
             ))}
         </>
       ) : (
-        <p>Keine offenen Schwämme</p>
+        <p>{nurStation ? 'Gekeimte Schwämme warten in der Box auf die Station' : 'Keine offenen Schwämme'}</p>
       )}
       {erledigt.length > 0 ? (
         <section aria-label="Eingetragen">
@@ -462,7 +465,7 @@ export function Keimung({ satz }: { satz: string }) {
       ) : null}
       {fehlerZeile}
       {teilweiseZeile}
-      {offene.length > 0 ? (
+      {offene.length > 0 || nurStation ? (
         <div className="hv-keimung-fuss">
           {mitStationsschritt ? (
             <Button disabled={!bereit} onClick={() => setSchritt(2)}>
@@ -523,9 +526,12 @@ function fertigText(teile: Teile, a: KeimAnsicht, eingabe: KeimEingabe, vorgang:
   const kennung = (platzId: string) =>
     zeilen<{ id: string; kennung: string }>(teile, 'platz').find((p) => p.id === platzId)?.kennung ?? '';
   const station = [...stationen].map(([id, n]) => `${n} auf ${kennung(id)}`);
-  const zeilenText = [`Gespeichert: ${[z.text, ...station].join(' · ')}`];
+  const mitKeimung = eingabe.werte.some((w) => w.gekeimt !== 'offen');
+  const zeilenText = [`Gespeichert: ${[...(mitKeimung ? [z.text] : []), ...station].join(' · ')}`];
   let warnung: string | undefined;
-  if (eingabe.keimtempEingehalten !== true)
+  if (!mitKeimung) {
+    // reiner Stationsschritt: keine Keimrate
+  } else if (eingabe.keimtempEingehalten !== true)
     zeilenText.push('Keimtemperatur nicht eingehalten: zählt nicht für die Keimrate');
   else if (a.datenart !== 'echt') zeilenText.push('Keimrate zählt nur in echten Anlagen');
   else {

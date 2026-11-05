@@ -65,7 +65,7 @@ export function keimPruefTermin(
   if (e.offen <= 0) return { grund: 'fertig' };
   if (e.letztePruefung === undefined) {
     const erfasst = kalendertag(e.erfasstAm, zeitzone);
-    // ohne typische Keimdauer die längste, sonst der Erfassungstag (A)
+    // ohne typische Keimdauer die längste, sonst der Saattag, nicht vor dem Erfassungstag (Plan 24 A24)
     const dauer = e.keimdauer.typ ?? e.keimdauer.max ?? 0;
     const tag = tagPlus(e.saatdatum, dauer);
     return { faelligAm: tag < erfasst ? erfasst : tag, grund: 'erste' };
