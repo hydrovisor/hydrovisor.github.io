@@ -38,7 +38,7 @@ export function DruckEtiketten({ route }: { route: Druckroute }) {
     // ohne Client-UUID lässt sich der Stand nicht setzen: nicht als Erfolg melden (Prüfer Runde 1, Befund 4)
     const ohneId = liste.filter((z) => !z.gedruckt && !z.etikett.client_id).map((z) => z.code);
     if (ohneId.length > 0) {
-      setMeldung({ ok: false, text: `Nicht bestätigt: ${ohneId.join(', ')} ohne Client-UUID` });
+      setMeldung({ ok: false, text: `Nicht bestätigt: ${ohneId.join(', ')} kann die App nicht als gedruckt speichern` });
       return;
     }
     const vorgang = gedrucktVorgang(

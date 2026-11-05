@@ -10,7 +10,7 @@ import { restNachbilden } from './rest.ts';
 const JETZT = new Date('2026-12-14T08:00:00Z');
 const PX_JE_MM = 96 / 25.4;
 
-test('UC14-AK4 Kennung 2.3 in 20 mm, A1 in 12 mm, alle in ihrer Spalte', async ({ page }) => {
+test('R9.1 Kennung 2.3, 4.4 und W in 20 mm, A1 in 12 mm', async ({ page }) => {
   const daten = sichtenNachrechnen(regalTeile(JETZT));
   await sitzungSpeichern(page);
   await authNachbilden(page);
