@@ -1,5 +1,5 @@
 // Vorlagen Box und Deckel (Plan 19 Testliste; UC2-AK1, UC2-AK2; Konzept 5.3, 5.4, 8.1 Regel 2, 3 und 9; R3.3,
-// R9.3). Ohne Uhr: keine der Vorlagen-Funktionen ist zeitabhängig. Teile des Bündels in der Form von PostgREST.
+// R9.3; Konzept v1.4 5.4 mit Erratum E9: Lochnummern spaltenweise). Ohne Uhr: keine der Vorlagen-Funktionen ist zeitabhängig. Teile des Bündels in der Form von PostgREST.
 import { describe, expect, it } from 'vitest';
 import { vorgangPruefen } from '../../src/domain/datenpfad/erfassung.ts';
 import {
@@ -59,7 +59,7 @@ const box = (teil: Partial<GefaessmodellEingabe> = {}): GefaessmodellEingabe => 
 });
 
 describe('Lochbild', () => {
-  it('UC2-AK1 «2, 2, 2» mit 5 cm ergibt 6 Löcher, Loch 1 vorne links, 1 bis 6 zeilenweise nach hinten', () => {
+  it('UC2-AK1 «2, 2, 2» mit 5 cm ergibt 6 Löcher, Loch 1 vorne links, 1 bis 6 spaltenweise (E9)', () => {
     const gelesen = loecherJeReiheLesen('2, 2, 2');
     expect(gelesen).toEqual({ ok: true, reihen: [2, 2, 2] });
     const reihen = [2, 2, 2];
@@ -67,17 +67,18 @@ describe('Lochbild', () => {
     const loecher = lochbild(reihen);
     expect(loecher.map((l) => l.nr)).toEqual([1, 2, 3, 4, 5, 6]);
     expect(loecher[0]).toMatchObject({ nr: 1, reihe: 1, spalte: 1 });
+    // erst die linke Spalte von vorne nach hinten (1, 2, 3), dann die rechte (4, 5, 6)
     expect(nummernJeReihe(reihen)).toEqual([
-      [1, 2],
-      [3, 4],
-      [5, 6],
+      [1, 4],
+      [2, 5],
+      [3, 6],
     ]);
     expect(loecher.map((l) => [l.nr, l.reihe, l.spalte])).toEqual([
       [1, 1, 1],
-      [2, 1, 2],
-      [3, 2, 1],
-      [4, 2, 2],
-      [5, 3, 1],
+      [2, 2, 1],
+      [3, 3, 1],
+      [4, 1, 2],
+      [5, 2, 2],
       [6, 3, 2],
     ]);
     const schritt = deckeltypSchritt(deckel(), CLIENT);
@@ -110,6 +111,41 @@ describe('Lochbild', () => {
     for (const v of gelesen.verstoesse) expect(v.grund.trim().length).toBeGreaterThan(10);
   });
 
+  it('UC2-AK1 ungleich breite Reihen «3, 1, 2» spaltenweise', () => {
+    expect(loecherJeReiheLesen('3, 1, 2')).toEqual({ ok: true, reihen: [3, 1, 2] });
+    const reihen = [3, 1, 2];
+    const loecher = lochbild(reihen);
+    // Reihenfolge der Nummern; Spalte = Stelle des Lochs in seiner Reihe von links
+    expect(loecher.map((l) => [l.nr, l.reihe, l.spalte])).toEqual([
+      [1, 1, 1],
+      [2, 2, 1],
+      [3, 3, 1],
+      [4, 1, 2],
+      [5, 3, 2],
+      [6, 1, 3],
+    ]);
+    expect(nummernJeReihe(reihen)).toEqual([[1, 4, 6], [2], [3, 5]]);
+    // 8.1 Regel 9: erste und letzte Reihe sowie die einzige Stelle der Reihe 2 sind Rand
+    expect(randloecher(reihen)).toEqual([1, 2, 3, 4, 5, 6]);
+    expect(loecher.every((l) => l.randloch)).toBe(true);
+    // Gangkante = Reihe 1 (vorne, R3.3)
+    expect(loecher.filter((l) => l.gangkante).map((l) => l.nr)).toEqual([1, 4, 6]);
+  });
+
+  it('UC2-AK1 ungleich breite Reihen «2, 4, 3» spaltenweise mit inneren Löchern 5 und 7', () => {
+    const reihen = [2, 4, 3];
+    const loecher = lochbild(reihen);
+    expect(loecher.map((l) => l.nr)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9]);
+    expect(nummernJeReihe(reihen)).toEqual([
+      [1, 4],
+      [2, 5, 7, 9],
+      [3, 6, 8],
+    ]);
+    expect(loecher.filter((l) => !l.randloch).map((l) => l.nr)).toEqual([5, 7]);
+    expect(randloecher(reihen)).toEqual([1, 2, 3, 4, 6, 8, 9]);
+    expect(loecher.filter((l) => l.gangkante).map((l) => l.nr)).toEqual([1, 4]);
+  });
+
   it('UC2-AK1 die Grenzen 20 Reihen und 20 Löcher je Reihe sind erlaubt, der Text nennt sie (A4)', () => {
     expect(loecherJeReiheLesen(Array(20).fill('1').join(', '))).toEqual({
       ok: true,
@@ -123,7 +159,7 @@ describe('Lochbild', () => {
   });
 
   it.each(LOCHBILDER.map((t) => [t.name, t] as const))(
-    'UC2-AK2 Lochnummern für D1, D2, D4, D3, D6, S8, S5 zeilenweise nach dem Lochbild: %s',
+    'UC2-AK2 Lochnummern für D1, D2, D4, D3, D6, S8, S5 spaltenweise nach dem Lochbild: %s',
     (_name, typ) => {
       expect(loecherJeReiheLesen(typ.eingabe)).toEqual({ ok: true, reihen: typ.reihen });
       const anzahl = typ.nummern.flat().length;
@@ -133,10 +169,11 @@ describe('Lochbild', () => {
       expect(nummernJeReihe(typ.reihen)).toEqual(typ.nummern);
       expect(loecher.find((l) => l.nr === 1)).toMatchObject({ reihe: 1, spalte: 1 });
       expect(Math.max(...loecher.map((l) => l.nr))).toBe(lochzahl(typ.reihen));
-      // Nummern lückenlos 1 bis Lochzahl, jede genau einmal
-      expect([...loecher.map((l) => l.nr)].sort((a, b) => a - b)).toEqual(
-        Array.from({ length: anzahl }, (_, i) => i + 1),
-      );
+      // Nummern lückenlos 1 bis Lochzahl, jede genau einmal, lochbild() in der Reihenfolge der Nummern
+      expect(loecher.map((l) => l.nr)).toEqual(Array.from({ length: anzahl }, (_, i) => i + 1));
+      // spaltenweise: die Spalte sinkt nie, innerhalb einer Spalte steigt die Reihe (E9)
+      const folge = loecher.map((l) => l.spalte * 100 + l.reihe);
+      expect(folge).toEqual([...folge].sort((x, y) => x - y));
       const schritt = deckeltypSchritt(
         deckel({ name: typ.name, topfdurchmesserCm: typ.topfdurchmesserCm, loecherJeReihe: typ.eingabe }),
         CLIENT,
@@ -163,12 +200,13 @@ describe('Lochbild', () => {
     expect(GEFAESSE.reduce((s, g) => s + lochzahl(lochbildtyp(g.deckel).reihen), 0)).toBe(84);
   });
 
-  it('UC2 Randlöcher nach 8.1 Regel 9: «3, 3, 3» hat nur Loch 5 innen', () => {
+  it('UC2 Randlöcher nach 8.1 Regel 9: «3, 3, 3» hat spaltenweise nur Loch 5 innen', () => {
     expect(randloecher([3, 3, 3])).toEqual([1, 2, 3, 4, 6, 7, 8, 9]);
     const loecher = lochbild([3, 3, 3]);
     expect(loecher.filter((l) => !l.randloch).map((l) => l.nr)).toEqual([5]);
-    // Gangkante = Reihe 1 (vorne, R3.3)
-    expect(loecher.filter((l) => l.gangkante).map((l) => l.nr)).toEqual([1, 2, 3]);
+    expect(loecher.find((l) => l.nr === 5)).toMatchObject({ reihe: 2, spalte: 2 });
+    // Gangkante = Reihe 1 (vorne, R3.3): spaltenweise die Löcher 1, 4 und 7
+    expect(loecher.filter((l) => l.gangkante).map((l) => l.nr)).toEqual([1, 4, 7]);
   });
 
   it('UC2 Randlöcher: ein einzelnes Loch ist Randloch und Gangkante', () => {

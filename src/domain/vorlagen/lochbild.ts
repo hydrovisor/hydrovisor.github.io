@@ -1,5 +1,6 @@
-// Lochbild eines Deckels oder einer Platte (Plan 19; UC2; Konzept 5.4, 8.1 Regel 9; R3.3): Löcher je Reihe von
-// vorne nach hinten, Loch 1 vorne links, zeilenweise nach hinten nummeriert. Rein, ohne Zeitbezug.
+// Lochbild eines Deckels oder einer Platte (Plan 19, Plan 81; UC2; Konzept 5.4, 8.1 Regel 9; R3.3): Löcher je Reihe
+// von vorne nach hinten, Loch 1 vorne links, spaltenweise nummeriert (Konzept v1.4, E9): erst die linke Spalte von
+// vorne nach hinten, dann die nächste. Spalte = Stelle des Lochs in seiner Reihe von links (A). Rein, ohne Zeitbezug.
 import type { Verstoss } from '../datenpfad/erfassung.ts';
 
 /** höchstens 20 Reihen (Check in deckeltyp) und höchstens 20 Löcher je Reihe (Plan 19 A4) */
@@ -56,23 +57,23 @@ export function lochzahl(reihen: readonly number[]): number {
   return reihen.reduce((summe, n) => summe + n, 0);
 }
 
-/** alle Löcher in der Reihenfolge der Nummern */
+/** alle Löcher in der Reihenfolge der Nummern: Spalte für Spalte, in jeder Spalte von vorne nach hinten */
 export function lochbild(reihen: readonly number[]): Loch[] {
   const loecher: Loch[] = [];
-  let nr = 0;
-  reihen.forEach((anzahl, i) => {
-    const reihe = i + 1;
-    for (let spalte = 1; spalte <= anzahl; spalte++) {
-      nr += 1;
+  const breiteste = Math.max(0, ...reihen);
+  for (let spalte = 1; spalte <= breiteste; spalte++) {
+    reihen.forEach((anzahl, i) => {
+      if (spalte > anzahl) return;
+      const reihe = i + 1;
       loecher.push({
-        nr,
+        nr: loecher.length + 1,
         reihe,
         spalte,
         randloch: reihe === 1 || reihe === reihen.length || spalte === 1 || spalte === anzahl,
         gangkante: reihe === 1,
       });
-    }
-  });
+    });
+  }
   return loecher;
 }
 

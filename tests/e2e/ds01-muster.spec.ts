@@ -87,6 +87,10 @@ for (const thema of THEMEN) {
     const eins = await masse(loecher.filter({ hasText: '2.3.1' }));
     const drei = await masse(bereich.getByRole('button', { name: 'Loch 3, frei' }));
     expect(eins.y).toBeGreaterThan(drei.y);
+    // spaltenweise (Konzept v1.4 5.4, E9): Loch 2 liegt in derselben Spalte hinter (über) Loch 1
+    const zwei = await masse(loecher.filter({ hasText: '2.3.2' }));
+    expect(zwei.x).toBeCloseTo(eins.x, 0);
+    expect(zwei.y).toBeLessThan(eins.y);
     // Statuswort in voller Breite in der Ergebniszone, nie nur Farbe
     await expect(bereich.locator('.hv-ergebnis')).toHaveText([
       'Im grünen Bereich',
