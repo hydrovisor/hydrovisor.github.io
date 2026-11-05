@@ -99,7 +99,8 @@ describe('R12.1 Grenzen', () => {
   });
 
   it('R12.1 ln-Grenzfall p 0.9 ergibt s 1, nicht 2 (Gleitkomma)', () => {
-    expect(Math.log(0.1) / Math.log(1 - 0.9)).toBeGreaterThan(1);
+    // im Gleitkomma nicht genau 1 (V8: 0.9999999999999998, 1 − 0.9 = 0.09999999999999998)
+    expect(Math.log(0.1) / Math.log(1 - 0.9)).not.toBe(1);
     expect(menge(0.9, 1).samenJeSchwamm).toBe(1);
     expect(menge(0.9, 9).samenJeSchwamm).toBe(1);
     // 9 / 0.9 ist im Gleitkomma 10.000000000000002: m bleibt 10
