@@ -44,6 +44,7 @@ export function messergebnis(
       vorher: k.vorher,
       ansaetze: k.ansaetze,
       uPh: k.uPh,
+      uEc: k.uEc,
     },
     jetzt,
     zeitzone,

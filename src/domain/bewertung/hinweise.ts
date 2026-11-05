@@ -3,7 +3,7 @@
 import type { Betriebsart } from '../ort.ts';
 import type { Groesse } from '../messung/eingabe.ts';
 import { kalendertag, tageZwischen, type Zeitzone } from '../zeit.ts';
-import { alsText, RANG, type Bewertung, type Hundertstel } from './bewertung.ts';
+import { alsText, bewerteEc, bewertePh, RANG, type Bewertung, type Hundertstel } from './bewertung.ts';
 import type { Sollband } from './sollband.ts';
 import type { AnsatzZeile } from './verlauf.ts';
 
@@ -78,6 +78,8 @@ export function hinweise(
     ansaetze: readonly AnsatzZeile[];
     /** u_pH in Hundertsteln; ein Anstieg innerhalb der Messunsicherheit gibt keinen Hinweis (A, Runde 1 Befund 8) */
     uPh?: Hundertstel;
+    /** u_EC in Hundertsteln (für die ungekappte Bewertung beim Mischentscheid, Runde 2 Befund 2) */
+    uEc?: Hundertstel;
   },
   jetzt: Date,
   zeitzone: Zeitzone,
@@ -115,7 +117,11 @@ export function hinweise(
 
   // pH gegen das Band (R10.5); bei Kratky über dem Band nur der Eisenhinweis über 6.80 (R10.4)
   const ph = e.werte.ph;
-  if (ph !== undefined && sb && e.bewertungen.ph && e.bewertungen.ph !== 'gruen') {
+  // Ob ein Bandhinweis erscheint, entscheidet die ungekappte Bewertung: die Kappung beim Mischentscheid (R2.4) sagt
+  // etwas über die Begleitkultur, nicht dass korrigiert werden muss (Runde 2 Befund 2); der Ton folgt der gekappten
+  const roh = (g: 'ph' | 'ec', wert: Hundertstel): Bewertung | undefined =>
+    !sb ? undefined : g === 'ph' ? bewertePh(wert, sb.ph, e.uPh ?? 10) : bewerteEc(wert, sb.ec, e.uEc ?? 10);
+  if (ph !== undefined && sb && e.bewertungen.ph && roh('ph', ph) !== 'gruen') {
     if (ph > sb.ph.max && !kratky)
       band(
         'ph',
@@ -128,7 +134,14 @@ export function hinweise(
       band('ph', 'ph_tief', 'Mangel an Magnesium und Kalzium möglich', 'pH vorsichtig anheben');
     // R10.4: im Beobachtungsband ausserhalb des Sollbands der Trend als Massnahme (Runde 1 Befund 1)
     const v = e.vorher.ph;
-    if (kratky && v && ph >= KRATKY_PH_MIN && ph <= KRATKY_PH_MAX)
+    if (
+      kratky &&
+      v &&
+      ph >= KRATKY_PH_MIN &&
+      ph <= KRATKY_PH_MAX &&
+      // nach einem Ansatz ist die Änderung kein Trend (wie Anstieg und Fall; Runde 2 Befund 1)
+      !ansatzSeit(e.ansaetze, v.giltAb, jetzt)
+    )
       band(
         'ph',
         'ph_trend',
@@ -141,6 +154,9 @@ export function hinweise(
       hinweis: {
         ausloeser: 'eisen',
         text: bandText('ph', ph),
+        ...(sb
+          ? { sollwert: `Sollwert deiner Anlage ${alsText('ph', sb.ph.min)}–${alsText('ph', sb.ph.max)}.` }
+          : {}),
         folge: 'Eisen- und Mangansperre',
         massnahme: 'pH schrittweise senken, nach 15 min nachmessen',
         ton: 'info',
@@ -151,7 +167,7 @@ export function hinweise(
 
   // EC gegen das Band (R10.5, R4.5, R4.10; A7)
   const ec = e.werte.ec;
-  if (ec !== undefined && sb && e.bewertungen.ec && e.bewertungen.ec !== 'gruen') {
+  if (ec !== undefined && sb && e.bewertungen.ec && roh('ec', ec) !== 'gruen') {
     if (ec > sb.ec.max) band('ec', 'ec_hoch', 'Gefahr von Salzstress', massnahmeEc(e.betriebsart, 'hoch'));
     if (ec < sb.ec.min) band('ec', 'ec_tief', 'Nährstoffmangel', massnahmeEc(e.betriebsart, 'tief'));
   }
@@ -167,7 +183,7 @@ export function hinweise(
           ausloeser: 'temp_hoch',
           text: `Gemessen ${alsText('temperatur', t)} °C.`,
           folge: 'Pythium-Risiko; Wärme von Leisten und Raum',
-          massnahme: 'Belüftung prüfen, Wurzeln ansehen, Wärmesperre; Aufgabe Wärme prüfen folgt',
+          massnahme: 'Belüftung prüfen, Wurzeln ansehen, Wärmesperre; Wechselintervall auf 7 Tage prüfen',
           ton: ton(e.bewertungen.temperatur),
         },
         'temperatur',

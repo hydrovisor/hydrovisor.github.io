@@ -115,3 +115,106 @@ describe('R2.4 Mischentscheid (Runde 1 Befund 3)', () => {
     expect(bewertungsband(teile, platzId('2.3'), JETZT)?.herkunft).toBe('pflanzungen');
   });
 });
+
+describe('Nachbesserung Runde 2 (Prüferbefunde 1, 2, 3, 4, 7)', () => {
+  const KOMPROMISS: Sollband = { ...BAND, ph: { min: 600, max: 650 }, hoechstensKnapp: true };
+
+  it('R10.4 nach Nachfüllen zwischen den Messungen kein Trend', () => {
+    const r = hinweise(
+      {
+        betriebsart: 'kratky_belueftet',
+        werte: { ph: 590 },
+        bewertungen: { ph: 'knapp' },
+        sollband: BAND,
+        vorher: { ph: { wert: 640, giltAb: VOR_7_TAGEN } },
+        ansaetze: [
+          {
+            id: uid('21', 70),
+            platz_id: platzId('3.1'),
+            typ: 'nachfuellen',
+            status: 'abgeschlossen',
+            begonnen_am: '2027-01-08T10:00:00.000Z',
+            kontrollmessung_id: null,
+            endmessung_id: null,
+            storniert_am: null,
+          },
+        ],
+      },
+      JETZT,
+      ZEITZONE,
+    );
+    expect(r.hinweise.map((h) => h.ausloeser)).not.toContain('ph_trend');
+  });
+
+  it('R2.4 Kappung allein löst keinen Korrekturhinweis aus', () => {
+    const werte = { ph: 660, ec: 115 };
+    const bewertungen = bewerten(werte, KOMPROMISS, { uEc: 10, uPh: 10 });
+    expect(bewertungen).toEqual({ ph: 'knapp', ec: 'knapp' });
+    const r = hinweise(
+      {
+        betriebsart: 'dwc',
+        werte,
+        bewertungen,
+        sollband: KOMPROMISS,
+        vorher: {},
+        ansaetze: [],
+        uPh: 10,
+        uEc: 10,
+      },
+      JETZT,
+      ZEITZONE,
+    );
+    expect(r.hinweise).toEqual([]);
+    expect(r.alarm).toBe(false);
+    // 6.7 liegt auch ungekappt daneben: Hinweis bleibt
+    const daneben = hinweise(
+      {
+        betriebsart: 'dwc',
+        werte: { ph: 670 },
+        bewertungen: bewerten({ ph: 670 }, KOMPROMISS, { uEc: 10, uPh: 10 }),
+        sollband: KOMPROMISS,
+        vorher: {},
+        ansaetze: [],
+        uPh: 10,
+        uEc: 10,
+      },
+      JETZT,
+      ZEITZONE,
+    );
+    expect(daneben.hinweise.map((h) => h.ausloeser)).toEqual(['ph_hoch']);
+  });
+
+  it('R2.4 abgebrochener Ansatz zählt nicht; Temperatur aus der Sicht, wenn der Schnappschuss keine hat', () => {
+    const teile = messTeile();
+    ansatzHinzu(teile, {
+      id: uid('21', 61),
+      kennung: '3.2',
+      typ: 'neuansatz',
+      begonnenAm: '2027-01-11T10:00:00.000Z',
+      zielbereich: { ph_min: 5.9, ph_max: 6.4, ec_min: 1.1, ec_max: 1.3 },
+    });
+    const a = (teile['naehrloesungsansatz'] ?? []).find((x) => x['id'] === uid('21', 61));
+    if (!a) throw new Error('Ansatz fehlt');
+    a['mischentscheid'] = 'leitkultur';
+    const sb = bewertungsband(teile, platzId('3.2'), JETZT);
+    expect(sb).toMatchObject({ herkunft: 'ansatz', temperatur: { min: 1500, max: 2000 } });
+    a['status'] = 'abgebrochen';
+    expect(bewertungsband(teile, platzId('3.2'), JETZT)?.herkunft).toBe('pflanzungen');
+  });
+
+  it('Eisenhinweis nennt den Sollwert wie die übrigen Bandhinweise', () => {
+    const r = hinweise(
+      {
+        betriebsart: 'kratky_belueftet',
+        werte: { ph: 690 },
+        bewertungen: { ph: 'ausserhalb' },
+        sollband: BAND,
+        vorher: {},
+        ansaetze: [],
+      },
+      JETZT,
+      ZEITZONE,
+    );
+    expect(r.hinweise.find((h) => h.ausloeser === 'eisen')?.sollwert).toBe('Sollwert deiner Anlage 6.0–6.5.');
+  });
+});

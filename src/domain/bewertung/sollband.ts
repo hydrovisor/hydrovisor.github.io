@@ -64,7 +64,7 @@ function station(teile: Teile, platzId: string, jetzt: Date, temperatur: Band): 
   return { ph: STATION_PH, ec, temperatur, herkunft: 'station' };
 }
 
-function ausSchnappschuss(a: Zeile): Sollband | undefined {
+function ausSchnappschuss(a: Zeile, temperatur: Band): Sollband | undefined {
   const zb = (a['schnappschuss'] as { zielbereich?: Zeile } | null | undefined)?.zielbereich;
   if (!zb) return undefined;
   const ph = band(zb['ph_min'], zb['ph_max']);
@@ -73,7 +73,7 @@ function ausSchnappschuss(a: Zeile): Sollband | undefined {
   return {
     ph,
     ec,
-    temperatur: band(zb['temp_min'], zb['temp_max']) ?? TEMPERATUR_STANDARD,
+    temperatur: band(zb['temp_min'], zb['temp_max']) ?? temperatur,
     herkunft: 'ansatz',
   };
 }
@@ -95,11 +95,11 @@ export function bewertungsband(teile: Teile, platzId: string, jetzt: Date): Soll
   // 1b. Mischentscheid (R2.4): der Schnappschuss des letzten Ansatzes mit Entscheid geht der Sicht vor
   //     (Runde 1 Befund 3; Ansätze mit Mischentscheid schreibt erst I1b-03)
   const letzterBasis = ansaetzeAm(teile, platzId, jetzt).find(
-    (a) => a['typ'] === 'neuansatz' || a['typ'] === 'teilwechsel',
+    (a) => (a['typ'] === 'neuansatz' || a['typ'] === 'teilwechsel') && a['status'] !== 'abgebrochen',
   );
   const entscheid = letzterBasis?.['mischentscheid'];
   if (letzterBasis && typeof entscheid === 'string' && entscheid !== 'keiner') {
-    const aus = ausSchnappschuss(letzterBasis);
+    const aus = ausSchnappschuss(letzterBasis, temperaturSicht ?? TEMPERATUR_STANDARD);
     if (aus)
       return entscheid === 'leitkultur' || entscheid === 'kompromiss'
         ? { ...aus, hoechstensKnapp: true }
@@ -116,8 +116,8 @@ export function bewertungsband(teile: Teile, platzId: string, jetzt: Date): Soll
 
   // 3. Schnappschuss des letzten Neuansatzes oder Teilwechsels
   for (const a of ansaetzeAm(teile, platzId, jetzt)) {
-    if (a['typ'] !== 'neuansatz' && a['typ'] !== 'teilwechsel') continue;
-    const aus = ausSchnappschuss(a);
+    if ((a['typ'] !== 'neuansatz' && a['typ'] !== 'teilwechsel') || a['status'] === 'abgebrochen') continue;
+    const aus = ausSchnappschuss(a, temperaturSicht ?? TEMPERATUR_STANDARD);
     if (aus) return aus;
   }
 
