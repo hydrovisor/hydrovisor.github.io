@@ -68,6 +68,17 @@ export const BUENDEL_TEILE: readonly Buendelteil[] = [
   tabelle('pflanzung', { ohneStorno: true }),
   sicht('v_pflanzung_zustand', ['pflanzung_id']),
   tabelle('v_reservierung_aktiv', { ohneStorno: true }),
+  // Keimung prüfen (Plan 24): frühere Reservierungen (auch beendete) für Schwammfolge und Wiederherstellen
+  tabelle('reservierung', { ohneStorno: true }),
+  // Ereignisse an den Pflanzungen für Keimprüfung, «keimt nicht» und Wiederherstellen
+  {
+    name: 'ereignis_pflanzung',
+    tabelle: 'ereignis',
+    spalten: '*',
+    ordnung: ['id'],
+    ohneStorno: true,
+    typen: ['keimung', 'abschluss', 'wiederherstellen'],
+  },
   // Säen (Plan 23): Packungen, Keimrate je Packung (nur echt, G5), aktueller Platz je Topf
   tabelle('saatgut', { ohneStorno: true }),
   sicht('v_keimrate', ['saatgut_id']),

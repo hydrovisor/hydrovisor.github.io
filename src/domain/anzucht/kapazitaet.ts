@@ -1,6 +1,6 @@
 // Kapazität der Stationen und Anzuchtboxen (R6.1, UC5-AK15, Konzept 5.8 und 14.1; Plan 23). Rein: Kalendertage als
 // Text 'JJJJ-MM-TT', keine Uhr. Belegung gilt nur am Keimtag (A2); Verweildauer nach A10.
-import { gefaessAm, plaetzeAus, zeilen, type Teile } from '../anlage/teile.ts';
+import { gefaessAm, nachKennung, plaetzeAus, zeilen, type Teile } from '../anlage/teile.ts';
 import { tagKurz, tagPlus, tageZwischen } from '../zeit.ts';
 
 export type Groesse = 50 | 80;
@@ -72,6 +72,7 @@ interface ZustandZeile {
   satz_id: string;
   status: string;
   platz_id: string | null;
+  loch_nr?: number | null;
 }
 interface ReservierungZeile {
   pflanzung_id: string;
@@ -177,9 +178,11 @@ export function stationsBelegung(
     if (imFenster(tag, '0000-01-01', belegtBis(teile, satz, resVon([z.pflanzung_id]))))
       belegt[station.groesse] += 1;
   }
-  // (b) in der Box, noch ohne Platz
+  // (b) in der Box, noch ohne Platz; ein Satz mit Stationseintritt zählt nur noch auf der Station (Plan 23 A10)
   for (const satz of saetze) {
     if (!satz.anzuchtort_platz_id || !boxen.has(satz.anzuchtort_platz_id)) continue;
+    if (zustand.some((z) => z.satz_id === satz.id && z.platz_id !== null && plaetze.has(z.platz_id)))
+      continue;
     const inBox = zustand
       .filter((z) => z.satz_id === satz.id && z.platz_id === null)
       .map((z) => z.pflanzung_id);
@@ -348,4 +351,99 @@ export function boxBelegung(
     (z) => z.status === 'aktiv' && z.platz_id === null && saetze.has(z.satz_id),
   ).length;
   return { belegt: inBox + neu, platzzahl: Number(box?.platzzahl ?? 25) };
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Stationsschritt der Keimprüfung (R6.1, Plan 24)
+
+export interface Stationsloch {
+  platzId: string;
+  kennung: string;
+  lochNr: number;
+}
+
+/** Stationen einer Grösse: mehr Löcher zuerst, bei gleicher Zahl nach Kennung (Konzept 5.8: 4.4, 4.5, 4.1) */
+export function stationenDerGroesse(
+  teile: Teile,
+  anlageId: string,
+  groesse: Groesse,
+): { platzId: string; kennung: string; loecher: number }[] {
+  const s = stationen(teile, anlageId);
+  return plaetzeAus(teile, anlageId)
+    .filter((p) => s.get(p.id)?.groesse === groesse)
+    .map((p) => ({ platzId: p.id, kennung: p.kennung, loecher: s.get(p.id)?.loecher ?? 0 }))
+    .sort((a, b) => b.loecher - a.loecher || nachKennung(a, b));
+}
+
+/** Platz-IDs aller Stationen der Anlage (Gefässe mit fester Dosis) mit Grösse und Lochzahl */
+export function stationenAus(
+  teile: Teile,
+  anlageId: string,
+): ReadonlyMap<string, { groesse: Groesse; loecher: number }> {
+  return stationen(teile, anlageId);
+}
+
+/** freie Löcher der Stationen dieser Grösse; frei = keine aktive Pflanzung auf platz_id und loch_nr */
+export function freieStationsloecher(teile: Teile, anlageId: string, groesse: Groesse): Stationsloch[] {
+  const belegt = new Set(
+    zeilen<ZustandZeile>(teile, 'v_pflanzung_zustand')
+      .filter((z) => z.status === 'aktiv' && z.platz_id !== null)
+      .map((z) => `${z.platz_id}|${Number(z.loch_nr)}`),
+  );
+  return stationenDerGroesse(teile, anlageId, groesse).flatMap((st) =>
+    Array.from({ length: st.loecher }, (_, i) => i + 1)
+      .filter((nr) => !belegt.has(`${st.platzId}|${nr}`))
+      .map((nr) => ({ platzId: st.platzId, kennung: st.kennung, lochNr: nr })),
+  );
+}
+
+/** Höchstzahl auf der Station (R6.1): 5 cm Z + 1, 8 cm Z, ohne Zieltöpfe alle gekeimten (Plan 23 A7) */
+export function stationsHoechstzahl(groesse: Groesse, zieltoepfe: number): number {
+  if (zieltoepfe <= 0) return Number.POSITIVE_INFINITY;
+  return groesse === 80 ? zieltoepfe : zieltoepfe + 1;
+}
+
+/**
+ * Vorbelegung der Stationsplätze (R6.1, Plan 24 A8): zuerst Schwämme mit Zieltopf, dann die übrigen in der gegebenen
+ * Folge, bis zur Höchstzahl abzüglich der schon gestellten; über der Höchstzahl Reserve in der Box bis heute + 7,
+ * ohne freies Loch in der Box bis heute + 4.
+ */
+export function stationsVorbelegung(
+  teile: Teile,
+  e: {
+    anlageId: string;
+    artId: string;
+    zieltoepfe: number;
+    schonAufStation: number;
+    gekeimt: { pflanzungId: string; mitZieltopf: boolean }[];
+  },
+  heute: string,
+): {
+  zuweisung: { pflanzungId: string; platzId: string; lochNr: number }[];
+  inBoxBis?: string;
+  reserveBis?: string;
+  ohnePlatz: string[];
+  reserve: string[];
+} {
+  const groesse = stationsGroesse(e.artId);
+  const platz = Math.max(0, stationsHoechstzahl(groesse, e.zieltoepfe) - e.schonAufStation);
+  const folge = [...e.gekeimt.filter((g) => g.mitZieltopf), ...e.gekeimt.filter((g) => !g.mitZieltopf)].map(
+    (g) => g.pflanzungId,
+  );
+  const kandidaten = folge.slice(0, platz);
+  const reserve = folge.slice(kandidaten.length);
+  const frei = freieStationsloecher(teile, e.anlageId, groesse);
+  const zuweisung = kandidaten.slice(0, frei.length).map((pflanzungId, i) => ({
+    pflanzungId,
+    platzId: (frei[i] as Stationsloch).platzId,
+    lochNr: (frei[i] as Stationsloch).lochNr,
+  }));
+  const ohnePlatz = kandidaten.slice(frei.length);
+  return {
+    zuweisung,
+    ...(ohnePlatz.length > 0 ? { inBoxBis: tagPlus(heute, 4) } : {}),
+    ...(reserve.length > 0 ? { reserveBis: tagPlus(heute, 7) } : {}),
+    ohnePlatz,
+    reserve,
+  };
 }

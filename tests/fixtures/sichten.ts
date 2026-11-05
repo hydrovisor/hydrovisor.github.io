@@ -139,3 +139,130 @@ export function sichtenNachrechnen(t: Teile): Teile {
     });
   return t;
 }
+
+// Plan 24 (Keimung prüfen): v_reservierung_aktiv, v_pflanzung_zustand (Status, Ort), v_keimrate und der Bündelteil
+// ereignis_pflanzung wie die Sichten in supabase/migrations/20261103140000_datenmodell.sql. Zusätzlich zu
+// sichtenNachrechnen(), damit bestehende Fixtures ohne Tabelle reservierung unverändert bleiben.
+
+const EREIGNIS_PFLANZUNG = new Set(['keimung', 'abschluss', 'wiederherstellen']);
+const ORTSEREIGNIS = new Set(['verschieben', 'umsetzen', 'tausch']);
+const datenVon = (e: Zeile) => (e['daten'] ?? {}) as Record<string, unknown>;
+const juengstes = (l: Zeile[]) => [...l].sort((a, b) => ms(b['gilt_ab']) - ms(a['gilt_ab']))[0];
+
+/**
+ * Rechnet die Sichten der Pflanzungen nach (verändert `t` und gibt es zurück):
+ * - v_reservierung_aktiv aus der Tabelle reservierung (nur wenn vorhanden): Ende bei umsetzen oder abschluss
+ *   keimt_nicht/ausfall ab gilt_ab der Reservierung, ausser ein wiederherstellen zeigt auf dieses Ereignis;
+ * - v_pflanzung_zustand je nicht stornierter Pflanzung: Status aus dem jüngsten Abschluss (oder ernte ab) ohne
+ *   Wiederherstellen, Ort aus dem jüngsten verschieben/umsetzen/tausch; ohne solche Ereignisse bleiben Status und
+ *   Ort einer schon vorhandenen Zeile (Fixtures wie aufStation()), die Phase bleibt immer (Start keimung);
+ * - v_keimrate je Packung: je Pflanzung die jüngste Keimung, nur mit keimtemp_eingehalten und nur in Anlagen mit
+ *   Datenart echt; rate_geglaettet ab 10 Samen (gekeimt + 10 · Basis) / (gesät + 10), sonst Basis = Packung,
+ *   sonst Standard der Art (ohne Begrenzung, die wendet src/domain an);
+ * - ereignis_pflanzung: nicht stornierte Ereignisse keimung, abschluss, wiederherstellen (Bündelteil, Plan 24).
+ */
+export function pflanzSichtenNachrechnen(t: Teile): Teile {
+  const ereignisse = (t['ereignis'] ?? []).filter(offen);
+  const wieder = new Set(
+    ereignisse.filter((e) => e['typ'] === 'wiederherstellen').map((e) => datenVon(e)['ereignis_id']),
+  );
+  const an = (pflanzungId: unknown) => ereignisse.filter((e) => e['pflanzung_id'] === pflanzungId);
+
+  if (t['reservierung'])
+    t['v_reservierung_aktiv'] = t['reservierung']
+      .filter(offen)
+      .filter(
+        (r) =>
+          !an(r['pflanzung_id']).some(
+            (e) =>
+              ms(e['gilt_ab']) >= ms(r['gilt_ab']) &&
+              (e['typ'] === 'umsetzen' ||
+                (e['typ'] === 'abschluss' &&
+                  ['keimt_nicht', 'ausfall'].includes(String(datenVon(e)['grund'])))) &&
+              !wieder.has(e['id']),
+          ),
+      )
+      .map((r) => ({ ...r }));
+
+  const alt = new Map((t['v_pflanzung_zustand'] ?? []).map((z) => [z['pflanzung_id'], z]));
+  t['v_pflanzung_zustand'] = (t['pflanzung'] ?? []).filter(offen).map((pf) => {
+    const vorher = alt.get(pf['id']);
+    const eigene = an(pf['id']);
+    const enden = eigene.filter(
+      (e) => e['typ'] === 'abschluss' || (e['typ'] === 'ernte' && datenVon(e)['art'] === 'ab'),
+    );
+    const ab = juengstes(enden.filter((e) => !wieder.has(e['id'])));
+    const ort = juengstes(eigene.filter((e) => ORTSEREIGNIS.has(String(e['typ']))));
+    const status = ab
+      ? ab['typ'] === 'ernte'
+        ? 'geerntet'
+        : String(datenVon(ab)['grund'])
+      : enden.length > 0
+        ? 'aktiv'
+        : ((vorher?.['status'] as string | undefined) ?? 'aktiv');
+    return {
+      pflanzung_id: pf['id'],
+      satz_id: pf['satz_id'],
+      phase: vorher?.['phase'] ?? 'keimung',
+      phase_seit: vorher?.['phase_seit'] ?? null,
+      status,
+      netztopf_id: ort ? (ort['netztopf_id'] ?? null) : (vorher?.['netztopf_id'] ?? null),
+      platz_id: ort ? (datenVon(ort)['nach_platz_id'] ?? null) : (vorher?.['platz_id'] ?? null),
+      loch_nr: ort ? (datenVon(ort)['nach_loch_nr'] ?? null) : (vorher?.['loch_nr'] ?? null),
+    };
+  });
+
+  const pflanzungen = new Map((t['pflanzung'] ?? []).map((p) => [p['id'], p]));
+  const saetze = new Map((t['satz'] ?? []).map((s) => [s['id'], s]));
+  const plaetze = new Map((t['platz'] ?? []).map((p) => [p['id'], p]));
+  const anlagen = new Map((t['anlage'] ?? []).map((a) => [a['id'], a]));
+  const keimungen = ereignisse.filter((e) => e['typ'] === 'keimung');
+  const gezaehlt = keimungen
+    .filter((e) => datenVon(e)['keimtemp_eingehalten'] === true)
+    .filter(
+      (e) =>
+        !keimungen.some(
+          (n) => n['pflanzung_id'] === e['pflanzung_id'] && ms(n['gilt_ab']) > ms(e['gilt_ab']),
+        ),
+    )
+    .flatMap((e) => {
+      const satz = saetze.get(pflanzungen.get(e['pflanzung_id'])?.['satz_id']);
+      const platz = plaetze.get(satz?.['anzuchtort_platz_id'] ?? satz?.['direktsaat_platz_id']);
+      const anlage = anlagen.get(platz?.['anlage_id']);
+      if (!satz || anlage?.['datenart'] !== 'echt') return [];
+      return [
+        {
+          saatgut_id: satz['saatgut_id'],
+          gesaet: Number(datenVon(e)['samen_gesaet']),
+          gekeimt: Number(datenVon(e)['samen_gekeimt']),
+        },
+      ];
+    });
+  if (t['saatgut'])
+    t['v_keimrate'] = t['saatgut'].filter(offen).flatMap((sg) => {
+      const sorte = (t['sorte'] ?? []).find(
+        (s) => s['sorte_id'] === sg['sorte_id'] && (s['gueltig_bis'] ?? null) === null,
+      );
+      if (!sorte) return [];
+      const art = (t['art'] ?? []).find(
+        (a) => a['art_id'] === sorte['art_id'] && (a['gueltig_bis'] ?? null) === null,
+      );
+      const basisRoh = sg['keimfaehigkeit_packung'] ?? art?.['standard_keimfaehigkeit'] ?? null;
+      const basis = basisRoh === null ? null : Number(basisRoh);
+      const eigene = gezaehlt.filter((k) => k.saatgut_id === sg['id']);
+      const gesaet = eigene.reduce((a, k) => a + k.gesaet, 0);
+      const gekeimt = eigene.reduce((a, k) => a + k.gekeimt, 0);
+      const rate = gesaet >= 10 ? (basis === null ? null : (gekeimt + 10 * basis) / (gesaet + 10)) : basis;
+      return [{ saatgut_id: sg['id'], gesaet, gekeimt, rate_geglaettet: rate }];
+    });
+
+  t['ereignis_pflanzung'] = ereignisse
+    .filter((e) => EREIGNIS_PFLANZUNG.has(String(e['typ'])) && e['pflanzung_id'])
+    .map((e) => ({ ...e }));
+  return t;
+}
+
+/** Vorgang anwenden wie vorgangAnwenden() und zusätzlich die Sichten der Pflanzungen nachrechnen (Plan 24) */
+export function pflanzVorgangAnwenden(teile: Teile, vorgang: Vorgang, jetzt: Date): Teile {
+  return pflanzSichtenNachrechnen(vorgangAnwenden(teile, vorgang, jetzt));
+}

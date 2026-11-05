@@ -45,3 +45,33 @@ export function saatTermine(
   if (!satz.direktsaat && umsetzenAm) dazu('umsetzen', umsetzenAm);
   return { termine, rueckdatiert: satz.saatdatum < erfasst };
 }
+
+/**
+ * Termin «Keimung prüfen» (R5.2, Plan 24): erste Prüfung am Saattag + typische Keimdauer, nicht vor dem Kalendertag des
+ * Erfassungszeitpunkts (Plan 23 Befund 13); nach einer Prüfung mit offenen Schwämmen (Teilergebnis) am Prüftag + 2,
+ * solange dieser Tag nicht nach Saat + Keimdauer max liegt; ohne offene Schwämme kein Termin.
+ */
+export function keimPruefTermin(
+  e: {
+    satzId: string;
+    saatdatum: string;
+    keimdauer: { typ?: number; max?: number };
+    erfasstAm: Date;
+    letztePruefung?: string;
+    offen: number;
+  },
+  zeitzone: Zeitzone,
+): { faelligAm?: string; grund: 'erste' | 'teilergebnis' | 'ueber_max' | 'fertig' } {
+  if (e.offen <= 0) return { grund: 'fertig' };
+  if (e.letztePruefung === undefined) {
+    const erfasst = kalendertag(e.erfasstAm, zeitzone);
+    // ohne typische Keimdauer die längste, sonst der Saattag, nicht vor dem Erfassungstag (Plan 24 A24)
+    const dauer = e.keimdauer.typ ?? e.keimdauer.max ?? 0;
+    const tag = tagPlus(e.saatdatum, dauer);
+    return { faelligAm: tag < erfasst ? erfasst : tag, grund: 'erste' };
+  }
+  const folge = tagPlus(e.letztePruefung, 2);
+  if (e.keimdauer.max !== undefined && folge > tagPlus(e.saatdatum, e.keimdauer.max))
+    return { grund: 'ueber_max' };
+  return { faelligAm: folge, grund: 'teilergebnis' };
+}

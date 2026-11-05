@@ -45,6 +45,10 @@ Stand 1.11.2026 · Auftrag 2 «Spezifikation». Bedeutungen stehen in Konzept v1
 | Satz, Folgesatz | `satz`, `v_folgesatz` | `Satz`, `istFolgesatz()` |
 | Pflanzung, Schwamm | `pflanzung` | `Pflanzung` |
 | Pflanzvorgang | `pflanzvorgang` | `Pflanzvorgang` |
+| Keimprüfung, Keimansicht, Keimeingabe | Ereignis `keimung` | `keimVorgang()`, `keimAnsicht()`, `KeimEingabe` |
+| Keimbilanz (Summe je Packung wie `v_keimrate`) | `v_keimrate.gesaet`, `gekeimt` | `keimbilanz()`, `keimrateGeglaettet()` |
+| Keimt nicht, Wiederherstellen | Ereignis `abschluss {grund: keimt_nicht}`, `wiederherstellen` | `wiederherstellenVorgang()` |
+| Stationseintritt (aus der Box auf die Station) | Ereignis `verschieben` | `stationsVorbelegung()`, `freieStationsloecher()` |
 | Reservierung, geplantes Umsetzdatum, Vorgabe | `reservierung`, `umsetzen_geplant_am`, `umsetzen_vorgabe_am` | `Reservierung`, `umsetzenGeplantAm`, `umsetzenVorgabeAm` |
 | Demo- oder Testdaten löschen | `datenart_loeschen()` | `datenartLoeschen` (nur Skript) |
 | Direktsaat | `satz.direktsaat_platz_id` | `istDirektsaat()` |

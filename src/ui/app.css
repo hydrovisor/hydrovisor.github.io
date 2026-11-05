@@ -376,6 +376,112 @@ body {
   background: var(--surface-raised);
 }
 
+.hv-aufgabe-text {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* Gefäss: Satzzeile mit Knopf «Keimung prüfen» (Plan 24 A12) */
+.hv-gefaess-pflanze {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Keimung prüfen (Regal, Plan 24): Schwammzeilen, Abschnitte, Knopfleiste fest unten im Daumenbereich */
+.hv-keimung {
+  gap: var(--space-3);
+}
+
+.hv-keimung-satz {
+  font-weight: 600;
+}
+
+.hv-keimung-schritt {
+  color: var(--ink-muted);
+  font-weight: 600;
+}
+
+.hv-keimung-schwamm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.hv-keimung-offen {
+  align-self: flex-start;
+}
+
+.hv-keimung-frage {
+  font-weight: 600;
+}
+
+.hv-keimung-zeile {
+  font-size: var(--text-caption-size);
+  color: var(--ink-muted);
+}
+
+.hv-keimung-zusammenfassung {
+  font-weight: 600;
+}
+
+.hv-keimung-liste {
+  margin: 0;
+  padding-left: var(--space-4);
+}
+
+.hv-keimung-beendet {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.hv-keimung-bestaetigung {
+  font-size: var(--text-status-regal-size);
+  line-height: var(--text-status-regal-line);
+  font-weight: 700;
+}
+
+.hv-keimung-fuss {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  gap: var(--space-2);
+  margin-top: auto;
+  padding: var(--space-2) 0 calc(var(--space-2) + env(safe-area-inset-bottom));
+  background: var(--surface);
+}
+
+.hv-keimung-fuss > .hv-btn {
+  flex: 1;
+}
+
+.hv-keimung-fuss > .hv-btn,
+.hv-keimung-haupt > .hv-btn {
+  min-width: 0;
+  padding: 0 var(--space-3);
+  white-space: normal;
+  text-align: center;
+}
+
+/* Schritt 2: «Zurück» so breit wie sein Text, «Keimung speichern» nimmt den Rest (360 dp) */
+.hv-keimung-haupt {
+  display: flex;
+  flex: 2;
+  min-width: 0;
+}
+
+.hv-keimung-haupt > .hv-btn {
+  flex: 1;
+}
+
+.hv-keimung-fuss-spalte {
+  flex-direction: column;
+}
+
 /* Säen (Regal, Plan 23): Schrittanzeige, Satzkarten, Knopfleiste fest unten im Daumenbereich (A16) */
 .hv-saeen {
   gap: var(--space-3);
