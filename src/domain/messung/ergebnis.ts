@@ -12,6 +12,7 @@ export interface Messergebnis {
   trend: Partial<Record<Groesse, NonNullable<ReturnType<typeof trendZeile>>>>;
   spur: Partial<Record<Groesse, ReturnType<typeof spurLage>>>;
   hinweise: Hinweis[];
+  /** Ton warn oder danger unter den Hinweisen; liest der Rundgang (I1b-05) für die Abschlussliste */
   alarm: boolean;
   sprung?: NonNullable<ReturnType<typeof sprungPruefen>>;
   ohneBewertung: boolean;
@@ -42,6 +43,7 @@ export function messergebnis(
       ...(k.sollband ? { sollband: k.sollband } : {}),
       vorher: k.vorher,
       ansaetze: k.ansaetze,
+      uPh: k.uPh,
     },
     jetzt,
     zeitzone,

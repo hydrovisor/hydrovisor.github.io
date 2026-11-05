@@ -11,6 +11,7 @@ export interface Hinweis {
   ausloeser:
     | 'ph_hoch'
     | 'ph_tief'
+    | 'ph_trend'
     | 'ph_fall'
     | 'ec_hoch'
     | 'ec_tief'
@@ -20,6 +21,8 @@ export interface Hinweis {
     | 'ph_anstieg'
     | 'leitungswasser';
   text: string;
+  /** nur der Sollwert («Sollwert deiner Anlage 6.0–6.5.») für die Ergebniszone, die den Messwert schon zeigt */
+  sollwert?: string;
   folge: string;
   massnahme: string;
   ton: 'info' | 'warn' | 'danger';
@@ -27,7 +30,8 @@ export interface Hinweis {
 
 export type Messart = Betriebsart | 'station' | 'messstelle';
 
-/** R10.4 Beobachtungsband Kratky: Eisenhinweis über pH 6.80 */
+/** R10.4 Beobachtungsband Kratky pH 5.50 bis 6.80: steuert nur Hinweis und Massnahme */
+const KRATKY_PH_MIN = 550;
 const KRATKY_PH_MAX = 680;
 /** R10.4 Anstieg je Woche über 0.20 */
 const ANSTIEG_JE_WOCHE = 20;
@@ -72,6 +76,8 @@ export function hinweise(
     sollband?: Sollband;
     vorher: Partial<Record<Groesse, { wert: Hundertstel; giltAb: string }>>;
     ansaetze: readonly AnsatzZeile[];
+    /** u_pH in Hundertsteln; ein Anstieg innerhalb der Messunsicherheit gibt keinen Hinweis (A, Runde 1 Befund 8) */
+    uPh?: Hundertstel;
   },
   jetzt: Date,
   zeitzone: Zeitzone,
@@ -92,7 +98,16 @@ export function hinweise(
     const b = e.bewertungen[g];
     if (wert === undefined || b === undefined) return;
     kandidaten.push({
-      hinweis: { ausloeser, text: bandText(g, wert), folge, massnahme, ton: ton(b) },
+      hinweis: {
+        ausloeser,
+        text: bandText(g, wert),
+        ...(sb
+          ? { sollwert: `Sollwert deiner Anlage ${alsText(g, sb[g].min)}–${alsText(g, sb[g].max)}.` }
+          : {}),
+        folge,
+        massnahme,
+        ton: ton(b),
+      },
       stufe: RANG[b],
       reihe: REIHE[g],
     });
@@ -106,10 +121,20 @@ export function hinweise(
         'ph',
         'ph_hoch',
         'Eisen wird schlechter aufgenommen, junge Blätter können gelb werden',
-        'pH schrittweise senken, nach 15 Minuten nachmessen',
+        'pH schrittweise senken, nach 15 min nachmessen',
       );
-    if (ph < sb.ph.min)
+    // bei Kratky erst unter dem Beobachtungsband 5.50 (R10.4, Runde 1 Befund 4)
+    if (ph < sb.ph.min && (!kratky || ph < KRATKY_PH_MIN))
       band('ph', 'ph_tief', 'Mangel an Magnesium und Kalzium möglich', 'pH vorsichtig anheben');
+    // R10.4: im Beobachtungsband ausserhalb des Sollbands der Trend als Massnahme (Runde 1 Befund 1)
+    const v = e.vorher.ph;
+    if (kratky && v && ph >= KRATKY_PH_MIN && ph <= KRATKY_PH_MAX)
+      band(
+        'ph',
+        'ph_trend',
+        'Im Beobachtungsband für Kratky 5.5–6.8',
+        `Trend beobachten: vorher ${alsText('ph', v.wert)}, jetzt ${alsText('ph', ph)}`,
+      );
   }
   if (ph !== undefined && kratky && ph > KRATKY_PH_MAX)
     kandidaten.push({
@@ -117,7 +142,7 @@ export function hinweise(
         ausloeser: 'eisen',
         text: bandText('ph', ph),
         folge: 'Eisen- und Mangansperre',
-        massnahme: 'pH schrittweise senken, nach 15 Minuten nachmessen',
+        massnahme: 'pH schrittweise senken, nach 15 min nachmessen',
         ton: 'info',
       },
       stufe: RANG[e.bewertungen.ph ?? 'ausserhalb'],
@@ -142,7 +167,7 @@ export function hinweise(
           ausloeser: 'temp_hoch',
           text: `Gemessen ${alsText('temperatur', t)} °C.`,
           folge: 'Pythium-Risiko; Wärme von Leisten und Raum',
-          massnahme: 'Belüftung prüfen, Wurzeln ansehen; Aufgabe Wärme prüfen folgt',
+          massnahme: 'Belüftung prüfen, Wurzeln ansehen, Wärmesperre; Aufgabe Wärme prüfen folgt',
           ton: ton(e.bewertungen.temperatur),
         },
         'temperatur',
@@ -169,7 +194,7 @@ export function hinweise(
         1,
         tageZwischen(kalendertag(new Date(phVorher.giltAb), zeitzone), kalendertag(jetzt, zeitzone)),
       );
-      if (delta * 7 > ANSTIEG_JE_WOCHE * tage)
+      if (delta > (e.uPh ?? 10) && delta * 7 > ANSTIEG_JE_WOCHE * tage)
         nachher(
           {
             ausloeser: 'ph_anstieg',

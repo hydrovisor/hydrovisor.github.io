@@ -286,6 +286,11 @@ function Messmaske({ ort }: { ort: Ort }) {
           {rueckgaengig ? 'Rückgängig gemacht' : `Gespeichert ${gespeichert.zeit} · ${werte.join(' · ')}`}
         </p>
         {!rueckgaengig && gespeichert.bewertung ? <StatusBadge tone={TON[gespeichert.bewertung]} /> : null}
+        {!rueckgaengig && leitungswasser ? (
+          <Notice kompakt tone="warn">
+            {`${leitungswasser.folge}: ${leitungswasser.massnahme}`}
+          </Notice>
+        ) : null}
         {fehler ? (
           <Notice kompakt tone="danger">
             {fehler.text}

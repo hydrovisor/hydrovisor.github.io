@@ -55,8 +55,10 @@ export function bewerten(
   geraet: { uEc: Hundertstel; uPh: Hundertstel },
 ): Partial<Record<Groesse, Bewertung>> {
   const r: Partial<Record<Groesse, Bewertung>> = {};
-  if (werte.ph !== undefined) r.ph = bewertePh(werte.ph, sollband.ph, geraet.uPh);
-  if (werte.ec !== undefined) r.ec = bewerteEc(werte.ec, sollband.ec, geraet.uEc);
+  // Mischentscheid Leitkultur oder Kompromiss: höchstens «Knapp daneben» (R2.4, R10.2)
+  const kappen = (b: Bewertung): Bewertung => (sollband.hoechstensKnapp && b === 'gruen' ? 'knapp' : b);
+  if (werte.ph !== undefined) r.ph = kappen(bewertePh(werte.ph, sollband.ph, geraet.uPh));
+  if (werte.ec !== undefined) r.ec = kappen(bewerteEc(werte.ec, sollband.ec, geraet.uEc));
   if (werte.temperatur !== undefined) r.temperatur = bewerteTemperatur(werte.temperatur, sollband.temperatur);
   return r;
 }

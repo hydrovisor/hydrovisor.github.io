@@ -298,13 +298,13 @@ button.hv-tile { cursor: pointer; touch-action: manipulation; }
 /* Ergebniszone der Messmaske (Tile.md, Plan 26): ersetzt den Ziffernblock in dessen Höhe (4 × 68 + 3 × 8 = 296 dp) */
 .hv-ergebniszone { box-sizing: border-box; height: calc(var(--size-touch-regal) * 4 + var(--space-2) * 3); display: flex; flex-direction: column; gap: var(--space-1); overflow: hidden; }
 .hv-ergebniszone .hv-ergebnis { padding: var(--space-1) var(--space-2); box-sizing: border-box; font-size: var(--text-text-regal-size); line-height: var(--text-text-regal-line); }
-.hv-ergebniszone .hv-ergebnis .hv-status-icon { width: 24px; height: 24px; flex: none; }
+.hv-ergebniszone .hv-ergebnis .hv-status-icon { width: var(--size-icon); height: var(--size-icon); flex: none; }
 .hv-ergebnis > span:not(.hv-ergebnis-wert) { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .hv-ergebnis-wert { flex: none; font-variant-numeric: tabular-nums; color: var(--ink); white-space: nowrap; }
 .hv-ergebnis-leer { margin: 0; font-size: var(--text-text-regal-size); line-height: var(--text-text-regal-line); color: var(--ink-muted); }
 /* Hinweis mit Folge und Massnahme: Ton warn oder danger mit Alarm, info ohne Alarm (Kratky, R10.4) */
 .hv-ergebnis-hinweis { margin: 0; padding: var(--space-1) var(--space-3); border-left: 4px solid var(--status-info); border-radius: var(--radius-sm); background: var(--status-info-soft); color: var(--ink);
-  font-size: var(--text-body-size); line-height: 20px; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+  font-size: var(--text-small-size); line-height: var(--text-small-line); display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
 .hv-ergebnis-hinweis-warn { border-left-color: var(--status-warn); background: var(--status-warn-soft); }
 .hv-ergebnis-hinweis-danger { border-left-color: var(--status-danger); background: var(--status-danger-soft); }
 .hv-ergebnis-hinweis strong { font-weight: 700; }
@@ -318,3 +318,6 @@ button.hv-tile { cursor: pointer; touch-action: manipulation; }
 /* Trendzeile mit Kennzeichen «veraltet»: Uhr und Wort, neutral, gestrichelt unterstrichen, nie Statusfarbe */
 .hv-tile-trend-veraltet { color: var(--ink-muted); text-decoration: underline dashed; text-underline-offset: 3px; }
 .hv-tile-trend-veraltet svg { width: 12px; height: 12px; vertical-align: -1px; margin-right: 2px; }
+
+/* nur für Vorlesehilfen sichtbar (zugänglicher Name ohne Platz, Tile «veraltet») */
+.hv-visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }

@@ -44,9 +44,11 @@ export function MesswertKachel({
       {trend ? (
         <span className="hv-tile-trend">
           {veraltet ? (
-            <span className="hv-tile-trend-veraltet">
+            // kurz «Uhr veraltet», damit das Kennzeichen in 88 dp passt; der Vorwert bleibt im Namen (Runde 1 Befund 2)
+            <span className="hv-tile-trend-veraltet" title={trend}>
               <Uhr />
-              {trend}
+              veraltet
+              <span className="hv-visually-hidden">{` (${trend.replace(/ · veraltet$/, '')})`}</span>
             </span>
           ) : (
             trend
@@ -132,6 +134,7 @@ export interface ErgebnisHinweis {
   folge: string;
   massnahme: string;
   text?: string;
+  sollwert?: string;
   ton: 'info' | 'warn' | 'danger';
 }
 
@@ -159,7 +162,9 @@ export function Ergebniszone({
             h.ton === 'info' ? 'hv-ergebnis-hinweis' : `hv-ergebnis-hinweis hv-ergebnis-hinweis-${h.ton}`
           }
         >
-          <strong>{h.folge}.</strong> {h.massnahme}.{h.text ? ` ${h.text}` : ''}
+          <strong>{h.folge}.</strong>
+          {/* der Messwert steht schon in der Zeile darüber; hier nur der Sollwert (05_masken.md 5) */}
+          {h.sollwert ? ` ${h.sollwert}` : h.text ? ` ${h.text}` : ''} {h.massnahme}.
         </p>
       ))}
     </section>

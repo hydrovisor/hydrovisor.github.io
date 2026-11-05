@@ -9,6 +9,8 @@ export interface Sollband {
   ec: Band;
   temperatur: Band;
   herkunft: 'station' | 'pflanzungen' | 'ansatz';
+  /** R2.4, R10.2: Mischentscheid Leitkultur oder Kompromiss → pH und EC höchstens «Knapp daneben» */
+  hoechstensKnapp?: true;
 }
 
 type Zeile = Record<string, unknown>;
@@ -62,6 +64,20 @@ function station(teile: Teile, platzId: string, jetzt: Date, temperatur: Band): 
   return { ph: STATION_PH, ec, temperatur, herkunft: 'station' };
 }
 
+function ausSchnappschuss(a: Zeile): Sollband | undefined {
+  const zb = (a['schnappschuss'] as { zielbereich?: Zeile } | null | undefined)?.zielbereich;
+  if (!zb) return undefined;
+  const ph = band(zb['ph_min'], zb['ph_max']);
+  const ec = band(zb['ec_min'], zb['ec_max']);
+  if (!ph || !ec) return undefined;
+  return {
+    ph,
+    ec,
+    temperatur: band(zb['temp_min'], zb['temp_max']) ?? TEMPERATUR_STANDARD,
+    herkunft: 'ansatz',
+  };
+}
+
 export function bewertungsband(teile: Teile, platzId: string, jetzt: Date): Sollband | undefined {
   const z = teil(teile, 'v_zielbereich').find((r) => r['platz_id'] === platzId);
   const temperaturSicht = z ? band(z['temp_min'], z['temp_max']) : undefined;
@@ -76,6 +92,20 @@ export function bewertungsband(teile: Teile, platzId: string, jetzt: Date): Soll
   if (gefaess?.['feste_dosis'] === true)
     return station(teile, platzId, jetzt, temperaturSicht ?? TEMPERATUR_STANDARD);
 
+  // 1b. Mischentscheid (R2.4): der Schnappschuss des letzten Ansatzes mit Entscheid geht der Sicht vor
+  //     (Runde 1 Befund 3; Ansätze mit Mischentscheid schreibt erst I1b-03)
+  const letzterBasis = ansaetzeAm(teile, platzId, jetzt).find(
+    (a) => a['typ'] === 'neuansatz' || a['typ'] === 'teilwechsel',
+  );
+  const entscheid = letzterBasis?.['mischentscheid'];
+  if (letzterBasis && typeof entscheid === 'string' && entscheid !== 'keiner') {
+    const aus = ausSchnappschuss(letzterBasis);
+    if (aus)
+      return entscheid === 'leitkultur' || entscheid === 'kompromiss'
+        ? { ...aus, hoechstensKnapp: true }
+        : aus;
+  }
+
   // 2. v_zielbereich mit zählenden Pflanzungen und gültigem pH- und EC-Band
   if (z && Number(z['zaehlende_pflanzungen'] ?? 0) > 0) {
     const ph = band(z['ph_min'], z['ph_max']);
@@ -87,17 +117,8 @@ export function bewertungsband(teile: Teile, platzId: string, jetzt: Date): Soll
   // 3. Schnappschuss des letzten Neuansatzes oder Teilwechsels
   for (const a of ansaetzeAm(teile, platzId, jetzt)) {
     if (a['typ'] !== 'neuansatz' && a['typ'] !== 'teilwechsel') continue;
-    const zb = (a['schnappschuss'] as { zielbereich?: Zeile } | null | undefined)?.zielbereich;
-    if (!zb) continue;
-    const ph = band(zb['ph_min'], zb['ph_max']);
-    const ec = band(zb['ec_min'], zb['ec_max']);
-    if (!ph || !ec) continue;
-    return {
-      ph,
-      ec,
-      temperatur: band(zb['temp_min'], zb['temp_max']) ?? TEMPERATUR_STANDARD,
-      herkunft: 'ansatz',
-    };
+    const aus = ausSchnappschuss(a);
+    if (aus) return aus;
   }
 
   // 4. kein Sollband (A3)
