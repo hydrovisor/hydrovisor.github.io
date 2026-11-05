@@ -127,6 +127,15 @@ tests/unit/anzucht-termine.test.ts
 tests/unit/saeen.test.ts
 tests/seed/saeen.test.ts
 tests/e2e/saeen.spec.ts
+# I1a-07 Keimung prüfen (#24)
+tests/fixtures/keimung.ts
+tests/unit/keimung.test.ts
+tests/unit/keimrate.test.ts
+tests/unit/keimung-station.test.ts
+tests/unit/keimung-termine.test.ts
+tests/unit/router-keimung.test.ts
+tests/seed/keimung.test.ts
+tests/e2e/keimung.spec.ts
 # I1b-01 Messmaske (#26)
 tests/fixtures/messen.ts
 tests/unit/bewertung.test.ts
