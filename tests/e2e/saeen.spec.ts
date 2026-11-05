@@ -272,3 +272,22 @@ test('TO8 Säen ohne Netz: «nicht gespeichert», Schritt 3 mit Eingaben bleibt,
   const geschrieben = new Set(m.geschrieben.map(([, z]) => String(z['client_id'])));
   for (const id of versucht) expect(geschrieben.has(id), id).toBe(true);
 });
+
+test('UC5 Heute auf 360 × 640 zeigt den Link «Säen» im Bild, ohne waagrechtes Scrollen', async ({ page }) => {
+  await sitzungSpeichern(page);
+  await authNachbilden(page);
+  await restNachbilden(page, () => regal());
+  await page.clock.setFixedTime(JETZT);
+  await page.goto('/#/heute');
+  await expect(page.getByRole('heading', { name: 'Heute', level: 1 })).toBeVisible();
+  const saeen = page.getByRole('link', { name: 'Säen', exact: true });
+  await expect(saeen).toBeVisible();
+  const box = await saeen.boundingBox();
+  expect(box).not.toBeNull();
+  expect(box?.x ?? -1).toBeGreaterThanOrEqual(0);
+  expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(360);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(360);
+  await saeen.click();
+  await expect(page).toHaveURL(/#\/saeen$/);
+  await expect(page.getByRole('heading', { name: 'Säen', level: 1 })).toBeVisible();
+});
