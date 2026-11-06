@@ -303,6 +303,81 @@ export const aboSchreiben = erstelleAboSchreiben(supabaseAboAdapter, {
   nachErfolg: () => buendelNeuLaden(),
 });
 
+// Einstellungen (Plan 32): einzige Zeile `einstellung` und Messgerät, Tabellen ohne client_id. Update nach id,
+// idempotent (gleiche Werte setzen gleiche Werte); Fehler wie schreiben(). Keine Zeile zurück → abgelehnt.
+export type Einstellungstabelle = 'einstellung' | 'messgeraet';
+
+export interface EinstellungAdapter {
+  aendern(
+    tabelle: Einstellungstabelle,
+    id: string,
+    felder: Record<string, unknown>,
+    signal: AbortSignal,
+  ): Promise<Antwort>;
+  /** Spalten, die das Bündel bewusst nicht trägt (Telefonnummer, Ü3), nur online gelesen */
+  lesen(tabelle: Einstellungstabelle, id: string, spalten: string, signal: AbortSignal): Promise<Antwort>;
+}
+
+export type Einstellungsergebnis =
+  | { status: 'gespeichert'; zeile?: Record<string, unknown> }
+  | { status: 'nicht_gespeichert'; fehler: Schreibfehler };
+
+/** Lesen hat eigene Texte: ein Lesefehler ist kein «nicht gespeichert» (Plan 32 Runde 1 Befund 2) */
+export const TEXT_NICHT_GELESEN = 'Nur mit Netz lesbar, Seite neu laden';
+export type Leseergebnis =
+  { status: 'gelesen'; zeile: Record<string, unknown> } | { status: 'nicht_gelesen'; text: string };
+
+export function erstelleEinstellungSchreiben(
+  adapter: EinstellungAdapter,
+  bindung: { nachErfolg?: () => void },
+): {
+  aendern: (
+    tabelle: Einstellungstabelle,
+    id: string,
+    felder: Record<string, unknown>,
+  ) => Promise<Einstellungsergebnis>;
+  lesen: (tabelle: Einstellungstabelle, id: string, spalten: string) => Promise<Leseergebnis>;
+} {
+  const ausfuehren = async (
+    anfrage: (signal: AbortSignal) => Promise<Antwort>,
+  ): Promise<Einstellungsergebnis> => {
+    try {
+      const [zeile] = zeilenAus(await mitZeitlimit(anfrage));
+      if (!zeile) throw new Abbruch({ art: 'abgelehnt', wiederholbar: false, text: TEXT_NICHT_GEFUNDEN });
+      bindung.nachErfolg?.();
+      return { status: 'gespeichert', zeile };
+    } catch (fehler) {
+      if (fehler instanceof Abbruch) return { status: 'nicht_gespeichert', fehler: fehler.fehler };
+      return { status: 'nicht_gespeichert', fehler: fehlerEinordnen(alsRoh(fehler)) };
+    }
+  };
+  return {
+    aendern: (tabelle, id, felder) => ausfuehren((s) => adapter.aendern(tabelle, id, felder, s)),
+    lesen: async (tabelle, id, spalten) => {
+      try {
+        const [zeile] = zeilenAus(await mitZeitlimit((s) => adapter.lesen(tabelle, id, spalten, s)));
+        return zeile ? { status: 'gelesen', zeile } : { status: 'nicht_gelesen', text: TEXT_NICHT_GELESEN };
+      } catch {
+        return { status: 'nicht_gelesen', text: TEXT_NICHT_GELESEN };
+      }
+    },
+  };
+}
+
+const einstellungTabelle = (name: Einstellungstabelle) =>
+  (supabase as unknown as { from(t: string): Abfrage }).from(name);
+
+export const supabaseEinstellungAdapter: EinstellungAdapter = {
+  aendern: async (t, id, felder, signal) =>
+    einstellungTabelle(t).update(felder).eq('id', id).select('id').abortSignal(signal),
+  lesen: async (t, id, spalten, signal) =>
+    einstellungTabelle(t).select(spalten).eq('id', id).abortSignal(signal),
+};
+
+export const einstellungSchreiben = erstelleEinstellungSchreiben(supabaseEinstellungAdapter, {
+  nachErfolg: () => buendelNeuLaden(),
+});
+
 // Nach jedem erfolgreichen Schreiben lädt die Oberfläche das Bündel neu (04 4.2); sie meldet sich hier an
 const nachErfolgHoerer = new Set<() => void>();
 /** Bündel neu laden lassen, z. B. nach einem Test-Push (Plan 13) */

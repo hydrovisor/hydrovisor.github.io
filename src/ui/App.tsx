@@ -19,6 +19,8 @@ import { EtikettAufloesen } from './masken/EtikettAufloesen.tsx';
 import { Etiketten } from './masken/Etiketten.tsx';
 import { Saeen } from './masken/Saeen.tsx';
 import { Keimung } from './masken/Keimung.tsx';
+import { Einstellungen } from './masken/Einstellungen.tsx';
+import { Notfallblatt } from './masken/Notfallblatt.tsx';
 import { BuendelAnbieter } from './buendel.tsx';
 import { maskeFuer, useRoute } from './router.ts';
 import { SitzungAnbieter, useSitzung } from './sitzung.tsx';
@@ -74,6 +76,10 @@ function Masken() {
         <AnlageNeu />
       ) : maske.name === 'vorlagen' ? (
         <Vorlagen />
+      ) : maske.name === 'einstellungen' ? (
+        <Einstellungen />
+      ) : maske.name === 'notfallblatt' ? (
+        <Notfallblatt {...(maske.kuerzel ? { kuerzel: maske.kuerzel } : {})} />
       ) : maske.name === 'push' ? (
         <Push />
       ) : maske.name === 'schreibprobe' ? (

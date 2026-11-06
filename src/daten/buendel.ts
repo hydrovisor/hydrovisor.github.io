@@ -63,6 +63,8 @@ export const BUENDEL_TEILE: readonly Buendelteil[] = [
   ),
   tabelle('kulturgruppe'),
   tabelle('produkt'),
+  // k je Komponente für die Einstellungen (Plan 32); gültig ist je Produkt die jüngste Zeile
+  tabelle('k_faktor', { ohneStorno: true }),
   sicht('v_sollwert', ['sorte_id', 'phase', 'groesse']),
   // Betrieb
   tabelle('satz', { ohneStorno: true }),
@@ -209,6 +211,9 @@ export function erstelleBuendelLaden(
                 (a) => (a.typ === 'neuansatz' || a.typ === 'teilwechsel') && a.status !== 'abgebrochen',
               ),
             ),
+            // und der letzte Neuansatz je Ort: «Lösung wechseln» rechnet ab dem letzten Neuansatz (Konzept 5.x
+            // Auslöser-Tabelle; Plan 32 Runde 2 Befund 5)
+            ...letzterJeOrt(ansaetze.filter((a) => a.typ === 'neuansatz' && a.status !== 'abgebrochen')),
           ]),
         ];
       // Positionen nur der letzten Ansätze je Ort (Plan 20)
