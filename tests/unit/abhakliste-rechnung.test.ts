@@ -91,11 +91,12 @@ function mitLaufendem(t: Teile): Teile {
 const teilDosis = (t: Teile) => rechnungEingaben(t, P23, JETZT, ZEITZONE).eingabe.teilDosis;
 
 describe('Rechnungseingaben für den Neuansatz in 2.3 (UC7-AK1, A11)', () => {
-  it('Loesungswechsel-AK3 UC7-AK1 2.3: Volumen 900, «3 × Lollo Rossa Wachstum», Stadium wachstum, Teil-Dosis 100, ECWasser 50, Mengen 10.5 / 7.0 / 3.5 ml', () => {
+  it('Loesungswechsel-AK3 UC7-AK1 2.3: Volumen 900, «3 × Salat Wachstum», Stadium wachstum, Teil-Dosis 100, ECWasser 50, Mengen 10.5 / 7.0 / 3.5 ml', () => {
     const r = rechnungEingaben(ansatzTeile(), P23, JETZT, ZEITZONE);
     expect(r.volumen).toBe(900);
     expect(r.eingabe.volumen).toBe(900);
-    expect(r.gerechnetFuer).toBe('3 × Lollo Rossa Wachstum');
+    // Plan 34 A8: «Gerechnet für» nennt die Art (name_de) und die Phase (Konzept R2.2)
+    expect(r.gerechnetFuer).toBe('3 × Salat Wachstum');
     expect(r.stadiumVorschlag).toBe('wachstum');
     expect(r.eingabe.stadium).toBe('wachstum');
     expect(r.eingabe.teilDosis).toBe(100);

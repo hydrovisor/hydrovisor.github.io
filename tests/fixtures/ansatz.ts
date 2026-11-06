@@ -12,7 +12,7 @@
 // - laufenderWechsel(t, bisNr): Kopf eines Neuansatzes in 2.3 (laufend, begonnen 12.1. 18:31 Zürich, wie aus einem
 //   anderen Gerät), Frischwassermessung 0.50 / 20.0 °C und die Schritte 0 bis bisNr mit erledigt_am nach
 //   WECHSEL_ZEITEN; timer_ende wie die Datenbank (erledigt_am(t − 1) + 15 min der höchsten Timerzeile).
-import { JETZT as MESSEN_JETZT, MESSGERAET, messTeile, mitKalibrierung } from './messen.ts';
+import { JETZT as MESSEN_JETZT, MESSGERAET, messTeile, mitKalibrierung, SORTE } from './messen.ts';
 import { platzId, uid, type Teile } from './regal.ts';
 
 type Zeile = Record<string, unknown>;
@@ -223,6 +223,25 @@ export function ansatzTeile(): Teile {
   });
   t['ansatz_schritt'] = [];
   t['v_ph_wirkung'] = [{ wirkung_ml_je_l_je_0_1: null }];
+  // Plan 34: der Zielbereich des Neuansatzes kommt aus v_sollwert der zählenden Pflanzungen (R2.1, R2.2), nicht mehr
+  // aus v_zielbereich; Lollo Rossa in Wachstum wie v_zielbereich von 2.3 (pH 6.0–6.5, EC 1.0–1.4, 18–22 °C)
+  t['v_sollwert'] = [
+    ['ph', 6.0, 6.5, null],
+    ['ec', 1.0, 1.4, 'gesamt'],
+    ['wassertemp', 18, 22, null],
+  ].map(([groesse, min, max, basis]) => ({
+    sorte_id: SORTE.lollo,
+    phase: 'wachstum',
+    groesse,
+    wert_min: min,
+    wert_typ: null,
+    wert_max: max,
+    text_wert: null,
+    herkunft_ebene: 'art',
+    evidenzklasse: 'B',
+    vermerk: 'keine',
+    ec_basis_quelle: basis,
+  }));
   return t;
 }
 

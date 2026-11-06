@@ -461,7 +461,7 @@ describe('R6.2 Zieltopf belegt, In der Station lassen, Hinweise, Rest', () => {
     expect(umsetzEingabePruefen(t, e, am4, Z).length).toBeGreaterThan(0);
   });
 
-  it('R6.2 Hinweise: 8-cm-Topf samt Blähton, 5-cm-Anzuchttopf in den 8-cm-Zieltopf, DWC-Startstand, Ansatz von Hand bis I2-02', () => {
+  it('R6.2 Hinweise: 8-cm-Topf samt Blähton, 5-cm-Anzuchttopf in den 8-cm-Zieltopf, DWC-Startstand, Ansatz je Zielgefäss (I2-02)', () => {
     const t = umsetzTeile();
     const z = umsetzZusammenfassung(t, geplant(t), J, Z);
     expect(z.zeilen).toContain('4.4.1 → 2.3.1');
@@ -473,9 +473,8 @@ describe('R6.2 Zieltopf belegt, In der Station lassen, Hinweise, Rest', () => {
       'DWC-Startstand: Topfboden 1 bis 2 cm im Wasser, 5 bis 7 Tage von oben angiessen',
     );
     expect(z.hinweise).not.toContain('8-cm-Topf samt Blähton ins Zielgefäss');
-    expect(z.ansatz).toBe(
-      'Ansatz für Umsetzen in 2.3: Ziel-EC von Hand nach Düngeplan, Stadium 1. echte Blätter',
-    );
+    // Plan 34 (R2.2): Lösung in 2.3 vom 7.1., Umsetzen heute am 19.1. → 12 Tage alt
+    expect(z.ansatz).toBe('2.3: Lösung wechseln am Umsetztag (Lösung 12 Tage alt)');
 
     const tomate = umsetzZusammenfassung(t, geplant(t, SATZ.tomate), J, Z);
     expect(tomate.hinweise).toContain('8-cm-Topf samt Blähton ins Zielgefäss');
@@ -497,6 +496,36 @@ describe('R6.2 Zieltopf belegt, In der Station lassen, Hinweise, Rest', () => {
     expect(kratky.hinweise).not.toContain(
       'DWC-Startstand: Topfboden 1 bis 2 cm im Wasser, 5 bis 7 Tage von oben angiessen',
     );
+  });
+
+  it('R6.2 R2.2 Ansatz je Zielgefäss: ab 7 Tagen Lösung wechseln, darunter Lösung bleibt, ohne Lösung Ansatz für Umsetzen (Plan 34 A12)', () => {
+    /** Neuansatz in 2.3 (aus regalTeile) auf `beginn` verlegen */
+    const mitLoesungVom = (beginn: string) => {
+      const t = umsetzTeile();
+      t['naehrloesungsansatz'] = (t['naehrloesungsansatz'] ?? []).map((a) =>
+        a['platz_id'] === platzId('2.3') ? { ...a, begonnen_am: beginn, gilt_ab: beginn } : a,
+      );
+      t['v_fuellzustand'] = (t['v_fuellzustand'] ?? []).map((f) =>
+        f['platz_id'] === platzId('2.3') ? { ...f, letzter_ansatz: beginn } : f,
+      );
+      return t;
+    };
+    const ansatz = (t: Teile) => umsetzZusammenfassung(t, geplant(t), J, Z).ansatz;
+    expect(ansatz(mitLoesungVom('2027-01-10T08:00:00.000Z'))).toBe(
+      '2.3: Lösung wechseln am Umsetztag (Lösung 9 Tage alt)',
+    );
+    expect(ansatz(mitLoesungVom('2027-01-12T08:00:00.000Z'))).toBe(
+      '2.3: Lösung wechseln am Umsetztag (Lösung 7 Tage alt)',
+    );
+    expect(ansatz(mitLoesungVom('2027-01-13T08:00:00.000Z'))).toBe(
+      '2.3: Lösung bleibt (6 Tage alt), Zielbereich und Nachfülldosis neu',
+    );
+    expect(ansatz(mitLoesungVom('2027-01-14T08:00:00.000Z'))).toBe(
+      '2.3: Lösung bleibt (5 Tage alt), Zielbereich und Nachfülldosis neu',
+    );
+    // Ochsenherz nach 2.1: ohne Lösung erster Ansatz
+    const t = umsetzTeile();
+    expect(umsetzZusammenfassung(t, geplant(t, SATZ.tomate), J, Z).ansatz).toBe('2.1: Ansatz für Umsetzen');
   });
 
   it('R6.2 Rest: «In 4.4 verbleiben 2 Sämlinge ohne Ziel»', () => {
