@@ -129,17 +129,47 @@ describe('UC12-AK1 Wissenskarten je Art und Phase der Startbelegung', () => {
     expect((fehler as Error).message).toContain(`${WISSEN_LUECKEN_MELDUNG} test_art_a/anzucht`);
   });
 
-  it('UC12-AK1 eine Karte auf Ebene Kulturgruppe deckt alle Arten der Gruppe; Phasen mit «entfällt» brauchen keine', async () => {
+  it('UC12-AK1 eine Karte auf Ebene Kulturgruppe deckt alle Arten der Gruppe; eine geschlossene Karte zählt nicht', async () => {
     await inTransaktion(async (tx) => {
       await laden(tx, wissen());
-      const l = await luecken(tx);
-      // test_frucht Blüte: Testart A (anwendbar) gedeckt; Testart B hat Blüte «entfällt»
-      expect(l.filter((x) => x.endsWith('/bluete'))).toEqual([]);
-      expect(l.filter((x) => x.endsWith('/fruchtbildung_reife') && !x.startsWith('test_art_a/'))).toEqual([]);
+      // Testart B (test_frucht) bekommt eine anwendbare Blüte: Art-Zeile auf «ja», sonst erbt sie von der Gruppe
+      // (Wissenszeilen werden nicht überschrieben: alte Fassung schliessen, neue mit «ja» anlegen)
+      await tx.unsafe(`with alt as (
+                         update public.profilwert set gueltig_bis = now()
+                          where art_id = 'test_art_b' and phase = 'bluete' and groesse = 'anwendbar'
+                            and gueltig_bis is null returning *)
+                       insert into public.profilwert
+                       select (jsonb_populate_record(null::public.profilwert, to_jsonb(alt) || jsonb_build_object(
+                                 'id', gen_random_uuid(), 'text_wert', 'ja', 'gueltig_bis', null,
+                                 'zeile_id', alt.zeile_id || '.test40'))).*
+                         from alt`);
+      const [b] = await tx.unsafe(`select count(*)::int as n from public.v_sollwert v
+                                     join public.sorte s on s.sorte_id = v.sorte_id and s.gueltig_bis is null
+                                    where s.art_id = 'test_art_b' and v.phase = 'bluete'
+                                      and v.groesse = 'anwendbar' and v.text_wert = 'ja'`);
+      expect(Number(muss(b, 'v_sollwert Testart B')['n'])).toBeGreaterThan(0);
+      // die Karte der Gruppe test_frucht in Blüte deckt Testart A und Testart B
+      expect((await luecken(tx)).filter((x) => x.endsWith('/bluete'))).toEqual([]);
+      // geschlossen (gueltig_bis gesetzt) deckt sie nicht mehr: beide Arten fehlen
+      await tx.unsafe(`update public.wissenseintrag set gueltig_bis = now()
+                        where zeile_id = 'we.test_frucht.bluete.1' and gueltig_bis is null`);
+      expect((await luecken(tx)).filter((x) => x.endsWith('/bluete'))).toEqual([
+        'test_art_a/bluete',
+        'test_art_b/bluete',
+      ]);
     });
   });
 
-  it('UC12-AK1 eine stornierte Packung zählt nicht zur Startbelegung', async () => {
+  it('UC12-AK1 Phasen mit «entfällt» brauchen keine Karte', async () => {
+    await inTransaktion(async (tx) => {
+      await laden(tx, wissen());
+      // Testart B, C, D: Blüte und Fruchtbildung entfallen (Art oder Gruppe)
+      const l = await luecken(tx);
+      expect(l.filter((x) => /^test_art_[bcd]\/(bluete|fruchtbildung_reife)$/.test(x))).toEqual([]);
+    });
+  });
+
+  it('UC12-AK1 eine stornierte Packung oder geschlossene Sorte zählt nicht zur Startbelegung', async () => {
     await inTransaktion(async (tx) => {
       await laden(tx, wissen());
       const vorher = await luecken(tx);
@@ -149,6 +179,13 @@ describe('UC12-AK1 Wissenskarten je Art und Phase der Startbelegung', () => {
       const nachher = await luecken(tx);
       expect(nachher.some((x) => x.startsWith('test_art_a/'))).toBe(false);
       expect(nachher).toEqual(vorher.filter((x) => !x.startsWith('test_art_a/')));
+      // ebenso eine geschlossene Fassung der Sorte
+      await tx.unsafe(`update public.saatgut set storniert_am = null`);
+      expect(await luecken(tx)).toEqual(vorher);
+      await tx.unsafe(
+        `update public.sorte set gueltig_bis = now() where art_id = 'test_art_a' and gueltig_bis is null`,
+      );
+      expect(await luecken(tx)).toEqual(nachher);
     });
   });
 

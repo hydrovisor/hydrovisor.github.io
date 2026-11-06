@@ -202,7 +202,8 @@ export function Pflanze({ pflanzung }: { pflanzung: string }) {
         setMerkmal(undefined);
         // Wissenskarte nach Ja (neue Phase) und nach Problem, nicht nach «Noch nicht» (Plan 35 Runde 2 Befund 10)
         setWissenPhase(antwort === 'ja' ? n?.phase : antwort === 'problem' ? stand?.phase : undefined);
-        setWissenZu(false);
+        // «Noch nicht» lässt eine geschlossene Karte zu (Runde 1 Befund 6)
+        if (antwort === 'ja' || antwort === 'problem') setWissenZu(false);
       },
     );
   const grenze = gesperrt || !aktiv ? undefined : korrekturGrenze(eff, a.satzId, jetzt, ZEITZONE);

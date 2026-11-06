@@ -6,7 +6,7 @@ import { buendelTeile, phasenNachrechnen, pflanzungVon } from '../fixtures/phase
 import { uid, type Teile } from '../fixtures/regal.ts';
 import { zeileAufnehmen } from '../fixtures/sichten.ts';
 import { authNachbilden, sitzungSpeichern } from './hilfen.ts';
-import { restNachbilden } from './rest.ts';
+import { REST, restNachbilden } from './rest.ts';
 
 /** 23.1.2027 09:00 Zürich: Lollo Rossa (61) in 4.4 seit 11.1. in Anzucht, Wechsel nach Wachstum fällig */
 const JETZT = new Date('2027-01-23T08:00:00Z');
@@ -57,12 +57,42 @@ test('UC12-AK2 Karte der aktuellen Phase ist ohne Netz lesbar', async ({ page, c
   await expect(main.getByText('Wissen: Anzucht', { exact: true })).toBeVisible();
   await expect(main.getByText(ANZUCHT, { exact: true })).toBeVisible();
 
-  // ohne Netz: zu Heute und zurück, die Karte kommt aus dem gespeicherten Bündel
+  // App vom Service Worker gesteuert, Bündel im Speicher des Geräts (wie datenpfad-runde2.spec.ts)
+  await page.evaluate(async () => void (await navigator.serviceWorker.ready));
+  await page.reload();
+  await expect.poll(() => page.evaluate(() => Boolean(navigator.serviceWorker.controller))).toBe(true);
+  await expect(main.getByText(ANZUCHT, { exact: true })).toBeVisible();
+
+  // ohne Netz: jede REST-Anfrage scheitert, auch GET (Runde 1 Befund 1)
+  let ohneNetz = false;
+  let beantwortet = 0;
+  await page.route(`${REST}/**`, async (route) => {
+    if (ohneNetz) return route.abort('internetdisconnected');
+    return route.fallback();
+  });
+  // gezählt werden nur Anfragen, die ohne Netz begonnen haben (laufende Ladevorgänge davor zählen nicht)
+  const ohneNetzBegonnen = new Set<object>();
+  page.on('request', (r) => {
+    if (ohneNetz && r.url().startsWith(REST)) ohneNetzBegonnen.add(r);
+  });
+  page.on('requestfinished', (r) => {
+    if (ohneNetzBegonnen.has(r)) beantwortet += 1;
+  });
+  ohneNetz = true;
   await context.setOffline(true);
+
+  // neu geladen: die Karte kommt aus dem gespeicherten Bündel
+  await page.reload();
+  await expect(page.getByRole('heading', { name: 'Pflanze', level: 1 })).toBeVisible();
+  await expect(main.getByText('Wissen: Anzucht', { exact: true })).toBeVisible();
+  await expect(main.getByText(ANZUCHT, { exact: true })).toBeVisible();
+  // zu Heute und zurück
   await page.goto('/#/heute');
   await expect(page.getByRole('heading', { name: 'Heute', level: 1 })).toBeVisible();
   await page.goto(`/#/pflanze/${pflanzungVon(61, 1)}`);
   await expect(main.getByText(ANZUCHT, { exact: true })).toBeVisible();
+  expect(beantwortet).toBe(0);
+  ohneNetz = false;
   await context.setOffline(false);
 });
 
