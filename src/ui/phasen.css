@@ -43,3 +43,29 @@
   font-size: var(--text-heading-size);
   font-weight: 700;
 }
+
+/* UC6 Rest (Plan 38): Ernte, Blüte, weitere Aktionen; Abernten mit einer Tastenhöhe Abstand unter Teilernte */
+.hv-pflanze-ernte,
+.hv-pflanze-weitere {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.hv-pflanze-abernten {
+  margin-top: var(--size-touch-regal);
+}
+
+.hv-ernte-zeile {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* lange Sortennamen in «Ernte und Kulturende» umbrechen statt abschneiden (Abnahme 1) */
+.hv-ernte-link {
+  white-space: normal;
+  text-align: left;
+  justify-content: flex-start;
+}

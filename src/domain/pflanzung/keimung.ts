@@ -615,6 +615,22 @@ export function keimVorgang(
 }
 
 /**
+ * Ist der Topf inzwischen an eine andere Pflanzung vergeben (aktive Reservierung oder aktive Pflanzung im Topf)? Dann
+ * darf die alte Reservierung beim Wiederherstellen nicht wieder aufleben (R8.2; Plan 38 aus wiederherstellenVorgang()
+ * herausgelöst).
+ */
+export function reservierungVergeben(teile: Teile, pflanzungId: string, netztopfId: string): boolean {
+  return (
+    zeilen<ReservierungZeile>(teile, 'v_reservierung_aktiv').some(
+      (r) => r.netztopf_id === netztopfId && r.pflanzung_id !== pflanzungId,
+    ) ||
+    zeilen<ZustandZeile>(teile, 'v_pflanzung_zustand').some(
+      (z) => z.status === 'aktiv' && z.netztopf_id === netztopfId && z.pflanzung_id !== pflanzungId,
+    )
+  );
+}
+
+/**
  * Wiederherstellen eines Schwamms mit «keimt nicht» bis und mit 7. Kalendertag (Konzept 6.3, R1.7): wiederherstellen
  * {ereignis_id: Abschluss}. Ist der frühere Zieltopf inzwischen vergeben, storniert derselbe Vorgang die alte
  * Reservierung (korrektur), damit nie zwei aktive Reservierungen auf einem Topf stehen (R8.2). Nicht erlaubt → leer.
@@ -634,14 +650,7 @@ export function wiederherstellenVorgang(
   let hinweis: string | undefined;
   const res = lage.reservierungVon.get(pflanzungId);
   if (res) {
-    const vergeben =
-      zeilen<ReservierungZeile>(teile, 'v_reservierung_aktiv').some(
-        (r) => r.netztopf_id === res.netztopf_id && r.pflanzung_id !== pflanzungId,
-      ) ||
-      zeilen<ZustandZeile>(teile, 'v_pflanzung_zustand').some(
-        (z) => z.status === 'aktiv' && z.netztopf_id === res.netztopf_id && z.pflanzung_id !== pflanzungId,
-      );
-    if (vergeben) {
+    if (reservierungVergeben(teile, pflanzungId, res.netztopf_id)) {
       schritte.push({
         art: 'storno',
         tabelle: 'reservierung',

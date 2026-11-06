@@ -49,6 +49,12 @@ Stand 1.11.2026 · Auftrag 2 «Spezifikation». Bedeutungen stehen in Konzept v1
 | Phasenfrage, Phasenstand, Phasenwechsel | Ereignis `phase_antwort` (`daten.phase`, `daten.antwort`) | `phasenStand()`, `phasenKarten()`, `antwortVorgang()`, `Fragekarte` |
 | Phasen nachführen, Profilende, Phasenfolge | `v_sollwert` (`dauer`, `wechselmerkmal`, `anwendbar`) | `nachfuehrVorgang()`, `PROFILENDE`, `phasenfolge()`, `NachfuehrZeile` |
 | Datumskorrektur, Verlauf, Wissenskarte der Phase | `ersetzt_id`, `wissenseintrag` | `korrekturVorgang()`, `korrekturGrenze()`, `phasenVerlauf()`, `wissenFuer()` |
+| Erntestand, Ernte möglich, Teilernte, Abernten | Ereignis `ernte` (`daten.art`), `art_kulturform` | `ernteStand()`, `ernteVorgang()`, `ernteAufgaben()`, `ErnteStand` |
+| Kulturfrage, Kultur beenden oder verlängern | Ereignis `kultur_entscheid` am Satz | `kulturEntscheidVorgang()`, `kulturEntscheide()`, `verlaengerungTage()`, `VERLAENGERN_TAGE` |
+| Blüte melden, Schossen-Handlung | Ereignisse `beobachtung` {kategorie: schossen}, `schossen_handlung`, `art.schossen_handlung` | `schossenVorgang()`, `SchossenHandlung` |
+| Ausfall, Endzustand, Wiederherstellen | Ereignisse `abschluss`, `ernte` ab, `wiederherstellen` | `ausfallVorgang()`, `endzustand()`, `endeWiederherstellenVorgang()`, `endeRueckgaengig()`, `kuerzlichBeendet()` |
+| Überlagerung nach dem Speichern | Bündelteile bis zum neuen Bündel | `teileNach()`, `zielbereichZeile()` (Spiegel von `v_zielbereich`) |
+| Sollbereich, Pflanzenansicht, Wie weiter? | `v_sollwert` (Herkunft, Evidenzklasse) | `sollbereich()`, `sollText()`, `pflanzenAnsicht()`, `wieWeiter()`, `pflanzenVerlauf()` |
 | Keimbilanz (Summe je Packung wie `v_keimrate`) | `v_keimrate.gesaet`, `gekeimt` | `keimbilanz()`, `keimrateGeglaettet()` |
 | Keimt nicht, Wiederherstellen | Ereignis `abschluss {grund: keimt_nicht}`, `wiederherstellen` | `wiederherstellenVorgang()` |
 | Stationseintritt (aus der Box auf die Station) | Ereignis `verschieben` | `stationsVorbelegung()`, `freieStationsloecher()` |

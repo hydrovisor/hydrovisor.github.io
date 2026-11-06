@@ -84,8 +84,15 @@ const SCHEMA: Readonly<Record<EreignisTyp, Schema>> = {
   tausch: { schluessel: { ...ORTSWECHSEL, vorgang_id: undefined } },
   neu_beschriften: { schluessel: { von_kennung: undefined, nach_kennung: undefined } },
   ernte: { schluessel: { art: ['teil', 'ab'] } },
-  kultur_entscheid: { schluessel: { entscheid: ['beenden', 'verlaengern'], tage: undefined } },
-  schossen_handlung: { schluessel: {} },
+  kultur_entscheid: {
+    schluessel: {
+      entscheid: ['beenden', 'verlaengern'],
+      // Plan 38: Verlängerung in ganzen Tagen
+      tage: (wert) => Number.isInteger(wert) && (wert as number) > 0,
+    },
+  },
+  // Plan 38 A7: Handlung nach art.schossen_handlung
+  schossen_handlung: { schluessel: { handlung: ['auskneifen', 'ernten_beenden', 'bluete_nutzen'] } },
   abschluss: {
     schluessel: { grund: ['geerntet', 'ausfall', 'keimt_nicht', 'ueberzaehlig'], text: undefined },
   },

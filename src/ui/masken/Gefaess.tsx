@@ -8,6 +8,7 @@ import { ereignisseAm, ms, type Teile } from '../../domain/anlage/teile.ts';
 import type { Vorgang } from '../../domain/datenpfad/erfassung.ts';
 import { ortAufloesen } from '../../domain/ort.ts';
 import { ZEITZONE } from '../../domain/zeit.ts';
+import { kuerzlichBeendet } from '../../domain/phasen/ende.ts';
 import { pflanzungVonSatz } from '../../domain/phasen/fragen.ts';
 import { PROFILENDE, type Kulturform } from '../../domain/phasen/profil.ts';
 import { deckelReihen, lochArt, lochName, lochText } from '../../domain/pflanzung/topf.ts';
@@ -95,10 +96,27 @@ export function Gefaess({ code }: { code: string }) {
           <ul className="hv-gefaess-pflanzen" aria-label="Pflanzen">
             {a.pflanzen.map((p) => (
               <li key={p.satzId} className={p.keimung ? 'hv-gefaess-pflanze' : undefined}>
-                <span>
-                  {p.anzahl} × {p.sorte} · {p.phase} · seit {p.seitTagen}{' '}
-                  {p.seitTagen === 1 ? 'Tag' : 'Tagen'}
-                </span>
+                {buendel &&
+                pflanzungVonSatz(buendel.teile, p.satzId) &&
+                !phaseOffen(buendel.teile, p.satzId) ? (
+                  // am Profilende führt die Satzzeile selbst zur Pflanzenansicht (Ernte, Kulturfrage; Plan 38 A10),
+                  // ohne zusätzlichen Knopf, damit der Kopf ohne Scrollen bleibt (UC1-AK2)
+                  <a
+                    className="hv-gefaess-satzlink"
+                    href={hashZu({
+                      name: 'pflanze',
+                      pflanzung: pflanzungVonSatz(buendel.teile, p.satzId) ?? '',
+                    })}
+                  >
+                    {p.anzahl} × {p.sorte} · {p.phase} · seit {p.seitTagen}{' '}
+                    {p.seitTagen === 1 ? 'Tag' : 'Tagen'}
+                  </a>
+                ) : (
+                  <span>
+                    {p.anzahl} × {p.sorte} · {p.phase} · seit {p.seitTagen}{' '}
+                    {p.seitTagen === 1 ? 'Tag' : 'Tagen'}
+                  </span>
+                )}
                 {p.keimung ? (
                   <a
                     className="hv-btn hv-btn-secondary hv-btn-compact"
@@ -148,6 +166,7 @@ export function Gefaess({ code }: { code: string }) {
       {a.nebenknoepfe.length > 0 && buendel ? <Nebenknoepfe a={a} teile={buendel.teile} /> : null}
       {/* Deckelgrafik darf scrollen; Kopf, Zustand und Hauptknopf bleiben oben (UC1-AK2) */}
       {a.deckel.length > 0 && buendel ? <DeckelAnsicht a={a} teile={buendel.teile} /> : null}
+      {buendel ? <KuerzlichBeendet code={a.code} teile={buendel.teile} jetzt={zeitpunkt} /> : null}
       {a.verlauf.length > 0 ? (
         <section aria-labelledby="verlauf-titel" className="hv-gefaess-verlauf">
           <h2 id="verlauf-titel" className="hv-gefaess-h2">
@@ -264,6 +283,30 @@ function Nebenknoepfe({ a, teile }: { a: Gefaessansicht; teile: Teile }) {
       )}
       {fehler ? <Notice tone="danger" title={fehler} kompakt /> : null}
     </nav>
+  );
+}
+
+/** Beendete Pflanzungen der letzten 7 Tage mit Link zur Pflanzenansicht (Plan 38 A10, Wiederherstellen) */
+function KuerzlichBeendet({ code, teile, jetzt: zeit }: { code: string; teile: Teile; jetzt: Date }) {
+  const platzId = ortAufloesen(code, teile as Record<string, readonly unknown[]>)?.platzId;
+  const liste = platzId ? kuerzlichBeendet(teile, platzId, zeit, ZEITZONE) : [];
+  if (liste.length === 0) return null;
+  return (
+    <section className="hv-gefaess-beendet">
+      <h2 className="hv-gefaess-h2">Kürzlich beendet</h2>
+      <ul className="hv-aufgaben" aria-label="Kürzlich beendet">
+        {liste.map((b) => (
+          <li key={b.pflanzungId} className="hv-aufgabe hv-aufgabe-umbruch">
+            <a
+              className="hv-btn hv-btn-secondary hv-btn-compact"
+              href={hashZu({ name: 'pflanze', pflanzung: b.pflanzungId })}
+            >
+              {b.text}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 
