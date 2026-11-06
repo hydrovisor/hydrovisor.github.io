@@ -2,7 +2,7 @@
 // bei belegtem Zieltopf abernten, anderes Loch oder in der Station lassen, ohne Zieltopf in drei Schritten zuweisen.
 import { useMemo, useRef, useState } from 'react';
 import { neueClientId, schreiben } from '../../daten/schreiben.ts';
-import { gefaessAm, plaetzeAus, zeilen } from '../../domain/anlage/teile.ts';
+import { gefaessAm, gefaessStatus, plaetzeAus, zeilen } from '../../domain/anlage/teile.ts';
 import {
   alleFreienWaehlen,
   umsetzAnsicht,
@@ -15,7 +15,15 @@ import {
 } from '../../domain/anzucht/umsetzen.ts';
 import type { Vorgang } from '../../domain/datenpfad/erfassung.ts';
 import { saatRueckgaengig } from '../../domain/pflanzung/saeen.ts';
-import { deckelReihen, istStation, lochGroesse, lochName } from '../../domain/pflanzung/topf.ts';
+import {
+  deckelReihen,
+  istStation,
+  lochArt,
+  lochGroesse,
+  lochName,
+  lochText,
+} from '../../domain/pflanzung/topf.ts';
+import { tagKurz } from '../../domain/zeit.ts';
 import { ZEITZONE } from '../../domain/zeit.ts';
 import { Button } from '../bausteine/Button.tsx';
 import { Deckel } from '../bausteine/Deckel.tsx';
@@ -32,7 +40,15 @@ type Schritt =
   | { art: 'gefaess'; fuer: string[] }
   | { art: 'loecher'; fuer: string[]; platzId: string }
   | { art: 'zusammen'; fuer: string[]; platzId: string }
-  | { art: 'ergebnis'; eingabe: UmsetzEingabe; vorgang: Vorgang; rest?: string; stationLeer?: string };
+  | {
+      art: 'ergebnis';
+      eingabe: UmsetzEingabe;
+      vorgang: Vorgang;
+      /** Rest beim Senden aus der Eingabe gerechnet, nie aus dem nachgeladenen Bündel (Runde 1 Befund 1) */
+      restIds: string[];
+      rest?: string;
+      stationLeer?: string;
+    };
 
 const leer = (satzId: string): UmsetzEingabe => ({
   satzId,
@@ -76,6 +92,8 @@ function Maske({ satz, wie, jetzt }: { satz: string; wie: 'geplant' | undefined;
   const [sendet, setSendet] = useState(false);
   // derselbe Vorgang bei jeder Wiederholung derselben Eingabe (TO2): gleiche client_id
   const vorgangFuer = useRef<{ schluessel: string; vorgang: Vorgang } | undefined>(undefined);
+  const sendetRef = useRef(false);
+  const letzterTipp = useRef(0);
 
   if (!a) return null;
   const ohneZiel = a.saemlinge.filter((s) => !s.zieltopf).map((s) => s.pflanzungId);
@@ -84,7 +102,30 @@ function Maske({ satz, wie, jetzt }: { satz: string; wie: 'geplant' | undefined;
   const planZeilen = umsetzZusammenfassung(teile, geplant, jetzt, ZEITZONE).zeilen;
 
   async function senden(eingabe: UmsetzEingabe) {
+    // Sperre 400 ms gegen Doppeltipps (U13; Runde 1 Befund 3)
+    const nun = uhrJetzt().getTime();
+    if (sendetRef.current || nun - letzterTipp.current < 400) return;
+    letzterTipp.current = nun;
+    sendetRef.current = true;
+    try {
+      await sendenOhneSperre(eingabe);
+    } finally {
+      // nach der Antwort ist ein neuer Tipp erlaubt; die Sperre gilt nur für Doppeltipps während des Sendens
+      sendetRef.current = false;
+      letzterTipp.current = 0;
+    }
+  }
+
+  async function sendenOhneSperre(eingabe: UmsetzEingabe) {
     const jetztSenden = uhrJetzt();
+    const bewegt = new Set([
+      ...eingabe.zuweisung.map((z) => z.pflanzungId),
+      ...eingabe.ueberzaehlig,
+      ...eingabe.inStationLassen.map((x) => x.pflanzungId),
+    ]);
+    const restIds = (a?.saemlinge ?? [])
+      .filter((s) => !s.zieltopf && !bewegt.has(s.pflanzungId))
+      .map((s) => s.pflanzungId);
     const schluessel = JSON.stringify(eingabe);
     const vorgang =
       vorgangFuer.current?.schluessel === schluessel
@@ -108,6 +149,7 @@ function Maske({ satz, wie, jetzt }: { satz: string; wie: 'geplant' | undefined;
       art: 'ergebnis',
       eingabe,
       vorgang,
+      restIds,
       ...(z.rest ? { rest: z.rest } : {}),
       ...(z.stationLeer ? { stationLeer: z.stationLeer } : {}),
     });
@@ -137,7 +179,8 @@ function Maske({ satz, wie, jetzt }: { satz: string; wie: 'geplant' | undefined;
   // Ergebnis
   if (schritt.art === 'ergebnis') {
     const n = schritt.eingabe.zuweisung.length;
-    const rest = a.saemlinge.filter((s) => !s.zieltopf).map((s) => s.pflanzungId);
+    const rest = schritt.restIds;
+    const gelassen = schritt.eingabe.inStationLassen;
     return (
       <main className="hv-seite hv-umsetzen" data-density="regal">
         {kopf}
@@ -145,7 +188,9 @@ function Maske({ satz, wie, jetzt }: { satz: string; wie: 'geplant' | undefined;
         <p className="hv-umsetzen-ergebnis" role="status">
           {n > 0
             ? `Umgesetzt: ${saemlingeText(n)}`
-            : `Beendet: ${saemlingeText(schritt.eingabe.ueberzaehlig.length)}`}
+            : gelassen.length > 0
+              ? `In der Station gelassen bis ${tagKurz(gelassen[0]?.bis ?? '')}: ${saemlingeText(gelassen.length)}`
+              : `Beendet: ${saemlingeText(schritt.eingabe.ueberzaehlig.length)}`}
         </p>
         {schritt.rest ? (
           <Notice kompakt tone="info">
@@ -232,7 +277,16 @@ function Maske({ satz, wie, jetzt }: { satz: string; wie: 'geplant' | undefined;
       (p) => p.id === a.saemlinge[0]?.ort.platzId,
     )?.anlage_id;
     const gefaesse = (anlageId ? plaetzeAus(teile, anlageId) : [])
-      .filter((p) => gefaessAm(teile, p.id) && !istStation(teile, p.id) && lochGroesse(teile, p.id) === 80)
+      .filter((p) => {
+        // entfernte Gefässe sind kein Ziel (Runde 1 Befund 8)
+        const g = gefaessAm(teile, p.id);
+        return (
+          g !== undefined &&
+          gefaessStatus(teile, g.id) !== 'entfernt' &&
+          !istStation(teile, p.id) &&
+          lochGroesse(teile, p.id) === 80
+        );
+      })
       .sort((x, y) => x.kennung.localeCompare(y.kennung, 'de', { numeric: true }));
     return (
       <main className="hv-seite hv-umsetzen" data-density="regal">
@@ -289,6 +343,15 @@ function Maske({ satz, wie, jetzt }: { satz: string; wie: 'geplant' | undefined;
               nr: l.lochNr,
               zustand: gew ? 'gewaehlt' : l.zustand,
               zustandName: gew ? `${lochName(l)} · gewählt` : lochName(l) || 'kein Topf',
+              // Status nie nur über Farbe (Runde 1 Befund 4): Marke im gewählten, Kurzwort im gesperrten Loch
+              ...(gew && l.netztopfId
+                ? { marke: { ziffer: marken.get(l.netztopfId) ?? 0, name: l.kennung ?? '' } }
+                : l.nichtWaehlbar
+                  ? { text: l.zustand === 'belegt' ? 'bel.' : l.zustand === 'reserviert' ? 'res.' : '–' }
+                  : lochText(l) !== undefined
+                    ? { text: lochText(l) as string }
+                    : {}),
+              ...(lochArt(l) ? { art: lochArt(l) } : {}),
               ...(l.nichtWaehlbar ? { nichtWaehlbar: true } : {}),
             };
           })}
@@ -323,7 +386,9 @@ function Maske({ satz, wie, jetzt }: { satz: string; wie: 'geplant' | undefined;
       {fehlerBanner}
       {a.ohneKeimpruefung > 0 ? (
         <Notice kompakt tone="info">
-          {`${String(a.ohneKeimpruefung)} Schwämme noch ohne Keimprüfung`}
+          {a.ohneKeimpruefung === 1
+            ? '1 Schwamm noch ohne Keimprüfung'
+            : `${String(a.ohneKeimpruefung)} Schwämme noch ohne Keimprüfung`}
         </Notice>
       ) : null}
       {planZeilen.length > 0 ? (

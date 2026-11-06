@@ -8,7 +8,7 @@ import { ereignisseAm, ms, type Teile } from '../../domain/anlage/teile.ts';
 import type { Vorgang } from '../../domain/datenpfad/erfassung.ts';
 import { ortAufloesen } from '../../domain/ort.ts';
 import { ZEITZONE } from '../../domain/zeit.ts';
-import { deckelReihen, lochName } from '../../domain/pflanzung/topf.ts';
+import { deckelReihen, lochArt, lochName, lochText } from '../../domain/pflanzung/topf.ts';
 import { Button } from '../bausteine/Button.tsx';
 import { Deckel } from '../bausteine/Deckel.tsx';
 import { Notice } from '../bausteine/Notice.tsx';
@@ -266,7 +266,9 @@ function DeckelAnsicht({ a, teile }: { a: Gefaessansicht; teile: Teile }) {
           nr: l.lochNr,
           zustand: l.zustand,
           zustandName: lochName(l) || 'kein Topf',
-          ...(l.kennung ? { text: l.kennung.split('.').at(-1) ?? String(l.lochNr) } : {}),
+          ...(lochText(l) !== undefined ? { text: lochText(l) as string } : {}),
+          // gewählter Quelltopf umrandet (Runde 1 Befund 5)
+          ...(l.lochNr === gewaehlt ? { art: 'markiert' as const } : lochArt(l) ? { art: lochArt(l) } : {}),
         }))}
         onLoch={(nr) => setGewaehlt(nr === gewaehlt ? undefined : nr)}
       />

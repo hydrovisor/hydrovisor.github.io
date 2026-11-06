@@ -134,7 +134,7 @@ export function voraussichtlichesEnde(
  * Kalendertag des letzten nicht stornierten Ereignisses umsetzen einer stehenden Pflanzung (Plan 33 A27, Plan 25
  * Befund 17): Bezug für «Ernte möglich ab» statt Saat + «Umsetzen ab». Zeitzone der Anlage nach G1 (A).
  */
-function umsetzTag(teile: Teile, pflanzungId: string): string | undefined {
+function umsetzTag(teile: Teile, pflanzungId: string, zeitzone: string): string | undefined {
   const e = zeilen<{
     typ: string;
     pflanzung_id: string | null;
@@ -143,7 +143,7 @@ function umsetzTag(teile: Teile, pflanzungId: string): string | undefined {
   }>(teile, 'ereignis_pflanzung')
     .filter((x) => x.typ === 'umsetzen' && x.pflanzung_id === pflanzungId && x.storniert_am === null)
     .sort((a, b) => Date.parse(b.gilt_ab) - Date.parse(a.gilt_ab))[0];
-  return e ? kalendertag(new Date(e.gilt_ab), ZEITZONE) : undefined;
+  return e ? kalendertag(new Date(e.gilt_ab), zeitzone) : undefined;
 }
 
 /**
@@ -156,6 +156,8 @@ export function topfPrognose(
   netztopfId: string,
   umsetzenAm: string,
   direktsaat: boolean,
+  /** Zeitzone für den Umsetztag (G1; Runde 1 Befund 11) */
+  zeitzone: string = ZEITZONE,
 ): TopfPrognose | undefined {
   const topf = zeilen<{ id: string; groesse_mm: number; aktiv?: boolean; storniert_am: string | null }>(
     teile,
@@ -192,7 +194,7 @@ export function topfPrognose(
       z.status === 'aktiv' &&
       (z.netztopf_id === netztopfId || (z.platz_id === ort.platz_id && Number(z.loch_nr) === lochNr))
     )
-      dazu(z.pflanzung_id, 'steht', umsetzTag(teile, z.pflanzung_id));
+      dazu(z.pflanzung_id, 'steht', umsetzTag(teile, z.pflanzung_id, zeitzone));
   // Reservierungen: Direktsaat steht (A4), Anzucht kommt; nur aktive Pflanzungen
   const reservierungen = zeilen<ReservierungZeile>(teile, 'v_reservierung_aktiv').filter(
     (r) => r.netztopf_id === netztopfId && aktiv(r.pflanzung_id),

@@ -294,3 +294,9 @@ button.hv-tile { cursor: pointer; touch-action: manipulation; }
 .hv-stepper-wert { min-width: 3ch; white-space: nowrap; text-align: center; font-size: var(--text-value-size); line-height: var(--text-value-line); font-weight: 700; font-variant-numeric: tabular-nums; }
 [data-density="regal"] .hv-stepper-wert { font-size: var(--text-value-regal-size); line-height: var(--text-value-regal-line); }
 .hv-stepper-hinweis { grid-column: 1 / -1; font-size: var(--text-caption-size); color: var(--ink-muted); }
+
+/* Deckel mit Töpfen (Plan 33): Topf ausser Heimplatz gestrichelt mit «↔», abwesender Heimtopf gepunktet mit «weg»,
+   gewählter Quelltopf umrandet; der Text im Loch trägt den Zustand mit, nie nur Farbe */
+.hv-loch-fremd { border-style: dashed; }
+.hv-loch-abwesend { border-style: dotted; color: var(--ink-muted); }
+.hv-loch-markiert { outline: 3px solid var(--brand); outline-offset: 2px; }

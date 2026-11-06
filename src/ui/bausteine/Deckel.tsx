@@ -12,6 +12,8 @@ export interface Loch {
   nichtWaehlbar?: boolean;
   /** Zustandswort im zugänglichen Namen statt des Zustands, z. B. «kein Topf» oder «5 cm, passt nicht» */
   zustandName?: string;
+  /** Plan 33: Topf ausser Heimplatz (gestrichelt), Heimtopf abwesend (gepunktet), gewählter Quelltopf (Umrandung) */
+  art?: 'fremd' | 'abwesend' | 'markiert' | undefined;
 }
 
 const ZUSTAND_TEXT = {
@@ -67,7 +69,9 @@ export function Deckel({
               .filter((l) => l.reihe === i + 1)
               .map((l) => {
                 const loch = loecher.find((x) => x.nr === l.nr) ?? { nr: l.nr, zustand: 'frei' as const };
-                const klasse = loch.zustand === 'frei' ? 'hv-loch' : `hv-loch hv-loch-${loch.zustand}`;
+                const grund = loch.zustand === 'frei' ? 'hv-loch' : `hv-loch hv-loch-${loch.zustand}`;
+                const art = 'art' in loch ? loch.art : undefined;
+                const klasse = art ? `${grund} hv-loch-${art}` : grund;
                 const marke = 'marke' in loch ? loch.marke : undefined;
                 const gesperrt = 'nichtWaehlbar' in loch && loch.nichtWaehlbar === true;
                 const wort =

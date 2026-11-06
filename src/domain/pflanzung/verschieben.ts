@@ -2,6 +2,7 @@
 // Parameter, Kalendertage in Zürich (G2). Ein Vorgang aus Ereignissen verschieben oder tausch über schreiben().
 import {
   gefaessAm,
+  gefaessStatus,
   plaetzeAus,
   zeilen,
   type NetztopfZeile,
@@ -204,7 +205,16 @@ export function verschiebAnsicht(
   // Zielgefässe: eigenes zuerst, dann übrige ohne feste Dosis mit gleicher Topfgrösse (keine Station)
   const anlageId = n.anlage_id;
   const andere = plaetzeAus(teile, anlageId)
-    .filter((p) => p.id !== ort.platzId && gefaessAm(teile, p.id) && !istStation(teile, p.id))
+    .filter((p) => {
+      // entfernte Gefässe sind kein Ziel (Runde 1 Befund 8)
+      const g = gefaessAm(teile, p.id);
+      return (
+        p.id !== ort.platzId &&
+        g !== undefined &&
+        gefaessStatus(teile, g.id) !== 'entfernt' &&
+        !istStation(teile, p.id)
+      );
+    })
     .filter((p) => lochGroesse(teile, p.id) === ort.groesseMm)
     .sort((a, b) => a.kennung.localeCompare(b.kennung, 'de', { numeric: true }));
   const pflanzen = pflanzungenImTopf(teile, n.id);

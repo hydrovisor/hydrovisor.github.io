@@ -221,3 +221,19 @@ export function lochName(l: DeckelLoch): string {
     .filter(Boolean)
     .join(' · ');
 }
+
+/** sichtbarer Kurztext im Loch (Plan 33, Status nie nur über Farbe) */
+export function lochText(l: DeckelLoch): string | undefined {
+  if (l.ziel) return l.ziel.replace('→ ', '→');
+  if (l.abwesend && l.kennung === undefined) return 'weg';
+  const nr = l.kennung?.split('.').at(-1);
+  if (l.fremd && nr) return `↔${nr}`;
+  return nr;
+}
+
+/** Darstellung des Lochs im Baustein Deckel */
+export function lochArt(l: DeckelLoch): 'fremd' | 'abwesend' | undefined {
+  if (l.fremd) return 'fremd';
+  if (l.abwesend && l.kennung === undefined) return 'abwesend';
+  return undefined;
+}

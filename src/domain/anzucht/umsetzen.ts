@@ -1,7 +1,7 @@
 // Umsetzen einfach (Plan 33; UC5-AK3, UC5-AK4, UC5-AK7, R6.1, R6.2, R5.2, R8.3): Sämlinge eines Satzes von der Station
 // (oder aus der Box) in ihre Zieltöpfe. Rein: `jetzt` und Zeitzone als Parameter, Kalendertage in Zürich (G2). Der
 // Vorgang besteht nur aus Ereignissen (ernte, umsetzdatum_geaendert, umsetzen, abschluss) über schreiben().
-import { gefaessAm, zeilen, type PlatzZeile, type Teile } from '../anlage/teile.ts';
+import { gefaessAm, gefaessStatus, zeilen, type PlatzZeile, type Teile } from '../anlage/teile.ts';
 import type { Schritt, Verstoss, Vorgang } from '../datenpfad/erfassung.ts';
 import { artDerSorte, umsetzenAbTage } from '../pflanzung/belegung.ts';
 import { KULTURFORM_NAME } from '../pflanzung/saeen.ts';
@@ -123,7 +123,8 @@ export function umsetzAnsicht(
   zeitzone: Zeitzone,
 ): UmsetzAnsicht | undefined {
   const satz = offen(zeilen<SatzZeile>(teile, 'satz')).find((s) => s.id === satzId);
-  if (!satz) return undefined;
+  // Direktsaat hat keine Sämlinge zum Umsetzen (A2; Runde 1 Befund 7)
+  if (!satz || satz.direktsaat_platz_id) return undefined;
   const sorte = sorteDesSatzes(teile, satzId) ?? 'Sorte';
   const artId = artDerSorte(teile, satz.sorte_id);
   const heute = kalendertag(jetzt, zeitzone);
@@ -134,7 +135,14 @@ export function umsetzAnsicht(
   )
     .filter((p) => p.satz_id === satzId)
     .map((p) => p.id)
-    .sort();
+    .sort((x, y) => {
+      // Folge wie am Regal: Station und Loch, dann Box (Runde 1 Befund 13)
+      const schluessel = (id: string) => {
+        const z = zustand.get(id);
+        return `${z?.platz_id ?? '~'}|${String(z?.loch_nr ?? 999).padStart(3, '0')}|${id}`;
+      };
+      return schluessel(x).localeCompare(schluessel(y));
+    });
 
   const saemlinge: Saemling[] = [];
   let ohneKeimpruefung = 0;
@@ -229,8 +237,10 @@ export function umsetzZiele(
   zielPlatzId: string,
   gewaehlt: ReadonlyMap<string, number>,
 ): Ziel[] {
+  const zielGefaess = gefaessAm(teile, zielPlatzId);
   const geeignet =
-    gefaessAm(teile, zielPlatzId) !== undefined &&
+    zielGefaess !== undefined &&
+    gefaessStatus(teile, zielGefaess.id) !== 'entfernt' &&
     !istStation(teile, zielPlatzId) &&
     lochGroesse(teile, zielPlatzId) === 80;
   return deckelBelegung(teile, zielPlatzId).map((l) => {
@@ -372,8 +382,10 @@ export function umsetzVorgang(
 
 const HINWEIS_8CM = '8-cm-Topf samt Blähton ins Zielgefäss';
 const HINWEIS_5CM = '5-cm-Anzuchttopf mitsamt Schwamm in den 8-cm-Zieltopf mit gespültem Blähton 8 bis 16 mm';
+const HINWEIS_BOX = 'Schwamm aus der Box in den 8-cm-Zieltopf mit gespültem Blähton 8 bis 16 mm';
 const HINWEIS_DWC = 'DWC-Startstand: Topfboden 1 bis 2 cm im Wasser, 5 bis 7 Tage von oben angiessen';
 const HINWEIS_KRATKY_BELUEFTET = 'Kratky belüftet: Topfboden 1 cm eintauchen';
+/** (A) Kratky ohne Pumpe wie belüftet; Konzept R6.2 nennt nur Kratky belüftet (Runde 1 Befund 14) */
 const HINWEIS_KRATKY = 'Kratky: Topfboden 1 cm eintauchen';
 
 export function umsetzZusammenfassung(
@@ -395,12 +407,19 @@ export function umsetzZusammenfassung(
     if (!s || !topf || !ziel) continue;
     const von = s.ort.lochNr !== undefined ? `${s.ort.kennung}.${String(s.ort.lochNr)}` : s.ort.kennung;
     zeilenText.push(`${von} → ${topf.kennung}`);
-    hinweise.add(s.groesse === 80 ? HINWEIS_8CM : HINWEIS_5CM);
+    // 8-cm-Topf von der Station; ein Schwamm aus der Box geht in den Zieltopf (Runde 1 Befund 15, A)
+    hinweise.add(s.ort.lochNr === undefined ? HINWEIS_BOX : s.groesse === 80 ? HINWEIS_8CM : HINWEIS_5CM);
     const g = gefaessAm(teile, ziel.platzId);
     if (g?.betriebsart === 'dwc') hinweise.add(HINWEIS_DWC);
     if (g?.betriebsart === 'kratky_belueftet') hinweise.add(HINWEIS_KRATKY_BELUEFTET);
     if (g?.betriebsart === 'kratky') hinweise.add(HINWEIS_KRATKY);
     if (!zielgefaesse.includes(ziel.platzId)) zielgefaesse.push(ziel.platzId);
+  }
+  for (const l of e.inStationLassen) {
+    const s = saemling.get(l.pflanzungId);
+    const von =
+      s && s.ort.lochNr !== undefined ? `${s.ort.kennung}.${String(s.ort.lochNr)}` : (s?.ort.kennung ?? '');
+    if (s) zeilenText.push(`${von} bleibt bis ${tagKurz(l.bis)}`);
   }
   // Rest: Sämlinge ohne Ziel, nicht beendet und nicht in der Station gelassen
   const bewegt = new Set([
@@ -408,7 +427,8 @@ export function umsetzZusammenfassung(
     ...e.ueberzaehlig,
     ...e.inStationLassen.map((s) => s.pflanzungId),
   ]);
-  const rest = a.saemlinge.filter((s) => !bewegt.has(s.pflanzungId));
+  // nur Sämlinge ohne Zieltopf (Runde 1 Befund 2)
+  const rest = a.saemlinge.filter((s) => !s.zieltopf && !bewegt.has(s.pflanzungId));
   const restOrt = rest[0]?.ort.kennung;
   const restText =
     rest.length === 0
@@ -480,7 +500,7 @@ export function umsetzAufgaben(teile: Teile, jetzt: Date, zeitzone: Zeitzone): U
     const ziel = a.saemlinge.find((s) => s.zieltopf)?.zieltopf?.gefaessKennung;
     aufgaben.push({
       satzId: satz.id,
-      text: `${ueberfaellig ? 'Umsetzen überfällig' : 'Umsetzen'} · ${a.sorte} · ${station} → ${ziel ?? 'Ziel wählen'}`,
+      text: `${ueberfaellig ? 'Umsetzen überfällig' : 'Umsetzen'} · ${a.sorte} · ${station} → ${ziel ?? 'Ziel wählen'} · ${a.saemlinge.length === 1 ? '1 Sämling' : `${String(a.saemlinge.length)} Sämlinge`}`,
       ort: station,
       faelligAm,
       ueberfaellig,

@@ -1,10 +1,10 @@
 // Verschieben und Tauschen eines Topfs (Regal, Plan 33; UC6-AK3, UC6-AK8, R8.3, R8.4): Zielgefäss wählen, Tipp auf
 // ein wählbares Loch speichert sofort; Rückgängig storniert beide Ereignisse.
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { neueClientId, schreiben } from '../../daten/schreiben.ts';
 import type { Vorgang } from '../../domain/datenpfad/erfassung.ts';
 import { saatRueckgaengig } from '../../domain/pflanzung/saeen.ts';
-import { deckelReihen, lochName } from '../../domain/pflanzung/topf.ts';
+import { deckelReihen, lochArt, lochName, lochText } from '../../domain/pflanzung/topf.ts';
 import { verschiebAnsicht, verschiebVorgang, verschiebZiele } from '../../domain/pflanzung/verschieben.ts';
 import { ZEITZONE } from '../../domain/zeit.ts';
 import { Button } from '../bausteine/Button.tsx';
@@ -26,6 +26,11 @@ export function Verschieben({ topf }: { topf: string }) {
   const [ergebnis, setErgebnis] = useState<{ text: string; vorgang: Vorgang }>();
   const [fehler, setFehler] = useState<string>();
   const [sendet, setSendet] = useState(false);
+  const laeuft = useRef(false);
+  const letzterTipp = useRef(0);
+  const vorgangFuer = useRef<{ schluessel: string; r: ReturnType<typeof verschiebVorgang> } | undefined>(
+    undefined,
+  );
 
   if (!a) {
     return (
@@ -45,22 +50,30 @@ export function Verschieben({ topf }: { topf: string }) {
   const gefaessCode = topf.replace(/\.\d+$/, '');
 
   async function tippen(nr: number) {
-    if (!a || sendet) return;
+    // Sperre 400 ms und kein zweiter Vorgang, solange einer läuft (U13; Runde 1 Befund 3)
+    const nun = uhrJetzt().getTime();
+    if (!a || laeuft.current || nun - letzterTipp.current < 400) return;
+    letzterTipp.current = nun;
     const jetztSenden = uhrJetzt();
-    const r = verschiebVorgang(
-      teile,
-      { netztopfId: a.topf.netztopfId, zielPlatzId: zielPlatz, zielLochNr: nr },
-      neueClientId,
-      jetztSenden,
-      ZEITZONE,
-    );
+    const eingabe = { netztopfId: a.topf.netztopfId, zielPlatzId: zielPlatz, zielLochNr: nr };
+    const schluessel = JSON.stringify(eingabe);
+    // dieselbe Eingabe wiederholt denselben Vorgang mit denselben client_id (TO2)
+    const r =
+      vorgangFuer.current?.schluessel === schluessel
+        ? vorgangFuer.current.r
+        : verschiebVorgang(teile, eingabe, neueClientId, jetztSenden, ZEITZONE);
     if (r.vorgang.length === 0) return;
+    vorgangFuer.current = { schluessel, r };
+    laeuft.current = true;
     setSendet(true);
     const antwort = await schreiben(r.vorgang, { jetzt: jetztSenden, zeitzone: ZEITZONE });
+    laeuft.current = false;
+    letzterTipp.current = 0;
     setSendet(false);
     if (antwort.status === 'nicht_gespeichert') setFehler(antwort.fehler.text);
     else {
       setFehler(undefined);
+      vorgangFuer.current = undefined;
       setErgebnis({ text: r.text, vorgang: r.vorgang });
     }
   }
@@ -125,6 +138,8 @@ export function Verschieben({ topf }: { topf: string }) {
               nr: l.lochNr,
               zustand: l.zustand,
               zustandName: [l.zustandName, lochName(l)].filter(Boolean).join(' · '),
+              ...(lochText(l) !== undefined ? { text: lochText(l) as string } : {}),
+              ...(lochArt(l) ? { art: lochArt(l) } : {}),
               ...(l.nichtWaehlbar ? { nichtWaehlbar: true } : {}),
             }))}
             onLoch={(nr) => void tippen(nr)}
