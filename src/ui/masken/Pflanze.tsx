@@ -41,6 +41,8 @@ export function Pflanze({ pflanzung }: { pflanzung: string }) {
   // Ergebnis mit Stand vor dem Speichern für Rückgängig (Runde 1 Befund 4)
   const [ergebnis, setErgebnis] = useState<{ text: string; vorgang: Vorgang; teile: typeof teile }>();
   const [wissenPhase, setWissenPhase] = useState<Phase>();
+  // seit dem Bündel gespeicherte Vorgänge: Stand und Verlauf rechnen sie ein, bis das neue Bündel da ist (A8; Runde 2 Befund 3)
+  const [seit, setSeit] = useState<{ teile: typeof teile; vorgang: Vorgang }>();
   const [sendet, setSendet] = useState(false);
   const sperre = useRef(false);
   const vorgangFuer = useRef<{ schluessel: string; vorgang: Vorgang } | undefined>(undefined);
@@ -50,7 +52,10 @@ export function Pflanze({ pflanzung }: { pflanzung: string }) {
     teile,
     'satz',
   ).find((s) => s.id === p?.satz_id);
-  const stand = p ? phasenStand(teile, p.satz_id, jetzt, ZEITZONE) : undefined;
+  const neu = seit && seit.teile === teile ? seit.vorgang : undefined;
+  // bis zum neuen Bündel nur Rückgängig, sonst baute ein zweiter Tipp auf dem alten Stand (Runde 2 Befund 3)
+  const gesperrt = neu !== undefined;
+  const stand = p ? phasenStand(teile, p.satz_id, jetzt, ZEITZONE, neu) : undefined;
   if (!p || !satz || !stand) {
     return (
       <main className="hv-seite hv-pflanze" data-density="regal">
@@ -71,7 +76,7 @@ export function Pflanze({ pflanzung }: { pflanzung: string }) {
   ).find((z) => z.pflanzung_id === pflanzung)?.platz_id;
   const ort = zeilen<{ id: string; kennung: string }>(teile, 'platz').find((x) => x.id === platzId)?.kennung;
   const heute = kalendertag(jetzt, ZEITZONE);
-  const verlauf = phasenVerlauf(teile, satz.id, ZEITZONE);
+  const verlauf = phasenVerlauf(teile, satz.id, ZEITZONE, neu);
   const n = stand.naechste;
 
   async function senden(schluessel: string, bauen: () => Vorgang, text: string, danach?: () => void) {
@@ -97,6 +102,9 @@ export function Pflanze({ pflanzung }: { pflanzung: string }) {
       setKorrigieren(false);
       setVersatz(0);
       setErgebnis({ text, vorgang, teile });
+      setSeit((alt) =>
+        alt && alt.teile === teile ? { teile, vorgang: [...alt.vorgang, ...vorgang] } : { teile, vorgang },
+      );
       danach?.();
     } finally {
       const frei = () => {
@@ -114,17 +122,18 @@ export function Pflanze({ pflanzung }: { pflanzung: string }) {
       () =>
         antwortVorgang(
           teile,
-          // die angesehene Pflanze löst Blüte und Fruchtbildung aus (Runde 1 Befund 6; die Domäne nimmt sie nur dort)
-          [{ satzId: satz.id, antwort, ausloesendePflanzungId: pflanzung }],
+          // ohne auslösende Pflanze, bis Tim sie wählt (A11, überspringbar; Wahl folgt im Restpaket UC6, Runde 2 Befund 5)
+          [{ satzId: satz.id, antwort }],
           neueClientId,
           uhrJetzt(),
           ZEITZONE,
           PHASENLOGIK_AB,
         ),
       antwort === 'ja' && n ? `Gespeichert: ${PHASE_NAME[n.phase]}` : `Gespeichert: ${ANTWORT_TEXT[antwort]}`,
-      () => setWissenPhase(antwort === 'ja' ? n?.phase : stand.phase),
+      // Wissenskarte nach Ja (neue Phase) und nach Problem, nicht nach «Noch nicht» (Plan R1.5; Runde 2 Befund 10)
+      () => setWissenPhase(antwort === 'ja' ? n?.phase : antwort === 'problem' ? stand.phase : undefined),
     );
-  const grenze = korrekturGrenze(teile, satz.id, jetzt, ZEITZONE);
+  const grenze = gesperrt ? undefined : korrekturGrenze(teile, satz.id, jetzt, ZEITZONE);
   const neuerTag = grenze ? tagPlus(grenze.tag, versatz) : stand.beginn;
   const wissenFuerPhase = wissenPhase ?? (stand.pruefen || stand.problemAm ? stand.phase : undefined);
   const wissen = wissenFuerPhase ? wissenFuer(teile, satz.sorte_id, wissenFuerPhase) : undefined;
@@ -186,16 +195,16 @@ export function Pflanze({ pflanzung }: { pflanzung: string }) {
       ) : null}
       {n ? (
         <div className="hv-pflanze-knoepfe">
-          <Button disabled={sendet || !stand.wechselMoeglich} onClick={() => antworten('ja')}>
+          <Button disabled={sendet || gesperrt || !stand.wechselMoeglich} onClick={() => antworten('ja')}>
             Phase wechseln
           </Button>
           {!stand.wechselMoeglich && stand.wechselAb ? (
             <p className="hv-pflanze-zeile">{`möglich ab ${tagKurz(stand.wechselAb)}`}</p>
           ) : null}
-          <Button variant="secondary" disabled={sendet} onClick={() => antworten('noch_nicht')}>
+          <Button variant="secondary" disabled={sendet || gesperrt} onClick={() => antworten('noch_nicht')}>
             Noch nicht
           </Button>
-          <Button variant="secondary" disabled={sendet} onClick={() => antworten('problem')}>
+          <Button variant="secondary" disabled={sendet || gesperrt} onClick={() => antworten('problem')}>
             Problem
           </Button>
         </div>

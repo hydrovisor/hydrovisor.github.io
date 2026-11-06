@@ -35,6 +35,8 @@ interface Antwort {
   erfasst_am?: string | null;
   ersetzt_id?: string | null;
   storniert_am: string | null;
+  war_faellig_am?: string | null;
+  aufgabe_schluessel?: string | null;
 }
 interface Zustand {
   pflanzung_id: string;
@@ -65,7 +67,14 @@ function antwortenVon(teile: Teile, satzId: string, neu?: Vorgang): Antwort[] {
       !storniert.has(e.client_id ?? e.id)
     );
   });
-  return alle.sort((a, b) => Date.parse(a.gilt_ab) - Date.parse(b.gilt_ab));
+  // Gleichstand im gilt_ab: erfasst_am, dann id (A8; Runde 2 Befund 2)
+  return alle.sort(
+    (a, b) =>
+      Date.parse(a.gilt_ab) - Date.parse(b.gilt_ab) ||
+      Date.parse(a.client_zeit ?? a.erfasst_am ?? a.gilt_ab) -
+        Date.parse(b.client_zeit ?? b.erfasst_am ?? b.gilt_ab) ||
+      a.id.localeCompare(b.id),
+  );
 }
 
 const datenVon = (e: Antwort) => e.daten ?? {};
@@ -291,6 +300,7 @@ export function phasenKarten(
         sorte,
         ort,
         phaseHeute: (wechsel.at(-1) as { phase: Phase }).phase,
+        // grenze.von = voriger vorbelegter Wechsel (Testvertrag); die Kette prüft die Maske streng (Runde 2 Befund 1)
         wechsel: wechsel.map((w) => ({
           phase: w.phase,
           am: w.am,
@@ -420,8 +430,12 @@ export function nachfuehrVorgang(
     const erwartet = erwarteteWechsel(folge, stand.phase, stand.beginn, tagPlus(heute, 3650));
     let i = folge.findIndex((p) => p.phase === stand.phase);
     let vorher = stand.beginn;
+    // nach einem Ja oder einem vorigen Wechsel nur später, sonst gälte die alte Phase weiter (Runde 2 Befund 2)
+    let streng = stand.phase !== 'keimung';
     for (const [k, w] of e.wechsel.entries()) {
-      if (folge[i + 1]?.phase !== w.phase || w.am < vorher || w.am > heute) return [];
+      if (folge[i + 1]?.phase !== w.phase || w.am < vorher || (streng && w.am === vorher) || w.am > heute)
+        return [];
+      streng = true;
       v.push(
         zeile(ids, {
           satz_id: e.satzId,
@@ -490,15 +504,21 @@ export function korrekturVorgang(
   const ja = antwortenVon(teile, satzId).filter((e) => datenVon(e)['antwort'] === 'ja');
   const alt = ja.at(-1);
   if (!satz || !alt) return [];
+  const grenze = korrekturGrenze(teile, satzId, jetzt, zeitzone);
+  if (!grenze || neuerTag < grenze.von || neuerTag > grenze.bis) return [];
+  // am Tag des vorigen Ja mindestens 1 s danach, sonst gälte die Phase davor wieder (Rückfall, Runde 2 Befund 2)
   const davor = ja.at(-2);
-  const untergrenze = davor ? kalendertag(new Date(davor.gilt_ab), zeitzone) : satz.saatdatum;
-  if (neuerTag < untergrenze || neuerTag > kalendertag(jetzt, zeitzone)) return [];
+  const mitte = mittag(neuerTag, zeitzone).getTime();
+  const giltAb = new Date(davor ? Math.max(mitte, Date.parse(davor.gilt_ab) + 1000) : mitte);
   return [
     { art: 'storno', tabelle: 'ereignis', clientId: alt.client_id ?? alt.id, grund: 'korrektur' },
     zeile(ids, {
       satz_id: satzId,
-      gilt_ab: mittag(neuerTag, zeitzone).toISOString(),
+      gilt_ab: giltAb.toISOString(),
       ersetzt_id: alt.id,
+      // fachliche Felder bleiben, damit die Aufgabe erledigt bleibt (8.1 Regel 2; Runde 2 Befund 4)
+      ...(alt.war_faellig_am ? { war_faellig_am: alt.war_faellig_am } : {}),
+      ...(alt.aufgabe_schluessel ? { aufgabe_schluessel: alt.aufgabe_schluessel } : {}),
       daten: { ...datenVon(alt) },
     }),
   ];
@@ -531,6 +551,9 @@ export function phasenRueckgaengig(
         typ: 'phase_antwort',
         satz_id: alt.satz_id,
         gilt_ab: alt.gilt_ab,
+        ...(alt.ersetzt_id ? { ersetzt_id: alt.ersetzt_id } : {}),
+        ...(alt.war_faellig_am ? { war_faellig_am: alt.war_faellig_am } : {}),
+        ...(alt.aufgabe_schluessel ? { aufgabe_schluessel: alt.aufgabe_schluessel } : {}),
         daten: { ...datenVon(alt) },
       },
     });
@@ -545,8 +568,9 @@ export function phasenVerlauf(
   teile: Teile,
   satzId: string,
   zeitzone: Zeitzone,
+  neu?: Vorgang,
 ): { tag: string; text: string; korrektur: boolean; nachgefuehrt: boolean }[] {
-  return antwortenVon(teile, satzId)
+  return antwortenVon(teile, satzId, neu)
     .map((e) => {
       const d = datenVon(e);
       const phase = PHASE_NAME[String(d['phase']) as Phase] ?? String(d['phase']);

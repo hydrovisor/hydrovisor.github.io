@@ -43,21 +43,28 @@ export function Phasenkarten({ jetzt }: { jetzt: Date }) {
   const [ohneLetzten, setOhneLetzten] = useState<Record<string, boolean>>({});
   const [ergebnis, setErgebnis] = useState<{ text: string; vorgang: Vorgang; teile: typeof teile }>();
   // gespeicherte Sätze bis zum neuen Bündel ausblenden, damit kein zweiter Vorgang entsteht (Runde 1 Befund 9)
-  const [erledigt, setErledigt] = useState<string[]>([]);
+  // an das Bündel des Speicherns gebunden: mit dem neuen Bündel erscheinen Folgefragen wieder (R1.6; Runde 2 Befund 6)
+  const [erledigtBei, setErledigtBei] = useState<{ teile: typeof teile; saetze: string[] }>();
   const [fehler, setFehler] = useState<string>();
   const [sendet, setSendet] = useState(false);
   const sperre = useRef(false);
   // derselbe Vorgang bei Wiederholung derselben Eingabe (TO2)
   const vorgangFuer = useRef<{ schluessel: string; vorgang: Vorgang } | undefined>(undefined);
   if (!teile) return null;
+  const erledigt = erledigtBei?.teile === teile ? erledigtBei.saetze : [];
   const roh = phasenKarten(teile, jetzt, ZEITZONE, PHASENLOGIK_AB);
   const nachZeilen = (roh.nachfuehren?.zeilen ?? []).filter((z) => !erledigt.includes(z.satzId));
   const fragen = roh.fragen
     .map((k) => ({ ...k, zeilen: k.zeilen.filter((z) => !erledigt.includes(z.satzId)) }))
     .filter((k) => k.zeilen.length > 0);
 
-  async function senden(schluessel: string, bauen: () => Vorgang, text: string, saetze: string[]) {
-    if (sperre.current) return;
+  async function senden(
+    schluessel: string,
+    bauen: () => Vorgang,
+    text: string,
+    saetze: string[],
+  ): Promise<boolean> {
+    if (sperre.current) return false;
     sperre.current = true;
     setSendet(true);
     let ok = false;
@@ -65,19 +72,23 @@ export function Phasenkarten({ jetzt }: { jetzt: Date }) {
       const vorgang = vorgangFuer.current?.schluessel === schluessel ? vorgangFuer.current.vorgang : bauen();
       if (vorgang.length === 0) {
         setFehler('Eingabe nicht gültig, nicht gespeichert');
-        return;
+        return false;
       }
       vorgangFuer.current = { schluessel, vorgang };
       const r = await schreiben(vorgang, { jetzt: uhrJetzt(), zeitzone: ZEITZONE });
       if (r.status !== 'gespeichert') {
         setFehler(r.status === 'nicht_gespeichert' ? r.fehler.text : 'Schon anders gespeichert');
-        return;
+        return false;
       }
       ok = true;
       setFehler(undefined);
       vorgangFuer.current = undefined;
-      setErledigt((alt) => [...alt, ...saetze]);
+      setErledigtBei((alt) => ({
+        teile,
+        saetze: [...(alt && alt.teile === teile ? alt.saetze : []), ...saetze],
+      }));
       setErgebnis({ text, vorgang, teile });
+      return true;
     } finally {
       const frei = () => {
         sperre.current = false;
@@ -92,9 +103,10 @@ export function Phasenkarten({ jetzt }: { jetzt: Date }) {
     if (!ergebnis) return;
     // Rückgängig mit dem Stand vor dem Speichern (Runde 1 Befund 5)
     const v = phasenRueckgaengig(ergebnis.vorgang, ergebnis.teile, neueClientId);
-    void senden(`rueck|${JSON.stringify(ergebnis.vorgang)}`, () => v, 'Rückgängig gemacht', []).then(() =>
-      setErledigt([]),
-    );
+    // nur nach Erfolg wieder einblenden (Runde 2 Befund 6)
+    void senden(`rueck|${JSON.stringify(ergebnis.vorgang)}`, () => v, 'Rückgängig gemacht', []).then((ok) => {
+      if (ok) setErledigtBei(undefined);
+    });
   }
 
   function alleJa(karte: Fragekarte) {
@@ -110,26 +122,34 @@ export function Phasenkarten({ jetzt }: { jetzt: Date }) {
     );
   }
 
+  /** Platz für die späteren Wechsel lassen: je einen Tag vor heute (Runde 2 Befund 1) */
+  const obergrenzeVon = (z: (typeof nachZeilen)[number], i: number) =>
+    tagPlus((z.wechsel[i] as { grenze: { bis: string } }).grenze.bis, -(z.wechsel.length - 1 - i));
+
+  /** wirksame Tage je Wechsel: nie vor oder am vorigen Wechsel, spätere ziehen mit (Runde 2 Befund 1) */
+  function tageVon(z: (typeof nachZeilen)[number]): string[] {
+    const tage: string[] = [];
+    for (const [i, w] of z.wechsel.entries()) {
+      const gewuenscht = tagPlus(w.am, versatz[z.satzId]?.[i] ?? 0);
+      const vorher = tage[i - 1];
+      const untergrenze = vorher ? tagPlus(vorher, 1) : w.grenze.von;
+      const obergrenze = obergrenzeVon(z, i);
+      tage.push(gewuenscht < untergrenze ? untergrenze : gewuenscht > obergrenze ? obergrenze : gewuenscht);
+    }
+    return tage;
+  }
+
   function alleUebernehmen() {
     const eintraege = nachZeilen.map((z) => {
-      const wechsel = z.wechsel.map((w, i) => ({
-        phase: w.phase,
-        am: tagPlus(w.am, versatz[z.satzId]?.[i] ?? 0),
-      }));
+      const tage = tageVon(z);
+      const wechsel = z.wechsel.map((w, i) => ({ phase: w.phase, am: tage[i] ?? w.am }));
       return { satzId: z.satzId, wechsel: ohneLetzten[z.satzId] ? wechsel.slice(0, -1) : wechsel };
     });
+    const mitWechsel = eintraege.filter((e) => e.wechsel.length > 0);
     void senden(
       `nach|${JSON.stringify(eintraege)}`,
-      () =>
-        nachfuehrVorgang(
-          teile,
-          eintraege.filter((e) => e.wechsel.length > 0),
-          neueClientId,
-          uhrJetzt(),
-          ZEITZONE,
-          PHASENLOGIK_AB,
-        ),
-      `Gespeichert: ${String(eintraege.length)} Sätze nachgeführt`,
+      () => nachfuehrVorgang(teile, mitWechsel, neueClientId, uhrJetzt(), ZEITZONE, PHASENLOGIK_AB),
+      `Gespeichert: ${String(mitWechsel.length)} ${mitWechsel.length === 1 ? 'Satz' : 'Sätze'} nachgeführt`,
       eintraege.map((e) => e.satzId),
     );
   }
@@ -169,42 +189,50 @@ export function Phasenkarten({ jetzt }: { jetzt: Date }) {
           <Button variant="secondary" size="compact" disabled={sendet} onClick={alleUebernehmen}>
             Alle übernehmen
           </Button>
-          {nachZeilen.map((z) => (
-            <div key={z.satzId} className="hv-phasen-zeile">
-              <span>
-                {sorteLink(z.satzId, z.sorte)}
-                {` · ${z.ort} · heute ${PHASE_NAME[z.phaseHeute]}`}
-              </span>
-              {z.wechsel.map((w, i) =>
-                ohneLetzten[z.satzId] && i === z.wechsel.length - 1 ? null : (
-                  <Stepper
-                    key={w.phase}
-                    label={`${z.sorte} ${PHASE_NAME[w.phase]} ab`}
-                    wert={versatz[z.satzId]?.[i] ?? 0}
-                    min={-tageZwischen(w.grenze.von, w.am)}
-                    max={tageZwischen(w.am, w.grenze.bis)}
-                    anzeige={(v) => tagKurz(tagPlus(w.am, v))}
-                    onWert={(v) =>
-                      setVersatz((alt) => {
-                        const liste = [...(alt[z.satzId] ?? z.wechsel.map(() => 0))];
-                        liste[i] = v;
-                        return { ...alt, [z.satzId]: liste };
-                      })
-                    }
+          {nachZeilen.map((z) => {
+            const tage = tageVon(z);
+            const ohne = ohneLetzten[z.satzId] === true;
+            const bisPhase = ohne ? z.wechsel.at(-2)?.phase : z.phaseHeute;
+            return (
+              <div key={z.satzId} className="hv-phasen-zeile">
+                <span>
+                  {sorteLink(z.satzId, z.sorte)}
+                  {` · ${z.ort} · ${bisPhase ? `heute ${PHASE_NAME[bisPhase]}` : 'ohne Wechsel'}`}
+                </span>
+                {z.wechsel.map((w, i) => {
+                  if (ohne && i === z.wechsel.length - 1) return null;
+                  const vorher = tage[i - 1];
+                  const von = vorher ? tagPlus(vorher, 1) : w.grenze.von;
+                  return (
+                    <Stepper
+                      key={w.phase}
+                      label={`${z.sorte} ${PHASE_NAME[w.phase]} ab`}
+                      wert={tageZwischen(w.am, tage[i] ?? w.am)}
+                      min={tageZwischen(w.am, von)}
+                      max={tageZwischen(w.am, obergrenzeVon(z, i))}
+                      anzeige={(v) => tagKurz(tagPlus(w.am, v))}
+                      onWert={(v) =>
+                        setVersatz((alt) => {
+                          const liste = z.wechsel.map((x, k) => tageZwischen(x.am, tage[k] ?? x.am));
+                          liste[i] = v;
+                          return { ...alt, [z.satzId]: liste };
+                        })
+                      }
+                    />
+                  );
+                })}
+                {z.wechsel.length > 0 ? (
+                  <Choice
+                    label={`${z.sorte} letzter Wechsel`}
+                    zeile
+                    optionen={[{ wert: 'ohne', titel: 'Ohne letzten Wechsel' }]}
+                    gewaehlt={ohne ? ['ohne'] : []}
+                    onWahl={() => setOhneLetzten((alt) => ({ ...alt, [z.satzId]: !alt[z.satzId] }))}
                   />
-                ),
-              )}
-              {z.wechsel.length > 0 ? (
-                <Choice
-                  label={`${z.sorte} letzter Wechsel`}
-                  zeile
-                  optionen={[{ wert: 'ohne', titel: 'Ohne letzten Wechsel' }]}
-                  gewaehlt={ohneLetzten[z.satzId] ? ['ohne'] : []}
-                  onWahl={() => setOhneLetzten((alt) => ({ ...alt, [z.satzId]: !alt[z.satzId] }))}
-                />
-              ) : null}
-            </div>
-          ))}
+                ) : null}
+              </div>
+            );
+          })}
         </Card>
       ) : null}
       {fragen.map((karte) => (
