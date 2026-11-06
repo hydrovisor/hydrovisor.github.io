@@ -151,3 +151,13 @@ supabase/tests/database/14_umsetzen.test.sql
 tests/e2e/umsetzen.spec.ts
 tests/e2e/verschieben.spec.ts
 tests/e2e/anzucht-ablauf.spec.ts
+# I1b-01 Messmaske (#26)
+tests/fixtures/messen.ts
+tests/unit/bewertung.test.ts
+tests/unit/bewertung-hinweise.test.ts
+tests/unit/messung-verlauf.test.ts
+tests/unit/messung-sprung.test.ts
+tests/unit/messung-ziffern.test.ts
+tests/unit/messung-kontext.test.ts
+tests/unit/messung-bewertung-speichern.test.ts
+tests/e2e/messen-maske.spec.ts

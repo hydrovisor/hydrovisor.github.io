@@ -1,8 +1,10 @@
 // Messung als Vorgang für schreiben() (Plan 12 Datenfluss «Speichern»; UC9-AK2, R4.10, R5.2, U2; Plan 11 Ü1).
 // Die Bindung hält client_id und gilt_ab des ersten Speicherns für denselben Eingabe-Schnappschuss.
 import type { Schritt } from '../datenpfad/erfassung.ts';
+import type { Bewertung } from '../bewertung/bewertung.ts';
+import { alsSchnappschuss, type Sollband } from '../bewertung/sollband.ts';
 import type { Betriebsart } from '../ort.ts';
-import { messwerte, type Messeingabe } from './eingabe.ts';
+import { messwerte, type Groesse, type Messeingabe } from './eingabe.ts';
 
 export interface Erfassungsbindung {
   /** Eingabe-Schnappschuss, an den client_id und gilt_ab gebunden sind */
@@ -36,6 +38,12 @@ export function messungVorgang(
     uPh: number;
     warFaelligAm?: string;
     erfassungsdauerS?: number;
+    /** Plan 26 (R2.5): Zielbereich und Bewertung; ohne bleibt der Vorgang wie in I0-07 */
+    bewertung?: {
+      sollband: Sollband;
+      bewertungen: Partial<Record<Groesse, Bewertung>>;
+      sprungBestaetigt?: boolean;
+    };
   },
   bindung: Erfassungsbindung,
 ): Schritt {
@@ -52,9 +60,21 @@ export function messungVorgang(
     fuellstand: kontext.fuellstand ?? null,
     war_faellig_am: kontext.warFaelligAm ?? null,
   };
-  // Schnappschuss ohne Zielbereich: die Bewertung kommt mit I1b (A5)
-  if (kontext.betriebsart)
-    felder['schnappschuss'] = { betriebsart: kontext.betriebsart, u_ec: kontext.uEc, u_ph: kontext.uPh };
+  const b = kontext.bewertung;
+  if (b) {
+    felder['bewertung_ph'] = b.bewertungen.ph ?? null;
+    felder['bewertung_ec'] = b.bewertungen.ec ?? null;
+    felder['bewertung_temp'] = b.bewertungen.temperatur ?? null;
+  }
+  // Schnappschuss mit Zielbereich nur, wenn bewertet wurde (R2.5); sonst wie in I0-07
+  if (kontext.betriebsart || b)
+    felder['schnappschuss'] = {
+      ...(kontext.betriebsart ? { betriebsart: kontext.betriebsart } : {}),
+      u_ec: kontext.uEc,
+      u_ph: kontext.uPh,
+      ...(b ? { zielbereich: alsSchnappschuss(b.sollband) } : {}),
+      ...(b?.sprungBestaetigt ? { sprung_bestaetigt: true } : {}),
+    };
   if (kontext.erfassungsdauerS !== undefined) felder['erfassungsdauer_s'] = kontext.erfassungsdauerS;
   return { art: 'neu', tabelle: 'messung', felder };
 }
