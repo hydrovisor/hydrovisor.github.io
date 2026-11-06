@@ -255,7 +255,7 @@ select matches(
 
 select is(
   (select format('vollständig %s, %s fehlend, Prüfaufträge = Werte mit Klasse D %s, mindestens die drei anwendbar %s',
-                 v.vollstaendig, v.fehlende_groessen, v.pruefauftraege = d.n, v.pruefauftraege >= 3)
+                 v.vollstaendig::text, v.fehlende_groessen, (v.pruefauftraege = d.n)::text, (v.pruefauftraege >= 3)::text)
      from public.v_vollstaendigkeit v,
           lateral (select count(*) as n from public.v_sollwert s
                     where s.sorte_id = v.sorte_id and s.evidenzklasse = 'D'
@@ -337,7 +337,7 @@ select is(
 -- ---------------------------------------------------------------------
 
 select is(
-  (select format('%s %s %s %s %s', se.ebene, se.klasse_saatmenge, se.bestaetigt_am = public.kalendertag(now()),
+  (select format('%s %s %s %s %s', se.ebene, se.klasse_saatmenge, (se.bestaetigt_am = public.kalendertag(now()))::text,
                  se.quelle_id, se.kurzzitat)
      from public.saatempfehlung se
     where se.art_id = 'pgtap15_salat' and se.kulturform = 'schnitt' and se.gueltig_bis is null),
@@ -360,7 +360,7 @@ select ok(
   'UC4-AK8 recherche_saatempfehlung Klasse A und D scheitern, Klasse C gelingt');
 
 select is(
-  (select string_agg(format('%s %s %s %s', se.ebene, se.klasse_saatmenge, se.bestaetigt_am is not null, se.zeile_id), ', '
+  (select string_agg(format('%s %s %s %s', se.ebene, se.klasse_saatmenge, (se.bestaetigt_am is not null)::text, se.zeile_id), ', '
                      order by se.ebene)
      from public.saatempfehlung se
     where se.gueltig_bis is null and se.kulturform = 'kopf'
@@ -372,8 +372,11 @@ select is(
 -- UC4-AK8 Katalogquelle bei sorte_neu (A12)
 -- ---------------------------------------------------------------------
 
+-- eigener Aufruf vorab, damit die Prüfung danach die Schreibvorgänge sieht
+create temp table pgtap15_katalog as select pg_temp.tim('sorte_neu', '{"sorte_id":"15000000-0000-4000-8000-000000000004","name":"Testsorte Katalog","art_id":"pgtap15_salat","kulturtyp":"blatt","wuchshoehe_max_mm":450,"wuchsform":"rosette","katalog_link":"https://katalog.example.invalid/testsorte","app_version":"pgtap"}') as r;
+
 select is(
-  pg_temp.tim('sorte_neu', '{"sorte_id":"15000000-0000-4000-8000-000000000004","name":"Testsorte Katalog","art_id":"pgtap15_salat","kulturtyp":"blatt","wuchshoehe_max_mm":450,"wuchsform":"rosette","katalog_link":"https://katalog.example.invalid/testsorte","app_version":"pgtap"}')
+  (select r from pgtap15_katalog)
   || ' | ' || coalesce((select q.klasse || ' ' || q.anbaumethode || ' ' || q.link from public.quelle q
                          where q.quelle_id = 'katalog-app-15000000-0000-4000-8000-000000000004'), 'keine Quelle')
   || ' | ' || coalesce((select string_agg(h.feld || ' ' || h.evidenzklasse || ' ' || h.vermerk || ' ' || h.quelle_id, ', '
