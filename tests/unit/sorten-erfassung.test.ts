@@ -398,15 +398,19 @@ describe('UC4 Sortenformular', () => {
     expect(keimartDerArt([keim(andere, 'dunkel', 'art')], sorten, undefined)).toBeUndefined();
   });
 
-  it('UC4 B9 Keimfähigkeit 85.5 % → 0.855', () => {
+  it('UC4 B9 Keimfähigkeit nur in ganzen Prozent: 85.5 % abgelehnt, 85 % → 0.85 (N1, numeric(3,2))', () => {
+    expect(formularPruefen({ ...VOLL(), keimfaehigkeitProzent: '85.5' }, ARTEN)).toContainEqual({
+      feld: 'keimfaehigkeitProzent',
+      text: 'Keimfähigkeit in ganzen %, 0 bis 100',
+    });
+    expect(formularPruefen({ ...VOLL(), keimfaehigkeitProzent: '85' }, ARTEN)).toEqual([]);
     const r = erfassungBauen(
-      { ...VOLL(), keimfaehigkeitProzent: '85.5' },
+      { ...VOLL(), keimfaehigkeitProzent: '85' },
       { sorteId: SORTE, saatgutId: SAATGUT, clientIds: zaehler() },
       LAUF,
       KONTEXT,
     );
     const saatgut = r.vorgang.find((s) => s.art === 'neu' && s.tabelle === 'saatgut');
-    expect(saatgut?.art === 'neu' && saatgut.felder['keimfaehigkeit_packung']).toBeCloseTo(0.855, 10);
-    expect(formularPruefen({ ...VOLL(), keimfaehigkeitProzent: '85.5' }, ARTEN)).toEqual([]);
+    expect(saatgut?.art === 'neu' && saatgut.felder['keimfaehigkeit_packung']).toBe(0.85);
   });
 });
