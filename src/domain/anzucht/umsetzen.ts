@@ -15,6 +15,7 @@ import {
   type DeckelLoch,
 } from '../pflanzung/topf.ts';
 import { kalendertag, tagKurz, tagPlus, tageZwischen, type Zeitzone } from '../zeit.ts';
+import { wechselAmUmsetztag } from '../zielbereich.ts';
 import { stationsGroesse } from './kapazitaet.ts';
 
 interface SatzZeile {
@@ -404,7 +405,15 @@ export function umsetzZusammenfassung(
   e: UmsetzEingabe,
   jetzt: Date,
   zeitzone: Zeitzone,
-): { zeilen: string[]; hinweise: string[]; rest?: string; stationLeer?: string; ansatz?: string } {
+): {
+  zeilen: string[];
+  hinweise: string[];
+  rest?: string;
+  stationLeer?: string;
+  ansatz?: string;
+  /** Zielgefässe, in denen die Lösung am Umsetztag gewechselt werden soll (R2.2; Plan 34 A12) */
+  wechselIn?: string[];
+} {
   const a = umsetzAnsicht(teile, e.satzId, jetzt, zeitzone);
   if (!a) return { zeilen: [], hinweise: [] };
   const saemling = new Map(a.saemlinge.map((s) => [s.pflanzungId, s]));
@@ -462,11 +471,21 @@ export function umsetzZusammenfassung(
         (z) => z.status === 'aktiv' && z.platz_id === st && !weg.has(z.pflanzung_id),
       ),
   );
+  // Ansatz je Zielgefäss am Umsetztag (R2.2 letzte Zeile; Plan 34 A12, ersetzt Plan 33 A28)
+  const umsetztag = kalendertag(jetzt, zeitzone);
+  const wechselIn: string[] = [];
   const ansatz = zielgefaesse
-    .map(
-      (p) =>
-        `Ansatz für Umsetzen in ${kennungVon(teile, p)}: Ziel-EC von Hand nach Düngeplan, Stadium 1. echte Blätter`,
-    )
+    .map((p) => {
+      const w = wechselAmUmsetztag(teile ?? {}, p, umsetztag, jetzt, zeitzone);
+      if (w.art === 'wechsel_vorschlagen') wechselIn.push(p);
+      const text =
+        w.art === 'erster_ansatz'
+          ? 'Ansatz für Umsetzen'
+          : w.art === 'wechsel_vorschlagen'
+            ? `Lösung wechseln am Umsetztag (Lösung ${String(w.alterTage)} Tage alt)`
+            : `Lösung bleibt (${String(w.alterTage)} Tage alt), Zielbereich und Nachfülldosis neu`;
+      return `${kennungVon(teile, p)}: ${text}`;
+    })
     .join(' · ');
   return {
     zeilen: zeilenText,
@@ -474,6 +493,7 @@ export function umsetzZusammenfassung(
     ...(restText ? { rest: restText } : {}),
     ...(leer ? { stationLeer: `${kennungVon(teile, leer)} ist ohne Satz: leeren` } : {}),
     ...(ansatz ? { ansatz } : {}),
+    ...(wechselIn.length > 0 ? { wechselIn } : {}),
   };
 }
 

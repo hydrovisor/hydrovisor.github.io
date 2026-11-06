@@ -28,6 +28,8 @@ export interface KopfAngaben {
   stadiumVorschlag?: Stadium;
   stadiumGewaehlt?: Stadium;
   pflanzungIds: readonly string[];
+  /** Leitkultur aus ansatzGrundlage() (R2.3, R2.5; Plan 34); ohne Leitkultur null */
+  leitkulturArtId?: string;
   schnappschuss: Record<string, unknown>;
   ecWasser?: number;
   zielEcVorschlag?: number;
@@ -111,6 +113,7 @@ export function kopfVorgang(
       stadium_vorschlag: k.stadiumVorschlag ?? r.stadium,
       stadium_gewaehlt: k.stadiumGewaehlt ?? r.stadium,
       gerechnet_fuer: [...k.pflanzungIds],
+      leitkultur_art_id: k.leitkulturArtId ?? null,
       schnappschuss: k.schnappschuss,
       ec_wasser: k.ecWasser === undefined ? null : k.ecWasser / 100,
       ziel_ec_vorschlag: (k.zielEcVorschlag ?? r.ecZiel) / 100,
@@ -188,6 +191,24 @@ export function abwahlVorgang(vorher: AblaufStand, nr: number): Vorgang {
   return [
     storno('ansatz_schritt', z.schrittClientId),
     ...(z.positionClientIds ?? []).map((id) => storno('ansatz_position', id)),
+  ];
+}
+
+/** Tims Wahl der Leitkultur im Gleichstand (R2.3 Stufe 4, Plan 34): Ereignis leitkultur_gewaehlt am Platz */
+export function leitkulturGewaehltVorgang(
+  platzId: string,
+  artId: string,
+  ids: () => string,
+  jetzt: Date,
+): Vorgang {
+  const id = ids();
+  return [
+    neu('ereignis', id, {
+      typ: 'leitkultur_gewaehlt',
+      platz_id: platzId,
+      daten: { art_id: artId },
+      gilt_ab: jetzt.toISOString(),
+    }),
   ];
 }
 

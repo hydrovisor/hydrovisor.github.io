@@ -33,6 +33,7 @@ import {
   abschlussVorgang,
   abwahlVorgang,
   kopfVorgang,
+  leitkulturGewaehltVorgang,
   schrittVorgang,
 } from '../../domain/abhakliste/vorgaenge.ts';
 import { zeilenAus, ZUGABEN } from '../../domain/abhakliste/zeilen.ts';
@@ -186,8 +187,31 @@ function ZahlEingabe({
   );
 }
 
-function Abhakliste({ ort, teile }: { ort: Ort; teile: Teile }) {
+function Abhakliste({ ort, teile: teileBuendel }: { ort: Ort; teile: Teile }) {
   const { buendel } = useBuendel();
+  // Tims Wahl der Leitkultur wirkt sofort, auch ohne Netz (R2.3 Stufe 4; Plan 34 A9): bis das Bündel sie enthält,
+  // steht sie als lokale Zeile im Teil ereignis_platz
+  const [leitkulturWahl, setLeitkulturWahl] = useState<{ id: string; artId: string; giltAb: string }>();
+  const teile = useMemo<Teile>(
+    () =>
+      leitkulturWahl
+        ? {
+            ...teileBuendel,
+            ereignis_platz: [
+              ...(teileBuendel['ereignis_platz'] ?? []),
+              {
+                id: leitkulturWahl.id,
+                typ: 'leitkultur_gewaehlt',
+                platz_id: ort.platzId,
+                daten: { art_id: leitkulturWahl.artId },
+                gilt_ab: leitkulturWahl.giltAb,
+                storniert_am: null,
+              },
+            ],
+          }
+        : teileBuendel,
+    [teileBuendel, leitkulturWahl, ort.platzId],
+  );
   const geraet = messgeraet(buendel);
   const [jetztMs, setJetztMs] = useState(() => Date.now());
   const jetzt = useMemo(() => new Date(jetztMs), [jetztMs]);
@@ -488,6 +512,7 @@ function Abhakliste({ ort, teile }: { ort: Ort; teile: Teile }) {
           stadiumVorschlag: eingaben.stadiumVorschlag ?? rechnung.stadium,
           stadiumGewaehlt: rechnung.stadium,
           pflanzungIds: eingaben.pflanzungIds,
+          ...(eingaben.leitkultur.art === 'art' ? { leitkulturArtId: eingaben.leitkultur.artId } : {}),
           schnappschuss: {
             ...(eingaben.phBand || zb
               ? {
@@ -642,6 +667,20 @@ function Abhakliste({ ort, teile }: { ort: Ort; teile: Teile }) {
       oeffnen({ name: 'heute' });
     })();
   }
+
+  /** Leitkultur im Gleichstand wählen: Ereignis leitkultur_gewaehlt über schreiben(), danach rechnet die Maske neu */
+  function leitkulturWaehlen(artId: string): void {
+    const giltAb = uhrJetzt();
+    const v = leitkulturGewaehltVorgang(ort.platzId, artId, neueClientId, giltAb);
+    const id = v[0]?.art === 'neu' ? String(v[0].felder['id']) : neueClientId();
+    setLeitkulturWahl({ id, artId, giltAb: giltAb.toISOString() });
+    void schreiben(v, { jetzt: giltAb, zeitzone: ZEITZONE }).then((antwort) => {
+      if (antwort.status === 'nicht_gespeichert')
+        setFehler(`${antwort.fehler.text}. Leitkultur nicht gespeichert.`);
+    });
+  }
+  const artName = (artId: string) =>
+    String(teil(teile, 'art').find((a) => a['art_id'] === artId)?.['name_de'] ?? artId);
 
   const kopf = (
     <header className="hv-messen-kopf">
@@ -810,6 +849,17 @@ function Abhakliste({ ort, teile }: { ort: Ort; teile: Teile }) {
         >
           {fehler}
         </Notice>
+      ) : null}
+      {!aktuell.kopfGeschrieben && eingaben.leitkultur.art === 'wahl_noetig' ? (
+        <Card title="Leitkultur wählen">
+          <p>Gleichstand: Wähle die Art, nach der Zielbereich und Stadium gelten</p>
+          <Choice
+            label="Leitkultur wählen"
+            optionen={eingaben.leitkultur.kandidaten.map((a) => ({ wert: a, titel: artName(a) }))}
+            gewaehlt={[]}
+            onWahl={leitkulturWaehlen}
+          />
+        </Card>
       ) : null}
       {!aktuell.kopfGeschrieben ? (
         <Card title="Rechnung">

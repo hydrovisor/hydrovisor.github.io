@@ -14,6 +14,7 @@ import {
   type UmsetzEingabe,
 } from '../../domain/anzucht/umsetzen.ts';
 import type { Vorgang } from '../../domain/datenpfad/erfassung.ts';
+import { messbareOrte } from '../../domain/ort.ts';
 import { saatRueckgaengig } from '../../domain/pflanzung/saeen.ts';
 import {
   deckelReihen,
@@ -252,6 +253,10 @@ function Maske({ satz, wie, jetzt }: { satz: string; wie: 'geplant' | undefined;
             zuweisung: zuordnen(a.saemlinge, schritt.fuer, gewaehlt),
           };
     const z = umsetzZusammenfassung(teile, eingabe, jetzt, ZEITZONE);
+    const wechselPlatz = z.wechselIn?.[0];
+    const wechselCode = wechselPlatz
+      ? messbareOrte(teile ?? {}).find((o) => o.platzId === wechselPlatz)?.code
+      : undefined;
     return (
       <main className="hv-seite hv-umsetzen" data-density="regal">
         {kopf}
@@ -267,7 +272,25 @@ function Maske({ satz, wie, jetzt }: { satz: string; wie: 'geplant' | undefined;
             {h}
           </Notice>
         ))}
-        {z.ansatz ? <p className="hv-umsetzen-ansatz">{z.ansatz}</p> : null}
+        {z.ansatz ? (
+          // R2.2 letzte Zeile (Plan 34 A12): Lösung ab 7 Tagen am Umsetztag wechseln
+          <Notice
+            kompakt
+            tone={z.wechselIn ? 'warn' : 'info'}
+            action={
+              wechselCode ? (
+                <a
+                  className="hv-btn hv-btn-secondary hv-btn-compact"
+                  href={hashZu({ name: 'ansatz', code: wechselCode })}
+                >
+                  Lösung wechseln
+                </a>
+              ) : undefined
+            }
+          >
+            {z.ansatz}
+          </Notice>
+        ) : null}
         {schritt.art === 'bestaetigen' && eingabe.inStationLassen.length > 0 && a.inStationLassenBis ? (
           // R6.2 / A11: Datum zwischen morgen und Saat + «Umsetzen bis» wählbar (Runde 2 Befund 3)
           <Stepper

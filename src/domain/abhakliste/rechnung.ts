@@ -1,14 +1,13 @@
 // Eingaben des Düngerrechners für den Neuansatz aus den Bündelteilen (Konzept R4.1 bis R4.7; Plan 29 A11, A12).
-// Rein. Zielbereich aus bewertungsband() (Zweck «Bewertung heute», A11), Leitkultur = ältester aktiver Satz im Gefäss
-// (A11, bis I2-02), k aus k_faktor, Teil-Dosis aus teilDosis() mit kStabil() über die Neuansätze im Bündel (A12).
+// Rein. Zielbereich, Leitkultur und Stadium aus ansatzGrundlage() nach Zweck (R2.1 bis R2.3, R4.3; Plan 34, ersetzt
+// Plan 29 A11); Station mit dem Kontrollband aus bewertungsband() (R4.5). k aus k_faktor, Teil-Dosis aus teilDosis()
+// mit kStabil() über die Neuansätze im Bündel (A12).
 import type { Teile } from '../teile.ts';
 import type { Band } from '../bewertung/bewertung.ts';
 import { bewertungsband } from '../bewertung/sollband.ts';
 import type { Datenart } from '../kalibrierung/stand.ts';
-import { PHASE_NAME, type Phase } from '../phasen/profil.ts';
 import {
   ecWasser,
-  herstellerstadium,
   neuansatz,
   type NeuansatzEingabe,
   type NeuansatzErgebnis,
@@ -18,6 +17,8 @@ import { ecSollIst, kStabil, teilDosis, type StabilZeile } from '../rechner-korr
 import type { KSatz } from '../rechner-zahlen.ts';
 import type { PhArt } from '../rechner-ph.ts';
 import type { Zeitzone } from '../zeit.ts';
+import type { Zweck } from '../zielbereich.ts';
+import { ansatzGrundlage, type Leitkultur } from '../zielbereich-leitkultur.ts';
 
 type Zeile = Record<string, unknown>;
 const teil = (t: Teile, name: string) => (t[name] ?? []) as readonly Zeile[];
@@ -35,6 +36,8 @@ const K_START = 300;
 
 export interface Rechnungseingaben {
   eingabe: NeuansatzEingabe;
+  zweck: Zweck;
+  leitkultur: Leitkultur;
   gerechnetFuer: string;
   pflanzungIds: string[];
   stadiumVorschlag: Stadium | undefined;
@@ -138,39 +141,6 @@ export function erstAnsatzAm(teile: Teile, platzId: string): boolean {
   return status === 'in_betrieb_volumen_offen';
 }
 
-/** Leitkultur = ältester aktiver Satz im Gefäss (A11) und «Gerechnet für: 3 × Lollo Rossa Wachstum» */
-function pflanzenAm(teile: Teile, platzId: string) {
-  const aktiv = teil(teile, 'v_pflanzung_zustand').filter(
-    (p) => p['platz_id'] === platzId && p['status'] === 'aktiv',
-  );
-  const saetze = new Map(teil(teile, 'satz').map((s) => [text(s['id']), s]));
-  const sorten = new Map(teil(teile, 'sorte').map((s) => [text(s['sorte_id'] ?? s['id']), s]));
-  const gruppen = new Map<string, { anzahl: number; name: string; phase: string }>();
-  for (const p of aktiv) {
-    const satz = saetze.get(text(p['satz_id']));
-    const name = text(sorten.get(text(satz?.['sorte_id']))?.['name']) || 'Pflanze';
-    const phase = text(p['phase']);
-    const schluessel = `${name}|${phase}`;
-    const g = gruppen.get(schluessel) ?? { anzahl: 0, name, phase };
-    g.anzahl += 1;
-    gruppen.set(schluessel, g);
-  }
-  const aeltester = [...new Set(aktiv.map((p) => text(p['satz_id'])))]
-    .map((id) => saetze.get(id))
-    .filter((s): s is Zeile => s !== undefined)
-    .sort((a, b) => text(a['saatdatum']).localeCompare(text(b['saatdatum'])))[0];
-  const phaseLeit = aktiv.find((p) => p['satz_id'] === aeltester?.['id'])?.['phase'] as Phase | undefined;
-  const gerechnetFuer = [...gruppen.values()]
-    .map((g) => `${String(g.anzahl)} × ${g.name} ${PHASE_NAME[g.phase as Phase] ?? g.phase}`)
-    .join(', ');
-  return {
-    pflanzungIds: aktiv.map((p) => text(p['pflanzung_id'])),
-    gerechnetFuer,
-    aeltester,
-    phaseLeit,
-  };
-}
-
 export function rechnungEingaben(
   teile: Teile,
   platzId: string,
@@ -188,40 +158,23 @@ export function rechnungEingaben(
         : 'dwc') as PhArt);
   // gezählte Kannen beim ersten Ansatz gehen dem Betriebsvolumen vor (R4.4)
   const volumen = e.volumen ?? Math.round((zahl(g?.['betriebsvolumen_l']) ?? 0) * 100);
-  const band = bewertungsband(teile, platzId, jetzt);
+  // Station: Kontrollband (R4.5); sonst die Schnittmenge der zählenden nach Zweck (R2.1, R2.2)
+  const band = istStation ? bewertungsband(teile, platzId, jetzt) : undefined;
+  const grundlage = ansatzGrundlage(teile, platzId, jetzt, zeitzone);
+  const schnitt = grundlage.schnittmenge.art === 'ok' ? grundlage.schnittmenge : undefined;
+  const ecBand = band?.ec ?? schnitt?.ec;
+  const phBand = band?.ph ?? schnitt?.ph;
   const datenart = datenartAm(teile, platzId);
   const { k, quellen, geaendertAm } = kAus(teile, jetzt);
   const uEc = hundertstel(teil(teile, 'messgeraet')[0]?.['u_ec']) ?? 10;
   const stabil = kStabil(stabilZeilen(teile, datenart, k), uEc, geaendertAm);
   const anlageW = teil(teile, 'v_ec_wasser')[0];
   const wasser = ecWasser({ frischwasser: e.frischwasserEc, letzteW: hundertstel(anlageW?.['ec']) });
-  const pflanzen = pflanzenAm(teile, platzId);
-  // Station (R4.5): Stadium nach dem ältesten Eintritt; sonst nach der Phase der Leitkultur (A11)
-  const vorschlag = istStation
-    ? herstellerstadium(
-        {
-          ort: 'station',
-          aeltesterEintrittAm: pflanzen.aeltester ? new Date(text(pflanzen.aeltester['gilt_ab'])) : jetzt,
-        },
-        jetzt,
-        zeitzone,
-      )
-    : pflanzen.phaseLeit
-      ? herstellerstadium(
-          {
-            ort: 'zielgefaess',
-            direktsaat: (pflanzen.aeltester?.['direktsaat_platz_id'] ?? null) !== null,
-            phaseLeitkultur: pflanzen.phaseLeit,
-          },
-          jetzt,
-          zeitzone,
-        )
-      : undefined;
-  const stadiumVorschlag = vorschlag === 'anfeuchten' ? undefined : vorschlag;
+  const stadiumVorschlag = grundlage.stadiumVorschlag;
   const eingabe: NeuansatzEingabe = {
     volumen,
     stadium: e.stadiumGewaehlt ?? stadiumVorschlag,
-    zielbereich: band ? { min: band.ec.min, max: band.ec.max } : undefined,
+    zielbereich: ecBand ? { min: ecBand.min, max: ecBand.max } : undefined,
     zielEcGewaehlt: e.zielEcGewaehlt,
     ecWasser: wasser.wert,
     k,
@@ -231,10 +184,12 @@ export function rechnungEingaben(
   };
   return {
     eingabe,
-    gerechnetFuer: pflanzen.gerechnetFuer,
-    pflanzungIds: pflanzen.pflanzungIds,
+    zweck: grundlage.zweck,
+    leitkultur: grundlage.leitkultur,
+    gerechnetFuer: grundlage.gerechnetFuer,
+    pflanzungIds: grundlage.pflanzungIds,
     stadiumVorschlag,
-    ...(band ? { phBand: band.ph } : {}),
+    ...(phBand ? { phBand } : {}),
     phArt,
     volumen,
     datenart,

@@ -142,6 +142,8 @@ export const BUENDEL_TEILE: readonly Buendelteil[] = [
       'ruhe',
       // Plan 33 (R8.4): Abweichung der Kurzprüfung sperrt das Verschieben in ein anderes Gefäss
       'kurzpruefung',
+      // Plan 34 (R2.3 Stufe 4): Tims Wahl der Leitkultur wirkt offline sofort (A9)
+      'leitkultur_gewaehlt',
     ],
   },
   // Push (Plan 13): Abos ohne Schlüssel, Versände für «Letzte Erinnerung» und #/push
