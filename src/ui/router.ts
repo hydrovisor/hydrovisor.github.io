@@ -33,6 +33,8 @@ export type Route =
   | { name: 'anlage'; kuerzel?: string }
   | { name: 'anlage-neu' }
   | { name: 'vorlagen' }
+  | { name: 'einstellungen' }
+  | { name: 'notfallblatt'; kuerzel?: string }
   | { name: 'kalibrieren'; datenart?: 'demo' | 'test' };
 
 const KUERZEL = /^[A-Z]{1,3}$/;
@@ -128,7 +130,13 @@ export function routeAusHash(hash: string): Route {
       ? { name: 'kalibrieren', datenart }
       : { name: 'kalibrieren' };
   }
+  if (pfad === '/notfallblatt') {
+    const kuerzel = new URLSearchParams(abfrage).get('a');
+    return kuerzel && KUERZEL.test(kuerzel) ? { name: 'notfallblatt', kuerzel } : { name: 'notfallblatt' };
+  }
   switch (pfad) {
+    case '/einstellungen':
+      return { name: 'einstellungen' };
     case '/info':
       return { name: 'info' };
     case '/anmelden':
@@ -193,6 +201,7 @@ export function hashZu(route: Route): string {
     return `#/gefaess-neu${q ? `?${q}` : ''}`;
   }
   if (route.name === 'anlage-neu') return '#/anlage/neu';
+  if (route.name === 'notfallblatt' && route.kuerzel) return `#/notfallblatt?a=${route.kuerzel}`;
   if (route.name === 'anlage' && route.kuerzel) return `#/anlage?a=${route.kuerzel}`;
   if (route.name === 'kalibrieren' && route.datenart) return `#/kalibrieren?datenart=${route.datenart}`;
   return `#/${route.name}`;
