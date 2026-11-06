@@ -229,6 +229,10 @@ function Nebenknoepfe({ a, teile }: { a: Gefaessansicht; teile: Teile }) {
           <a key={k.art} className="hv-btn hv-btn-secondary" href={hashZu({ name: 'pruefen', code: a.code })}>
             {k.text}
           </a>
+        ) : k.art === 'wechseln' ? (
+          <a key={k.art} className="hv-btn hv-btn-secondary" href={hashZu({ name: 'ansatz', code: a.code })}>
+            {k.text}
+          </a>
         ) : k.art === 'aendern' ? (
           <a
             key={k.art}

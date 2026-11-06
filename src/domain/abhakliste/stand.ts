@@ -1,7 +1,7 @@
 // Ablaufstand der Abhakliste (Konzept R4.6, U4, U7, 8.1 Regel 2, 11.4; Plan 29 A6, A8, A10, A13). Rein und
 // JSON-serialisierbar (IndexedDB, Neustart). Jeder Übergang gibt einen neuen Stand zurück; ein unzulässiger Übergang
 // gibt den Stand unverändert zurück. Zeitpunkte als ISO-Text.
-import type { Vorgang } from '../datenpfad/erfassung.ts';
+import type { Schritt } from '../datenpfad/erfassung.ts';
 import type { NeuansatzErgebnis } from '../rechner.ts';
 import { uhrzeit, type Zeitzone } from '../zeit.ts';
 import { MESSZEILEN, TIMER_MIN, type Messfeld, type Teilschritt, type ZeileDef } from './zeilen.ts';
@@ -44,7 +44,7 @@ export interface AblaufStand {
   kopfGeschrieben: boolean;
   /** Betriebsvolumen in Hundertsteln l, ab dem Kopf */
   volumen?: number;
-  ausstehend: Vorgang[];
+  ausstehend: Schritt[];
   rechnung?: NeuansatzErgebnis;
   frischwasser?: AblaufMessung;
   messungen: { kontrolle?: AblaufMessung; end?: AblaufMessung };
@@ -364,5 +364,48 @@ export function zustandAusSchritten(
     ...(timer ? { timerEnde: timer } : {}),
     ...(kontrolle ? { kontrollmessungId: kontrolle } : {}),
     ...(endm ? { endmessungId: endm } : {}),
+  };
+}
+
+/** Stand aus Kopf und Schritten des Bündels (Gerätewechsel, A13): erledigte Zeilen mit ihrer client_id */
+export function standAusSchritten(
+  e: {
+    platzId: string;
+    code: string;
+    ansatzId: string;
+    defs: readonly ZeileDef[];
+    schritte: readonly (SchrittZeile & { client_id?: string; ist_ml?: number | string | null })[];
+    begonnenAm: string;
+    volumen: number;
+  },
+  jetzt: Date,
+): AblaufStand {
+  const s = standNeu(e, jetzt);
+  const gueltige = e.schritte.filter((x) => !x.storniert_am && x.schritt !== 'abbruch');
+  const zeilen = s.zeilen.map((z) => {
+    const x = gueltige.find((g) => g.nr === z.nr);
+    if (!x?.erledigt_am) return z;
+    const ist = x.ist_ml === null || x.ist_ml === undefined ? z.sollMl : Math.round(Number(x.ist_ml) * 10);
+    return {
+      ...z,
+      erledigtAm: new Date(x.erledigt_am).toISOString(),
+      ...(ist === undefined ? {} : { istMl: ist }),
+      aufzuegeErledigt: z.aufzuege,
+      ...(x.client_id ? { schrittClientId: x.client_id } : {}),
+      ...(MESSZEILEN[z.nr] ? { messungId: `buendel:${String(z.nr)}` } : {}),
+    };
+  });
+  const letzte = zeilen
+    .map((z) => z.erledigtAm)
+    .filter((t): t is string => t !== undefined)
+    .sort()
+    .at(-1);
+  return {
+    ...s,
+    zeilen,
+    begonnenAm: new Date(e.begonnenAm).toISOString(),
+    kopfGeschrieben: true,
+    volumen: e.volumen,
+    letzteAktionAm: letzte ?? jetzt.toISOString(),
   };
 }

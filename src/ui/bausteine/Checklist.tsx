@@ -9,8 +9,14 @@ export interface Zeile {
   /** absolute Endzeit des Timers in ms */
   timerEnde?: number;
   zustand: 'offen' | 'aktiv' | 'erledigt';
-  /** Variante «selbst»: Knopf oder Hinweis unter dem Titel */
+  /** Knopf unter dem Titel (Variante «selbst» und aktive Zeile der Variante «haken»: «Menge ändern», «Messen») */
   aktion?: ReactNode;
+  /** Hinweis unter dem Titel im Notice-Ton (Plan 29: Zeile 0 «zuerst kalibrieren», Zeile 15) */
+  hinweis?: ReactNode;
+  /** erledigte Zeile: nur die zuletzt erledigte, solange die nächste nicht begonnen ist (R4.6); ohne Angabe ja */
+  abwaehlbar?: boolean;
+  /** aktive Zeile gesperrt, etwa eine Messzeile ohne Messung */
+  gesperrt?: boolean;
 }
 
 /** «14:32» aus der Restzeit, ab einer Stunde «11:59:30»; nie negativ */
@@ -49,7 +55,9 @@ export function Checklist({
     <ol className="hv-checklist" aria-label={label}>
       {zeilen.map((z) => {
         const timerLaeuft = z.timerEnde !== undefined && z.timerEnde > jetzt;
-        const gesperrt = z.zustand === 'offen' || (z.zustand === 'aktiv' && timerLaeuft);
+        const gesperrt =
+          z.zustand === 'offen' || (z.zustand === 'aktiv' && (timerLaeuft || z.gesperrt === true));
+        const fest = z.zustand === 'erledigt' && z.abwaehlbar === false;
         return (
           <li key={z.nr} className={`hv-check-row hv-check-${z.zustand}`} data-zustand={z.zustand}>
             <span className="hv-check-nr">{z.nr}</span>
@@ -61,11 +69,16 @@ export function Checklist({
                   {restzeit(z.timerEnde, jetzt)}
                 </span>
               ) : null}
+              {z.hinweis ? <span className="hv-check-hinweis">{z.hinweis}</span> : null}
               {z.aktion ? <span className="hv-check-aktion">{z.aktion}</span> : null}
             </span>
             {variante === 'selbst' ? (
               <span className="hv-check-status" role="img" aria-label={STATUSTEXT[z.zustand]}>
                 {z.zustand === 'erledigt' ? <Haken /> : null}
+              </span>
+            ) : fest ? (
+              <span className="hv-check-haken hv-check-fest" role="img" aria-label={`Zeile ${z.nr} erledigt`}>
+                <Haken />
               </span>
             ) : (
               <button

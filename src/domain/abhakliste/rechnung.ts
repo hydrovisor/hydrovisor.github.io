@@ -79,7 +79,8 @@ function stabilZeilen(teile: Teile, datenart: Datenart): StabilZeile[] {
   const messungen = new Map(teil(teile, 'messung').map((m) => [text(m['id']), m]));
   const unsicher = new Set(teil(teile, 'v_messung_unsicher').map((u) => text(u['messung_id'])));
   return teil(teile, 'naehrloesungsansatz')
-    .filter((a) => a['typ'] === 'neuansatz')
+    // nur abgeschlossene: ein laufender Wechsel hat noch keine Kontrolle und zählt nicht als instabil (A12)
+    .filter((a) => a['typ'] === 'neuansatz' && a['status'] === 'abgeschlossen')
     .map((a) => {
       const kontrolle = messungen.get(text(a['kontrollmessung_id']));
       return {

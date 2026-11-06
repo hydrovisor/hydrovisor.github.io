@@ -8,6 +8,7 @@ import { messFaelligkeit, type Messfaelligkeit } from '../../domain/messung/fael
 import { heuteGruppiert, nachAnlage } from '../../domain/anlage/gruppen.ts';
 import { pruefAufgaben } from '../../domain/etikett/pruefung.ts';
 import { keimAufgaben } from '../../domain/pflanzung/keimung.ts';
+import { Ablaeufe } from './Ablaeufe.tsx';
 import { Phasenkarten } from './Phasenkarten.tsx';
 import { Erntekarten } from './Erntekarten.tsx';
 import { umsetzAufgaben } from '../../domain/anzucht/umsetzen.ts';
@@ -88,6 +89,7 @@ export function Heute() {
         </Notice>
       ) : null}
       {keinZugang ? <Notice tone="warn" title="Kein Zugang für dieses Konto" /> : null}
+      {buendel && !keinZugang ? <Ablaeufe jetzt={new Date(jetzt)} /> : null}
       {!keinZugang && anzeige.hinweis ? <Notice title={anzeige.hinweis} /> : null}
       {buendel && !keinZugang ? <Einrichtung /> : null}
       {zeigen ? <NeueVersionHinweis /> : null}

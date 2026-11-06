@@ -1,5 +1,8 @@
 // Maske «Gefäss» (UC1 Ablauf Maske «Gefäss», 05_masken.md 3.3; Plan 20): liest Kopf, Zustand, Hauptknopf und
 // Verlauf aus dem Bündel, ohne neu zu rechnen (R2.5, Plan 20 A3, A4). Rein: jetzt und Zeitzone als Parameter.
+import { laufendeAnsaetze } from '../abhakliste/folgen.ts';
+import type { SchrittZeile } from '../abhakliste/stand.ts';
+import type { AnsatzZeile } from '../bewertung/verlauf.ts';
 import { deckelBelegung, type DeckelLoch } from '../pflanzung/topf.ts';
 import { messFaelligkeit } from '../messung/faelligkeit.ts';
 import { ortAufloesen } from '../ort.ts';
@@ -47,7 +50,10 @@ export interface Gefaessansicht {
   dosis: { komponente: string; mlProL: string }[];
   hauptknopf?: { text: string; code: string };
   /** Plan 21: Nebenknöpfe «Prüfen», «Ändern», «Leeren» (nur bei Lösung), «Wiederherstellen» (bis 7 Tage) */
-  nebenknoepfe: { art: 'pruefen' | 'aendern' | 'leeren' | 'wiederherstellen' | 'saeen'; text: string }[];
+  nebenknoepfe: {
+    art: 'pruefen' | 'aendern' | 'leeren' | 'wiederherstellen' | 'saeen' | 'wechseln';
+    text: string;
+  }[];
   /** «Gefäss 2.3 entfernt am 10.12.» (R9.2) */
   entfernt?: string;
   verlauf: {
@@ -263,6 +269,17 @@ export function gefaessAnsicht(
       }
     } else {
       if (roh === 'in_pruefung') ansicht.nebenknoepfe.push({ art: 'pruefen', text: 'Prüfen' });
+      // Plan 29: Lösungswechsel mit der Abhakliste; bei laufendem Wechsel im Bündel «Wechsel fortsetzen»
+      if ((roh === 'in_betrieb' || roh === 'in_betrieb_volumen_offen') && !g.feste_dosis) {
+        const laufend = laufendeAnsaetze(
+          zeilen<AnsatzZeile>(teile, 'naehrloesungsansatz'),
+          zeilen<SchrittZeile & { ansatz_id: string }>(teile, 'ansatz_schritt'),
+        ).some((l) => l.platzId === ort.platzId);
+        ansicht.nebenknoepfe.push({
+          art: 'wechseln',
+          text: laufend ? 'Wechsel fortsetzen' : 'Lösung wechseln',
+        });
+      }
       ansicht.nebenknoepfe.push({ art: 'aendern', text: 'Ändern' });
       if (fuellNeben === 'loesung') ansicht.nebenknoepfe.push({ art: 'leeren', text: 'Leeren' });
       // Plan 23: Säen in Gefässe ohne feste Dosis (UC5 Auslöser)

@@ -143,10 +143,13 @@ export function Ergebniszone({
   zeilen,
   hinweise,
   ohneBewertung,
+  zusatz,
 }: {
   zeilen: { ton: Bewertung; wert: string }[];
   hinweise: ErgebnisHinweis[];
   ohneBewertung?: boolean;
+  /** Plan 29: Vorschlag pH-Minus mit Knopf unter den Hinweisen */
+  zusatz?: ReactNode;
 }) {
   return (
     <section className="hv-ergebniszone" aria-label="Ergebnis">
@@ -167,6 +170,7 @@ export function Ergebniszone({
           {h.sollwert ? ` ${h.sollwert}` : h.text ? ` ${h.text}` : ''} {h.massnahme}.
         </p>
       ))}
+      {zusatz}
     </section>
   );
 }
