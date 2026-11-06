@@ -255,15 +255,17 @@ export const loesungWechseln: Regel = (k, lage) => {
   const seit = tag(k, n.begonnen_am);
   const vorgabe = g.naechster_wechsel_am ?? undefined;
   const regulaer = vorgabe !== undefined && vorgabe > seit ? vorgabe : tagPlus(seit, g.intervall_wechseln_d);
-  const volumen = Number(g.betriebsvolumen_l);
+  // Liter in Hundertsteln als Ganzzahl (G3, numeric(5,2)), damit 4.5 + 4.5 sicher 9 ergibt
+  const volumen = Math.round(Number(g.betriebsvolumen_l) * 100);
   let faelligAm = regulaer;
-  if (lage.nachfuellsummeL >= volumen) {
+  if (Math.round(lage.nachfuellsummeL * 100) >= volumen) {
     const nachfuellen = lage.ansaetze
       .filter((a) => a.typ === 'nachfuellen' && ms(a.begonnen_am) > ms(n.begonnen_am))
       .sort((a, b) => ms(a.begonnen_am) - ms(b.begonnen_am));
     let summe = 0;
     const erreicht =
-      nachfuellen.find((a) => (summe += Number(a.nachgefuellt_l ?? 0)) >= volumen) ?? nachfuellen.at(-1);
+      nachfuellen.find((a) => (summe += Math.round(Number(a.nachgefuellt_l ?? 0) * 100)) >= volumen) ??
+      nachfuellen.at(-1);
     const voll = erreicht === undefined ? k.heute : tag(k, erreicht.begonnen_am);
     if (voll < regulaer) faelligAm = voll;
   }

@@ -52,7 +52,7 @@ describe('R5.2 Lösung wechseln nach Nachfüllsumme (Befund 1)', () => {
     const t = vollAm8();
     t['naehrloesungsansatz'] = (t['naehrloesungsansatz'] ?? []).filter((a) => a['typ'] === 'neuansatz');
     expect(von(faellig(t), 'loesung_wechseln').map((a) => a.faelligAm)).toEqual(['2027-01-12']);
-    // regulärer Termin vor dem Erreichen: der reguläre gilt
+    // am 7.1. gerechnet: das Erreichen am 8.1. liegt vor dem regulären Termin 16.1. und gilt
     const frueh = vollAm8();
     expect(von(alle(frueh, jetztAm('2027-01-07')), 'loesung_wechseln').map((a) => a.faelligAm)).toEqual([
       '2027-01-08',

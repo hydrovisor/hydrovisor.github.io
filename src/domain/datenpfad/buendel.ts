@@ -54,7 +54,6 @@ export function fensterBeginn(jetzt: Date, tage: number, zeitzone: Zeitzone): st
   return tagesbeginn(tag, zeitzone).toISOString();
 }
 
-/** je Ort (platz_id) nur der zuletzt begonnene Ansatz (04 4.2 «letzter Ansatz je Ort») */
 /**
  * Nachfüll-Ansätze nach dem letzten nicht abgebrochenen Neuansatz je Ort (Plan 27, Prüfer Runde 1 Befund 1 und 2): die
  * Aufgaben-Rechnung braucht den Tag, an dem die Nachfüllsumme das Betriebsvolumen erreicht, und das letzte Nachfüllen
@@ -75,6 +74,7 @@ export function nachfuellenSeitNeuansatz<
   });
 }
 
+/** je Ort (platz_id) nur der zuletzt begonnene Ansatz (04 4.2 «letzter Ansatz je Ort») */
 export function letzterJeOrt<T extends { platz_id: string | null; begonnen_am: string }>(
   zeilen: readonly T[],
 ): T[] {
