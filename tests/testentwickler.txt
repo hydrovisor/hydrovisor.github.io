@@ -211,3 +211,5 @@ tests/unit/rechner-ph.test.ts
 tests/unit/datenpfad-setzen-ansatz.test.ts
 tests/e2e/abhakliste.spec.ts
 tests/e2e/ph-korrektur.spec.ts
+tests/unit/abhakliste-vorgaenge.test.ts
+tests/unit/router-ansatz.test.ts
