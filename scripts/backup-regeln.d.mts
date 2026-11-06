@@ -55,3 +55,22 @@ export declare function meldungKuerzen(text: string): string;
 export declare function scramVerifier(passwort: string, salz: Uint8Array, iterationen: number): string;
 
 export declare function speicherToken(geheimnis: string, jetzt: Date, ablauf: Date): string;
+
+export declare const LEER_SHA256: string;
+
+export declare function sigV4(e: {
+  methode: string;
+  url: string;
+  region: string;
+  dienst: string;
+  zugangId: string;
+  geheimnis: string;
+  jetzt: Date;
+  header?: Record<string, string>;
+  inhaltHash?: string;
+}): Record<string, string>;
+
+export declare function s3ListeLesen(xml: string): {
+  dateien: { pfad: string; bytes: number }[];
+  weiter: string | null;
+};
