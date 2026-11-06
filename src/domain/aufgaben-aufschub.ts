@@ -233,8 +233,33 @@ export function erledigtVorgang(aufgabe: Aufgabe, id: string, jetzt: Date): Vorg
         id,
         client_id: id,
         typ: 'aufgabe_erledigt',
-        ...(aufgabe.bezugArt === 'satz' ? { satz_id: aufgabe.bezug } : { platz_id: aufgabe.bezug }),
+        platz_id: aufgabe.bezug,
         daten: { aufgabe_schluessel: aufgabe.schluessel },
+        war_faellig_am: aufgabe.faelligAm,
+        aufgabe_schluessel: aufgabe.schluessel,
+        gilt_ab: jetzt.toISOString(),
+      },
+    },
+  ];
+}
+
+/**
+ * «Deckel geöffnet» bzw. «Abdeckung entfernt» aus der Aufgabe (A9, 8.1 Regel 2): der eigene Ereignistyp statt
+ * aufgabe_erledigt, am Platz der Box bzw. am Direktsaat-Satz; für andere Typen leer.
+ */
+export function deckelVorgang(aufgabe: Aufgabe, id: string, jetzt: Date): Vorgang {
+  const box = aufgabe.typ === 'deckel_oeffnen';
+  if (!box && aufgabe.typ !== 'abdeckung_entfernen') return [];
+  return [
+    {
+      art: 'neu',
+      tabelle: 'ereignis',
+      felder: {
+        id,
+        client_id: id,
+        typ: box ? 'deckel_geoeffnet' : 'abdeckung_entfernt',
+        ...(box ? { platz_id: aufgabe.bezug } : { satz_id: aufgabe.bezug }),
+        daten: {},
         war_faellig_am: aufgabe.faelligAm,
         aufgabe_schluessel: aufgabe.schluessel,
         gilt_ab: jetzt.toISOString(),

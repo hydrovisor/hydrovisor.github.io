@@ -83,7 +83,7 @@ schreiben<T>(tabelle: Erfassungstabelle, datensatz: T & { client_id: string }): 
 
 ### 4.2 Lesen und Offline-Bündel
 
-- Beim Start und nach jedem erfolgreichen Schreiben lädt der Client ein Bündel in IndexedDB (`buendel`): Anlage mit Bereichen, Plätzen und aktiven Gefässen, Deckeltypen, gültige Sorten mit `v_sollwert`, `art_kulturform`, Saatempfehlungen, Duengerschema, aktive Sätze, Pflanzungen und Reservierungen mit Zustand, letzte Messungen je Ort (14 Tage), letzter Ansatz je Ort, dazu der letzte nicht abgebrochene Neuansatz oder Teilwechsel je Ort mit seinen Positionen (Plan 20), Kalibrierung und `v_kalibrierung_faellig`, Aufschübe, Einstellungen, Wissenseinträge.
+- Beim Start und nach jedem erfolgreichen Schreiben lädt der Client ein Bündel in IndexedDB (`buendel`): Anlage mit Bereichen, Plätzen und aktiven Gefässen, Deckeltypen, gültige Sorten mit `v_sollwert`, `art_kulturform`, Saatempfehlungen, Duengerschema, aktive Sätze, Pflanzungen und Reservierungen mit Zustand, letzte Messungen je Ort (14 Tage), letzter Ansatz je Ort, dazu der letzte nicht abgebrochene Neuansatz oder Teilwechsel je Ort mit seinen Positionen (Plan 20), Kalibrierung und `v_kalibrierung_faellig`, Aufschübe, Einstellungen, Wissenseinträge. Für die Aufgaben-Rechnung (Plan 27) dazu `v_nachfuellsumme` und in `ereignis_platz` die Typen `kurzpruefung`, `aufgabe_erledigt`, `gereinigt`, `deckel_geoeffnet`, in `ereignis_pflanzung` `abdeckung_entfernt`; `AUFGABEN_TEILE` nennt die Teile, die die Regeln lesen, und ist der Vertrag für den Datenzugriff von `push-taeglich` (I1b-06).
 - Ohne Netz zeigen Heute, Gefäss und Pflanze das Bündel mit «Stand: hh:mm» (TO6).
 - Aufgaben rechnet `faelligeAufgaben()` im Client aus dem Bündel (R5.1).
 

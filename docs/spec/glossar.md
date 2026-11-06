@@ -78,8 +78,9 @@ Stand 1.11.2026 · Auftrag 2 «Spezifikation». Bedeutungen stehen in Konzept v1
 | Säurebedarf, pH-Wirkung | `v_saeurebedarf`, `v_ph_wirkung` | `saeurebedarf()`, `phWirkung()` |
 | Nachfüllsumme | `v_nachfuellsumme` | `nachfuellsumme` |
 | Ereignis | `ereignis`, `ereignis_typ` | `Ereignis` |
-| Aufgabe, Aufgabenschlüssel | – (berechnet), `aufgabe_schluessel` | `Aufgabe`, `faelligeAufgaben()`, `aufgabenSchluessel()` |
-| Aufschub (Morgen, Überspringen, Pegel ok) | `aufschub` | `Aufschub` |
+| Aufgabe, Aufgabenschlüssel (Plan 27) | – (berechnet), `aufgabe_schluessel` | `Aufgabe`, `Rohaufgabe`, `AufgabenTyp`, `Gewicht`, `faelligeAufgaben()`, `alleAufgaben()`, `naechsteAufgabe()`, `nurEcht()`, `titelNachGewicht()`, `aufgabenSchluessel()`, `schluesselLesen()`, `AUFGABEN_TEILE`, `fehlendeTeile()`, `einstellungenAus()` |
+| Aufschub (Morgen, Überspringen, Pegel ok) | `aufschub` | `AufschubZeile`, `MORGEN`, `UEBERSPRINGEN`, `ERLEDIGT_KNOPF`, `aufschubVorgang()`, `erledigtVorgang()`, `deckelVorgang()` |
+| Keimtermine eines Satzes (Plan 27) | – (berechnet) | `KeimTermin`, `keimTermine()` |
 | Tagesliste | `aufgabe_tagesliste` | – (nur Edge Function) |
 | Kurzprüfung | Ereignis `kurzpruefung` | `Kurzpruefung` |
 | Rundgang | – | `Rundgang` (Ablauf) |
