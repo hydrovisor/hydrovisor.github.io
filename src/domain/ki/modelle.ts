@@ -18,7 +18,8 @@ export const RECHERCHE_FRIST_HAUPT_MS = 60_000;
 export const RECHERCHE_FRIST_GESAMT_MS = 120_000;
 export const RECHERCHE_MAX_TOKENS = 8000;
 export const SUCHEN_MAX = 5;
-export const ABRUFE_MAX = 3;
+/** Obergrenze der Abrufe des Quellenprüfers; je Quelle ein Abruf (Prüferbefund B5) */
+export const ABRUFE_MAX = 10;
 /** pause_turn höchstens so oft fortsetzen */
 export const PAUSEN_MAX = 2;
 

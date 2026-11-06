@@ -126,14 +126,29 @@ function dezimal(w: string): number | undefined {
   return /^-?\d+(\.\d+)?$/.test(t) ? Number(t) : undefined;
 }
 
-function kulturformenDerArt(f: SortenFormular, arten: readonly ArtZeile[]): readonly string[] | undefined {
-  if (f.artId) return arten.find((a) => a.art_id === f.artId && a.gueltig_bis === null)?.kulturformen_erlaubt;
+export interface KulturgruppeZeile {
+  kulturgruppe_id: string;
+  leitkultur_art_id: string | null;
+}
+
+/** Kulturformen der gewählten Art, bei einer neuen Art die der Leitkultur ihrer Kulturgruppe (R1.2, R1.3) */
+function kulturformenDerArt(
+  f: SortenFormular,
+  arten: readonly ArtZeile[],
+  gruppen: readonly KulturgruppeZeile[],
+): readonly string[] | undefined {
+  const gueltig = (id: string | null | undefined) =>
+    arten.find((a) => a.art_id === id && a.gueltig_bis === null)?.kulturformen_erlaubt;
+  if (f.neueArt)
+    return gueltig(gruppen.find((g) => g.kulturgruppe_id === f.neueArt?.kulturgruppeId)?.leitkultur_art_id);
+  if (f.artId) return gueltig(f.artId);
   return undefined;
 }
 
 export function formularPruefen(
   f: SortenFormular,
   arten: readonly ArtZeile[],
+  gruppen: readonly KulturgruppeZeile[] = [],
 ): { feld: string; text: string }[] {
   const fehler: { feld: string; text: string }[] = [];
   if (leer(f.tuete.name)) fehler.push({ feld: 'name', text: 'Gib den Namen der Sorte ein' });
@@ -144,10 +159,17 @@ export function formularPruefen(
       fehler.push({ feld: 'neueArt.nameWiss', text: 'Gib den wissenschaftlichen Namen ein' });
     if (leer(f.neueArt.kulturgruppeId))
       fehler.push({ feld: 'neueArt.kulturgruppeId', text: 'Wähle die Kulturgruppe' });
+    // Kollision mit einer bestehenden Art (A18): nicht still an die bestehende Art hängen
+    const vorhanden = arten.find((a) => a.art_id === neueArtId(f.neueArt?.nameWiss ?? ''));
+    if (!leer(f.neueArt.nameWiss) && vorhanden)
+      fehler.push({
+        feld: 'neueArt.nameWiss',
+        text: `Diese Art gibt es schon: ${vorhanden.name_de}. Wähle sie in der Liste.`,
+      });
   }
   if (!f.kulturtyp) fehler.push({ feld: 'kulturtyp', text: 'Wähle den Kulturtyp' });
   else {
-    const formen = kulturformenDerArt(f, arten);
+    const formen = kulturformenDerArt(f, arten, gruppen);
     if (formen && !KULTURFORMEN_JE_TYP[f.kulturtyp].some((k) => formen.includes(k)))
       fehler.push({ feld: 'kulturtyp', text: 'Kulturtyp passt nicht zur Art' });
   }
@@ -289,7 +311,7 @@ export function erfassungBauen(
       sorte_id: ids.sorteId,
       kaufdatum: leer(f.kaufdatum) ? null : f.kaufdatum.trim(),
       bestand_korn: bestand ?? null,
-      keimfaehigkeit_packung: keim === undefined ? null : Math.round(keim) / 100,
+      keimfaehigkeit_packung: keim === undefined ? null : keim / 100,
     },
   });
   if (ki)
@@ -328,4 +350,44 @@ export function feldprotokoll(
       },
     };
   });
+}
+
+/** Keimart der Art aus den Sollwerten einer anderen Sorte derselben Art (Herkunft Art oder darüber; A) */
+export function keimartDerArt(
+  sollwerte: readonly {
+    sorte_id: string;
+    phase: string;
+    groesse: string;
+    text_wert: string | null;
+    herkunft_ebene: string;
+  }[],
+  sorten: readonly SorteZeile[],
+  artId: string | undefined,
+): string | undefined {
+  if (!artId) return undefined;
+  const ids = new Set(
+    sorten.filter((s) => s.art_id === artId && s.gueltig_bis === null).map((s) => s.sorte_id),
+  );
+  return (
+    sollwerte.find(
+      (z) =>
+        ids.has(z.sorte_id) &&
+        z.phase === 'keimung' &&
+        z.groesse === 'keimart' &&
+        z.herkunft_ebene !== 'sorte' &&
+        z.text_wert !== null,
+    )?.text_wert ?? undefined
+  );
+}
+
+const KEIMART_NAME: Record<string, string> = {
+  licht: 'Lichtkeimer',
+  dunkel: 'Dunkelkeimer',
+  indifferent: 'ohne Angabe zum Licht',
+};
+
+/** Hinweis, wenn die Keimart der Tüte vom Profil der Art abweicht; die Tüte gilt (UC4 Varianten, R1.3) */
+export function keimartHinweis(tuete: string | undefined, art: string | undefined): string | undefined {
+  if (!tuete || !art || tuete === art || !KEIMART_NAME[tuete] || !KEIMART_NAME[art]) return undefined;
+  return `Tüte: ${KEIMART_NAME[tuete]}, Art: ${KEIMART_NAME[art]}. Die Tüte gilt.`;
 }

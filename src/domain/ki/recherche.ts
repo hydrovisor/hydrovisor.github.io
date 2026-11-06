@@ -245,7 +245,7 @@ export function pruefAnfrageBauen(
       {
         type: werkzeugeFuer(modell).webFetch,
         name: 'web_fetch',
-        max_uses: ABRUFE_MAX,
+        max_uses: Math.min(ABRUFE_MAX, Math.max(1, new Set(kandidaten.map((k) => k.link)).size)),
         allowed_domains: domains,
       },
     ],

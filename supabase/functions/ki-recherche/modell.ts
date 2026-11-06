@@ -1,6 +1,8 @@
 // Anthropic-Rufer der Recherche mit Serverwerkzeugen (Konzept 11.3; 04_architektur.md 6, 10; Plan 37).
 // Statusabbildung wie ki-tuete/modell.ts; stop_reason pause_turn setzt den Turn mit der Antwort als assistant-Nachricht
 // fort, höchstens zweimal. Wirft nie; der Schlüssel steht nur im Header x-api-key.
+// Eine Fortsetzung bei pause_turn ist derselbe Turn und zählt deshalb nicht als eigene Zeile ki_aufruf; das
+// Tageslimit zählt Turns, höchstens drei Requests je Zeile (A, Prüferbefund B8).
 import { letzterTextblock } from '../../../src/domain/ki/recherche.ts';
 import { PAUSEN_MAX } from '../../../src/domain/ki/modelle.ts';
 import type { ModellAntwort, ModellRufer } from '../ki-tuete/kern.ts';

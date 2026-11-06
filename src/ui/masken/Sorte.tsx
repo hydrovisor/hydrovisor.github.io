@@ -15,6 +15,15 @@ import { useBuendel } from '../buendel.tsx';
 import { hashZu } from '../router.ts';
 import '../sorten.css';
 
+const KULTURFORM_NAME: Record<string, string> = {
+  keimling: 'Keimling',
+  babyleaf: 'Babyleaf',
+  schnitt: 'Schnitt',
+  kopf: 'Kopf',
+  dauerkultur_blatt: 'Dauerkultur Blatt',
+  dauerkultur_frucht: 'Dauerkultur Frucht',
+};
+
 export function Sorte({ sorte }: { sorte: string }) {
   const { buendel } = useBuendel();
   const [recherche, setRecherche] = useState<RechercheErgebnis | 'laeuft'>();
@@ -64,7 +73,7 @@ export function Sorte({ sorte }: { sorte: string }) {
             <Notice tone="info">Recherche läuft. Du kannst die Seite verlassen.</Notice>
           ) : recherche?.ergebnis === 'ok' ? (
             <Notice tone="info">
-              {`Ergänzt: ${recherche.werte} Werte und ${recherche.saat} Saatempfehlungen. Offen: ${recherche.offen.length + recherche.offenSaat.length} Prüfaufträge.`}
+              {`Ergänzt: ${recherche.werte} ${recherche.werte === 1 ? 'Wert' : 'Werte'} und ${recherche.saat} ${recherche.saat === 1 ? 'Saatempfehlung' : 'Saatempfehlungen'}. Offen: ${recherche.offen.length + recherche.offenSaat.length} Prüfaufträge.`}
             </Notice>
           ) : recherche ? (
             <Notice tone="warn">{recherche.hinweis}</Notice>
@@ -104,7 +113,8 @@ export function Sorte({ sorte }: { sorte: string }) {
               {d.saat.map((s) => (
                 <li key={s.id}>
                   <span className="hv-sorte-wert">
-                    {s.kulturform}: {s.samen} Samen je Schwamm, Klasse {s.klasse}
+                    {KULTURFORM_NAME[s.kulturform] ?? s.kulturform}: {s.samen} Samen je Schwamm, Klasse{' '}
+                    {s.klasse}
                   </span>
                   {s.bestaetigtAm ? (
                     <span className="hv-sorte-herkunft">bestätigt am {s.bestaetigtAm}</span>

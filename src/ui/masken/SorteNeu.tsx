@@ -18,6 +18,8 @@ import {
   formularPruefen,
   leeresFormular,
   vorhandeneSorte,
+  keimartDerArt,
+  keimartHinweis,
   type ArtZeile,
   type KiLauf,
   type Kulturtyp,
@@ -84,7 +86,12 @@ export function SorteNeu() {
   const { buendel } = useBuendel();
   const arten = ((buendel?.teile['art'] ?? []) as ArtZeile[]).filter((a) => a.gueltig_bis === null);
   const sorten = (buendel?.teile['sorte'] ?? []) as SorteZeile[];
-  const gruppen = (buendel?.teile['kulturgruppe'] ?? []) as { kulturgruppe_id: string; name: string }[];
+  const gruppen = (buendel?.teile['kulturgruppe'] ?? []) as {
+    kulturgruppe_id: string;
+    name: string;
+    leitkultur_art_id: string | null;
+  }[];
+  const sollwerte = (buendel?.teile['v_sollwert'] ?? []) as Parameters<typeof keimartDerArt>[0];
 
   const [ids] = useState(() => ({ sorteId: neueClientId(), saatgutId: neueClientId() }));
   const [schritt, setSchritt] = useState<Schritt>('tuete');
@@ -113,6 +120,7 @@ export function SorteNeu() {
   const vorhandenId =
     !f.neueArt && f.artId && f.tuete.name ? vorhandeneSorte(sorten, f.tuete.name, f.artId) : undefined;
   const vorhandenName = sorten.find((s) => s.sorte_id === vorhandenId)?.name;
+  const keimartAbweichung = keimartHinweis(f.tuete.keimart, keimartDerArt(sollwerte, sorten, f.artId));
   const zielSorte = nurPackung ?? ids.sorteId;
 
   async function lesen() {
@@ -161,7 +169,7 @@ export function SorteNeu() {
   }
 
   function weiter(nach: Schritt) {
-    const fehlerJetzt = formularPruefen(f, arten).filter((x) =>
+    const fehlerJetzt = formularPruefen(f, arten, gruppen).filter((x) =>
       schritt === 'sorte'
         ? ['name', 'art'].includes(x.feld) || x.feld.startsWith('neueArt')
         : schritt === 'merkmale'
@@ -180,7 +188,7 @@ export function SorteNeu() {
   }
 
   async function speichern() {
-    const alle = formularPruefen(f, arten);
+    const alle = formularPruefen(f, arten, gruppen);
     const f2 = nurPackung ? alle.filter((x) => PACKUNG_FELDER.includes(x.feld)) : alle;
     setFehler(f2);
     if (f2.length > 0) {
@@ -418,6 +426,7 @@ export function SorteNeu() {
               <option value="indifferent">ohne Angabe zum Licht</option>
             </select>
           </label>
+          {keimartAbweichung ? <Notice tone="info">{keimartAbweichung}</Notice> : null}
           <TextField
             label="Keimtemperatur laut Tüte"
             unit="°C"

@@ -89,7 +89,8 @@ export function evidenzAusQuelle(klasse: string): Evidenz | undefined {
   }
 }
 
-const h = (x: number): number => Math.round(x * 100);
+/** in Tausendsteln wie profilwert numeric(7,3) (Prüferbefund B7) */
+const h = (x: number): number => Math.round(x * 1000);
 
 /** Gemeinsame Prüfung von System, Quelle und Zitat (9.1, 9.3) */
 function grundregel(k: {
@@ -132,7 +133,7 @@ function bereich(
 
 function bandbreiteOk(min: number, max: number): boolean {
   const b = h(max) - h(min);
-  return b >= 20 && b <= 120;
+  return b >= 200 && b <= 1200;
 }
 
 function wertGrenzen(
