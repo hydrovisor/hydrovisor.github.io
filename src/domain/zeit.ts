@@ -77,3 +77,8 @@ export function tagKurz(tag: string): string {
   const [, m, d] = tag.split('-').map(Number) as [number, number, number];
   return `${d}.${m}.`;
 }
+
+/** 12:00 des Kalendertags 'JJJJ-MM-TT' in der Zeitzone (rückdatierte Ereignisse, Plan 35 R1.6) */
+export function mittag(tag: string, zeitzone: Zeitzone): Date {
+  return new Date(tagesbeginn(tag, zeitzone).getTime() + 12 * 3_600_000);
+}
