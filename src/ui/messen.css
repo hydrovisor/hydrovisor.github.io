@@ -71,5 +71,6 @@
 
 /* Plan 29: «pH-Minus gegeben» im pH-Hinweis der Ergebniszone, ohne die Zone zu vergrössern */
 .hv-ergebnis-aktion {
-  margin-left: var(--space-2);
+  display: flex;
+  justify-content: flex-end;
 }

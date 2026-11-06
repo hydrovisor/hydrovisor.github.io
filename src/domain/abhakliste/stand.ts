@@ -44,6 +44,8 @@ export interface AblaufStand {
   kopfGeschrieben: boolean;
   /** Betriebsvolumen in Hundertsteln l, ab dem Kopf */
   volumen?: number;
+  /** client_id des Ereignisses Prüfschritt 4 beim ersten Ansatz, für das Storno bei der Abwahl von Zeile 2 */
+  pruefschritt4Ids?: string[];
   ausstehend: Schritt[];
   rechnung?: NeuansatzErgebnis;
   frischwasser?: AblaufMessung;

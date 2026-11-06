@@ -76,6 +76,12 @@ const STADIEN: readonly { wert: Stadium; titel: string }[] = [
   { wert: 'bluete_frucht', titel: 'Blüte und Frucht' },
 ];
 
+/** client_id der Ereignisse eines Vorgangs (Prüfschritt 4) */
+const ereignisIds = (v: readonly Schritt[]) =>
+  v
+    .filter((x) => x.art === 'neu' && x.tabelle === 'ereignis')
+    .map((x) => (x.art === 'neu' ? x.felder.client_id : ''));
+
 export const ablaufIdAbhakliste = (platzId: string) => `abhakliste:${platzId}`;
 
 export function Ansatz({ code }: { code: string }) {
@@ -194,6 +200,7 @@ function Abhakliste({ ort, teile }: { ort: Ort; teile: Teile }) {
   const [zielEc, setZielEc] = useState<number>();
   const [stadiumWahl, setStadiumWahl] = useState<Stadium>();
   const [kannen, setKannen] = useState<number>();
+  const [volumenFrage, setVolumenFrage] = useState<{ gezaehlt: number; text: string }>();
   const [abgeschlossen, setAbgeschlossen] = useState<{ text: string[] }>();
   const sendet = useRef(false);
   const aktivRef = useRef<HTMLDivElement>(null);
@@ -526,7 +533,13 @@ function Abhakliste({ ort, teile }: { ort: Ort; teile: Teile }) {
     const z = aktuell.zeilen.find((x) => x.nr === nr);
     if (z?.erledigtAm !== undefined) {
       if (!abwaehlbar(aktuell, nr)) return;
-      const storno = abwahlVorgang(aktuell, nr);
+      const storno: Schritt[] = [...abwahlVorgang(aktuell, nr)];
+      // Abwahl von Zeile 2: Prüfschritt 4 stornieren (Korrektur = Storno plus neue Zeile, Prüfer R2-7)
+      if (nr === 2 && aktuell.pruefschritt4Ids) {
+        for (const id of aktuell.pruefschritt4Ids)
+          storno.push({ art: 'storno', tabelle: 'ereignis', clientId: id, grund: 'korrektur' });
+        setVolumenFrage(undefined);
+      }
       let neu = abwaehlen(aktuell, nr, t);
       if (nr === 4) {
         // Korrektur = Storno plus neue Zeile: das nächste Abhaken schreibt Kopf und Schritte mit neuen IDs (A4)
@@ -560,10 +573,14 @@ function Abhakliste({ ort, teile }: { ort: Ort; teile: Teile }) {
       const betrieb = eingaben.volumen / 100;
       const gezaehlt = kannen !== undefined ? kannen / 2 : betrieb;
       const vorschlag = volumenVorschlag(gezaehlt, betrieb);
-      extra.push(
-        ...pruefschritt4Vorgang(teile, ort.platzId, gezaehlt, vorschlag !== undefined, neueClientId, t),
-      );
       neu = { ...neu, volumen: Math.round(gezaehlt * 100) };
+      // mehr als 10 % Abweichung: Korrekturvorschlag mit Ja/Nein statt stiller Übernahme (R9.3, Prüfer R2-1)
+      if (vorschlag) setVolumenFrage({ gezaehlt, text: vorschlag.text });
+      else {
+        const v = pruefschritt4Vorgang(teile, ort.platzId, gezaehlt, false, neueClientId, t);
+        extra.push(...v);
+        neu = { ...neu, pruefschritt4Ids: ereignisIds(v) };
+      }
     }
     const n = nachziehen(neu);
     void weiter(n.stand, [...extra, ...n.vorgang]);
@@ -584,6 +601,22 @@ function Abhakliste({ ort, teile }: { ort: Ort; teile: Teile }) {
     else if (w.kText) zeilen.push(w.kText);
     zeilen.push('Kontrollmessung morgen');
     setAbgeschlossen({ text: zeilen });
+  }
+
+  /** Antwort auf «Betriebsvolumen auf 8.0 l ändern»: Prüfschritt 4 in beiden Fällen, Übernahme nur nach Ja */
+  function volumenAntwort(uebernehmen: boolean) {
+    const s = standRef.current;
+    if (!volumenFrage || !s) return;
+    const v = pruefschritt4Vorgang(
+      teile,
+      ort.platzId,
+      volumenFrage.gezaehlt,
+      uebernehmen,
+      neueClientId,
+      uhrJetzt(),
+    );
+    setVolumenFrage(undefined);
+    void weiter({ ...s, pruefschritt4Ids: ereignisIds(v) }, v);
   }
 
   function antworten(antwort: 'ja' | 'nein') {
@@ -713,7 +746,7 @@ function Abhakliste({ ort, teile }: { ort: Ort; teile: Teile }) {
         </a>
       ) : istAktiv && d.nr === 2 && ersterAnsatz ? (
         <Stepper
-          label="Kannen zu 0.5 l"
+          label="Frischwasser gezählt"
           wert={kannen ?? Math.round((eingaben.volumen / 100) * 2)}
           min={1}
           max={200}
@@ -822,6 +855,19 @@ function Abhakliste({ ort, teile }: { ort: Ort; teile: Teile }) {
           {h}
         </Notice>
       ))}
+      {volumenFrage ? (
+        <Card title="Gezählt weicht ab">
+          <p>{`${volumenFrage.gezaehlt.toFixed(1)} l statt ${(eingaben.volumen / 100).toFixed(1)} l gezählt. ${volumenFrage.text}?`}</p>
+          <div className="hv-ansatz-frage">
+            <Button variant="secondary" onClick={() => volumenAntwort(false)}>
+              Nein, beibehalten
+            </Button>
+            <Button variant="secondary" onClick={() => volumenAntwort(true)}>
+              Ja, ändern
+            </Button>
+          </div>
+        </Card>
+      ) : null}
       {frage ? (
         <Card title="Rückfrage">
           <p>{frage.text}</p>

@@ -168,9 +168,12 @@ export function Ergebniszone({
           <strong>{h.folge}.</strong>
           {/* der Messwert steht schon in der Zeile darüber; hier nur der Sollwert (05_masken.md 5) */}
           {h.sollwert ? ` ${h.sollwert}` : h.text ? ` ${h.text}` : ''} {h.massnahme}.
-          {aktion?.bei(h) ? <span className="hv-ergebnis-aktion">{aktion.knopf}</span> : null}
         </p>
       ))}
+      {/* Plan 29: eigene Zeile unter den Hinweisen, damit der gekürzte Hinweistext den Knopf nicht verdeckt */}
+      {aktion && hinweise.slice(0, 2).some((h) => aktion.bei(h)) ? (
+        <div className="hv-ergebnis-aktion">{aktion.knopf}</div>
+      ) : null}
     </section>
   );
 }
