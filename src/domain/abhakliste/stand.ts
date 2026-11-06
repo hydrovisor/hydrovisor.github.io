@@ -215,8 +215,10 @@ export function abwaehlen(stand: AblaufStand, nr: number, jetzt: Date): AblaufSt
   if (!abwaehlbar(stand, nr)) return stand;
   const z = zeileVon(stand, nr) as ZeilenStand;
   const zuruck: ZeilenStand = { ...z, aufzuegeErledigt: 0, begonnen: z.messungId !== undefined };
-  for (const feld of ['erledigtAm', 'istMl', 'schrittClientId', 'positionClientIds'] as const)
-    delete zuruck[feld];
+  delete zuruck.erledigtAm;
+  delete zuruck.istMl;
+  delete zuruck.schrittClientId;
+  delete zuruck.positionClientIds;
   const s = ersetze(stand, zuruck, jetzt);
   if (nr === 1) delete s.begonnenAm;
   return s;

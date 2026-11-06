@@ -217,7 +217,8 @@ export function gefaessAnsicht(
   // letzter Ansatz für den Verlauf; Zielbereich und Dosis aus dem letzten nicht abgebrochenen Neuansatz oder
   // Teilwechsel, wie v_fuellzustand (Runde 1, Befund 4)
   const ansatz = ansaetze[0];
-  const basis = ansaetze.find((a) => BASIS_TYPEN.has(a.typ) && a.status !== 'abgebrochen');
+  // Basis nur abgeschlossene Ansätze: ein laufender Wechsel ist noch nicht die Lösung im Gefäss (Plan 29 Risiko 6)
+  const basis = ansaetze.find((a) => BASIS_TYPEN.has(a.typ) && a.status === 'abgeschlossen');
 
   const ansicht: Gefaessansicht = {
     code,
@@ -364,6 +365,7 @@ export function gefaessAnsicht(
     const produkte = new Map(
       zeilen<{ produkt_id: string; name: string }>(teile, 'produkt').map((p) => [p.produkt_id, p.name]),
     );
+    const summe = new Map<string, number>();
     for (const pos of zeilen<{
       ansatz_id: string;
       produkt_id: string;
@@ -373,12 +375,12 @@ export function gefaessAnsicht(
       storniert_am: string | null;
     }>(teile, 'ansatz_position')) {
       if (pos.ansatz_id !== basis.id || pos.storniert_am !== null || pos.produkt_id === 'ph_minus') continue;
+      // Summe je Produkt: die Restdosis ergibt eine zweite Position (Plan 29 A10, Risiko 6)
       const ml = Number(pos.ist_ml ?? pos.soll_ml) / Number(pos.bezugsvolumen_l);
-      ansicht.dosis.push({
-        komponente: produkte.get(pos.produkt_id) ?? pos.produkt_id,
-        mlProL: ml.toFixed(2),
-      });
+      summe.set(pos.produkt_id, (summe.get(pos.produkt_id) ?? 0) + ml);
     }
+    for (const [produkt, ml] of summe)
+      ansicht.dosis.push({ komponente: produkte.get(produkt) ?? produkt, mlProL: ml.toFixed(2) });
   }
 
   // Hauptknopf: bis zur Aufgaben-Rechnung die Messfälligkeit (A4); Anzuchtbox ohne Knopf (A6)
