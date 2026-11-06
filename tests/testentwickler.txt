@@ -149,6 +149,17 @@ tests/unit/router-pflanze.test.ts
 tests/e2e/phasen.spec.ts
 # I2-03 Runde 2 (#35)
 tests/unit/phasen-runde2.test.ts
+# I2-01 Umsetzen einfach (#33)
+tests/fixtures/umsetzen.ts
+tests/unit/umsetzen.test.ts
+tests/unit/verschieben.test.ts
+tests/unit/topf-deckel.test.ts
+tests/unit/umsetzen-nebenwirkungen.test.ts
+tests/unit/router-umsetzen.test.ts
+supabase/tests/database/14_umsetzen.test.sql
+tests/e2e/umsetzen.spec.ts
+tests/e2e/verschieben.spec.ts
+tests/e2e/anzucht-ablauf.spec.ts
 # I1b-01 Messmaske (#26)
 tests/fixtures/messen.ts
 tests/unit/bewertung.test.ts

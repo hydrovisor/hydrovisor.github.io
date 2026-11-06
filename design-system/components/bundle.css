@@ -295,6 +295,12 @@ button.hv-tile { cursor: pointer; touch-action: manipulation; }
 [data-density="regal"] .hv-stepper-wert { font-size: var(--text-value-regal-size); line-height: var(--text-value-regal-line); }
 .hv-stepper-hinweis { grid-column: 1 / -1; font-size: var(--text-caption-size); color: var(--ink-muted); }
 
+/* Deckel mit Töpfen (Plan 33): Topf ausser Heimplatz gestrichelt mit «↔», abwesender Heimtopf gepunktet mit «weg»,
+   gewählter Quelltopf umrandet; der Text im Loch trägt den Zustand mit, nie nur Farbe */
+.hv-loch-fremd { border-style: double; border-width: 4px; }
+.hv-loch-abwesend { border-style: dotted; color: var(--ink-muted); }
+.hv-loch-markiert { outline: 3px solid var(--brand); outline-offset: 2px; }
+
 /* Ergebniszone der Messmaske (Tile.md, Plan 26): ersetzt den Ziffernblock in dessen Höhe (4 × 68 + 3 × 8 = 296 dp) */
 .hv-ergebniszone { box-sizing: border-box; height: calc(var(--size-touch-regal) * 4 + var(--space-2) * 3); display: flex; flex-direction: column; gap: var(--space-1); overflow: hidden; }
 .hv-ergebniszone .hv-ergebnis { padding: var(--space-1) var(--space-2); box-sizing: border-box; font-size: var(--text-text-regal-size); line-height: var(--text-text-regal-line); }

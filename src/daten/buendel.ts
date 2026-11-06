@@ -80,7 +80,17 @@ export const BUENDEL_TEILE: readonly Buendelteil[] = [
     spalten: '*',
     ordnung: ['id'],
     ohneStorno: true,
-    typen: ['keimung', 'abschluss', 'wiederherstellen'],
+    // Plan 33: Umsetzen, Verschieben, Tausch, Umsetzdatum und Ernte für Sämlinge, Deckel und Verlauf
+    typen: [
+      'keimung',
+      'abschluss',
+      'wiederherstellen',
+      'verschieben',
+      'umsetzen',
+      'tausch',
+      'umsetzdatum_geaendert',
+      'ernte',
+    ],
   },
   // Säen (Plan 23): Packungen, Keimrate je Packung (nur echt, G5), aktueller Platz je Topf
   tabelle('saatgut', { ohneStorno: true }),
@@ -113,7 +123,16 @@ export const BUENDEL_TEILE: readonly Buendelteil[] = [
     spalten: '*',
     ordnung: ['id'],
     ohneStorno: true,
-    typen: ['gefaess_erfasst', 'gefaesspruefung', 'box_deckel_tausch', 'entfernt', 'geleert', 'ruhe'],
+    typen: [
+      'gefaess_erfasst',
+      'gefaesspruefung',
+      'box_deckel_tausch',
+      'entfernt',
+      'geleert',
+      'ruhe',
+      // Plan 33 (R8.4): Abweichung der Kurzprüfung sperrt das Verschieben in ein anderes Gefäss
+      'kurzpruefung',
+    ],
   },
   // Push (Plan 13): Abos ohne Schlüssel, Versände für «Letzte Erinnerung» und #/push
   {

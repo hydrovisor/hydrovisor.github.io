@@ -12,3 +12,5 @@ Deckelgrafik eines Gefässes: Löcher als Tippflächen, aus dem Lochbild «Löch
 - `kanten` zeigt die Beschriftung «hinten» oben und «vorne · Gang» unten (`hv-deckel-kante`); `serviceOeffnung` setzt an der Vorderkante die Marke «Service-Öffnung» (`hv-deckel-service`, gestrichelter Rahmen mit Text).
 - `hv-deckel-rahmen` umschliesst die Grafik: Reihen, die breiter als die Maske sind, scrollen waagrecht; Löcher schrumpfen nie unter `size-loch` (UC2-AK3).
 - Keine geometrische Lochprüfung (U-01); die Grafik ist schematisch.
+
+- **Töpfe im Deckel** (Plan 33): Ein Topf ausser seinem Heimplatz zeigt «↔» vor der Topfnummer und einen doppelten Rand (`hv-loch-fremd`; gestrichelt bleibt «reserviert»). Ein Heimloch, dessen Topf anderswo steht, zeigt «weg» mit gepunktetem Rand (`hv-loch-abwesend`). Ein 8-cm-Zieltopf auf der Station zeigt «→» mit dem Zielgefäss («→2.1»). Der gewählte Quelltopf ist umrandet (`hv-loch-markiert`). Nicht wählbare Löcher zeigen «bel.», «res.» oder «–». Der zugängliche Name nennt Kennung, Sorte, Zustand, «ausser Heimplatz», Ziel und «auf …».
