@@ -213,3 +213,6 @@ tests/e2e/abhakliste.spec.ts
 tests/e2e/ph-korrektur.spec.ts
 tests/unit/abhakliste-vorgaenge.test.ts
 tests/unit/router-ansatz.test.ts
+# I1b-04 Runde 1 (#29)
+tests/unit/abhakliste-rechnung.test.ts
+tests/unit/abhakliste-gefaess.test.ts

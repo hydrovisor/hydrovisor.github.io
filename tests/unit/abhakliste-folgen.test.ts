@@ -110,6 +110,20 @@ describe('Nach dem Wechsel (R10.3)', () => {
     );
   });
 
+  it('Loesungswechsel-AK4 TZ9 Grenze wie die Spalte nacherfasst (> 2 hours): genau 2:00 nach gilt_ab noch Kontrollmessung, 2:01 keine', () => {
+    // gilt_ab 10.1. 18:30 Zürich
+    expect(kontrollmessungFolgetag(ansatz({ erfasst_am: '2027-01-10T19:30:00.000Z' }), ZEITZONE)).toBe(
+      '2027-01-11',
+    );
+    expect(
+      kontrollmessungFolgetag(ansatz({ erfasst_am: '2027-01-10T19:31:00.000Z' }), ZEITZONE),
+    ).toBeUndefined();
+    // eine Millisekunde über 2 h gilt bereits als nacherfasst
+    expect(
+      kontrollmessungFolgetag(ansatz({ erfasst_am: '2027-01-10T19:30:00.001Z' }), ZEITZONE),
+    ).toBeUndefined();
+  });
+
   it('Loesungswechsel-AK4 storniert, abgebrochen oder kein Neuansatz ergibt keine Kontrollmessung', () => {
     expect(
       kontrollmessungFolgetag(ansatz({ storniert_am: '2027-01-10T19:00:00.000Z' }), ZEITZONE),
