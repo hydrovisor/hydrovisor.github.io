@@ -62,12 +62,20 @@ export type StornoGrund = 'rueckgaengig' | 'korrektur' | 'fehleingabe';
  */
 export const SETZBAR: Readonly<Partial<Record<Erfassungstabelle, readonly string[]>>> = {
   etikett: ['gedruckt_am'],
+  // Plan 29 A24: entstehen erst nach dem Kopf, nie ein Zustandsfeld (8.1 Regel 2)
+  naehrloesungsansatz: ['ec_erwartet_final', 'k_vorschlag'],
 };
 
 export type Schritt =
   | { art: 'neu'; tabelle: Erfassungstabelle; felder: Record<string, unknown> & { client_id: string } }
   | { art: 'storno'; tabelle: Erfassungstabelle; clientId: string; grund: StornoGrund }
-  | { art: 'setzen'; tabelle: 'etikett'; clientId: string; felder: { gedruckt_am: string } };
+  | { art: 'setzen'; tabelle: 'etikett'; clientId: string; felder: { gedruckt_am: string } }
+  | {
+      art: 'setzen';
+      tabelle: 'naehrloesungsansatz';
+      clientId: string;
+      felder: { ec_erwartet_final?: number; k_vorschlag?: number };
+    };
 
 export type Vorgang = readonly Schritt[];
 

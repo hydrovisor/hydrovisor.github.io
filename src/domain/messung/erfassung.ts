@@ -31,7 +31,9 @@ export function messungVorgang(
   kontext: {
     platzId: string;
     messgeraetId: string;
-    messart: 'aufgabe' | 'w';
+    messart: 'aufgabe' | 'w' | 'frischwasser' | 'kontrolle_ansatz' | 'end_ansatz' | 'nachmessen';
+    /** Messung im Ablauf (Plan 29): gehört zum Ansatz und veraltet nicht (R10.3) */
+    ansatzId?: string;
     betriebsart?: Betriebsart;
     fuellstand?: 'ueber_drittel' | 'unter_drittel';
     uEc: number;
@@ -60,6 +62,11 @@ export function messungVorgang(
     fuellstand: kontext.fuellstand ?? null,
     war_faellig_am: kontext.warFaelligAm ?? null,
   };
+  if (kontext.ansatzId) {
+    // id = client_id wie die übrigen Zeilen im Ablauf (Plan 29 «Schreibweg»)
+    felder['id'] = bindung.clientId;
+    felder['ansatz_id'] = kontext.ansatzId;
+  }
   const b = kontext.bewertung;
   if (b) {
     felder['bewertung_ph'] = b.bewertungen.ph ?? null;

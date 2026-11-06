@@ -143,10 +143,13 @@ export function Ergebniszone({
   zeilen,
   hinweise,
   ohneBewertung,
+  aktion,
 }: {
   zeilen: { ton: Bewertung; wert: string }[];
   hinweise: ErgebnisHinweis[];
   ohneBewertung?: boolean;
+  /** Plan 29: Knopf im Hinweis, dessen Massnahme passt (pH-Minus gegeben) */
+  aktion?: { bei: (h: ErgebnisHinweis) => boolean; knopf: ReactNode };
 }) {
   return (
     <section className="hv-ergebniszone" aria-label="Ergebnis">
@@ -167,6 +170,10 @@ export function Ergebniszone({
           {h.sollwert ? ` ${h.sollwert}` : h.text ? ` ${h.text}` : ''} {h.massnahme}.
         </p>
       ))}
+      {/* Plan 29: eigene Zeile unter den Hinweisen, damit der gekürzte Hinweistext den Knopf nicht verdeckt */}
+      {aktion && hinweise.slice(0, 2).some((h) => aktion.bei(h)) ? (
+        <div className="hv-ergebnis-aktion">{aktion.knopf}</div>
+      ) : null}
     </section>
   );
 }

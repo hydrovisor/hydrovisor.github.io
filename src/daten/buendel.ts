@@ -108,6 +108,9 @@ export const BUENDEL_TEILE: readonly Buendelteil[] = [
   tabelle('naehrloesungsansatz', { ohneStorno: true }),
   // Dosis je Komponente in der Maske «Gefäss»; nach dem Laden auf die letzten Ansätze gekürzt (Plan 20)
   tabelle('ansatz_position', { ohneStorno: true }),
+  // Plan 29: Schritte der Abhakliste (nach dem Laden nur laufende Neuansätze) und die Wirkung von pH-Minus (R4.14)
+  tabelle('ansatz_schritt', { ohneStorno: true }),
+  sicht('v_ph_wirkung', ['wirkung_ml_je_l_je_0_1']),
   tabelle('kalibrierung', { ohneStorno: true }),
   sicht('v_kalibrierung_faellig', ['messgeraet_id', 'datenart']),
   tabelle('messgeraet'),
@@ -257,6 +260,14 @@ export function erstelleBuendelLaden(
       );
       const positionen = teile['ansatz_position'] as { ansatz_id: string }[] | undefined;
       if (positionen) teile['ansatz_position'] = positionen.filter((p) => letzte.has(p.ansatz_id));
+      // Schritte nur der laufenden Neuansätze im Bündel: Fortsetzen auf einem anderen Gerät (Plan 29 A13)
+      const laufend = new Set(
+        (teile['naehrloesungsansatz'] as { id: string; typ?: string; status?: string }[] | undefined)
+          ?.filter((a) => a.typ === 'neuansatz' && a.status === 'laufend')
+          .map((a) => a.id),
+      );
+      const schritte = teile['ansatz_schritt'] as { ansatz_id: string }[] | undefined;
+      if (schritte) teile['ansatz_schritt'] = schritte.filter((x) => laufend.has(x.ansatz_id));
       // v_messung_unsicher hat kein gilt_ab: auf die Messungen im Fenster beschränken (Runde 1, Befund 9)
       const imFenster = new Set((teile['messung'] as { id: string }[] | undefined)?.map((m) => m.id));
       const unsicher = teile['v_messung_unsicher'] as { messung_id: string }[] | undefined;

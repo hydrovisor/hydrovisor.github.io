@@ -231,6 +231,10 @@ button.hv-tile { cursor: pointer; touch-action: manipulation; }
 .hv-check-erledigt .hv-check-haken { background: var(--brand); border-color: var(--brand); }
 .hv-check-erledigt .hv-check-titel { text-decoration: line-through; text-decoration-thickness: 2px; color: var(--ink-muted); }
 .hv-check-aktion { margin-top: var(--space-2); }
+/* Plan 29: Hinweis unter dem Titel (Notice-Ton) und fester Haken einer erledigten Zeile, die nicht mehr abwählbar ist */
+.hv-check-hinweis { margin-top: var(--space-1); font-size: var(--text-small-size); line-height: var(--text-small-line); color: var(--ink); }
+.hv-check-fest { display: inline-flex; align-items: center; justify-content: center; cursor: default; }
+.hv-check-erledigt .hv-check-fest { background: var(--brand); border-color: var(--brand); }
 /* Variante «selbst» (Einrichtung UC0): Zeilen haken sich durch die Erfassung selbst ab; Status statt Haken-Knopf */
 .hv-check-status { width: var(--size-touch-regal); height: var(--size-touch-regal); border-radius: 50%; border: 2px solid var(--line-control); background: var(--surface-raised); color: var(--on-brand);
   display: inline-flex; align-items: center; justify-content: center; }

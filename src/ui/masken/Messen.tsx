@@ -1,6 +1,19 @@
 // Messen (Regal, Plan 12 und Plan 26; UC9, U1 bis U4, U13, R2.5, R10.1 bis R10.5): drei Kacheln mit Symbol, Trend
 // und Spur, eigener Ziffernblock, nach dem letzten Wert die Ergebniszone, vor dem Speichern bei Sprung die Rückfrage.
-import { useMemo, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { ablaufLesen, ablaufLoeschen, ablaufSchreiben, type AblaufEintrag } from '../../ablauf/speicher.ts';
+import { useWachhalten } from '../../ablauf/wachhalten.ts';
+import { feldFrei, messungZuordnen, WACH_NACH_MS, type AblaufStand } from '../../domain/abhakliste/stand.ts';
+import { phKorrekturVorgang } from '../../domain/abhakliste/vorgaenge.ts';
+import {
+  NACHMESSEN_MIN,
+  phKorrekturAngebot,
+  phKorrekturVorschlag,
+  phWirkung,
+  phZielErsteinstellung,
+  type PhArt,
+} from '../../domain/rechner-ph.ts';
+import { Checklist } from '../bausteine/Checklist.tsx';
 import { neueClientId, schreiben, type Schreibergebnis } from '../../daten/schreiben.ts';
 import type { Schritt } from '../../domain/datenpfad/erfassung.ts';
 import { istUnsicher, kalibrierStand } from '../../domain/kalibrierung/stand.ts';
@@ -30,7 +43,7 @@ import { StatusBadge } from '../bausteine/StatusBadge.tsx';
 import { Ergebniszone, MesswertKachel, Rueckfrage } from '../bausteine/Tile.tsx';
 import { useBuendel } from '../buendel.tsx';
 import { kalibrierdaten, messgeraet, messungenIm, zustandVon } from '../bundeldaten.ts';
-import { hashZu } from '../router.ts';
+import { hashZu, oeffnen } from '../router.ts';
 import '../messen.css';
 
 const BEZEICHNUNG: Record<Groesse, string> = { ph: 'pH', ec: 'EC mS/cm', temperatur: '°C' };
@@ -71,7 +84,13 @@ function Kopf({
   );
 }
 
-export function Messen({ code }: { code: string }) {
+/** Messung im Ablauf (Plan 29): Zeile 3, 14 oder 17 der Abhakliste bzw. Nachmessen einer pH-Korrektur */
+interface Ablaufmodus {
+  zeile?: 3 | 14 | 17;
+  nachmessen?: string;
+}
+
+export function Messen({ code, zeile, nachmessen }: { code: string } & Ablaufmodus) {
   const { buendel, liest } = useBuendel();
   const ort = buendel ? ortAufloesen(code, buendel.teile) : undefined;
   if (!ort) {
@@ -90,7 +109,13 @@ export function Messen({ code }: { code: string }) {
       </main>
     );
   }
-  return <Messmaske key={ort.platzId} ort={ort} />;
+  return (
+    <Messmaske
+      key={`${ort.platzId}|${String(zeile ?? '')}|${nachmessen ?? ''}`}
+      ort={ort}
+      modus={{ ...(zeile ? { zeile } : {}), ...(nachmessen ? { nachmessen } : {}) }}
+    />
+  );
 }
 
 type Zone = 'eingabe' | 'ergebnis' | 'rueckfrage';
@@ -108,10 +133,38 @@ function schlechteste(b: Partial<Record<Groesse, Bewertung>>): Bewertung | undef
   return (Object.values(b) as Bewertung[]).sort((x, y) => RANG[x] - RANG[y])[0];
 }
 
-function Messmaske({ ort }: { ort: Ort }) {
+const PH_ARTEN: readonly string[] = ['dwc', 'konstantpegel', 'kratky', 'kratky_belueftet', 'station'];
+
+function Messmaske({ ort, modus }: { ort: Ort; modus: Ablaufmodus }) {
   const { buendel } = useBuendel();
   const geraet = messgeraet(buendel);
-  const felder: Groesse[] = ort.rolle === 'messstelle' ? ['ec', 'temperatur'] : ['ph', 'ec', 'temperatur'];
+  const felder: Groesse[] =
+    ort.rolle === 'messstelle' || modus.zeile === 3 ? ['ec', 'temperatur'] : ['ph', 'ec', 'temperatur'];
+  // Ablaufstand der Abhakliste (Zeilen 3, 14, 17)
+  const [ablauf, setAblauf] = useState<AblaufStand>();
+  useEffect(() => {
+    if (!modus.zeile) return;
+    let aktiv = true;
+    ablaufLesen<AblaufStand & AblaufEintrag>(`abhakliste:${ort.platzId}`).then(
+      (s) => aktiv && setAblauf(s),
+      () => undefined,
+    );
+    return () => {
+      aktiv = false;
+    };
+  }, [modus.zeile, ort.platzId]);
+  // pH-Korrektur: Countdown bis zum Nachmessen (R4.14)
+  const [korrektur, setKorrektur] = useState<{ ende: number; ansatzId: string }>();
+  const [uhr, setUhr] = useState(() => Date.now());
+  useEffect(() => {
+    if (!korrektur) return;
+    const id = window.setInterval(() => setUhr(Date.now()), 1000);
+    return () => window.clearInterval(id);
+  }, [korrektur]);
+  useWachhalten(
+    Boolean(modus.zeile) || korrektur !== undefined,
+    korrektur ? new Date(korrektur.ende + WACH_NACH_MS) : undefined,
+  );
   const [eingabe, setEingabe] = useState<Messeingabe>(() => eingabeStart(felder));
   const aktuell = useRef(eingabe);
   const [zone, setZone] = useState<Zone>('eingabe');
@@ -155,7 +208,8 @@ function Messmaske({ ort }: { ort: Ort }) {
   const kalibrierLink = hashZu(
     ort.datenart === 'echt' ? { name: 'kalibrieren' } : { name: 'kalibrieren', datenart: ort.datenart },
   );
-  const kratky = ort.betriebsart !== undefined && MIT_FUELLSTAND.has(ort.betriebsart);
+  // im Ablauf (Zeilen 3, 14, 17) entfällt der Füllstand (Plan 29, Kommentar zu messung)
+  const kratky = ort.betriebsart !== undefined && MIT_FUELLSTAND.has(ort.betriebsart) && !modus.zeile;
   const bereit = geraet !== undefined && speichernMoeglich(eingabe) && (!kratky || fuellstand !== undefined);
   // Messstelle W: keine Bewertung und keine Ergebniszone; der Leitungswasser-Hinweis steht im Bannerplatz (A9)
   const messstelle = ort.rolle === 'messstelle';
@@ -175,6 +229,8 @@ function Messmaske({ ort }: { ort: Ort }) {
   }
 
   function waehlen(g: Groesse) {
+    // pH vor EC in der Kontroll- und Endmessung (Herstellerregel Konzept 5.6)
+    if (modus.zeile && !feldFrei(modus.zeile, messwerteHundertstel(aktuell.current), g)) return;
     const neu = feldWaehlen(aktuell.current, g);
     aktuell.current = neu;
     setEingabe(neu);
@@ -190,11 +246,32 @@ function Messmaske({ ort }: { ort: Ort }) {
     void senden(bestaetigt);
   }
 
-  async function senden(sprungBestaetigt: boolean) {
-    if (!geraet || !bereit) return;
+  /** Messung im Ablauf zurück an die Abhakliste (Zeilen 3, 14, 17) und zurück zu #/ansatz/:code */
+  async function zurAbhakliste(clientId: string, giltAb: string) {
+    if (!modus.zeile || !ablauf) return;
+    const h = messwerteHundertstel(eingabe);
+    const neu = messungZuordnen(ablauf, modus.zeile, {
+      id: clientId,
+      giltAb,
+      ...(h.ph !== undefined ? { ph: h.ph } : {}),
+      ...(h.ec !== undefined ? { ec: h.ec } : {}),
+      ...(h.temperatur !== undefined ? { temperatur: h.temperatur } : {}),
+    });
+    await ablaufSchreiben(neu as AblaufStand & AblaufEintrag).catch(() => undefined);
+    oeffnen({ name: 'ansatz', code: ort.code });
+  }
+
+  async function senden(sprungBestaetigt: boolean): Promise<boolean> {
+    if (!geraet || !bereit) return false;
     const jetztSenden = uhrJetzt();
     const schluessel = JSON.stringify({ w: messwerte(eingabe), fuellstand });
     bindung.current = erfassungBinden(bindung.current, schluessel, neueClientId, jetztSenden);
+    // Zeile 3: die Frischwassermessung schreibt der Kopf beim Haken von Zeile 4 (Plan 29 A4)
+    if (modus.zeile === 3) {
+      await zurAbhakliste(bindung.current.clientId, bindung.current.giltAb);
+      return true;
+    }
+    const ansatzId = modus.nachmessen ?? (modus.zeile ? ablauf?.ansatzId : undefined);
     const giltAb = new Date(bindung.current.giltAb);
     const faelligkeit = messFaelligkeit(
       {
@@ -216,7 +293,16 @@ function Messmaske({ ort }: { ort: Ort }) {
             {
               platzId: ort.platzId,
               messgeraetId: geraet.id,
-              messart: messstelle ? 'w' : 'aufgabe',
+              messart: messstelle
+                ? 'w'
+                : modus.zeile === 14
+                  ? 'kontrolle_ansatz'
+                  : modus.zeile === 17
+                    ? 'end_ansatz'
+                    : modus.nachmessen
+                      ? 'nachmessen'
+                      : 'aufgabe',
+              ...(ansatzId ? { ansatzId } : {}),
               ...(ort.betriebsart ? { betriebsart: ort.betriebsart } : {}),
               ...(fuellstand ? { fuellstand } : {}),
               uEc: geraet.u_ec,
@@ -244,6 +330,12 @@ function Messmaske({ ort }: { ort: Ort }) {
     const antwort = await schreiben(vorgang, { jetzt: jetztSenden, zeitzone: ZEITZONE });
     setSendet(false);
     setErgebnis(antwort);
+    if (antwort.status === 'gespeichert' && modus.zeile) {
+      await zurAbhakliste(bindung.current.clientId, bindung.current.giltAb);
+      return true;
+    }
+    if (antwort.status === 'gespeichert' && modus.nachmessen)
+      await ablaufLoeschen(`nachmessen:${ort.platzId}`).catch(() => undefined);
     if (antwort.status === 'gespeichert') {
       const schlecht = schlechteste(bewertungen);
       setGespeichert({
@@ -255,7 +347,80 @@ function Messmaske({ ort }: { ort: Ort }) {
           : true,
         ...(schlecht ? { bewertung: schlecht } : {}),
       });
-    } else setZone((z) => (z === 'rueckfrage' ? 'ergebnis' : z));
+      return true;
+    }
+    setZone((z) => (z === 'rueckfrage' ? 'ergebnis' : z));
+    return false;
+  }
+
+  // Vorschlag pH-Minus in der Ergebniszone, nur ausserhalb eines Ablaufs (R4.14, UC9 Ablauf 6, A2)
+  const phVorschlag = (() => {
+    if (messstelle || modus.zeile || modus.nachmessen || !teile || !auswertung) return undefined;
+    if (!phKorrekturAngebot(auswertung.hinweise) || werteH.ph === undefined) return undefined;
+    const g = (teile['gefaess'] ?? []).find(
+      (x) =>
+        (x as Record<string, unknown>)['platz_id'] === ort.platzId &&
+        ((x as Record<string, unknown>)['gueltig_bis'] ?? null) === null,
+    ) as Record<string, unknown> | undefined;
+    const volumen = Math.round(Number(g?.['betriebsvolumen_l'] ?? 0) * 100);
+    if (volumen <= 0) return undefined;
+    const art = (g?.['feste_dosis'] === true ? 'station' : (ort.betriebsart ?? 'dwc')) as string;
+    const phArt = (PH_ARTEN.includes(art) ? art : 'dwc') as PhArt;
+    const sicht = (teile['v_ph_wirkung'] ?? [])[0] as Record<string, unknown> | undefined;
+    const roh = sicht?.['wirkung_ml_je_l_je_0_1'];
+    const w = phWirkung(roh === null || roh === undefined ? null : Number(roh));
+    const phZiel = phZielErsteinstellung({
+      art: phArt,
+      ...(kontext?.sollband ? { phBand: kontext.sollband.ph } : {}),
+    });
+    const v = phKorrekturVorschlag({ volumen, phIst: werteH.ph, phZiel, w });
+    return v.art === 'vorschlag' ? { ...v, volumen } : undefined;
+  })();
+
+  // der Vorschlag ersetzt die Massnahme «pH schrittweise senken» im Hinweis: zwei Hinweise bleiben (UC9-AK1)
+  const hinweiseMitVorschlag = (auswertung?.hinweise ?? []).map((h) =>
+    phVorschlag && h.massnahme.startsWith('pH schrittweise senken')
+      ? { ...h, massnahme: `pH-Minus ${phVorschlag.text}` }
+      : h,
+  );
+
+  async function phMinusGegeben() {
+    if (!phVorschlag) return;
+    // zuerst die Messung (falls noch nicht gespeichert), dann Korrektur und Position (Plan 29 «Schreibweg»)
+    const ok = gespeichert ? true : await senden(bestaetigt);
+    if (!ok) return;
+    const t = uhrJetzt();
+    const vorgang = phKorrekturVorgang(
+      {
+        platzId: ort.platzId,
+        phVorher: werteH.ph ?? 0,
+        volumenL: phVorschlag.volumen / 100,
+        sollMl: phVorschlag.zuerstMl,
+        istMl: phVorschlag.zuerstMl,
+        ids: neueClientId,
+      },
+      t,
+      ZEITZONE,
+    );
+    const kopfSchritt = vorgang[0];
+    const ansatzId = kopfSchritt?.art === 'neu' ? String(kopfSchritt.felder['id']) : '';
+    const antwort = await schreiben(vorgang, { jetzt: t, zeitzone: ZEITZONE });
+    if (antwort.status === 'nicht_gespeichert') {
+      setErgebnis(antwort);
+      return;
+    }
+    const ende = t.getTime() + NACHMESSEN_MIN * 60_000;
+    await ablaufSchreiben({
+      id: `nachmessen:${ort.platzId}`,
+      art: 'nachmessen',
+      platzId: ort.platzId,
+      code: ort.code,
+      ansatzId,
+      faelligAb: new Date(ende).toISOString(),
+      letzteAktionAm: t.toISOString(),
+    }).catch(() => undefined);
+    setUhr(t.getTime());
+    setKorrektur({ ende, ansatzId });
   }
 
   async function zuruecknehmen() {
@@ -286,6 +451,21 @@ function Messmaske({ ort }: { ort: Ort }) {
           {rueckgaengig ? 'Rückgängig gemacht' : `Gespeichert ${gespeichert.zeit} · ${werte.join(' · ')}`}
         </p>
         {!rueckgaengig && gespeichert.bewertung ? <StatusBadge tone={TON[gespeichert.bewertung]} /> : null}
+        {korrektur ? (
+          <Checklist
+            label="Nachmessen"
+            jetzt={uhr}
+            zeilen={[
+              {
+                nr: 1,
+                titel: `Nach ${String(NACHMESSEN_MIN)} min nachmessen`,
+                timerEnde: korrektur.ende,
+                zustand: 'aktiv',
+                gesperrt: true,
+              },
+            ]}
+          />
+        ) : null}
         {!rueckgaengig && leitungswasser ? (
           <Notice kompakt tone="warn">
             {`${leitungswasser.folge}: ${leitungswasser.massnahme}`}
@@ -451,7 +631,24 @@ function Messmaske({ ort }: { ort: Ort }) {
         <div className="hv-numpad">
           <Ergebniszone
             zeilen={zeilen}
-            hinweise={auswertung.hinweise}
+            hinweise={hinweiseMitVorschlag}
+            {...(phVorschlag
+              ? {
+                  aktion: {
+                    bei: (h: { massnahme: string }) => h.massnahme.startsWith('pH-Minus'),
+                    knopf: (
+                      <Button
+                        variant="secondary"
+                        size="compact"
+                        disabled={sendet || !bereit}
+                        onClick={() => void phMinusGegeben()}
+                      >
+                        pH-Minus gegeben
+                      </Button>
+                    ),
+                  },
+                }
+              : {})}
             {...(auswertung.ohneBewertung ? { ohneBewertung: true } : {})}
           />
           <div className="hv-numpad-save">{speichernZeile}</div>

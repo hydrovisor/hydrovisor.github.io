@@ -122,7 +122,8 @@ create type public.mischentscheid as enum ('keiner', 'leitkultur', 'andere_phase
 create type public.ansatz_schritt_typ as enum (
   'kalibrierung_pruefen', 'absaugen', 'frischwasser', 'frischwasser_messen', 'gerechnet_fuer',
   'micro', 'spuelen', 'grow', 'bloom', 'umruehren', 'timer', 'ph_einstellen', 'kontrollmessung',
-  'restdosis', 'endmessung');
+  'restdosis', 'endmessung', 'abbruch');
+-- 'abbruch' seit Plan 29 (Migration 20261108120000): «Wechsel abbrechen» mit der nächsten offenen nr.
 create type public.ereignis_typ as enum (
   'aussaat', 'deckel_geoeffnet', 'abdeckung_entfernt', 'keimung', 'phase_antwort', 'verschieben',
   'umsetzdatum_geaendert', 'umsetzen', 'tausch', 'neu_beschriften', 'ernte', 'kultur_entscheid',
@@ -1228,6 +1229,12 @@ begin
   end if;
   return new;
 end $$;
+-- Seit Plan 29 (Migration 20261108120100, 8.1 Regel 2): ansatz_zustand_nachrechnen() rechnet status,
+-- abgeschlossen_am, timer_ende, dauer_s, kontrollmessung_id und endmessung_id eines Neuansatzes mit Schritten aus
+-- ansatz_schritt und messung (after insert or update of storniert_am; bei messung nur mit ansatz_id) und den Status
+-- einer pH-Korrektur aus der Messung nachmessen; ansatz_zustand_geschuetzt() (before update auf naehrloesungsansatz,
+-- pg_trigger_depth() < 2) lehnt jede direkte Änderung dieser Felder ab. Neuansätze ohne Schritte behalten die Werte
+-- des Inserts (Seed, Demo, Plan 29 A22). Vollständiger Text in der Migration.
 create trigger satz_cache_geschuetzt before update on public.satz
   for each row execute function public.cache_geschuetzt();
 create trigger reservierung_cache_geschuetzt before update on public.reservierung
@@ -1789,6 +1796,8 @@ select s.id as satz_id,
  where s.storniert_am is null;
 comment on view public.v_folgesatz is 'Folgesatz = früherer Satz derselben Sorte mit demselben Zielgefäss (Glossar); vorsatz_id null = kein Folgesatz.';
 
+-- Seit Plan 29 (Migration 20261108120100, A23): pH nachher = coalesce(ph_nachher, pH der jüngsten gültigen Messung
+-- nachmessen mit dieser ansatz_id); die pH-Korrektur braucht kein Update von ph_nachher.
 create view public.v_ph_wirkung with (security_invoker = true) as
 select avg(w) as wirkung_ml_je_l_je_0_1
   from (select pos.ist_ml / (a.volumen_l * (a.ph_vorher - a.ph_nachher) / 0.1) as w

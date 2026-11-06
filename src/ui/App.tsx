@@ -5,6 +5,7 @@ import { Info } from './masken/Info.tsx';
 import { Muster } from './masken/Muster.tsx';
 import { Schreibprobe } from './masken/Schreibprobe.tsx';
 import { Messen } from './masken/Messen.tsx';
+import { Ansatz } from './masken/Ansatz.tsx';
 import { Kalibrieren } from './masken/Kalibrieren.tsx';
 import { Push } from './masken/Push.tsx';
 import { Anlage } from './masken/Anlage.tsx';
@@ -45,7 +46,13 @@ function Masken() {
       ) : maske.name === 'muster' ? (
         <Muster />
       ) : maske.name === 'messen' ? (
-        <Messen code={maske.code} />
+        <Messen
+          code={maske.code}
+          {...(maske.zeile ? { zeile: maske.zeile } : {})}
+          {...(maske.nachmessen ? { nachmessen: maske.nachmessen } : {})}
+        />
+      ) : maske.name === 'ansatz' ? (
+        <Ansatz code={maske.code} />
       ) : maske.name === 'kalibrieren' ? (
         <Kalibrieren {...(maske.datenart ? { datenart: maske.datenart } : {})} />
       ) : maske.name === 'gefaess-aendern' ? (

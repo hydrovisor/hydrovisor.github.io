@@ -9,7 +9,8 @@ export type Route =
   | { name: 'muster' }
   | { name: 'schreibprobe' }
   | { name: 'push' }
-  | { name: 'messen'; code: string }
+  | { name: 'messen'; code: string; zeile?: 3 | 14 | 17; nachmessen?: string }
+  | { name: 'ansatz'; code: string }
   | { name: 'gefaess'; code: string }
   | { name: 'gefaess-aendern'; code: string; teil?: 'deckel' }
   | { name: 'gefaess-neu'; kuerzel?: string; rolle?: 'gefaess' | 'anzuchtort' | 'messstelle' }
@@ -113,7 +114,20 @@ export function routeAusHash(hash: string): Route {
     };
   }
   const messen = /^\/messen\/([A-Za-z0-9.-]+)$/.exec(pfad);
-  if (messen?.[1]) return { name: 'messen', code: decodeURIComponent(messen[1]) };
+  if (messen?.[1]) {
+    // Messung im Ablauf (Plan 29): Zeile 3, 14 oder 17 der Abhakliste bzw. Nachmessen einer pH-Korrektur
+    const p = new URLSearchParams(abfrage);
+    const zeile = Number(p.get('zeile'));
+    const nachmessen = p.get('nachmessen');
+    return {
+      name: 'messen',
+      code: decodeURIComponent(messen[1]),
+      ...(zeile === 3 || zeile === 14 || zeile === 17 ? { zeile } : {}),
+      ...(nachmessen && UUID.test(nachmessen) ? { nachmessen } : {}),
+    };
+  }
+  const ansatz = /^\/ansatz\/([A-Za-z0-9.-]+)$/.exec(pfad);
+  if (ansatz?.[1]) return { name: 'ansatz', code: decodeURIComponent(ansatz[1]) };
   const aendern = /^\/gefaess\/([A-Za-z0-9.-]+)\/aendern$/.exec(pfad);
   if (aendern?.[1]) {
     const teil = new URLSearchParams(abfrage).get('teil');
@@ -183,7 +197,12 @@ export function oeffnen(route: Route): void {
 }
 
 export function hashZu(route: Route): string {
-  if (route.name === 'messen') return `#/messen/${route.code}`;
+  if (route.name === 'messen') {
+    if (route.zeile) return `#/messen/${route.code}?zeile=${String(route.zeile)}`;
+    if (route.nachmessen) return `#/messen/${route.code}?nachmessen=${route.nachmessen}`;
+    return `#/messen/${route.code}`;
+  }
+  if (route.name === 'ansatz') return `#/ansatz/${route.code}`;
   if (route.name === 'gefaess') return `#/gefaess/${route.code}`;
   if (route.name === 'gefaess-aendern')
     return `#/gefaess/${route.code}/aendern${route.teil ? `?teil=${route.teil}` : ''}`;
@@ -244,6 +263,16 @@ export function maskeFuer(route: Route, sitzung: Sitzungszustand): Route {
   if (sitzung === 'abgemeldet')
     return route.name === 'info' || route.name === 'muster' ? route : { name: 'anmelden' };
   return route.name === 'anmelden' ? { name: 'heute' } : route;
+}
+
+/**
+ * Fortsetzen (Plan 29 A18): #/e/<code> und #/ansatz/<code> mit offenem Wechsel an diesem Platz führen zur Abhakliste,
+ * vor der offenen Prüfung; sonst bleibt die Route.
+ */
+export function fortsetzenZiel(route: Route, offeneWechsel: readonly string[]): Route {
+  if ((route.name === 'etikett' || route.name === 'ansatz') && offeneWechsel.includes(route.code))
+    return { name: 'ansatz', code: route.code };
+  return route;
 }
 
 function abonnieren(melden: () => void): () => void {
