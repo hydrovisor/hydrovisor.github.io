@@ -203,13 +203,18 @@ test('TO6 Heute online geladen, offline neu geladen: Bündel sichtbar mit «Stan
   await page.reload();
   await expect.poll(() => page.evaluate(() => Boolean(navigator.serviceWorker.controller))).toBe(true);
   await expect(heute).toBeVisible();
-  // warten, bis das letzte Laden fertig ist: Stand in IndexedDB und in der Oberfläche gleich (#79; nach dem
-  // Neuladen lädt die App ein zweites Bündel, der neuere Stand gewinnt)
+  // warten, bis das Laden dieser Sitzung fertig ist (#79): nach dem Neuladen zeigt die App zuerst das gespeicherte
+  // Bündel und lädt dann ein neues; erst nach dem frischen Laden ist die Standzeile ausgeblendet und der Stand in
+  // IndexedDB und in der Oberfläche gleich (Prüfer #102)
   await expect
     .poll(
       async () => {
         const s = (await buendelAusSpeicher(page))?.stand;
-        return s !== undefined && s === (await standZeile.getAttribute('data-buendel-stand'));
+        return (
+          s !== undefined &&
+          s === (await standZeile.getAttribute('data-buendel-stand')) &&
+          (await standZeile.isHidden())
+        );
       },
       { timeout: 15_000 },
     )
