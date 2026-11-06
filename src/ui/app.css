@@ -396,6 +396,16 @@ body {
   flex-wrap: wrap;
 }
 
+/* Heute: Kopf «Messgerät» bricht auf 360 dp um statt waagrecht zu scrollen (Abnahme 1, Plan 27) */
+.hv-heute-geraet {
+  flex-wrap: wrap;
+}
+
+.hv-messen-kopf.hv-heute-geraet .hv-messen-titel {
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+
 /* Aufgabenliste (Plan 27): Hauptknopf und Morgen, Überspringen, Pegel ok, Erledigt in einer umbrechenden Zeile */
 .hv-aufgabe-knoepfe {
   display: flex;

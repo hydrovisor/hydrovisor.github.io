@@ -147,7 +147,7 @@ function Uebersicht({ jetzt }: { jetzt: Date }) {
   return (
     <>
       {geraet ? (
-        <section className="hv-messen-kopf" aria-label="Messgerät">
+        <section className="hv-messen-kopf hv-heute-geraet" aria-label="Messgerät">
           <span className="hv-messen-titel">
             {kalibrierText(
               kalibrierStand(
