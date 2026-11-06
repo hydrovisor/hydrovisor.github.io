@@ -140,3 +140,10 @@ tests/unit/keimung-termine.test.ts
 tests/unit/router-keimung.test.ts
 tests/seed/keimung.test.ts
 tests/e2e/keimung.spec.ts
+# I2-03 Phasen nachführen und Phasenfragen (#35)
+tests/fixtures/phasen.ts
+tests/unit/phasen-termine.test.ts
+tests/unit/phasen-fragen.test.ts
+tests/unit/phasen-buendel.test.ts
+tests/unit/router-pflanze.test.ts
+tests/e2e/phasen.spec.ts

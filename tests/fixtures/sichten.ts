@@ -266,3 +266,38 @@ export function pflanzSichtenNachrechnen(t: Teile): Teile {
 export function pflanzVorgangAnwenden(teile: Teile, vorgang: Vorgang, jetzt: Date): Teile {
   return pflanzSichtenNachrechnen(vorgangAnwenden(teile, vorgang, jetzt));
 }
+
+// Plan 35 (Phasen nachführen und Phasenfragen): Phase der Pflanzungen und Bündelteil ereignis_satz wie die Sicht
+// v_pflanzung_zustand in supabase/migrations/20261103140000_datenmodell.sql. Zusätzlich zu pflanzSichtenNachrechnen(),
+// das die Phase einer vorhandenen Zeile stehen lässt; bestehende Fixtures bleiben unverändert.
+
+/**
+ * Rechnet nach (verändert `t` und gibt es zurück):
+ * - v_pflanzung_zustand.phase und phase_seit je Zeile: daten.phase und gilt_ab der jüngsten nicht stornierten
+ *   phase_antwort mit antwort ja am Satz der Pflanzung (nach gilt_ab), sonst keimung und null;
+ * - ereignis_satz: nicht stornierte Ereignisse phase_antwort (Bündelteil, Plan 35).
+ */
+export function phaseNachrechnen(t: Teile): Teile {
+  const antworten = (t['ereignis'] ?? []).filter(offen).filter((e) => e['typ'] === 'phase_antwort');
+  for (const z of t['v_pflanzung_zustand'] ?? []) {
+    const ja = juengstes(
+      antworten.filter((e) => e['satz_id'] === z['satz_id'] && datenVon(e)['antwort'] === 'ja'),
+    );
+    z['phase'] = ja ? String(datenVon(ja)['phase']) : 'keimung';
+    z['phase_seit'] = ja ? ja['gilt_ab'] : null;
+  }
+  t['ereignis_satz'] = antworten.map((e) => ({ ...e }));
+  return t;
+}
+
+/**
+ * Vorgang anwenden wie pflanzVorgangAnwenden() und zusätzlich die Phase nachrechnen (Plan 35). Neue Zeilen erhalten
+ * client_zeit = jetzt (wie zeileVorbereiten() in schreiben()) und erfasst_am = jetzt (Standardwert der Datenbank).
+ */
+export function phasenVorgangAnwenden(teile: Teile, vorgang: Vorgang, jetzt: Date): Teile {
+  const iso = jetzt.toISOString();
+  const mitZeit: Vorgang = vorgang.map((s) =>
+    s.art === 'neu' ? { ...s, felder: { client_zeit: iso, erfasst_am: iso, ...s.felder } } : s,
+  );
+  return phaseNachrechnen(pflanzVorgangAnwenden(teile, mitZeit, jetzt));
+}
