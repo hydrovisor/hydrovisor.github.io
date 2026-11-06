@@ -93,6 +93,13 @@ a:hover { color: var(--brand-strong); }
 .hv-field-input { flex: 1; min-width: 0; border: 0; background: transparent; padding: var(--space-3) 0; font-size: 16px; line-height: 24px; font-variant-numeric: tabular-nums; outline: none; }
 .hv-field-input:focus-visible { box-shadow: none; }
 .hv-field-input::placeholder { color: var(--ink-muted); }
+.hv-field-textarea { min-height: calc(4 * 24px + 2 * var(--space-3)); resize: vertical; font-variant-numeric: normal; font-family: inherit; }
+/* PhotoField (components/PhotoField.md) */
+.hv-photo { display: flex; flex-direction: column; gap: var(--space-2); }
+.hv-photo-zeile { display: flex; gap: var(--space-3); align-items: center; }
+.hv-photo-input { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.hv-photo-preview { width: 64px; height: 64px; object-fit: cover; border-radius: var(--radius-md); border: 1px solid var(--line); }
+.hv-photo-input:focus-visible + .hv-btn { outline: 2px solid var(--focus); outline-offset: 2px; }
 .hv-field-unit { font-size: 14px; line-height: 20px; font-weight: 500; color: var(--ink-muted); }
 .hv-field-msg { margin: 0; display: flex; gap: var(--space-1); align-items: center; font-size: 14px; line-height: 20px; color: var(--ink-muted); }
 .hv-field-error .hv-field-box { border-color: var(--status-danger); border-width: 2px; padding: 0 calc(var(--space-4) - 1px); }

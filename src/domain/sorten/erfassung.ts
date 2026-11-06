@@ -12,7 +12,7 @@ export type { Kulturtyp };
 export interface SortenFormular {
   tuete: Partial<Record<KiFeld, string>>;
   artId?: string | undefined;
-  neueArt?: { nameDe: string; nameWiss: string; kulturgruppeId: string };
+  neueArt?: { nameDe: string; nameWiss: string; kulturgruppeId: string } | undefined;
   kulturtyp?: Kulturtyp | undefined;
   wuchshoeheCm: string;
   wuchsform: string;

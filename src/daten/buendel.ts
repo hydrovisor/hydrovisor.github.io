@@ -66,6 +66,9 @@ export const BUENDEL_TEILE: readonly Buendelteil[] = [
   // k je Komponente für die Einstellungen (Plan 32); gültig ist je Produkt die jüngste Zeile
   tabelle('k_faktor', { ohneStorno: true }),
   sicht('v_sollwert', ['sorte_id', 'phase', 'groesse']),
+  // Plan 37: Maske Sorten (Vollständigkeit je Sorte, Quellen der Werte mit Herkunft)
+  sicht('v_vollstaendigkeit', ['sorte_id']),
+  tabelle('quelle'),
   // Betrieb
   tabelle('satz', { ohneStorno: true }),
   tabelle('pflanzung', { ohneStorno: true }),

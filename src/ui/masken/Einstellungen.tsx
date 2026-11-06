@@ -468,6 +468,9 @@ function Formulare({ e, geraet }: { e: Zeile; geraet: Zeile | undefined }) {
         <a className="hv-btn hv-btn-secondary" href={hashZu({ name: 'anlage' })}>
           Anlagen verwalten
         </a>
+        <a className="hv-btn hv-btn-secondary" href={hashZu({ name: 'sorten' })}>
+          Sorten verwalten
+        </a>
         <a className="hv-btn hv-btn-secondary" href={hashZu({ name: 'etiketten' })}>
           Etiketten
         </a>
