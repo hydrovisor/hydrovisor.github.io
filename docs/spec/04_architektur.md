@@ -57,7 +57,8 @@ Der Router wertet beim Erstaufruf und bei jedem `hashchange` dieselbe Funktion a
 | `#/ansatz/:code` | Rechner und Abhakliste (Neuansatz, Nachfüllen, Teilwechsel, pH-Korrektur) | Regal |
 | `#/saeen` (`?box=R-A1`, `?ziel=R-2.3`, `&von=gefaess`) | Säen; Box ohne `von` ist der Scan (Einstieg `scan`), `von=gefaess` aus der Maske «Gefäss», sonst `heute` (Plan 23 A3) | Regal |
 | `#/keimung/:satz` | Keimung prüfen | Regal |
-| `#/umsetzen/:satz` | Umsetzen | Regal |
+| `#/umsetzen/:satz` (`?wie=geplant`) | Umsetzen; mit `wie=geplant` direkt die Bestätigung «Wie geplant umsetzen» (Plan 33 A6) | Regal |
+| `#/verschieben/:topf` | Verschieben oder Tauschen eines Topfs, Code aus Kürzel und Topfkennung, z. B. `R-2.3.1` (Plan 33) | Regal |
 | `#/pflanze/:pflanzung` | Pflanzenansicht (Satz oder Topf) | Regal |
 | `#/pruefen/:code` (`?scan=1`) | Gefäss prüfen, Schritte 1 bis 3; mit `scan` gilt der Scan als Schritt 1, danach ersetzt die Maske die Adresse ohne `scan` (Plan 22 A4) | Regal |
 | `#/anlage` (`?a=<Kürzel>` wählt die Anlage), `#/anlage/neu` (Anlage anlegen, Plan 20), `#/vorlagen`, `#/gefaess-neu`, `#/sorten`, `#/etiketten` (`?a=<Kürzel>&code=<Code>`), `#/einstellungen`, `#/info`, `#/druck/:art` (Etiketten: `#/druck/etiketten?a=&code=…&start=&x=&y=&test=1`, Plan 22) | Schreibtisch-Masken und Druckansichten (Etikettenbogen, Notfallblatt, Vertretungsblatt) | Schreibtisch |

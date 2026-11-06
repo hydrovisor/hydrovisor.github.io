@@ -29,6 +29,8 @@ export type Route =
   | { name: 'saeen'; box?: string; ziel?: string; von?: 'gefaess' }
   // Plan 24: Keimung prüfen je Satz (04 Abschnitt 3)
   | { name: 'keimung'; satz: string }
+  | { name: 'umsetzen'; satz: string; wie?: 'geplant' }
+  | { name: 'verschieben'; topf: string }
   | { name: 'anlage'; kuerzel?: string }
   | { name: 'anlage-neu' }
   | { name: 'vorlagen' }
@@ -38,6 +40,8 @@ export type Route =
 
 const KUERZEL = /^[A-Z]{1,3}$/;
 const CODE = /^[A-Z]{1,3}-[A-Za-z0-9.]+$/;
+/** Topf-Code: Kürzel der Anlage und Topfkennung, etwa «R-2.3.1» */
+const TOPF = /^[A-Z]{1,3}-[0-9]+\.[0-9]+\.[0-9]+$/;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** Druckversatz in mm: −5.0 bis +5.0, sonst 0 (Plan 22 A6) */
@@ -53,6 +57,17 @@ export function routeAusHash(hash: string): Route {
   if (etikett?.[1]) return { name: 'etikett', code: decodeURIComponent(etikett[1]) };
   const keimung = /^\/keimung\/([^/]+)$/.exec(pfad);
   if (keimung?.[1]) return UUID.test(keimung[1]) ? { name: 'keimung', satz: keimung[1] } : { name: 'heute' };
+  // Plan 33: Umsetzen je Satz, Verschieben je Topf (Kürzel und Topfkennung)
+  const umsetzen = /^\/umsetzen\/([^/]+)$/.exec(pfad);
+  if (umsetzen?.[1]) {
+    if (!UUID.test(umsetzen[1])) return { name: 'heute' };
+    return new URLSearchParams(abfrage).get('wie') === 'geplant'
+      ? { name: 'umsetzen', satz: umsetzen[1], wie: 'geplant' }
+      : { name: 'umsetzen', satz: umsetzen[1] };
+  }
+  const verschieben = /^\/verschieben\/([^/]+)$/.exec(pfad);
+  if (verschieben?.[1])
+    return TOPF.test(verschieben[1]) ? { name: 'verschieben', topf: verschieben[1] } : { name: 'heute' };
   if (pfad === '/saeen') {
     const p = new URLSearchParams(abfrage);
     const box = p.get('box');
@@ -162,6 +177,8 @@ export function hashZu(route: Route): string {
   if (route.name === 'pruefen') return `#/pruefen/${route.code}${route.scan ? '?scan=1' : ''}`;
   if (route.name === 'etikett') return `#/e/${route.code}`;
   if (route.name === 'keimung') return `#/keimung/${route.satz}`;
+  if (route.name === 'umsetzen') return `#/umsetzen/${route.satz}${route.wie ? `?wie=${route.wie}` : ''}`;
+  if (route.name === 'verschieben') return `#/verschieben/${route.topf}`;
   if (route.name === 'saeen') {
     const teile = [
       route.box ? `box=${route.box}` : '',
