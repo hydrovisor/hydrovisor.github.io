@@ -1,0 +1,46 @@
+{
+  "id": "msg_recherche_01",
+  "type": "message",
+  "role": "assistant",
+  "model": "claude-sonnet-5-5",
+  "content": [
+    {
+      "type": "text",
+      "text": "Ich suche hydroponische Quellen."
+    },
+    {
+      "type": "server_tool_use",
+      "id": "srvtoolu_fixture_01",
+      "name": "web_search",
+      "input": {
+        "query": "Blattsalat DWC EC pH"
+      }
+    },
+    {
+      "type": "web_search_tool_result",
+      "tool_use_id": "srvtoolu_fixture_01",
+      "content": [
+        {
+          "type": "web_search_result",
+          "url": "https://forschung.example.invalid/blattsalat-dwc",
+          "title": "Blattsalat im DWC-Versuch",
+          "encrypted_content": "fixture",
+          "page_age": null
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "text": "{\"werte\":[{\"id\":\"w1\",\"phase\":\"wachstum\",\"groesse\":\"ec\",\"wert_min\":1.2,\"wert_typ\":1.4,\"wert_max\":1.6,\"text_wert\":null,\"ec_einheit\":\"mS/cm\",\"ec_basis\":\"gesamt\",\"system\":\"dwc\",\"umgebung\":\"indoor_led\",\"quelle\":{\"titel\":\"Blattsalat im DWC-Versuch\",\"link\":\"https://forschung.example.invalid/blattsalat-dwc\",\"klasse\":\"peer_review\",\"anbaumethode\":\"dwc\"},\"fundstelle\":\"Tabelle 2\",\"kurzzitat\":\"Im DWC-System lag die Leitfähigkeit für Blattsalat zwischen 1.2 und 1.6 mS/cm.\"},{\"id\":\"w2\",\"phase\":\"wachstum\",\"groesse\":\"ph\",\"wert_min\":5.8,\"wert_typ\":6,\"wert_max\":6.2,\"text_wert\":null,\"ec_einheit\":null,\"ec_basis\":null,\"system\":\"nft\",\"umgebung\":\"gewaechshaus\",\"quelle\":{\"titel\":\"NFT-Anleitung Blattgemüse\",\"link\":\"https://hersteller.example.invalid/nft-anleitung\",\"klasse\":\"hersteller\",\"anbaumethode\":\"nft\"},\"fundstelle\":\"Abschnitt 4\",\"kurzzitat\":\"Für Blattgemüse im NFT halten wir den pH-Wert bei 5.8 bis 6.2.\"}],\"saat\":[{\"id\":\"s1\",\"kulturform\":\"schnitt\",\"samen_je_schwamm\":3,\"obergrenze_samen\":4,\"pflanzen_stehen_lassen\":1,\"substrat_gleich\":true,\"system\":\"nft\",\"quelle\":{\"titel\":\"Merkblatt Schnittsalat hydroponisch\",\"link\":\"https://beratung.example.invalid/schnittsalat\",\"klasse\":\"universitaet_beratung\",\"anbaumethode\":\"nft\"},\"fundstelle\":\"Seite 3\",\"kurzzitat\":\"Drei Samen je Steinwollwürfel, ohne Vereinzeln.\"}]}"
+    }
+  ],
+  "stop_reason": "end_turn",
+  "stop_sequence": null,
+  "usage": {
+    "input_tokens": 5200,
+    "output_tokens": 900,
+    "server_tool_use": {
+      "web_search_requests": 2
+    }
+  }
+}

@@ -36,6 +36,10 @@ export type Route =
   | { name: 'anlage-neu' }
   | { name: 'vorlagen' }
   | { name: 'einstellungen' }
+  // Plan 37: Sorten (Schreibtisch)
+  | { name: 'sorten' }
+  | { name: 'sorte-neu' }
+  | { name: 'sorte'; sorte: string }
   | { name: 'notfallblatt'; kuerzel?: string }
   | { name: 'kalibrieren'; datenart?: 'demo' | 'test' };
 
@@ -134,6 +138,10 @@ export function routeAusHash(hash: string): Route {
   }
   const gefaess = /^\/gefaess\/([A-Za-z0-9.-]+)$/.exec(pfad);
   if (gefaess?.[1]) return { name: 'gefaess', code: decodeURIComponent(gefaess[1]) };
+  if (pfad === '/sorten') return { name: 'sorten' };
+  if (pfad === '/sorten/neu') return { name: 'sorte-neu' };
+  const sorte = /^\/sorten\/([^/]+)$/.exec(pfad);
+  if (sorte?.[1]) return UUID.test(sorte[1]) ? { name: 'sorte', sorte: sorte[1] } : { name: 'sorten' };
   if (pfad === '/anlage/neu') return { name: 'anlage-neu' };
   if (pfad === '/anlage') {
     const kuerzel = new URLSearchParams(abfrage).get('a');
@@ -181,6 +189,9 @@ export function hashZu(route: Route): string {
     return `#/gefaess/${route.code}/aendern${route.teil ? `?teil=${route.teil}` : ''}`;
   if (route.name === 'pruefen') return `#/pruefen/${route.code}${route.scan ? '?scan=1' : ''}`;
   if (route.name === 'etikett') return `#/e/${route.code}`;
+  if (route.name === 'sorten') return '#/sorten';
+  if (route.name === 'sorte-neu') return '#/sorten/neu';
+  if (route.name === 'sorte') return `#/sorten/${route.sorte}`;
   if (route.name === 'keimung') return `#/keimung/${route.satz}`;
   if (route.name === 'pflanze') return `#/pflanze/${route.pflanzung}`;
   if (route.name === 'umsetzen') return `#/umsetzen/${route.satz}${route.wie ? `?wie=${route.wie}` : ''}`;

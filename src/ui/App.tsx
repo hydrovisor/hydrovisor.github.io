@@ -23,6 +23,9 @@ import { Pflanze } from './masken/Pflanze.tsx';
 import { Umsetzen } from './masken/Umsetzen.tsx';
 import { Verschieben } from './masken/Verschieben.tsx';
 import { Einstellungen } from './masken/Einstellungen.tsx';
+import { Sorte } from './masken/Sorte.tsx';
+import { SorteNeu } from './masken/SorteNeu.tsx';
+import { Sorten } from './masken/Sorten.tsx';
 import { Notfallblatt } from './masken/Notfallblatt.tsx';
 import { BuendelAnbieter } from './buendel.tsx';
 import { maskeFuer, useRoute } from './router.ts';
@@ -87,6 +90,12 @@ function Masken() {
         <Vorlagen />
       ) : maske.name === 'einstellungen' ? (
         <Einstellungen />
+      ) : maske.name === 'sorten' ? (
+        <Sorten />
+      ) : maske.name === 'sorte-neu' ? (
+        <SorteNeu />
+      ) : maske.name === 'sorte' ? (
+        <Sorte sorte={maske.sorte} />
       ) : maske.name === 'notfallblatt' ? (
         <Notfallblatt {...(maske.kuerzel ? { kuerzel: maske.kuerzel } : {})} />
       ) : maske.name === 'push' ? (
