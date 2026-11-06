@@ -150,6 +150,8 @@ export const BUENDEL_TEILE: readonly Buendelteil[] = [
       'aufgabe_erledigt',
       'gereinigt',
       'deckel_geoeffnet',
+      // Plan 34 (R2.3 Stufe 4): Tims Wahl der Leitkultur wirkt offline sofort (A9)
+      'leitkultur_gewaehlt',
     ],
   },
   // Push (Plan 13): Abos ohne Schlüssel, Versände für «Letzte Erinnerung» und #/push
