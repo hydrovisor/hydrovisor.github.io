@@ -15,6 +15,17 @@ import { useBuendel } from '../buendel.tsx';
 import { hashZu } from '../router.ts';
 import '../sorten.css';
 
+const KEIMART: Record<string, string> = {
+  licht: 'Lichtkeimer',
+  dunkel: 'Dunkelkeimer',
+  indifferent: 'ohne Angabe zum Licht',
+};
+/** «2027-01-10» → «10.1.2027» (Anzeige) */
+const datum = (iso: string | null) => {
+  const m = iso ? /^(\d{4})-(\d{2})-(\d{2})/.exec(iso) : null;
+  return m ? `${Number(m[3])}.${Number(m[2])}.${m[1]}` : (iso ?? '');
+};
+
 const KULTURFORM_NAME: Record<string, string> = {
   keimling: 'Keimling',
   babyleaf: 'Babyleaf',
@@ -73,7 +84,7 @@ export function Sorte({ sorte }: { sorte: string }) {
             <Notice tone="info">Recherche läuft. Du kannst die Seite verlassen.</Notice>
           ) : recherche?.ergebnis === 'ok' ? (
             <Notice tone="info">
-              {`Ergänzt: ${recherche.werte} ${recherche.werte === 1 ? 'Wert' : 'Werte'} und ${recherche.saat} ${recherche.saat === 1 ? 'Saatempfehlung' : 'Saatempfehlungen'}. Offen: ${recherche.offen.length + recherche.offenSaat.length} Prüfaufträge.`}
+              {`Ergänzt: ${recherche.werte} ${recherche.werte === 1 ? 'Wert' : 'Werte'} und ${recherche.saat} ${recherche.saat === 1 ? 'Saatempfehlung' : 'Saatempfehlungen'}. Offen: ${recherche.offen.length + recherche.offenSaat.length} ${recherche.offen.length + recherche.offenSaat.length === 1 ? 'Prüfauftrag' : 'Prüfaufträge'}.`}
             </Notice>
           ) : recherche ? (
             <Notice tone="warn">{recherche.hinweis}</Notice>
@@ -85,7 +96,7 @@ export function Sorte({ sorte }: { sorte: string }) {
                 {p.werte.map((w) => (
                   <li key={w.groesse}>
                     <span className="hv-sorte-wert">
-                      {w.groesse}: {w.wert}
+                      {w.groesse}: {w.groesse === 'Keimart' ? (KEIMART[w.wert] ?? w.wert) : w.wert}
                     </span>
                     <span className="hv-sorte-herkunft">
                       {w.herkunft} · {w.verlaesslichkeit}
@@ -117,7 +128,7 @@ export function Sorte({ sorte }: { sorte: string }) {
                     {s.klasse}
                   </span>
                   {s.bestaetigtAm ? (
-                    <span className="hv-sorte-herkunft">bestätigt am {s.bestaetigtAm}</span>
+                    <span className="hv-sorte-herkunft">bestätigt am {datum(s.bestaetigtAm)}</span>
                   ) : (
                     <Button variant="secondary" size="compact" onClick={() => void bestaetigen(s.id)}>
                       Saatempfehlung bestätigen
@@ -132,7 +143,7 @@ export function Sorte({ sorte }: { sorte: string }) {
             <ul className="hv-sorte-werte">
               {d.packungen.map((p) => (
                 <li key={p.id}>
-                  {p.kaufdatum ? `Gekauft ${p.kaufdatum}` : 'Kaufdatum offen'} · Bestand{' '}
+                  {p.kaufdatum ? `Gekauft ${datum(p.kaufdatum)}` : 'Kaufdatum offen'} · Bestand{' '}
                   {p.bestandKorn ?? '–'} Korn
                   {p.keimfaehigkeit !== null
                     ? ` · Keimfähigkeit ${Math.round(p.keimfaehigkeit * 100)} %`

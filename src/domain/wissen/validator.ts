@@ -1,6 +1,6 @@
 // Grundregel 9.1 und Validator 9.4 für Kandidaten der Hydroponik-Recherche (Konzept 9.1, 9.3, 9.4, 11.3,
 // Erratum E8; Plan 37). Rein. Grenzen wie die Checks von profilwert und der W0-Validator (02_datenmodell.sql).
-// Werte in Hundertsteln bzw. Tausendsteln verglichen, damit 6.0 bis 6.1 nicht an Gleitkommafehlern hängt (G3).
+// Werte in Tausendsteln verglichen (wie profilwert numeric(7,3)), damit 6.0 bis 6.1 nicht an Gleitkommafehlern hängt (G3).
 import { quelleId, type QuelleKandidat, type SaatKandidat, type WertKandidat } from '../ki/recherche.ts';
 import { ecInMsCm, type EcEinheit } from '../w0/umrechnung.ts';
 import type { Kulturform } from '../phasen/profil.ts';
@@ -117,7 +117,7 @@ function quelleMitId(q: QuelleKandidat): RechercheQuelle {
   };
 }
 
-/** min ≤ typ ≤ max, alle vorhandenen Werte innerhalb [unten, oben] (in Hundertsteln) */
+/** min ≤ typ ≤ max, alle vorhandenen Werte innerhalb [unten, oben] (in Tausendsteln) */
 function bereich(
   min: number | null,
   typ: number | null,

@@ -132,7 +132,7 @@ export interface KulturgruppeZeile {
 }
 
 /** Kulturformen der gewählten Art, bei einer neuen Art die der Leitkultur ihrer Kulturgruppe (R1.2, R1.3) */
-function kulturformenDerArt(
+export function kulturformenDerArt(
   f: SortenFormular,
   arten: readonly ArtZeile[],
   gruppen: readonly KulturgruppeZeile[],
@@ -192,9 +192,9 @@ export function formularPruefen(
   if (!leer(f.kaufdatum) && !/^\d{4}-\d{2}-\d{2}$/.test(f.kaufdatum.trim()))
     fehler.push({ feld: 'kaufdatum', text: 'Datum als JJJJ-MM-TT' });
   if (!leer(f.keimfaehigkeitProzent)) {
-    const k = dezimal(f.keimfaehigkeitProzent);
+    const k = ganzzahl(f.keimfaehigkeitProzent);
     if (k === undefined || k < 0 || k > 100)
-      fehler.push({ feld: 'keimfaehigkeitProzent', text: 'Keimfähigkeit in %, 0 bis 100' });
+      fehler.push({ feld: 'keimfaehigkeitProzent', text: 'Keimfähigkeit in ganzen %, 0 bis 100' });
   }
   if (!leer(f.bestandKorn)) {
     const b = ganzzahl(f.bestandKorn);
@@ -311,7 +311,8 @@ export function erfassungBauen(
       sorte_id: ids.sorteId,
       kaufdatum: leer(f.kaufdatum) ? null : f.kaufdatum.trim(),
       bestand_korn: bestand ?? null,
-      keimfaehigkeit_packung: keim === undefined ? null : keim / 100,
+      // numeric(3,2) in saatgut: ganze Prozent, damit Client und Datenbank denselben Wert halten (Prüferbefund N1)
+      keimfaehigkeit_packung: keim === undefined ? null : Math.round(keim) / 100,
     },
   });
   if (ki)

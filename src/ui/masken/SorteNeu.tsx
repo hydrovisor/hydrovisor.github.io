@@ -1,7 +1,7 @@
 // Maske «Neue Sorte» (UC4 Ablauf 1 bis 7, Varianten; Schreibtisch, Standarddichte, Systemtastatur erlaubt; Plan 37).
 // Vier Schritte: Tüte, Sorte und Art, Merkmale, Packung. Die KI liest nur die Tüte und füllt leere Felder; nach dem
 // Speichern ergänzt die Recherche fehlende Werte (Erratum E8). Eingaben bleiben bei jedem Fehler stehen (UC4-AK2, TO8).
-import { useState } from 'react';
+import { useId, useState, type SelectHTMLAttributes } from 'react';
 import { fotoHochladen, rechercheStarten, tueteLesen } from '../../daten/ki.ts';
 import { neueClientId, schreiben } from '../../daten/schreiben.ts';
 import { wissenSchreiben } from '../../daten/wissen.ts';
@@ -20,6 +20,7 @@ import {
   vorhandeneSorte,
   keimartDerArt,
   keimartHinweis,
+  kulturformenDerArt,
   type ArtZeile,
   type KiLauf,
   type Kulturtyp,
@@ -82,9 +83,28 @@ interface Speicherstand {
   wissenErledigt: number;
 }
 
+/** Auswahl mit Beschriftung und Rahmen wie TextField (TextField.md, Abschnitt «Auswahl und Wahlgruppe») */
+function Auswahl({ label, children, ...rest }: SelectHTMLAttributes<HTMLSelectElement> & { label: string }) {
+  const id = useId();
+  return (
+    <div className="hv-field">
+      <label className="hv-field-label" htmlFor={id}>
+        {label}
+      </label>
+      <div className="hv-field-box">
+        <select id={id} className="hv-field-input" {...rest}>
+          {children}
+        </select>
+      </div>
+    </div>
+  );
+}
+
 export function SorteNeu() {
   const { buendel } = useBuendel();
-  const arten = ((buendel?.teile['art'] ?? []) as ArtZeile[]).filter((a) => a.gueltig_bis === null);
+  // alle Fassungen für die Kollisionsprüfung der neuen Art (N5); Auswahl nur gültige
+  const alleArten = (buendel?.teile['art'] ?? []) as ArtZeile[];
+  const arten = alleArten.filter((a) => a.gueltig_bis === null);
   const sorten = (buendel?.teile['sorte'] ?? []) as SorteZeile[];
   const gruppen = (buendel?.teile['kulturgruppe'] ?? []) as {
     kulturgruppe_id: string;
@@ -169,7 +189,7 @@ export function SorteNeu() {
   }
 
   function weiter(nach: Schritt) {
-    const fehlerJetzt = formularPruefen(f, arten, gruppen).filter((x) =>
+    const fehlerJetzt = formularPruefen(f, alleArten, gruppen).filter((x) =>
       schritt === 'sorte'
         ? ['name', 'art'].includes(x.feld) || x.feld.startsWith('neueArt')
         : schritt === 'merkmale'
@@ -188,7 +208,7 @@ export function SorteNeu() {
   }
 
   async function speichern() {
-    const alle = formularPruefen(f, arten, gruppen);
+    const alle = formularPruefen(f, alleArten, gruppen);
     const f2 = nurPackung ? alle.filter((x) => PACKUNG_FELDER.includes(x.feld)) : alle;
     setFehler(f2);
     if (f2.length > 0) {
@@ -240,7 +260,8 @@ export function SorteNeu() {
   }
 
   const name = (f.tuete.name ?? '').trim();
-  const formen = arten.find((a) => a.art_id === f.artId)?.kulturformen_erlaubt ?? [];
+  // Kulturformen der Art, bei einer neuen Art die der Leitkultur (B3, N2)
+  const formen = kulturformenDerArt(f, arten, gruppen) ?? [];
   const saatFormen = f.kulturtyp
     ? KULTURFORMEN_JE_TYP[f.kulturtyp].filter((k) => formen.length === 0 || formen.includes(k))
     : [];
@@ -374,22 +395,19 @@ export function SorteNeu() {
                   f.neueArt && aendern({ neueArt: { ...f.neueArt, nameWiss: ev.target.value } })
                 }
               />
-              <label className="hv-field-label">
-                Kulturgruppe
-                <select
-                  className="hv-field-input"
-                  value={f.neueArt.kulturgruppeId}
-                  onChange={(ev) =>
-                    f.neueArt && aendern({ neueArt: { ...f.neueArt, kulturgruppeId: ev.target.value } })
-                  }
-                >
-                  {gruppen.map((g) => (
-                    <option key={g.kulturgruppe_id} value={g.kulturgruppe_id}>
-                      {g.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
+              <Auswahl
+                label="Kulturgruppe"
+                value={f.neueArt.kulturgruppeId}
+                onChange={(ev) =>
+                  f.neueArt && aendern({ neueArt: { ...f.neueArt, kulturgruppeId: ev.target.value } })
+                }
+              >
+                {gruppen.map((g) => (
+                  <option key={g.kulturgruppe_id} value={g.kulturgruppe_id}>
+                    {g.name}
+                  </option>
+                ))}
+              </Auswahl>
               <p className="hv-field-msg">Die Merkmale kommen von der Leitkultur und bleiben Prüfauftrag.</p>
             </fieldset>
           ) : null}
@@ -413,19 +431,16 @@ export function SorteNeu() {
               Erfasse nur die neue Packung.
             </Notice>
           ) : null}
-          <label className="hv-field-label">
-            Keimart laut Tüte
-            <select
-              className="hv-field-input"
-              value={f.tuete.keimart ?? ''}
-              onChange={(ev) => tueteAendern('keimart', ev.target.value)}
-            >
-              <option value="">keine Angabe</option>
-              <option value="licht">Lichtkeimer</option>
-              <option value="dunkel">Dunkelkeimer</option>
-              <option value="indifferent">ohne Angabe zum Licht</option>
-            </select>
-          </label>
+          <Auswahl
+            label="Keimart laut Tüte"
+            value={f.tuete.keimart ?? ''}
+            onChange={(ev) => tueteAendern('keimart', ev.target.value)}
+          >
+            <option value="">keine Angabe</option>
+            <option value="licht">Lichtkeimer</option>
+            <option value="dunkel">Dunkelkeimer</option>
+            <option value="indifferent">ohne Angabe zum Licht</option>
+          </Auswahl>
           {keimartAbweichung ? <Notice tone="info">{keimartAbweichung}</Notice> : null}
           <TextField
             label="Keimtemperatur laut Tüte"
@@ -473,21 +488,18 @@ export function SorteNeu() {
             error={fehlerZu('wuchshoeheCm')}
             onChange={(ev) => aendern({ wuchshoeheCm: ev.target.value })}
           />
-          <label className="hv-field-label">
-            Wuchsform
-            <select
-              className="hv-field-input"
-              value={f.wuchsform}
-              onChange={(ev) => aendern({ wuchsform: ev.target.value })}
-            >
-              <option value="">keine Angabe</option>
-              {WUCHSFORMEN.map((w) => (
-                <option key={w} value={w}>
-                  {WUCHSFORM_NAME[w]}
-                </option>
-              ))}
-            </select>
-          </label>
+          <Auswahl
+            label="Wuchsform"
+            value={f.wuchsform}
+            onChange={(ev) => aendern({ wuchsform: ev.target.value })}
+          >
+            <option value="">keine Angabe</option>
+            {WUCHSFORMEN.map((w) => (
+              <option key={w} value={w}>
+                {WUCHSFORM_NAME[w]}
+              </option>
+            ))}
+          </Auswahl>
           <TextField
             label="Frühzeitigkeit"
             unit="Tage"
@@ -583,25 +595,22 @@ export function SorteNeu() {
                 </fieldset>
                 {f.saatVonHand ? (
                   <>
-                    <label className="hv-field-label">
-                      Kulturform
-                      <select
-                        className="hv-field-input"
-                        value={f.saatVonHand.kulturform}
-                        onChange={(ev) =>
-                          f.saatVonHand &&
-                          aendern({
-                            saatVonHand: { ...f.saatVonHand, kulturform: ev.target.value as Kulturform },
-                          })
-                        }
-                      >
-                        {saatFormen.map((k) => (
-                          <option key={k} value={k}>
-                            {KULTURFORM_NAME[k]}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
+                    <Auswahl
+                      label="Kulturform"
+                      value={f.saatVonHand.kulturform}
+                      onChange={(ev) =>
+                        f.saatVonHand &&
+                        aendern({
+                          saatVonHand: { ...f.saatVonHand, kulturform: ev.target.value as Kulturform },
+                        })
+                      }
+                    >
+                      {saatFormen.map((k) => (
+                        <option key={k} value={k}>
+                          {KULTURFORM_NAME[k]}
+                        </option>
+                      ))}
+                    </Auswahl>
                     <TextField
                       label="Samen je Schwamm"
                       inputMode="numeric"
@@ -646,7 +655,7 @@ export function SorteNeu() {
             <Notice tone="info">Recherche läuft. Du kannst die Seite verlassen.</Notice>
           ) : recherche?.ergebnis === 'ok' ? (
             <Notice tone="info">
-              {`Ergänzt: ${recherche.werte} ${recherche.werte === 1 ? 'Wert' : 'Werte'} und ${recherche.saat} ${recherche.saat === 1 ? 'Saatempfehlung' : 'Saatempfehlungen'}. Offen: ${recherche.offen.length + recherche.offenSaat.length} Prüfaufträge.`}
+              {`Ergänzt: ${recherche.werte} ${recherche.werte === 1 ? 'Wert' : 'Werte'} und ${recherche.saat} ${recherche.saat === 1 ? 'Saatempfehlung' : 'Saatempfehlungen'}. Offen: ${recherche.offen.length + recherche.offenSaat.length} ${recherche.offen.length + recherche.offenSaat.length === 1 ? 'Prüfauftrag' : 'Prüfaufträge'}.`}
             </Notice>
           ) : recherche ? (
             <Notice tone="warn">{recherche.hinweis}</Notice>
