@@ -19,6 +19,7 @@ import { EtikettAufloesen } from './masken/EtikettAufloesen.tsx';
 import { Etiketten } from './masken/Etiketten.tsx';
 import { Saeen } from './masken/Saeen.tsx';
 import { Keimung } from './masken/Keimung.tsx';
+import { Pflanze } from './masken/Pflanze.tsx';
 import { BuendelAnbieter } from './buendel.tsx';
 import { maskeFuer, useRoute } from './router.ts';
 import { SitzungAnbieter, useSitzung } from './sitzung.tsx';
@@ -64,6 +65,8 @@ function Masken() {
           {...(maske.ziel ? { ziel: maske.ziel } : {})}
           {...(maske.von ? { von: maske.von } : {})}
         />
+      ) : maske.name === 'pflanze' ? (
+        <Pflanze pflanzung={maske.pflanzung} />
       ) : maske.name === 'keimung' ? (
         <Keimung satz={maske.satz} />
       ) : maske.name === 'gefaess' ? (

@@ -8,6 +8,7 @@ import { messFaelligkeit, type Messfaelligkeit } from '../../domain/messung/fael
 import { heuteGruppiert, nachAnlage } from '../../domain/anlage/gruppen.ts';
 import { pruefAufgaben } from '../../domain/etikett/pruefung.ts';
 import { keimAufgaben } from '../../domain/pflanzung/keimung.ts';
+import { Phasenkarten } from './Phasenkarten.tsx';
 import { messbareOrte } from '../../domain/ort.ts';
 import { tagKurz, ZEITZONE } from '../../domain/zeit.ts';
 import { OrtKachel } from '../bausteine/Tile.tsx';
@@ -86,6 +87,7 @@ export function Heute() {
       {buendel && !keinZugang ? <Einrichtung /> : null}
       {zeigen ? <NeueVersionHinweis /> : null}
       {buendel && !keinZugang ? <PushHinweis /> : null}
+      {buendel && !keinZugang ? <Phasenkarten jetzt={new Date(jetzt)} /> : null}
       {buendel && !keinZugang ? <Pruefaufgaben /> : null}
       {buendel && !keinZugang ? <Keimaufgaben jetzt={new Date(jetzt)} /> : null}
       {buendel ? <Uebersicht jetzt={new Date(jetzt)} /> : null}

@@ -8,6 +8,7 @@ import { ereignisseAm, ms, type Teile } from '../../domain/anlage/teile.ts';
 import type { Vorgang } from '../../domain/datenpfad/erfassung.ts';
 import { ortAufloesen } from '../../domain/ort.ts';
 import { ZEITZONE } from '../../domain/zeit.ts';
+import { pflanzungVonSatz } from '../../domain/phasen/fragen.ts';
 import { Button } from '../bausteine/Button.tsx';
 import { Notice } from '../bausteine/Notice.tsx';
 import { StatusBadge } from '../bausteine/StatusBadge.tsx';
@@ -101,6 +102,17 @@ export function Gefaess({ code }: { code: string }) {
                     href={hashZu({ name: 'keimung', satz: p.satzId })}
                   >
                     Keimung prüfen
+                  </a>
+                ) : null}
+                {buendel && pflanzungVonSatz(buendel.teile, p.satzId) ? (
+                  <a
+                    className="hv-btn hv-btn-secondary hv-btn-compact"
+                    href={hashZu({
+                      name: 'pflanze',
+                      pflanzung: pflanzungVonSatz(buendel.teile, p.satzId) ?? '',
+                    })}
+                  >
+                    Phase
                   </a>
                 ) : null}
               </li>
