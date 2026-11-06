@@ -266,6 +266,16 @@ body {
   padding-left: var(--space-4);
 }
 
+/* Satzzeile am Profilende als Link zur Pflanzenansicht (Plan 38 A10), gleiche Höhe wie der Text */
+.hv-gefaess-satzlink {
+  color: inherit;
+  text-decoration: underline;
+}
+
+.hv-gefaess-beendet {
+  margin-top: var(--space-4);
+}
+
 .hv-gefaess-haupt {
   min-height: 72px;
   font-size: var(--text-heading-size);
@@ -379,6 +389,11 @@ body {
 .hv-aufgabe-text {
   min-width: 0;
   overflow-wrap: anywhere;
+}
+
+/* Aufgabe mit langem Knopf (Umsetzen, Plan 33): Knopf bricht unter den Text statt über 360 dp hinaus */
+.hv-aufgabe-umbruch {
+  flex-wrap: wrap;
 }
 
 /* Gefäss: Satzzeile mit Knopf «Keimung prüfen» (Plan 24 A12) */
@@ -543,4 +558,17 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: var(--space-2);
+}
+
+/* Säen: Zeile «Satz duplizieren» (Plan 25), Knopf behält seine Breite und bricht auf 360 dp unter den Text */
+.hv-saeen-kopie {
+  flex-wrap: wrap;
+}
+
+.hv-saeen-kopie > p {
+  flex: 1 1 12rem;
+}
+
+.hv-saeen-kopie > .hv-btn {
+  flex-shrink: 0;
 }

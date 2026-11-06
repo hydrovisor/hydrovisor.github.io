@@ -1,0 +1,83 @@
+/* Masken Sorten, Neue Sorte und Sortendetail (Plan 37); nur Tokens des Design Systems, Standarddichte 48 dp */
+.hv-sorten-liste {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.hv-sorten-zeile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-height: var(--size-touch);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface-raised);
+  color: var(--ink);
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.hv-sorten-name {
+  font-weight: 600;
+}
+
+.hv-sorten-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+  color: var(--ink-muted);
+  font-size: 14px;
+}
+
+.hv-sorte-schritte {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  font-size: 14px;
+  color: var(--ink-muted);
+}
+
+.hv-sorte-schritte [aria-current='step'] {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.hv-sorte-werte {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.hv-sorte-werte li {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  overflow-wrap: anywhere;
+}
+
+.hv-sorte-wert {
+  font-variant-numeric: tabular-nums;
+}
+
+.hv-sorte-herkunft,
+.hv-sorte-tuete {
+  font-size: 14px;
+  color: var(--ink-muted);
+}
+
+.hv-sorte-saat ul {
+  margin: 0;
+  padding-left: var(--space-4);
+}

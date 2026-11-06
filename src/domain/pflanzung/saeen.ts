@@ -14,6 +14,7 @@ import { keimdauerTyp, stationsVorschau, type GeplanterSatz } from '../anzucht/k
 import type { Schritt, Verstoss, Vorgang } from '../datenpfad/erfassung.ts';
 import { keimrate, keimrateArt, saatmenge, type Empfehlung, type Keimrate } from '../saatmenge/saatmenge.ts';
 import { kalendertag, tagPlus, tageZwischen, versatz, type Zeitzone } from '../zeit.ts';
+import { topfPrognose } from './belegung.ts';
 
 export type Kulturform =
   'keimling' | 'babyleaf' | 'schnitt' | 'kopf' | 'dauerkultur_blatt' | 'dauerkultur_frucht';
@@ -99,7 +100,10 @@ interface NetztopfPlatzZeile {
 }
 interface NetztopfZeile {
   id: string;
+  kennung: string;
   groesse_mm: number;
+  heim_platz_id: string;
+  heim_loch_nr: number;
   aktiv?: boolean;
   storniert_am: string | null;
 }
@@ -283,6 +287,10 @@ export interface Zieltopf {
   groesseMm: number;
   zustand: TopfZustand;
   marke?: number;
+  /** Nachfolge-Topf (Plan 25): frei am Umsetzdatum, bis dahin belegt bis zu diesem Tag */
+  belegtBis?: string;
+  /** Plan 33 (R1-2): Heimtopf steht anderswo, «2.1.2 auf 4.2.1»; nicht wählbar */
+  abwesend?: string;
 }
 
 function belegungImGefaess(teile: Teile, platzId: string) {
@@ -295,11 +303,16 @@ function belegungImGefaess(teile: Teile, platzId: string) {
   return { toepfe, loecher, reserviert };
 }
 
-/** Töpfe eines Gefässes nach Loch: belegt (aktive Pflanzung), reserviert (aktive Reservierung), gewählt, frei */
+/**
+ * Töpfe eines Gefässes nach Loch: belegt (aktive Pflanzung), reserviert (aktive Reservierung), gewählt, frei. Mit
+ * Umsetzdatum (Plan 25, R11.1, R11.2) entscheidet topfPrognose(): ein Nachfolge-Topf ist frei mit belegtBis.
+ */
 export function zieltoepfe(
   teile: Teile,
   platzId: string,
   ausgewaehlt: ReadonlyMap<string, number>,
+  umsetzenAm?: string,
+  direktsaat?: boolean,
 ): Zieltopf[] {
   const groesse = new Map(
     zeilen<NetztopfZeile>(teile, 'netztopf')
@@ -307,11 +320,30 @@ export function zieltoepfe(
       .map((n) => [n.id, Number(n.groesse_mm)]),
   );
   const b = belegungImGefaess(teile, platzId);
-  return zeilen<NetztopfPlatzZeile>(teile, 'v_netztopf_platz')
+  const liste: Zieltopf[] = zeilen<NetztopfPlatzZeile>(teile, 'v_netztopf_platz')
     .filter((n) => n.platz_id === platzId && n.loch_nr !== null && groesse.has(n.netztopf_id))
     .sort((a, c) => Number(a.loch_nr) - Number(c.loch_nr))
     .map((n) => {
       const marke = ausgewaehlt.get(n.netztopf_id);
+      const p = umsetzenAm ? topfPrognose(teile, n.netztopf_id, umsetzenAm, direktsaat === true) : undefined;
+      if (p) {
+        const zustand: TopfZustand = p.frei
+          ? marke !== undefined
+            ? 'gewaehlt'
+            : 'frei'
+          : p.grund === 'reserviert'
+            ? 'reserviert'
+            : 'belegt';
+        return {
+          lochNr: Number(n.loch_nr),
+          netztopfId: n.netztopf_id,
+          kennung: n.kennung,
+          groesseMm: groesse.get(n.netztopf_id) ?? 0,
+          zustand,
+          ...(zustand === 'gewaehlt' && marke !== undefined ? { marke } : {}),
+          ...(p.grund === 'nachfolge' && p.belegtBis ? { belegtBis: p.belegtBis } : {}),
+        };
+      }
       const zustand: TopfZustand =
         b.toepfe.has(n.netztopf_id) || b.loecher.has(n.loch_nr)
           ? 'belegt'
@@ -329,6 +361,30 @@ export function zieltoepfe(
         ...(zustand === 'gewaehlt' && marke !== undefined ? { marke } : {}),
       };
     });
+  // abwesender Heimtopf (z. B. 8-cm-Zieltopf auf der Station) an seinem Heimloch, nicht wählbar (Plan 33, R1-2)
+  const stehend = new Set(liste.map((z) => z.lochNr));
+  const kennungen = new Map(
+    zeilen<{ id: string; kennung: string }>(teile, 'platz').map((p) => [p.id, p.kennung]),
+  );
+  const reserviert = new Set(
+    zeilen<{ netztopf_id: string }>(teile, 'v_reservierung_aktiv').map((r) => r.netztopf_id),
+  );
+  for (const n of zeilen<NetztopfZeile>(teile, 'netztopf')) {
+    if (n.storniert_am !== null || n.aktiv === false || n.heim_platz_id !== platzId) continue;
+    const heimLoch = Number(n.heim_loch_nr);
+    if (stehend.has(heimLoch)) continue;
+    const ort = zeilen<NetztopfPlatzZeile>(teile, 'v_netztopf_platz').find((x) => x.netztopf_id === n.id);
+    if (!ort || ort.platz_id === platzId) continue;
+    liste.push({
+      lochNr: heimLoch,
+      netztopfId: n.id,
+      kennung: n.kennung,
+      groesseMm: Number(n.groesse_mm),
+      zustand: reserviert.has(n.id) ? 'reserviert' : 'belegt',
+      abwesend: `${n.kennung} auf ${kennungen.get(ort.platz_id ?? '') ?? ''}.${String(ort.loch_nr)}`,
+    });
+  }
+  return liste.sort((a, c) => a.lochNr - c.lochNr);
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -406,11 +462,13 @@ export interface SatzEingabe {
   pflanzenOhneZiel?: number;
   samenJeSchwamm?: number;
   schwaemme?: number;
+  /** Original bei «Satz duplizieren» (satz.kopiert_von, Plan 25) */
+  kopiertVon?: string;
 }
 
 export interface SaatEingabe {
   anlageId: string;
-  einstieg: 'heute' | 'gefaess' | 'scan';
+  einstieg: 'heute' | 'gefaess' | 'scan' | 'duplizieren';
   begonnenAm: Date;
   saatdatum: string;
   zielPlatzId?: string;
@@ -587,7 +645,6 @@ export function saatEingabePruefen(
     ? zielgefaesse(teile, eingabe.anlageId).find((z) => z.platzId === eingabe.zielPlatzId)
     : undefined;
   if (eingabe.zielPlatzId && !ziel) v.push({ feld: 'ziel', grund: 'Zielgefäss nicht wählbar' });
-  const toepfe = ziel ? zieltoepfe(teile, ziel.platzId, new Map()) : [];
   const verwendet = new Set<string>();
 
   for (const s of eingabe.saetze) {
@@ -613,6 +670,14 @@ export function saatEingabePruefen(
     } else if (!direktsaat && zahl(art?.umsetzen_ab_d) === undefined) {
       v.push({ feld: 'ziel', grund: `${sorte.name}: ${HINWEIS_OHNE_UMSETZEN}` });
     }
+    // Zieltöpfe am Umsetzdatum dieses Satzes (Plan 25, R11.2); ohne Umsetzdatum wie Plan 23
+    const umsetzenAb = zahl(art?.umsetzen_ab_d);
+    const umsetzenAm = direktsaat
+      ? eingabe.saatdatum
+      : umsetzenAb === undefined || !/^\d{4}-\d{2}-\d{2}$/.test(eingabe.saatdatum)
+        ? undefined
+        : tagPlus(eingabe.saatdatum, umsetzenAb);
+    const toepfe = ziel ? zieltoepfe(teile, ziel.platzId, new Map(), umsetzenAm, direktsaat) : [];
     for (const id of s.zieltopfIds) {
       const topf = toepfe.find((t) => t.netztopfId === id);
       if (!topf) v.push({ feld: 'ziel', grund: 'Zieltopf nicht im Zielgefäss' });
@@ -691,6 +756,7 @@ export function saatVorgang(
         kulturform: s.kulturform,
         anzuchtort_platz_id: s.direktsaat ? null : (s.box?.platzId ?? null),
         direktsaat_platz_id: s.direktsaat ? (eingabe.zielPlatzId ?? null) : null,
+        kopiert_von: e.kopiertVon ?? null,
         anzahl_schwaemme: s.schwaemme,
         samen_je_schwamm: s.samenJeSchwamm,
         schwaemme_vorschlag: s.vorschlag.schwaemme,

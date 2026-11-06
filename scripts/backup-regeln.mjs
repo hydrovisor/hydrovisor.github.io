@@ -329,3 +329,117 @@ export function speicherToken(geheimnis, jetzt, ablauf) {
   const signatur = createHmac('sha256', geheimnis).update(`${kopf}.${nutzlast}`).digest('base64url');
   return `${kopf}.${nutzlast}.${signatur}`;
 }
+
+// ---------------------------------------------------------------------
+// Storage über die S3-Schnittstelle (Issue #69, Entscheid 0013): nur ListObjectsV2 und GetObject
+// ---------------------------------------------------------------------
+
+/** RFC 3986 wie AWS SigV4 (unreservierte Zeichen bleiben) */
+export function s3Kodieren(text) {
+  return encodeURIComponent(text).replace(
+    /[!'()*]/g,
+    (z) => `%${z.charCodeAt(0).toString(16).toUpperCase()}`,
+  );
+}
+
+/** Leerer Körper: SHA-256 der leeren Zeichenkette */
+export const LEER_SHA256 = sha256Hex('');
+
+/**
+ * AWS Signature Version 4 für einen Request ohne Körper. Liefert die Header inklusive Authorization.
+ * @param {{ methode: string; url: string; region: string; dienst: string; zugangId: string; geheimnis: string;
+ *           jetzt: Date; header?: Record<string, string>; inhaltHash?: string }} e
+ */
+export function sigV4(e) {
+  const u = new URL(e.url);
+  const zeit = e.jetzt
+    .toISOString()
+    .replace(/[-:]/g, '')
+    .replace(/\.\d{3}/, '');
+  const tag = zeit.slice(0, 8);
+  const header = { host: u.host, 'x-amz-date': zeit, ...(e.header ?? {}) };
+  const namen = Object.keys(header)
+    .map((n) => n.toLowerCase())
+    .sort();
+  const klein = Object.fromEntries(
+    Object.entries(header).map(([n, w]) => [n.toLowerCase(), String(w).trim()]),
+  );
+  const pfad =
+    u.pathname
+      .split('/')
+      .map((s) => s3Kodieren(decodeURIComponent(s)))
+      .join('/') || '/';
+  const abfrage = [...u.searchParams.entries()]
+    .map(([k, w]) => [s3Kodieren(k), s3Kodieren(w)])
+    .sort(([a, x], [b, y]) => (a < b ? -1 : a > b ? 1 : x < y ? -1 : x > y ? 1 : 0))
+    .map(([k, w]) => `${k}=${w}`)
+    .join('&');
+  const kanonisch = [
+    e.methode,
+    pfad,
+    abfrage,
+    namen.map((n) => `${n}:${klein[n]}\n`).join(''),
+    namen.join(';'),
+    e.inhaltHash ?? LEER_SHA256,
+  ].join('\n');
+  const bereich = `${tag}/${e.region}/${e.dienst}/aws4_request`;
+  const zuSignieren = ['AWS4-HMAC-SHA256', zeit, bereich, sha256Hex(kanonisch)].join('\n');
+  const hmac = (schluessel, daten) => createHmac('sha256', schluessel).update(daten).digest();
+  const k = hmac(hmac(hmac(hmac(`AWS4${e.geheimnis}`, tag), e.region), e.dienst), 'aws4_request');
+  const signatur = createHmac('sha256', k).update(zuSignieren).digest('hex');
+  return {
+    ...header,
+    authorization: `AWS4-HMAC-SHA256 Credential=${e.zugangId}/${bereich}, SignedHeaders=${namen.join(';')}, Signature=${signatur}`,
+  };
+}
+
+function xmlText(text) {
+  return text
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&amp;/g, '&');
+}
+
+/**
+ * Antwort von ListObjectsV2 lesen: Schlüssel mit Grösse und Fortsetzung. Ein Schlüssel muss <ordner>/<datei> mit
+ * sicheren Namen sein (kein Pfadtrenner \, kein . oder ..), sonst Fehler wie listeAufloesen.
+ * @param {string} xml
+ */
+export function s3ListeLesen(xml) {
+  if (!/<ListBucketResult[\s>]/.test(xml)) throw new Error('Keine ListBucketResult-Antwort');
+  const dateien = [];
+  for (const [, inhalt] of xml.matchAll(/<Contents>([\s\S]*?)<\/Contents>/g)) {
+    const pfad = xmlText(/<Key>([\s\S]*?)<\/Key>/.exec(inhalt)?.[1] ?? '');
+    const bytes = Number(/<Size>(\d+)<\/Size>/.exec(inhalt)?.[1] ?? NaN);
+    const teile = pfad.split('/');
+    if (!pfad || teile.some((t) => !t || t === '.' || t === '..' || t.includes('\\')))
+      throw new Error(`Ungültiger Schlüssel in der S3-Liste: ${JSON.stringify(pfad)}`);
+    if (!Number.isSafeInteger(bytes) || bytes < 0) throw new Error(`Ungültige Grösse für ${pfad}`);
+    if (pfad.endsWith('.emptyFolderPlaceholder')) continue;
+    dateien.push({ pfad, bytes });
+  }
+  const weiter = /<IsTruncated>true<\/IsTruncated>/.test(xml)
+    ? xmlText(/<NextContinuationToken>([\s\S]*?)<\/NextContinuationToken>/.exec(xml)?.[1] ?? '') || null
+    : null;
+  if (/<IsTruncated>true<\/IsTruncated>/.test(xml) && !weiter) throw new Error('Fortsetzung ohne Token');
+  return { dateien, weiter };
+}
+
+/**
+ * S3-Adresse mit kodiertem Pfad und sortierter, kodierter Query. Gesendet wird genau diese Zeichenkette; sigV4 kommt
+ * für sie auf dieselbe kanonische Form (Prüfer Sicherheit, Befund 3).
+ * @param {string} basis z. B. https://<ref>.supabase.co/storage/v1/s3
+ * @param {string[]} segmente Bucket und Teile des Schlüssels
+ * @param {Record<string, string>} [abfrage]
+ */
+export function s3Url(basis, segmente, abfrage = {}) {
+  const pfad = segmente.map(s3Kodieren).join('/');
+  const q = Object.entries(abfrage)
+    .map(([k, w]) => [s3Kodieren(k), s3Kodieren(w)])
+    .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+    .map(([k, w]) => `${k}=${w}`)
+    .join('&');
+  return `${basis.replace(/\/+$/, '')}/${pfad}${q ? `?${q}` : ''}`;
+}

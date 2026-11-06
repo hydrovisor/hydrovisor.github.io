@@ -266,3 +266,203 @@ export function pflanzSichtenNachrechnen(t: Teile): Teile {
 export function pflanzVorgangAnwenden(teile: Teile, vorgang: Vorgang, jetzt: Date): Teile {
   return pflanzSichtenNachrechnen(vorgangAnwenden(teile, vorgang, jetzt));
 }
+
+// Plan 35 (Phasen nachführen und Phasenfragen): Phase der Pflanzungen und Bündelteil ereignis_satz wie die Sicht
+// v_pflanzung_zustand in supabase/migrations/20261103140000_datenmodell.sql. Zusätzlich zu pflanzSichtenNachrechnen(),
+// das die Phase einer vorhandenen Zeile stehen lässt; bestehende Fixtures bleiben unverändert.
+
+/**
+ * Rechnet nach (verändert `t` und gibt es zurück):
+ * - v_pflanzung_zustand.phase und phase_seit je Zeile: daten.phase und gilt_ab der jüngsten nicht stornierten
+ *   phase_antwort mit antwort ja am Satz der Pflanzung (nach gilt_ab), sonst keimung und null;
+ * - ereignis_satz: nicht stornierte Ereignisse phase_antwort (Bündelteil, Plan 35).
+ */
+export function phaseNachrechnen(t: Teile): Teile {
+  const antworten = (t['ereignis'] ?? []).filter(offen).filter((e) => e['typ'] === 'phase_antwort');
+  for (const z of t['v_pflanzung_zustand'] ?? []) {
+    const ja = juengstes(
+      antworten.filter((e) => e['satz_id'] === z['satz_id'] && datenVon(e)['antwort'] === 'ja'),
+    );
+    z['phase'] = ja ? String(datenVon(ja)['phase']) : 'keimung';
+    z['phase_seit'] = ja ? ja['gilt_ab'] : null;
+  }
+  t['ereignis_satz'] = antworten.map((e) => ({ ...e }));
+  return t;
+}
+
+/**
+ * Vorgang anwenden wie pflanzVorgangAnwenden() und zusätzlich die Phase nachrechnen (Plan 35). Neue Zeilen erhalten
+ * client_zeit = jetzt (wie zeileVorbereiten() in schreiben()) und erfasst_am = jetzt (Standardwert der Datenbank).
+ */
+export function phasenVorgangAnwenden(teile: Teile, vorgang: Vorgang, jetzt: Date): Teile {
+  const iso = jetzt.toISOString();
+  const mitZeit: Vorgang = vorgang.map((s) =>
+    s.art === 'neu' ? { ...s, felder: { client_zeit: iso, erfasst_am: iso, ...s.felder } } : s,
+  );
+  return phaseNachrechnen(pflanzVorgangAnwenden(teile, mitZeit, jetzt));
+}
+
+// Plan 33 (Umsetzen einfach): zusätzlich v_netztopf_platz, v_zielbereich, die Phase aus phase_antwort am Satz, der Cache
+// reservierung.umsetzen_geplant_am (wie cache_aus_ereignis()), die neuen Typen im Bündelteil ereignis_pflanzung und der
+// Bündelteil ereignis_platz mit kurzpruefung. Additiv: pflanzSichtenNachrechnen() bleibt unverändert.
+
+const EREIGNIS_PFLANZUNG_UMSETZEN = new Set([
+  ...EREIGNIS_PFLANZUNG,
+  'verschieben',
+  'umsetzen',
+  'tausch',
+  'umsetzdatum_geaendert',
+  'ernte',
+]);
+const EREIGNIS_PLATZ = new Set([
+  'gefaess_erfasst',
+  'gefaesspruefung',
+  'box_deckel_tausch',
+  'entfernt',
+  'geleert',
+  'ruhe',
+  'kurzpruefung',
+]);
+const zahlOderNull = (w: unknown) => (w === null || w === undefined || w === '' ? null : Number(w));
+/** jüngstes nach gilt_ab; bei gleichem gilt_ab das zuletzt erfasste (Reihenfolge im Teil) */
+const letztes = (l: Zeile[]) =>
+  l.reduce<Zeile | undefined>((a, e) => (!a || ms(e['gilt_ab']) >= ms(a['gilt_ab']) ? e : a), undefined);
+const maxVon = (l: (number | null)[]) => {
+  const w = l.filter((x): x is number => x !== null);
+  return w.length > 0 ? Math.max(...w) : null;
+};
+const minVon = (l: (number | null)[]) => {
+  const w = l.filter((x): x is number => x !== null);
+  return w.length > 0 ? Math.min(...w) : null;
+};
+
+/**
+ * Rechnet nach pflanzSichtenNachrechnen() die Sichten für Umsetzen, Verschieben und Tausch nach (verändert `t`):
+ * - reservierung.umsetzen_geplant_am je aktiver Reservierung aus dem letzten umsetzdatum_geaendert der Pflanzung
+ *   oder ihres Satzes (daten.nach), sonst umsetzen_vorgabe_am; fehlt der Wert in einer neuen Zeile, gilt die Vorgabe;
+ * - v_pflanzung_zustand.phase und phase_seit aus der letzten phase_antwort {antwort: ja} am Satz (sonst wie bisher);
+ * - v_netztopf_platz je aktivem Topf: letztes verschieben/umsetzen/tausch mit netztopf_id, sonst Heimplatz;
+ *   ausser_heim, wenn Platz oder Loch vom Heim abweichen;
+ * - v_zielbereich je Gefäss (rolle gefaess): aktive Pflanzungen mit aktuellem Platz (sonst Direktsaat-Gefäss), je
+ *   Phase pH, EC (Basis zuwachs + ECWasser der Anlage) und Wassertemperatur aus v_sollwert; max der Minima, min der
+ *   Maxima, zaehlende_pflanzungen;
+ * - ereignis_pflanzung: zusätzlich verschieben, umsetzen, tausch, umsetzdatum_geaendert, ernte;
+ * - ereignis_platz: nicht stornierte Platz-Ereignisse des Bündelteils, dazu kurzpruefung.
+ */
+export function umsetzSichtenNachrechnen(t: Teile): Teile {
+  pflanzSichtenNachrechnen(t);
+  const ereignisse = (t['ereignis'] ?? []).filter(offen);
+  const pflanzungen = new Map((t['pflanzung'] ?? []).map((p) => [p['id'], p]));
+
+  if (t['reservierung']) {
+    for (const r of t['reservierung']) r['umsetzen_geplant_am'] ??= r['umsetzen_vorgabe_am'];
+    const aktiv = new Set((t['v_reservierung_aktiv'] ?? []).map((r) => r['id']));
+    for (const r of t['reservierung']) {
+      if (!offen(r) || !aktiv.has(r['id'])) continue;
+      const satzId = pflanzungen.get(r['pflanzung_id'])?.['satz_id'];
+      const e = letztes(
+        ereignisse.filter(
+          (x) =>
+            x['typ'] === 'umsetzdatum_geaendert' &&
+            (x['pflanzung_id'] === r['pflanzung_id'] ||
+              ((x['pflanzung_id'] ?? null) === null && satzId !== undefined && x['satz_id'] === satzId)),
+        ),
+      );
+      r['umsetzen_geplant_am'] = e ? String(datenVon(e)['nach']) : r['umsetzen_vorgabe_am'];
+    }
+    pflanzSichtenNachrechnen(t);
+  }
+
+  const alle = t['ereignis'] ?? [];
+  for (const z of t['v_pflanzung_zustand'] ?? []) {
+    // nach einem Storno (Rückgängig) wie die Sicht: ohne gültiges Ende aktiv, ohne gültiges Ortsereignis ohne Ort
+    const eigene = alle.filter((e) => e['pflanzung_id'] === z['pflanzung_id']);
+    const enden = eigene.filter(
+      (e) => e['typ'] === 'abschluss' || (e['typ'] === 'ernte' && datenVon(e)['art'] === 'ab'),
+    );
+    if (enden.length > 0 && !enden.some(offen)) z['status'] = 'aktiv';
+    const orte = eigene.filter((e) => ORTSEREIGNIS.has(String(e['typ'])));
+    if (orte.length > 0 && !orte.some(offen)) {
+      z['platz_id'] = null;
+      z['loch_nr'] = null;
+      z['netztopf_id'] = null;
+    }
+    const ph = letztes(
+      ereignisse.filter(
+        (e) =>
+          e['typ'] === 'phase_antwort' && e['satz_id'] === z['satz_id'] && datenVon(e)['antwort'] === 'ja',
+      ),
+    );
+    if (ph) {
+      z['phase'] = datenVon(ph)['phase'];
+      z['phase_seit'] = ph['gilt_ab'];
+    }
+  }
+
+  t['v_netztopf_platz'] = (t['netztopf'] ?? [])
+    .filter((n) => offen(n) && n['aktiv'] !== false)
+    .map((n) => {
+      const o = letztes(
+        ereignisse.filter((e) => e['netztopf_id'] === n['id'] && ORTSEREIGNIS.has(String(e['typ']))),
+      );
+      const platz = o ? (datenVon(o)['nach_platz_id'] ?? n['heim_platz_id']) : n['heim_platz_id'];
+      const loch = o ? (zahlOderNull(datenVon(o)['nach_loch_nr']) ?? n['heim_loch_nr']) : n['heim_loch_nr'];
+      return {
+        netztopf_id: n['id'],
+        kennung: n['kennung'],
+        platz_id: platz,
+        loch_nr: loch,
+        ausser_heim: platz !== n['heim_platz_id'] || Number(loch) !== Number(n['heim_loch_nr']),
+      };
+    });
+
+  const saetze = new Map((t['satz'] ?? []).map((s) => [s['id'], s]));
+  const plaetze = new Map((t['platz'] ?? []).map((p) => [p['id'], p]));
+  const anlagen = new Map((t['anlage'] ?? []).map((a) => [a['id'], a]));
+  const sollwert = (sorteId: unknown, phase: unknown, groesse: string) =>
+    (t['v_sollwert'] ?? []).find(
+      (s) => s['sorte_id'] === sorteId && s['phase'] === phase && s['groesse'] === groesse,
+    );
+  const gruppen = new Map<unknown, Zeile[]>();
+  for (const z of t['v_pflanzung_zustand'] ?? []) {
+    if (z['status'] !== 'aktiv') continue;
+    const satz = saetze.get(z['satz_id']);
+    const platzId = z['platz_id'] ?? satz?.['direktsaat_platz_id'] ?? null;
+    const platz = plaetze.get(platzId);
+    if (!satz || !platz || platz['rolle'] !== 'gefaess') continue;
+    gruppen.set(platzId, [...(gruppen.get(platzId) ?? []), { ...z, sorte_id: satz['sorte_id'] }]);
+  }
+  t['v_zielbereich'] = [...gruppen.entries()].map(([platzId, zz]) => {
+    const anlage = anlagen.get(plaetze.get(platzId)?.['anlage_id']);
+    const ecWasser = Number(anlage?.['ec_wasser_annahme'] ?? 0.5);
+    const werte = (groesse: string, feld: 'wert_min' | 'wert_max') =>
+      zz.map((z) => {
+        const s = sollwert(z['sorte_id'], z['phase'], groesse);
+        const w = zahlOderNull(s?.[feld]);
+        return w !== null && groesse === 'ec' && s?.['ec_basis_quelle'] === 'zuwachs' ? w + ecWasser : w;
+      });
+    return {
+      platz_id: platzId,
+      ph_min: maxVon(werte('ph', 'wert_min')),
+      ph_max: minVon(werte('ph', 'wert_max')),
+      ec_min: maxVon(werte('ec', 'wert_min')),
+      ec_max: minVon(werte('ec', 'wert_max')),
+      temp_min: maxVon(werte('wassertemp', 'wert_min')),
+      temp_max: minVon(werte('wassertemp', 'wert_max')),
+      zaehlende_pflanzungen: zz.length,
+    };
+  });
+
+  t['ereignis_pflanzung'] = ereignisse
+    .filter((e) => EREIGNIS_PFLANZUNG_UMSETZEN.has(String(e['typ'])) && e['pflanzung_id'])
+    .map((e) => ({ ...e }));
+  t['ereignis_platz'] = ereignisse
+    .filter((e) => EREIGNIS_PLATZ.has(String(e['typ'])) && e['platz_id'])
+    .map((e) => ({ ...e }));
+  return t;
+}
+
+/** Vorgang anwenden wie vorgangAnwenden() und die Sichten für Umsetzen und Verschieben nachrechnen (Plan 33) */
+export function umsetzVorgangAnwenden(teile: Teile, vorgang: Vorgang, jetzt: Date): Teile {
+  return umsetzSichtenNachrechnen(vorgangAnwenden(teile, vorgang, jetzt));
+}

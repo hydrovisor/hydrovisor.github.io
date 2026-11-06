@@ -150,13 +150,15 @@ const imFenster = (tag: string, von: string, bis: string | undefined) =>
 /**
  * Belegte Stationsplätze an einem Kalendertag: (a) aktive Pflanzungen auf einer Station bis vor ihr Umsetzdatum;
  * (b) Sätze in einer Box der Anlage mit ihrem Stationsbedarf ab Keimtag bis vor ihr Umsetzdatum; (c) die geplanten
- * Sätze genauso.
+ * Sätze genauso. Mit `heute` (Plan 33 A26, Station verlassen) zählt eine Pflanzung, deren Umsetzdatum am oder vor
+ * heute liegt und die noch auf der Station steht, bis heute weiter als belegt.
  */
 export function stationsBelegung(
   teile: Teile,
   anlageId: string,
   tag: string,
   geplant: readonly GeplanterSatz[],
+  heute?: string,
 ): ProGroesse {
   const belegt: ProGroesse = { 50: 0, 80: 0 };
   const plaetze = stationen(teile, anlageId);
@@ -175,8 +177,9 @@ export function stationsBelegung(
     const station = z.platz_id ? plaetze.get(z.platz_id) : undefined;
     const satz = saetze.find((s) => s.id === z.satz_id);
     if (!station || !satz) continue;
-    if (imFenster(tag, '0000-01-01', belegtBis(teile, satz, resVon([z.pflanzung_id]))))
-      belegt[station.groesse] += 1;
+    const bis = belegtBis(teile, satz, resVon([z.pflanzung_id]));
+    const ueberfaellig = heute !== undefined && bis !== undefined && bis <= heute && tag <= heute;
+    if (imFenster(tag, '0000-01-01', bis) || ueberfaellig) belegt[station.groesse] += 1;
   }
   // (b) in der Box, noch ohne Platz; ein Satz mit Stationseintritt zählt nur noch auf der Station (Plan 23 A10)
   for (const satz of saetze) {

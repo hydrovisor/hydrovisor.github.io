@@ -1,0 +1,71 @@
+/* Phasenfragen in Heute und Pflanzenansicht (Plan 35): Layout mit Tokens, Knöpfe aus dem Design System */
+.hv-phasen {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.hv-phasen-zeile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
+  border-top: 1px solid var(--line);
+}
+
+.hv-phasen-knoepfe,
+.hv-pflanze-knoepfe {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.hv-phasen-liste {
+  margin: 0;
+  padding-left: var(--space-4);
+}
+
+.hv-phasen-ergebnis {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.hv-phasen-frage,
+.hv-pflanze-kopf,
+.hv-pflanze-zeile,
+.hv-pflanze-phase {
+  margin: 0;
+}
+
+.hv-pflanze-phase {
+  font-size: var(--text-heading-size);
+  font-weight: 700;
+}
+
+/* UC6 Rest (Plan 38): Ernte, Blüte, weitere Aktionen; Abernten mit einer Tastenhöhe Abstand unter Teilernte */
+.hv-pflanze-ernte,
+.hv-pflanze-weitere {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.hv-pflanze-abernten {
+  margin-top: var(--size-touch-regal);
+}
+
+.hv-ernte-zeile {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* lange Sortennamen in «Ernte und Kulturende» umbrechen statt abschneiden (Abnahme 1) */
+.hv-ernte-link {
+  white-space: normal;
+  text-align: left;
+  justify-content: flex-start;
+}

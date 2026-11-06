@@ -1,5 +1,9 @@
 // Maske «Gefäss» (UC1 Ablauf Maske «Gefäss», 05_masken.md 3.3; Plan 20): liest Kopf, Zustand, Hauptknopf und
 // Verlauf aus dem Bündel, ohne neu zu rechnen (R2.5, Plan 20 A3, A4). Rein: jetzt und Zeitzone als Parameter.
+import { laufendeAnsaetze } from '../abhakliste/folgen.ts';
+import type { SchrittZeile } from '../abhakliste/stand.ts';
+import type { AnsatzZeile } from '../bewertung/verlauf.ts';
+import { deckelBelegung, type DeckelLoch } from '../pflanzung/topf.ts';
 import { messFaelligkeit } from '../messung/faelligkeit.ts';
 import { ortAufloesen } from '../ort.ts';
 import { pruefStand } from '../etikett/pruefung.ts';
@@ -36,11 +40,20 @@ export interface Gefaessansicht {
     phase: string;
     seitTagen: number;
     keimung?: boolean;
+    /** Plan 33: Knopf «Umsetzen» je Satzzeile auf einer Station */
+    umsetzen?: true;
   }[];
+  /** Plan 33: Deckel mit Töpfen, Belegung, fremden und abwesenden Töpfen */
+  deckel: DeckelLoch[];
+  /** Plan 33 (R2.2): «Zielbereich aus Pflanzen: pH 5.8–6.3 · EC 1.0–1.4 · 2 Pflanzen» aus v_zielbereich */
+  zielbereichPflanzen?: string;
   dosis: { komponente: string; mlProL: string }[];
   hauptknopf?: { text: string; code: string };
   /** Plan 21: Nebenknöpfe «Prüfen», «Ändern», «Leeren» (nur bei Lösung), «Wiederherstellen» (bis 7 Tage) */
-  nebenknoepfe: { art: 'pruefen' | 'aendern' | 'leeren' | 'wiederherstellen' | 'saeen'; text: string }[];
+  nebenknoepfe: {
+    art: 'pruefen' | 'aendern' | 'leeren' | 'wiederherstellen' | 'saeen' | 'wechseln';
+    text: string;
+  }[];
   /** «Gefäss 2.3 entfernt am 10.12.» (R9.2) */
   entfernt?: string;
   verlauf: {
@@ -113,6 +126,73 @@ const ANSATZ_MARKER: Record<string, string> = {
   ph_korrektur: 'pH-Korrektur',
 };
 
+interface OrtsEreignis {
+  id: string;
+  typ: string;
+  netztopf_id: string | null;
+  pflanzung_id: string | null;
+  daten?: Record<string, unknown> | null;
+  gilt_ab: string;
+  storniert_am: string | null;
+}
+
+/** Plan 33: Marker «Tausch 2.3.1 ↔ 2.3.4», «Umgesetzt aus 4.4: 5», «Verschoben 2.3.1 auf 2.1.5» am Platz */
+function ortsMarker(teile: Teile, platzId: string): { zeit: Date; marker: string[] }[] {
+  const kennung = new Map(
+    zeilen<{ id: string; kennung: string }>(teile, 'platz').map((p) => [p.id, p.kennung]),
+  );
+  const topf = new Map(
+    zeilen<{ id: string; kennung: string }>(teile, 'netztopf').map((n) => [n.id, n.kennung]),
+  );
+  const gesehen = new Set<string>();
+  const ereignisse = [
+    ...zeilen<OrtsEreignis>(teile, 'ereignis_pflanzung'),
+    ...zeilen<OrtsEreignis>(teile, 'ereignis'),
+  ].filter((e) => {
+    if (e.storniert_am !== null || gesehen.has(e.id)) return false;
+    gesehen.add(e.id);
+    return e.typ === 'tausch' || e.typ === 'umsetzen' || e.typ === 'verschieben';
+  });
+  const d = (e: OrtsEreignis) => e.daten ?? {};
+  const ergebnis: { zeit: Date; marker: string[] }[] = [];
+  // Tausch: je vorgang_id ein Marker, wenn ein Topf hier stand
+  const tausch = new Map<string, OrtsEreignis[]>();
+  for (const e of ereignisse.filter((x) => x.typ === 'tausch')) {
+    const k = String(d(e)['vorgang_id'] ?? e.id);
+    tausch.set(k, [...(tausch.get(k) ?? []), e]);
+  }
+  for (const gruppe of tausch.values()) {
+    if (!gruppe.some((e) => d(e)['von_platz_id'] === platzId || d(e)['nach_platz_id'] === platzId)) continue;
+    const namen = gruppe.map((e) => topf.get(e.netztopf_id ?? '') ?? '?');
+    ergebnis.push({ zeit: new Date(gruppe[0]?.gilt_ab ?? 0), marker: [`Tausch ${namen.join(' ↔ ')}`] });
+  }
+  // Umsetzen hierher: je Herkunft und Zeitpunkt die Zahl der Sämlinge
+  const umsetzen = new Map<string, OrtsEreignis[]>();
+  for (const e of ereignisse.filter((x) => x.typ === 'umsetzen' && d(x)['nach_platz_id'] === platzId)) {
+    const k = `${String(d(e)['von_platz_id'])}|${e.gilt_ab}`;
+    umsetzen.set(k, [...(umsetzen.get(k) ?? []), e]);
+  }
+  for (const gruppe of umsetzen.values()) {
+    const erstes = gruppe[0];
+    if (!erstes) continue;
+    ergebnis.push({
+      zeit: new Date(erstes.gilt_ab),
+      marker: [`Umgesetzt aus ${kennung.get(String(d(erstes)['von_platz_id'])) ?? '?'}: ${gruppe.length}`],
+    });
+  }
+  // Verschieben eines Topfs mit Pflanzung von hier weg
+  for (const e of ereignisse.filter(
+    (x) => x.typ === 'verschieben' && x.netztopf_id && x.pflanzung_id && d(x)['von_platz_id'] === platzId,
+  ))
+    ergebnis.push({
+      zeit: new Date(e.gilt_ab),
+      marker: [
+        `Verschoben ${topf.get(e.netztopf_id ?? '') ?? '?'} auf ${kennung.get(String(d(e)['nach_platz_id'])) ?? '?'}.${String(d(e)['nach_loch_nr'])}`,
+      ],
+    });
+  return ergebnis;
+}
+
 function tagText(zeitpunkt: Date, zeitzone: Zeitzone): string {
   const tag = kalendertag(zeitpunkt, zeitzone);
   const [j, m, d] = tag.split('-').map(Number) as [number, number, number];
@@ -143,7 +223,8 @@ export function gefaessAnsicht(
   // letzter Ansatz für den Verlauf; Zielbereich und Dosis aus dem letzten nicht abgebrochenen Neuansatz oder
   // Teilwechsel, wie v_fuellzustand (Runde 1, Befund 4)
   const ansatz = ansaetze[0];
-  const basis = ansaetze.find((a) => BASIS_TYPEN.has(a.typ) && a.status !== 'abgebrochen');
+  // Basis nur abgeschlossene Ansätze: ein laufender Wechsel ist noch nicht die Lösung im Gefäss (Plan 29 Risiko 6)
+  const basis = ansaetze.find((a) => BASIS_TYPEN.has(a.typ) && a.status === 'abgeschlossen');
 
   const ansicht: Gefaessansicht = {
     code,
@@ -160,6 +241,7 @@ export function gefaessAnsicht(
           ? 'Messstelle Leitungswasser'
           : 'kein Gefäss',
     pflanzen: [],
+    deckel: g ? deckelBelegung(teile, ort.platzId) : [],
     dosis: [],
     verlauf: [],
     nebenknoepfe: [],
@@ -187,6 +269,17 @@ export function gefaessAnsicht(
       }
     } else {
       if (roh === 'in_pruefung') ansicht.nebenknoepfe.push({ art: 'pruefen', text: 'Prüfen' });
+      // Plan 29: Lösungswechsel mit der Abhakliste, auch an Stationen (R4.5); bei laufendem Wechsel «Wechsel fortsetzen»
+      if (roh === 'in_betrieb' || roh === 'in_betrieb_volumen_offen') {
+        const laufend = laufendeAnsaetze(
+          zeilen<AnsatzZeile>(teile, 'naehrloesungsansatz'),
+          zeilen<SchrittZeile & { ansatz_id: string }>(teile, 'ansatz_schritt'),
+        ).some((l) => l.platzId === ort.platzId);
+        ansicht.nebenknoepfe.push({
+          art: 'wechseln',
+          text: laufend ? 'Wechsel fortsetzen' : 'Lösung wechseln',
+        });
+      }
       ansicht.nebenknoepfe.push({ art: 'aendern', text: 'Ändern' });
       if (fuellNeben === 'loesung') ansicht.nebenknoepfe.push({ art: 'leeren', text: 'Leeren' });
       // Plan 23: Säen in Gefässe ohne feste Dosis (UC5 Auslöser)
@@ -213,6 +306,19 @@ export function gefaessAnsicht(
       temp: band(z['temp_min'], z['temp_max'], 0),
       quelle: zAnsatz ? 'Ansatz' : 'Messung',
     };
+
+  // Zielbereich aus den Pflanzen (R2.2) neben dem Schnappschuss (R2.5)
+  const zp = zeilen<{
+    platz_id: string;
+    ph_min: unknown;
+    ph_max: unknown;
+    ec_min: unknown;
+    ec_max: unknown;
+    zaehlende_pflanzungen: number | string;
+  }>(teile, 'v_zielbereich').find((r) => r.platz_id === ort.platzId);
+  const zaehlend = Number(zp?.zaehlende_pflanzungen ?? 0);
+  if (zp && zaehlend > 0)
+    ansicht.zielbereichPflanzen = `Zielbereich aus Pflanzen: pH ${band(zp.ph_min, zp.ph_max, 1)} · EC ${band(zp.ec_min, zp.ec_max, 1)} · ${zaehlend} ${zaehlend === 1 ? 'Pflanze' : 'Pflanzen'}`;
 
   const letzte = messungen[0];
   if (letzte) {
@@ -267,6 +373,7 @@ export function gefaessAnsicht(
       ...(satzOrt.get(satzId) === ort.platzId && keimungOffen(teile, satzId, jetzt, zeitzone)
         ? { keimung: true }
         : {}),
+      ...(g?.feste_dosis ? { umsetzen: true as const } : {}),
     });
   }
 
@@ -275,6 +382,7 @@ export function gefaessAnsicht(
     const produkte = new Map(
       zeilen<{ produkt_id: string; name: string }>(teile, 'produkt').map((p) => [p.produkt_id, p.name]),
     );
+    const summe = new Map<string, number>();
     for (const pos of zeilen<{
       ansatz_id: string;
       produkt_id: string;
@@ -284,12 +392,12 @@ export function gefaessAnsicht(
       storniert_am: string | null;
     }>(teile, 'ansatz_position')) {
       if (pos.ansatz_id !== basis.id || pos.storniert_am !== null || pos.produkt_id === 'ph_minus') continue;
+      // Summe je Produkt: die Restdosis ergibt eine zweite Position (Plan 29 A10, Risiko 6)
       const ml = Number(pos.ist_ml ?? pos.soll_ml) / Number(pos.bezugsvolumen_l);
-      ansicht.dosis.push({
-        komponente: produkte.get(pos.produkt_id) ?? pos.produkt_id,
-        mlProL: ml.toFixed(2),
-      });
+      summe.set(pos.produkt_id, (summe.get(pos.produkt_id) ?? 0) + ml);
     }
+    for (const [produkt, ml] of summe)
+      ansicht.dosis.push({ komponente: produkte.get(produkt) ?? produkt, mlProL: ml.toFixed(2) });
   }
 
   // Hauptknopf: bis zur Aufgaben-Rechnung die Messfälligkeit (A4); Anzuchtbox ohne Knopf (A6)
@@ -334,6 +442,8 @@ export function gefaessAnsicht(
       fuellstand: '–',
       marker: [ANSATZ_MARKER[a.typ] ?? 'Ansatz'],
     });
+  for (const m of ortsMarker(teile, ort.platzId))
+    eintraege.push({ ...m, ph: '–', ec: '–', temp: '–', fuellstand: '–' });
   ansicht.verlauf = eintraege
     .sort((a, b) => b.zeit.getTime() - a.zeit.getTime())
     .map(({ zeit, ...rest }) => ({ tag: tagText(zeit, zeitzone), zeit: uhrzeit(zeit, zeitzone), ...rest }));

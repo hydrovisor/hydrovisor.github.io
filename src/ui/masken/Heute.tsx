@@ -8,6 +8,10 @@ import { messFaelligkeit, type Messfaelligkeit } from '../../domain/messung/fael
 import { heuteGruppiert, nachAnlage } from '../../domain/anlage/gruppen.ts';
 import { pruefAufgaben } from '../../domain/etikett/pruefung.ts';
 import { keimAufgaben } from '../../domain/pflanzung/keimung.ts';
+import { Ablaeufe } from './Ablaeufe.tsx';
+import { Phasenkarten } from './Phasenkarten.tsx';
+import { Erntekarten } from './Erntekarten.tsx';
+import { umsetzAufgaben } from '../../domain/anzucht/umsetzen.ts';
 import { messbareOrte } from '../../domain/ort.ts';
 import { tagKurz, ZEITZONE } from '../../domain/zeit.ts';
 import { OrtKachel } from '../bausteine/Tile.tsx';
@@ -67,6 +71,9 @@ export function Heute() {
           <a className="hv-btn hv-btn-ghost hv-btn-compact" href={hashZu({ name: 'info' })}>
             Info öffnen
           </a>
+          <a className="hv-btn hv-btn-ghost hv-btn-compact" href={hashZu({ name: 'einstellungen' })}>
+            Einstellungen öffnen
+          </a>
         </nav>
       </header>
       <h1 className="hv-seite-titel">Heute</h1>
@@ -82,12 +89,16 @@ export function Heute() {
         </Notice>
       ) : null}
       {keinZugang ? <Notice tone="warn" title="Kein Zugang für dieses Konto" /> : null}
+      {buendel && !keinZugang ? <Ablaeufe jetzt={new Date(jetzt)} /> : null}
       {!keinZugang && anzeige.hinweis ? <Notice title={anzeige.hinweis} /> : null}
       {buendel && !keinZugang ? <Einrichtung /> : null}
       {zeigen ? <NeueVersionHinweis /> : null}
       {buendel && !keinZugang ? <PushHinweis /> : null}
+      {buendel && !keinZugang ? <Phasenkarten jetzt={new Date(jetzt)} /> : null}
       {buendel && !keinZugang ? <Pruefaufgaben /> : null}
       {buendel && !keinZugang ? <Keimaufgaben jetzt={new Date(jetzt)} /> : null}
+      {buendel && !keinZugang ? <Umsetzaufgaben jetzt={new Date(jetzt)} /> : null}
+      {buendel && !keinZugang ? <Erntekarten jetzt={new Date(jetzt)} /> : null}
       {buendel ? <Uebersicht jetzt={new Date(jetzt)} /> : null}
     </main>
   );
@@ -235,6 +246,32 @@ function Keimaufgaben({ jetzt }: { jetzt: Date }) {
           </span>
           <a className="hv-btn hv-btn-secondary" href={hashZu({ name: 'keimung', satz: a.satzId })}>
             Prüfen
+          </a>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/** Aufgabe «Umsetzen» je fälligem Satz, Übergangsliste bis zur Aufgaben-Rechnung in I1b-02 (Plan 33 A5) */
+function Umsetzaufgaben({ jetzt }: { jetzt: Date }) {
+  const { buendel } = useBuendel();
+  const aufgaben = umsetzAufgaben(buendel?.teile, jetzt, ZEITZONE);
+  if (aufgaben.length === 0) return null;
+  return (
+    <ul className="hv-aufgaben" aria-label="Umsetzen">
+      {aufgaben.map((a) => (
+        <li key={a.satzId} className="hv-aufgabe hv-aufgabe-umbruch">
+          <span className="hv-aufgabe-text">{a.text}</span>
+          <a
+            className="hv-btn hv-btn-secondary"
+            href={hashZu(
+              a.wieGeplant
+                ? { name: 'umsetzen', satz: a.satzId, wie: 'geplant' }
+                : { name: 'umsetzen', satz: a.satzId },
+            )}
+          >
+            {a.wieGeplant ? 'Wie geplant umsetzen' : 'Umsetzen'}
           </a>
         </li>
       ))}

@@ -46,6 +46,15 @@ Stand 1.11.2026 · Auftrag 2 «Spezifikation». Bedeutungen stehen in Konzept v1
 | Pflanzung, Schwamm | `pflanzung` | `Pflanzung` |
 | Pflanzvorgang | `pflanzvorgang` | `Pflanzvorgang` |
 | Keimprüfung, Keimansicht, Keimeingabe | Ereignis `keimung` | `keimVorgang()`, `keimAnsicht()`, `KeimEingabe` |
+| Phasenfrage, Phasenstand, Phasenwechsel | Ereignis `phase_antwort` (`daten.phase`, `daten.antwort`) | `phasenStand()`, `phasenKarten()`, `antwortVorgang()`, `Fragekarte` |
+| Phasen nachführen, Profilende, Phasenfolge | `v_sollwert` (`dauer`, `wechselmerkmal`, `anwendbar`) | `nachfuehrVorgang()`, `PROFILENDE`, `phasenfolge()`, `NachfuehrZeile` |
+| Datumskorrektur, Verlauf, Wissenskarte der Phase | `ersetzt_id`, `wissenseintrag` | `korrekturVorgang()`, `korrekturGrenze()`, `phasenVerlauf()`, `wissenFuer()` |
+| Erntestand, Ernte möglich, Teilernte, Abernten | Ereignis `ernte` (`daten.art`), `art_kulturform` | `ernteStand()`, `ernteVorgang()`, `ernteAufgaben()`, `ErnteStand` |
+| Kulturfrage, Kultur beenden oder verlängern | Ereignis `kultur_entscheid` am Satz | `kulturEntscheidVorgang()`, `kulturEntscheide()`, `verlaengerungTage()`, `VERLAENGERN_TAGE` |
+| Blüte melden, Schossen-Handlung | Ereignisse `beobachtung` {kategorie: schossen}, `schossen_handlung`, `art.schossen_handlung` | `schossenVorgang()`, `SchossenHandlung` |
+| Ausfall, Endzustand, Wiederherstellen | Ereignisse `abschluss`, `ernte` ab, `wiederherstellen` | `ausfallVorgang()`, `endzustand()`, `endeWiederherstellenVorgang()`, `endeRueckgaengig()`, `kuerzlichBeendet()` |
+| Überlagerung nach dem Speichern | Bündelteile bis zum neuen Bündel | `teileNach()`, `zielbereichZeile()` (Spiegel von `v_zielbereich`) |
+| Sollbereich, Pflanzenansicht, Wie weiter? | `v_sollwert` (Herkunft, Evidenzklasse) | `sollbereich()`, `sollText()`, `pflanzenAnsicht()`, `wieWeiter()`, `pflanzenVerlauf()` |
 | Keimbilanz (Summe je Packung wie `v_keimrate`) | `v_keimrate.gesaet`, `gekeimt` | `keimbilanz()`, `keimrateGeglaettet()` |
 | Keimt nicht, Wiederherstellen | Ereignis `abschluss {grund: keimt_nicht}`, `wiederherstellen` | `wiederherstellenVorgang()` |
 | Stationseintritt (aus der Box auf die Station) | Ereignis `verschieben` | `stationsVorbelegung()`, `freieStationsloecher()` |
@@ -99,3 +108,9 @@ Stand 1.11.2026 · Auftrag 2 «Spezifikation». Bedeutungen stehen in Konzept v1
 | Ort aus dem Etikett-Code | – | `Ort`, `ortAufloesen()`, `messbareOrte()` |
 | Edge Functions | `push-taeglich`, `push-quittung`, `ki-tuete` | – |
 | Zugriff | `zugang`, `ist_tim()` | – |
+| Umsetzen, Sämling, Zieltopf (Plan 33) | Ereignisse `umsetzen`, `umsetzdatum_geaendert`, `ernte`, `abschluss` | `umsetzAnsicht()`, `wieGeplant()`, `umsetzZiele()`, `alleFreienWaehlen()`, `umsetzEingabePruefen()`, `umsetzVorgang()`, `umsetzZusammenfassung()`, `umsetzAufgaben()` |
+| Verschieben, Tausch, Wurzelregel (Plan 33) | Ereignisse `verschieben`, `tausch` (`vorgang_id`) | `verschiebenPruefen()`, `verschiebZiele()`, `verschiebAnsicht()`, `verschiebVorgang()`, `umgesetztAm()`, `HINWEIS_WURZELN` |
+| Topf und Deckel (Plan 33) | `v_netztopf_platz`, `netztopf` | `topfOrt()`, `pflanzungenImTopf()`, `lochGroesse()`, `topfPasst()`, `deckelBelegung()`, `DeckelLoch` |
+| Deckel-Hilfen und Typen (Plan 33) | – | `lochText()`, `lochArt()`, `lochName()`, `deckelReihen()`, `istStation()`, `UmsetzEingabe`, `Saemling` |
+| Hydroponik-Recherche (Plan 37, E8) | `ki_aufruf.zweck`, Vermerk `recherche`, `wissen_app_schreiben('recherche_wert' \| 'recherche_saatempfehlung')` | `rechercheLuecken()`, `wertPruefen()`, `saatPruefen()`, `recherchieren()`, `RechercheErgebnis` |
+| Sortenerfassung (Plan 37) | `sorte`, `saatgut`, `ki_feldprotokoll`, `v_vollstaendigkeit` | `SortenFormular`, `formularNachKi()`, `erfassungBauen()`, `sortenListe()`, `sortenDetail()` |

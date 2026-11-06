@@ -9,7 +9,8 @@ export type Route =
   | { name: 'muster' }
   | { name: 'schreibprobe' }
   | { name: 'push' }
-  | { name: 'messen'; code: string }
+  | { name: 'messen'; code: string; zeile?: 3 | 14 | 17; nachmessen?: string }
+  | { name: 'ansatz'; code: string }
   | { name: 'gefaess'; code: string }
   | { name: 'gefaess-aendern'; code: string; teil?: 'deckel' }
   | { name: 'gefaess-neu'; kuerzel?: string; rolle?: 'gefaess' | 'anzuchtort' | 'messstelle' }
@@ -29,13 +30,24 @@ export type Route =
   | { name: 'saeen'; box?: string; ziel?: string; von?: 'gefaess' }
   // Plan 24: Keimung prüfen je Satz (04 Abschnitt 3)
   | { name: 'keimung'; satz: string }
+  | { name: 'pflanze'; pflanzung: string }
+  | { name: 'umsetzen'; satz: string; wie?: 'geplant' }
+  | { name: 'verschieben'; topf: string }
   | { name: 'anlage'; kuerzel?: string }
   | { name: 'anlage-neu' }
   | { name: 'vorlagen' }
+  | { name: 'einstellungen' }
+  // Plan 37: Sorten (Schreibtisch)
+  | { name: 'sorten' }
+  | { name: 'sorte-neu' }
+  | { name: 'sorte'; sorte: string }
+  | { name: 'notfallblatt'; kuerzel?: string }
   | { name: 'kalibrieren'; datenart?: 'demo' | 'test' };
 
 const KUERZEL = /^[A-Z]{1,3}$/;
 const CODE = /^[A-Z]{1,3}-[A-Za-z0-9.]+$/;
+/** Topf-Code: Kürzel der Anlage und Topfkennung, etwa «R-2.3.1» */
+const TOPF = /^[A-Z]{1,3}-[0-9]+\.[0-9]+\.[0-9]+$/;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** Druckversatz in mm: −5.0 bis +5.0, sonst 0 (Plan 22 A6) */
@@ -51,6 +63,21 @@ export function routeAusHash(hash: string): Route {
   if (etikett?.[1]) return { name: 'etikett', code: decodeURIComponent(etikett[1]) };
   const keimung = /^\/keimung\/([^/]+)$/.exec(pfad);
   if (keimung?.[1]) return UUID.test(keimung[1]) ? { name: 'keimung', satz: keimung[1] } : { name: 'heute' };
+  // Plan 35: Pflanzenansicht (Phasen) je Pflanzung
+  const pflanze = /^\/pflanze\/([^/]+)$/.exec(pfad);
+  if (pflanze?.[1])
+    return UUID.test(pflanze[1]) ? { name: 'pflanze', pflanzung: pflanze[1] } : { name: 'heute' };
+  // Plan 33: Umsetzen je Satz, Verschieben je Topf (Kürzel und Topfkennung)
+  const umsetzen = /^\/umsetzen\/([^/]+)$/.exec(pfad);
+  if (umsetzen?.[1]) {
+    if (!UUID.test(umsetzen[1])) return { name: 'heute' };
+    return new URLSearchParams(abfrage).get('wie') === 'geplant'
+      ? { name: 'umsetzen', satz: umsetzen[1], wie: 'geplant' }
+      : { name: 'umsetzen', satz: umsetzen[1] };
+  }
+  const verschieben = /^\/verschieben\/([^/]+)$/.exec(pfad);
+  if (verschieben?.[1])
+    return TOPF.test(verschieben[1]) ? { name: 'verschieben', topf: verschieben[1] } : { name: 'heute' };
   if (pfad === '/saeen') {
     const p = new URLSearchParams(abfrage);
     const box = p.get('box');
@@ -87,7 +114,20 @@ export function routeAusHash(hash: string): Route {
     };
   }
   const messen = /^\/messen\/([A-Za-z0-9.-]+)$/.exec(pfad);
-  if (messen?.[1]) return { name: 'messen', code: decodeURIComponent(messen[1]) };
+  if (messen?.[1]) {
+    // Messung im Ablauf (Plan 29): Zeile 3, 14 oder 17 der Abhakliste bzw. Nachmessen einer pH-Korrektur
+    const p = new URLSearchParams(abfrage);
+    const zeile = Number(p.get('zeile'));
+    const nachmessen = p.get('nachmessen');
+    return {
+      name: 'messen',
+      code: decodeURIComponent(messen[1]),
+      ...(zeile === 3 || zeile === 14 || zeile === 17 ? { zeile } : {}),
+      ...(nachmessen && UUID.test(nachmessen) ? { nachmessen } : {}),
+    };
+  }
+  const ansatz = /^\/ansatz\/([A-Za-z0-9.-]+)$/.exec(pfad);
+  if (ansatz?.[1]) return { name: 'ansatz', code: decodeURIComponent(ansatz[1]) };
   const aendern = /^\/gefaess\/([A-Za-z0-9.-]+)\/aendern$/.exec(pfad);
   if (aendern?.[1]) {
     const teil = new URLSearchParams(abfrage).get('teil');
@@ -112,6 +152,10 @@ export function routeAusHash(hash: string): Route {
   }
   const gefaess = /^\/gefaess\/([A-Za-z0-9.-]+)$/.exec(pfad);
   if (gefaess?.[1]) return { name: 'gefaess', code: decodeURIComponent(gefaess[1]) };
+  if (pfad === '/sorten') return { name: 'sorten' };
+  if (pfad === '/sorten/neu') return { name: 'sorte-neu' };
+  const sorte = /^\/sorten\/([^/]+)$/.exec(pfad);
+  if (sorte?.[1]) return UUID.test(sorte[1]) ? { name: 'sorte', sorte: sorte[1] } : { name: 'sorten' };
   if (pfad === '/anlage/neu') return { name: 'anlage-neu' };
   if (pfad === '/anlage') {
     const kuerzel = new URLSearchParams(abfrage).get('a');
@@ -123,7 +167,13 @@ export function routeAusHash(hash: string): Route {
       ? { name: 'kalibrieren', datenart }
       : { name: 'kalibrieren' };
   }
+  if (pfad === '/notfallblatt') {
+    const kuerzel = new URLSearchParams(abfrage).get('a');
+    return kuerzel && KUERZEL.test(kuerzel) ? { name: 'notfallblatt', kuerzel } : { name: 'notfallblatt' };
+  }
   switch (pfad) {
+    case '/einstellungen':
+      return { name: 'einstellungen' };
     case '/info':
       return { name: 'info' };
     case '/anmelden':
@@ -147,13 +197,24 @@ export function oeffnen(route: Route): void {
 }
 
 export function hashZu(route: Route): string {
-  if (route.name === 'messen') return `#/messen/${route.code}`;
+  if (route.name === 'messen') {
+    if (route.zeile) return `#/messen/${route.code}?zeile=${String(route.zeile)}`;
+    if (route.nachmessen) return `#/messen/${route.code}?nachmessen=${route.nachmessen}`;
+    return `#/messen/${route.code}`;
+  }
+  if (route.name === 'ansatz') return `#/ansatz/${route.code}`;
   if (route.name === 'gefaess') return `#/gefaess/${route.code}`;
   if (route.name === 'gefaess-aendern')
     return `#/gefaess/${route.code}/aendern${route.teil ? `?teil=${route.teil}` : ''}`;
   if (route.name === 'pruefen') return `#/pruefen/${route.code}${route.scan ? '?scan=1' : ''}`;
   if (route.name === 'etikett') return `#/e/${route.code}`;
+  if (route.name === 'sorten') return '#/sorten';
+  if (route.name === 'sorte-neu') return '#/sorten/neu';
+  if (route.name === 'sorte') return `#/sorten/${route.sorte}`;
   if (route.name === 'keimung') return `#/keimung/${route.satz}`;
+  if (route.name === 'pflanze') return `#/pflanze/${route.pflanzung}`;
+  if (route.name === 'umsetzen') return `#/umsetzen/${route.satz}${route.wie ? `?wie=${route.wie}` : ''}`;
+  if (route.name === 'verschieben') return `#/verschieben/${route.topf}`;
   if (route.name === 'saeen') {
     const teile = [
       route.box ? `box=${route.box}` : '',
@@ -187,6 +248,7 @@ export function hashZu(route: Route): string {
     return `#/gefaess-neu${q ? `?${q}` : ''}`;
   }
   if (route.name === 'anlage-neu') return '#/anlage/neu';
+  if (route.name === 'notfallblatt' && route.kuerzel) return `#/notfallblatt?a=${route.kuerzel}`;
   if (route.name === 'anlage' && route.kuerzel) return `#/anlage?a=${route.kuerzel}`;
   if (route.name === 'kalibrieren' && route.datenart) return `#/kalibrieren?datenart=${route.datenart}`;
   return `#/${route.name}`;
@@ -201,6 +263,16 @@ export function maskeFuer(route: Route, sitzung: Sitzungszustand): Route {
   if (sitzung === 'abgemeldet')
     return route.name === 'info' || route.name === 'muster' ? route : { name: 'anmelden' };
   return route.name === 'anmelden' ? { name: 'heute' } : route;
+}
+
+/**
+ * Fortsetzen (Plan 29 A18): #/e/<code> und #/ansatz/<code> mit offenem Wechsel an diesem Platz führen zur Abhakliste,
+ * vor der offenen Prüfung; sonst bleibt die Route.
+ */
+export function fortsetzenZiel(route: Route, offeneWechsel: readonly string[]): Route {
+  if ((route.name === 'etikett' || route.name === 'ansatz') && offeneWechsel.includes(route.code))
+    return { name: 'ansatz', code: route.code };
+  return route;
 }
 
 function abonnieren(melden: () => void): () => void {

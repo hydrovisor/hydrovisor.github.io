@@ -56,13 +56,19 @@ export const BUENDEL_TEILE: readonly Buendelteil[] = [
   sicht('v_fuellzustand', ['platz_id']),
   // Leitungswasser-EC je Anlage für Punkt 4 der Einrichtung, unabhängig vom 14-Tage-Fenster (Plan 18)
   sicht('v_ec_wasser', ['anlage_id']),
+  sicht('v_zielbereich', ['platz_id']),
   // Wissen (gültige Fassung)
   ...['sorte', 'art', 'art_kulturform', 'saatempfehlung', 'duengerschema', 'wissenseintrag'].map((n) =>
     tabelle(n, { gueltig: true }),
   ),
   tabelle('kulturgruppe'),
   tabelle('produkt'),
+  // k je Komponente für die Einstellungen (Plan 32); gültig ist je Produkt die jüngste Zeile
+  tabelle('k_faktor', { ohneStorno: true }),
   sicht('v_sollwert', ['sorte_id', 'phase', 'groesse']),
+  // Plan 37: Maske Sorten (Vollständigkeit je Sorte, Quellen der Werte mit Herkunft)
+  sicht('v_vollstaendigkeit', ['sorte_id']),
+  tabelle('quelle'),
   // Betrieb
   tabelle('satz', { ohneStorno: true }),
   tabelle('pflanzung', { ohneStorno: true }),
@@ -77,7 +83,21 @@ export const BUENDEL_TEILE: readonly Buendelteil[] = [
     spalten: '*',
     ordnung: ['id'],
     ohneStorno: true,
-    typen: ['keimung', 'abschluss', 'wiederherstellen'],
+    // Plan 33: Umsetzen, Verschieben, Tausch, Umsetzdatum und Ernte für Sämlinge, Deckel und Verlauf
+    typen: [
+      'keimung',
+      'abschluss',
+      'wiederherstellen',
+      'verschieben',
+      'umsetzen',
+      'tausch',
+      'umsetzdatum_geaendert',
+      'ernte',
+      // Plan 38: Schossen an der Pflanzung, Kulturentscheid am Satz (ereignis_satz bleibt phase_antwort)
+      'schossen_handlung',
+      'beobachtung',
+      'kultur_entscheid',
+    ],
   },
   // Säen (Plan 23): Packungen, Keimrate je Packung (nur echt, G5), aktueller Platz je Topf
   tabelle('saatgut', { ohneStorno: true }),
@@ -88,9 +108,21 @@ export const BUENDEL_TEILE: readonly Buendelteil[] = [
   tabelle('naehrloesungsansatz', { ohneStorno: true }),
   // Dosis je Komponente in der Maske «Gefäss»; nach dem Laden auf die letzten Ansätze gekürzt (Plan 20)
   tabelle('ansatz_position', { ohneStorno: true }),
+  // Plan 29: Schritte der Abhakliste (nach dem Laden nur laufende Neuansätze) und die Wirkung von pH-Minus (R4.14)
+  tabelle('ansatz_schritt', { ohneStorno: true }),
+  sicht('v_ph_wirkung', ['wirkung_ml_je_l_je_0_1']),
   tabelle('kalibrierung', { ohneStorno: true }),
   sicht('v_kalibrierung_faellig', ['messgeraet_id', 'datenart']),
   tabelle('messgeraet'),
+  // Plan 35: Phasenantworten am Satz für Phasenstand, Phasenfragen und Verlauf
+  {
+    name: 'ereignis_satz',
+    tabelle: 'ereignis',
+    spalten: '*',
+    ordnung: ['id'],
+    ohneStorno: true,
+    typen: ['phase_antwort'],
+  },
   tabelle('aufschub', { ohneStorno: true }),
   // Geräte-Ereignisse für Kalibrierstand und «unsicher» ohne Netz (R10.3, R5.2; Plan 12)
   tabelle('ereignis', { ohneStorno: true, typen: ['sonde_gereinigt', 'als_unsicher_markiert'] }),
@@ -101,7 +133,16 @@ export const BUENDEL_TEILE: readonly Buendelteil[] = [
     spalten: '*',
     ordnung: ['id'],
     ohneStorno: true,
-    typen: ['gefaess_erfasst', 'gefaesspruefung', 'box_deckel_tausch', 'entfernt', 'geleert', 'ruhe'],
+    typen: [
+      'gefaess_erfasst',
+      'gefaesspruefung',
+      'box_deckel_tausch',
+      'entfernt',
+      'geleert',
+      'ruhe',
+      // Plan 33 (R8.4): Abweichung der Kurzprüfung sperrt das Verschieben in ein anderes Gefäss
+      'kurzpruefung',
+    ],
   },
   // Push (Plan 13): Abos ohne Schlüssel, Versände für «Letzte Erinnerung» und #/push
   {
@@ -208,6 +249,9 @@ export function erstelleBuendelLaden(
                 (a) => (a.typ === 'neuansatz' || a.typ === 'teilwechsel') && a.status !== 'abgebrochen',
               ),
             ),
+            // und der letzte Neuansatz je Ort: «Lösung wechseln» rechnet ab dem letzten Neuansatz (Konzept 5.x
+            // Auslöser-Tabelle; Plan 32 Runde 2 Befund 5)
+            ...letzterJeOrt(ansaetze.filter((a) => a.typ === 'neuansatz' && a.status !== 'abgebrochen')),
           ]),
         ];
       // Positionen nur der letzten Ansätze je Ort (Plan 20)
@@ -216,6 +260,14 @@ export function erstelleBuendelLaden(
       );
       const positionen = teile['ansatz_position'] as { ansatz_id: string }[] | undefined;
       if (positionen) teile['ansatz_position'] = positionen.filter((p) => letzte.has(p.ansatz_id));
+      // Schritte nur der laufenden Neuansätze im Bündel: Fortsetzen auf einem anderen Gerät (Plan 29 A13)
+      const laufend = new Set(
+        (teile['naehrloesungsansatz'] as { id: string; typ?: string; status?: string }[] | undefined)
+          ?.filter((a) => a.typ === 'neuansatz' && a.status === 'laufend')
+          .map((a) => a.id),
+      );
+      const schritte = teile['ansatz_schritt'] as { ansatz_id: string }[] | undefined;
+      if (schritte) teile['ansatz_schritt'] = schritte.filter((x) => laufend.has(x.ansatz_id));
       // v_messung_unsicher hat kein gilt_ab: auf die Messungen im Fenster beschränken (Runde 1, Befund 9)
       const imFenster = new Set((teile['messung'] as { id: string }[] | undefined)?.map((m) => m.id));
       const unsicher = teile['v_messung_unsicher'] as { messung_id: string }[] | undefined;

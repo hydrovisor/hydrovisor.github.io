@@ -1,0 +1,42 @@
+{
+  "id": "msg_recherche_03",
+  "type": "message",
+  "role": "assistant",
+  "model": "claude-sonnet-5-5",
+  "content": [
+    {
+      "type": "server_tool_use",
+      "id": "srvtoolu_fixture_03",
+      "name": "web_search",
+      "input": {
+        "query": "Blattsalat DWC EC pH"
+      }
+    },
+    {
+      "type": "web_search_tool_result",
+      "tool_use_id": "srvtoolu_fixture_03",
+      "content": [
+        {
+          "type": "web_search_result",
+          "url": "https://forschung.example.invalid/blattsalat-dwc",
+          "title": "Blattsalat im DWC-Versuch",
+          "encrypted_content": "fixture",
+          "page_age": null
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "text": "Ich habe folgende Werte gefunden: EC etwa 1.4, pH etwa 6."
+    }
+  ],
+  "stop_reason": "end_turn",
+  "stop_sequence": null,
+  "usage": {
+    "input_tokens": 5200,
+    "output_tokens": 900,
+    "server_tool_use": {
+      "web_search_requests": 2
+    }
+  }
+}

@@ -127,6 +127,10 @@ tests/unit/anzucht-termine.test.ts
 tests/unit/saeen.test.ts
 tests/seed/saeen.test.ts
 tests/e2e/saeen.spec.ts
+# I1a-08 Satz duplizieren (#25)
+tests/fixtures/duplizieren.ts
+tests/unit/duplizieren.test.ts
+tests/e2e/saeen-duplizieren.spec.ts
 # I1a-07 Keimung prüfen (#24)
 tests/fixtures/keimung.ts
 tests/unit/keimung.test.ts
@@ -144,3 +148,79 @@ tests/unit/aufgaben-aufschub.test.ts
 tests/unit/aufgaben-fuellzustand.test.ts
 tests/unit/aufgaben-zeit.test.ts
 supabase/functions/push-taeglich/aufgaben_test.ts
+# I2-03 Phasen nachführen und Phasenfragen (#35)
+tests/fixtures/phasen.ts
+tests/unit/phasen-termine.test.ts
+tests/unit/phasen-fragen.test.ts
+tests/unit/phasen-buendel.test.ts
+tests/unit/router-pflanze.test.ts
+tests/e2e/phasen.spec.ts
+# I2-03 Runde 2 (#35)
+tests/unit/phasen-runde2.test.ts
+# I2-01 Umsetzen einfach (#33)
+tests/fixtures/umsetzen.ts
+tests/unit/umsetzen.test.ts
+tests/unit/verschieben.test.ts
+tests/unit/topf-deckel.test.ts
+tests/unit/umsetzen-nebenwirkungen.test.ts
+tests/unit/router-umsetzen.test.ts
+supabase/tests/database/14_umsetzen.test.sql
+tests/e2e/umsetzen.spec.ts
+tests/e2e/verschieben.spec.ts
+tests/e2e/anzucht-ablauf.spec.ts
+# I1b-01 Messmaske (#26)
+tests/fixtures/messen.ts
+tests/unit/bewertung.test.ts
+tests/unit/bewertung-hinweise.test.ts
+tests/unit/messung-verlauf.test.ts
+tests/unit/messung-sprung.test.ts
+tests/unit/messung-ziffern.test.ts
+tests/unit/messung-kontext.test.ts
+tests/unit/messung-bewertung-speichern.test.ts
+tests/e2e/messen-maske.spec.ts
+# I2-06 UC6 Rest (#38)
+tests/fixtures/ernte.ts
+tests/unit/ernte-ende.test.ts
+tests/unit/pflanzenansicht.test.ts
+tests/unit/ernte-buendel.test.ts
+tests/e2e/ernte.spec.ts
+# I2-05 Sorten mit KI und Recherche (#37)
+supabase/tests/database/15_sorten_erfassung.test.sql
+tests/unit/recherche-validator.test.ts
+tests/unit/recherche-luecken.test.ts
+tests/unit/recherche-schema.test.ts
+tests/unit/sorten-erfassung.test.ts
+tests/unit/ki-eval-bereit.test.ts
+supabase/functions/ki-recherche/kern_test.ts
+supabase/functions/ki-recherche/modell_test.ts
+tests/fixtures/ki/recherche/antwort_gueltig.json
+tests/fixtures/ki/recherche/antwort_erde.json
+tests/fixtures/ki/recherche/antwort_ungueltig.json
+tests/fixtures/ki/recherche/antwort_pause_turn.json
+tests/fixtures/ki/recherche/fehler_529.json
+tests/fixtures/ki/recherche/pruefer_belegt.json
+tests/fixtures/ki/recherche/pruefer_nicht_belegt.json
+tests/e2e/sorten.spec.ts
+tests/e2e/sorten-exif.spec.ts
+tests/unit/sorten-liste.test.ts
+# I1b-03 UC7 Rechner (#28)
+tests/unit/rechner-zahlen.test.ts
+tests/unit/rechner-neuansatz.test.ts
+tests/unit/rechner-korrektur.test.ts
+tests/unit/rechner-nachfuellen.test.ts
+tests/unit/rechner-referenz.test.ts
+tests/unit/rechner-runde1.test.ts
+# I1b-04 Abhakliste Lösungswechsel (#29)
+supabase/tests/database/16_ansatz_zustand.test.sql
+tests/fixtures/ansatz.ts
+tests/unit/abhakliste-stand.test.ts
+tests/unit/abhakliste-folgen.test.ts
+tests/unit/rechner-ph.test.ts
+tests/unit/datenpfad-setzen-ansatz.test.ts
+tests/e2e/abhakliste.spec.ts
+tests/e2e/ph-korrektur.spec.ts
+tests/unit/abhakliste-vorgaenge.test.ts
+tests/unit/router-ansatz.test.ts
+# I1b-04 Runde 1 (#29)
+tests/unit/abhakliste-rechnung.test.ts
+tests/unit/abhakliste-gefaess.test.ts

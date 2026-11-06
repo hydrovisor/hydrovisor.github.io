@@ -1,0 +1,76 @@
+/* Messmaske mit Ergebniszone (Plan 26, 05_masken.md 3.4): feste Höhen, damit 360 × 640 ohne Scrollen bleibt */
+.hv-messen-kopf .hv-messen-titel {
+  flex: none;
+}
+
+.hv-messen-kultur {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  font-size: var(--text-small-size);
+  /* zwei Zeilen in der Höhe des Titels (34 dp) */
+  line-height: 17px;
+  color: var(--ink-muted);
+}
+
+.hv-messen-kultur > span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Platzbudget 360 × 640 (Plan 26 Risiken): Kopf, ein Banner, Kacheln mit Symbol, Trend und Spur, Zone 296, Speichern */
+.hv-messen {
+  gap: var(--space-1);
+}
+
+/* Banner: die Aktion trägt die 68 dp, kein zusätzlicher Rand oben und unten */
+.hv-messen .hv-notice-kompakt {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.hv-messen .hv-tile:not(.hv-tile-kompakt) {
+  padding: 6px var(--space-2);
+  gap: 2px;
+}
+
+.hv-messen .hv-tile-aktiv:not(.hv-tile-kompakt) {
+  padding: 5px calc(var(--space-2) - 1px);
+}
+
+.hv-messen .hv-tile:not(.hv-tile-kompakt) .hv-tile-value {
+  line-height: 40px;
+}
+
+.hv-messen .hv-tile:not(.hv-tile-kompakt) .hv-tile-trend {
+  line-height: 18px;
+}
+
+.hv-messen .hv-tile-spur {
+  margin: 0;
+}
+
+/* «EC mS/cm» zweizeilig neben dem Statussymbol, ohne die Kachel zu verlängern */
+.hv-messen .hv-tile:not(.hv-tile-kompakt) .hv-tile-label {
+  font-size: 13px;
+  line-height: 16px;
+}
+
+/* Trendzeile «vorher 1.20 ↗» ganz in der Kachelbreite (drei Kacheln auf 360 dp) */
+.hv-messen .hv-tile:not(.hv-tile-kompakt) .hv-tile-trend {
+  font-size: var(--text-caption-size);
+}
+
+/* Kratky: Füllstand und Speichern in einer Zeile (A23) */
+.hv-messen-speichern .hv-btn {
+  padding-left: var(--space-3);
+  padding-right: var(--space-3);
+}
+
+/* Plan 29: «pH-Minus gegeben» im pH-Hinweis der Ergebniszone, ohne die Zone zu vergrössern */
+.hv-ergebnis-aktion {
+  display: flex;
+  justify-content: flex-end;
+}
