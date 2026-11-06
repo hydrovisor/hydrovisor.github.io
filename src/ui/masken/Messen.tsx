@@ -376,6 +376,13 @@ function Messmaske({ ort, modus }: { ort: Ort; modus: Ablaufmodus }) {
     return v.art === 'vorschlag' ? { ...v, volumen } : undefined;
   })();
 
+  // der Vorschlag ersetzt die Massnahme «pH schrittweise senken» im Hinweis: zwei Hinweise bleiben (UC9-AK1)
+  const hinweiseMitVorschlag = (auswertung?.hinweise ?? []).map((h) =>
+    phVorschlag && h.massnahme.startsWith('pH schrittweise senken')
+      ? { ...h, massnahme: `pH-Minus ${phVorschlag.text}` }
+      : h,
+  );
+
   async function phMinusGegeben() {
     if (!phVorschlag) return;
     // zuerst die Messung (falls noch nicht gespeichert), dann Korrektur und Position (Plan 29 «Schreibweg»)
@@ -623,13 +630,12 @@ function Messmaske({ ort, modus }: { ort: Ort; modus: Ablaufmodus }) {
         <div className="hv-numpad">
           <Ergebniszone
             zeilen={zeilen}
-            hinweise={auswertung.hinweise}
-            {...(auswertung.ohneBewertung ? { ohneBewertung: true } : {})}
+            hinweise={hinweiseMitVorschlag}
             {...(phVorschlag
               ? {
-                  zusatz: (
-                    <div className="hv-ergebnis-ph">
-                      <p className="hv-ergebnis-hinweis">{`pH-Minus: ${phVorschlag.text}`}</p>
+                  aktion: {
+                    bei: (h: { massnahme: string }) => h.massnahme.startsWith('pH-Minus'),
+                    knopf: (
                       <Button
                         variant="secondary"
                         size="compact"
@@ -638,10 +644,11 @@ function Messmaske({ ort, modus }: { ort: Ort; modus: Ablaufmodus }) {
                       >
                         pH-Minus gegeben
                       </Button>
-                    </div>
-                  ),
+                    ),
+                  },
                 }
               : {})}
+            {...(auswertung.ohneBewertung ? { ohneBewertung: true } : {})}
           />
           <div className="hv-numpad-save">{speichernZeile}</div>
         </div>

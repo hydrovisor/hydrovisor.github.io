@@ -143,13 +143,13 @@ export function Ergebniszone({
   zeilen,
   hinweise,
   ohneBewertung,
-  zusatz,
+  aktion,
 }: {
   zeilen: { ton: Bewertung; wert: string }[];
   hinweise: ErgebnisHinweis[];
   ohneBewertung?: boolean;
-  /** Plan 29: Vorschlag pH-Minus mit Knopf unter den Hinweisen */
-  zusatz?: ReactNode;
+  /** Plan 29: Knopf im Hinweis, dessen Massnahme passt (pH-Minus gegeben) */
+  aktion?: { bei: (h: ErgebnisHinweis) => boolean; knopf: ReactNode };
 }) {
   return (
     <section className="hv-ergebniszone" aria-label="Ergebnis">
@@ -168,9 +168,9 @@ export function Ergebniszone({
           <strong>{h.folge}.</strong>
           {/* der Messwert steht schon in der Zeile darüber; hier nur der Sollwert (05_masken.md 5) */}
           {h.sollwert ? ` ${h.sollwert}` : h.text ? ` ${h.text}` : ''} {h.massnahme}.
+          {aktion?.bei(h) ? <span className="hv-ergebnis-aktion">{aktion.knopf}</span> : null}
         </p>
       ))}
-      {zusatz}
     </section>
   );
 }
