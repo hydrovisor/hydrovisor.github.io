@@ -201,3 +201,4 @@ tests/unit/rechner-neuansatz.test.ts
 tests/unit/rechner-korrektur.test.ts
 tests/unit/rechner-nachfuellen.test.ts
 tests/unit/rechner-referenz.test.ts
+tests/unit/rechner-runde1.test.ts
