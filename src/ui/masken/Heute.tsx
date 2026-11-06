@@ -1,13 +1,13 @@
-// Heute (Kontext Regal, docs/spec/05_masken.md 3.1): Kopf, Hinweise, Einrichtungs-Checkliste (Plan 18); Karten folgen
-// mit I1b.
+// Heute (Kontext Regal, docs/spec/05_masken.md 3.1): Kopf, Hinweise, Einrichtungs-Checkliste (Plan 18), Liste
+// «Aufgaben» aus der Aufgaben-Rechnung (Plan 27); Karten folgen mit I1b-05.
 import { useState } from 'react';
 import { useAblaufOffen } from '../../ablauf/offen.ts';
 import { standAnzeige } from '../../domain/datenpfad/buendel.ts';
 import { kalibrierStand, kalibrierText } from '../../domain/kalibrierung/stand.ts';
 import { messFaelligkeit, type Messfaelligkeit } from '../../domain/messung/faelligkeit.ts';
 import { heuteGruppiert, nachAnlage } from '../../domain/anlage/gruppen.ts';
-import { pruefAufgaben } from '../../domain/etikett/pruefung.ts';
-import { keimAufgaben } from '../../domain/pflanzung/keimung.ts';
+import { einstellungenAus, faelligeAufgaben } from '../../domain/aufgaben.ts';
+import { Aufgabenliste, aufgabenSicher } from './Aufgabenliste.tsx';
 import { Ablaeufe } from './Ablaeufe.tsx';
 import { Phasenkarten } from './Phasenkarten.tsx';
 import { Erntekarten } from './Erntekarten.tsx';
@@ -95,8 +95,7 @@ export function Heute() {
       {zeigen ? <NeueVersionHinweis /> : null}
       {buendel && !keinZugang ? <PushHinweis /> : null}
       {buendel && !keinZugang ? <Phasenkarten jetzt={new Date(jetzt)} /> : null}
-      {buendel && !keinZugang ? <Pruefaufgaben /> : null}
-      {buendel && !keinZugang ? <Keimaufgaben jetzt={new Date(jetzt)} /> : null}
+      {buendel && !keinZugang ? <Aufgabenliste jetzt={new Date(jetzt)} /> : null}
       {buendel && !keinZugang ? <Umsetzaufgaben jetzt={new Date(jetzt)} /> : null}
       {buendel && !keinZugang ? <Erntekarten jetzt={new Date(jetzt)} /> : null}
       {buendel ? <Uebersicht jetzt={new Date(jetzt)} /> : null}
@@ -139,10 +138,16 @@ function Uebersicht({ jetzt }: { jetzt: Date }) {
   const teile = buendel?.teile;
   const orte = buendel ? messbareOrte(buendel.teile) : [];
   const messungen = messungenIm(buendel);
+  // erste fällige Aufgabe je Ort aus der Aufgaben-Rechnung (Plan 27), sonst die Messfälligkeit
+  const ersteAufgabe = new Map<string, string>();
+  for (const a of teile
+    ? aufgabenSicher(() => faelligeAufgaben(teile, einstellungenAus(teile), jetzt, ZEITZONE), [])
+    : [])
+    if (a.ort && !ersteAufgabe.has(a.ort.platzId)) ersteAufgabe.set(a.ort.platzId, a.titel);
   return (
     <>
       {geraet ? (
-        <section className="hv-messen-kopf" aria-label="Messgerät">
+        <section className="hv-messen-kopf hv-heute-geraet" aria-label="Messgerät">
           <span className="hv-messen-titel">
             {kalibrierText(
               kalibrierStand(
@@ -179,19 +184,20 @@ function Uebersicht({ jetzt }: { jetzt: Date }) {
                   key={o.platzId}
                   kennung={o.code}
                   zeilen={[
-                    faelligText(
-                      messFaelligkeit(
-                        {
-                          platzId: o.platzId,
-                          intervallMessenD: o.intervallMessenD ?? null,
-                          ...zustandVon(buendel, o.platzId),
-                        },
-                        messungen,
-                        jetzt,
-                        ZEITZONE,
+                    ersteAufgabe.get(o.platzId) ??
+                      faelligText(
+                        messFaelligkeit(
+                          {
+                            platzId: o.platzId,
+                            intervallMessenD: o.intervallMessenD ?? null,
+                            ...zustandVon(buendel, o.platzId),
+                          },
+                          messungen,
+                          jetzt,
+                          ZEITZONE,
+                        ),
+                        o.rolle,
                       ),
-                      o.rolle,
-                    ),
                   ]}
                   onClick={() => {
                     // Gefäss öffnet die Maske «Gefäss», W die Messmaske (UC1, Plan 20)
@@ -208,48 +214,6 @@ function Uebersicht({ jetzt }: { jetzt: Date }) {
         ))
       )}
     </>
-  );
-}
-
-/** Aufgabe «Gefäss prüfen» je Gefäss «in Prüfung» echter Anlagen, bis zur Aufgaben-Rechnung (Plan 21 A7) */
-function Pruefaufgaben() {
-  const { buendel } = useBuendel();
-  const aufgaben = pruefAufgaben(buendel?.teile);
-  if (aufgaben.length === 0) return null;
-  return (
-    <ul className="hv-aufgaben" aria-label="Aufgaben">
-      {aufgaben.map((a) => (
-        <li key={a.platzId} className="hv-aufgabe">
-          <span>
-            {a.titel} · {a.kennung}
-          </span>
-          <a className="hv-btn hv-btn-secondary" href={hashZu({ name: 'pruefen', code: a.code })}>
-            Prüfen
-          </a>
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-/** Aufgabe «Keimung prüfen» je fälligem Satz, bis zur Aufgaben-Rechnung in I1b-02 (Plan 24, wie Plan 21 A7) */
-function Keimaufgaben({ jetzt }: { jetzt: Date }) {
-  const { buendel } = useBuendel();
-  const aufgaben = keimAufgaben(buendel?.teile, jetzt, ZEITZONE);
-  if (aufgaben.length === 0) return null;
-  return (
-    <ul className="hv-aufgaben" aria-label="Keimprüfungen">
-      {aufgaben.map((a) => (
-        <li key={a.satzId} className="hv-aufgabe">
-          <span className="hv-aufgabe-text">
-            {a.text} · {a.ort}
-          </span>
-          <a className="hv-btn hv-btn-secondary" href={hashZu({ name: 'keimung', satz: a.satzId })}>
-            Prüfen
-          </a>
-        </li>
-      ))}
-    </ul>
   );
 }
 

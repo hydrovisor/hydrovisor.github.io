@@ -15,7 +15,7 @@ import {
 import { keimPruefTermin } from '../anzucht/termine.ts';
 import { keimbilanz, keimrateGeglaettet } from '../saatmenge/saatmenge.ts';
 import type { Schritt, Verstoss, Vorgang } from '../datenpfad/erfassung.ts';
-import { kalendertag, tageZwischen, type Zeitzone } from '../zeit.ts';
+import { kalendertag, tagPlus, tageZwischen, type Zeitzone } from '../zeit.ts';
 
 export interface Schwamm {
   /** 1 bis m, nur in der Maske: zuerst mit Zieltopf nach Topfkennung, dann nach id (A1) */
@@ -304,7 +304,8 @@ function lageVon(teile: Teile, satzId: string, jetzt: Date, zeitzone: Zeitzone):
 }
 
 function terminVon(lage: Lage, zeitzone: Zeitzone) {
-  const erfasst = lage.satz.client_zeit ?? lage.satz.erfasst_am ?? lage.satz.gilt_ab;
+  // ohne Zeitpunkt (unvollständige Zeile) der Saattag, damit Heute nie an einem Satz scheitert (Plan 27)
+  const erfasst = lage.satz.client_zeit ?? lage.satz.erfasst_am ?? lage.satz.gilt_ab ?? lage.satz.saatdatum;
   return keimPruefTermin(
     {
       satzId: lage.satz.id,
@@ -692,6 +693,61 @@ export function keimAufgaben(
     });
   }
   return aufgaben.sort((a, b) => a.faelligAm.localeCompare(b.faelligAm) || a.ort.localeCompare(b.ort));
+}
+
+/** Termine eines Satzes für die Aufgaben-Rechnung (Plan 27): auch künftige, mit Grenze für «Morgen» */
+export interface KeimTermin {
+  satzId: string;
+  sorte: string;
+  artId: string;
+  /** Anzuchtort oder Direktsaat-Gefäss */
+  ortPlatzId: string;
+  direktsaat: boolean;
+  anlageId: string;
+  datenart: KeimAnsicht['datenart'];
+  saatdatum: string;
+  /** Zeitpunkt der Erfassung (client_zeit, erfasst_am, gilt_ab) */
+  erfasstAm: string;
+  keimdauer: KeimAnsicht['keimdauer'];
+  /** v_sollwert keimart ('licht', 'dunkel') */
+  keimart?: string;
+  /** mindestens eine Keimprüfung erfasst */
+  geprueft: boolean;
+  /** Keimung prüfen fällig am (keimPruefTermin); ohne offene Schwämme oder nach max undefined */
+  faelligAm?: string;
+  /** Saat + Keimdauer max: letzter Tag für «Morgen» bei Keimung prüfen */
+  maxBis?: string;
+}
+
+/** alle nicht stornierten Sätze mit ihren Keimterminen (ohne Filter auf heute) */
+export function keimTermine(teile: Teile, jetzt: Date, zeitzone: Zeitzone): KeimTermin[] {
+  const termine: KeimTermin[] = [];
+  for (const satz of zeilen<SatzZeile>(teile, 'satz').filter(offen)) {
+    const lage = lageVon(teile, satz.id, jetzt, zeitzone);
+    if (!lage) continue;
+    const termin = terminVon(lage, zeitzone);
+    const keimart = zeilen<SollwertZeile & { text_wert?: string | null }>(teile, 'v_sollwert').find(
+      (s) => s.sorte_id === satz.sorte_id && s.phase === 'keimung' && s.groesse === 'keimart',
+    )?.text_wert;
+    termine.push({
+      satzId: satz.id,
+      sorte: lage.sorte,
+      artId: lage.artId,
+      ortPlatzId: lage.ort.platzId,
+      direktsaat: lage.ort.direktsaat,
+      anlageId: lage.anlageId,
+      datenart: lage.datenart,
+      saatdatum: satz.saatdatum,
+      // ohne Zeitpunkt (unvollständige Zeile) zählt der Saattag, damit die Rechnung nie wirft
+      erfasstAm: satz.client_zeit ?? satz.erfasst_am ?? satz.gilt_ab ?? satz.saatdatum,
+      keimdauer: lage.keimdauer,
+      ...(keimart ? { keimart } : {}),
+      geprueft: lage.letztePruefung !== undefined,
+      ...(termin.faelligAm !== undefined ? { faelligAm: termin.faelligAm } : {}),
+      ...(lage.keimdauer.max !== undefined ? { maxBis: tagPlus(satz.saatdatum, lage.keimdauer.max) } : {}),
+    });
+  }
+  return termine;
 }
 
 /** Knopf «Keimung prüfen»: offene Schwämme, oder in einer Box gekeimte ohne Stationsplatz, solange Platz erlaubt ist */

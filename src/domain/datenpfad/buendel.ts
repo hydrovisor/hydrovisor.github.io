@@ -54,6 +54,26 @@ export function fensterBeginn(jetzt: Date, tage: number, zeitzone: Zeitzone): st
   return tagesbeginn(tag, zeitzone).toISOString();
 }
 
+/**
+ * Nachfüll-Ansätze nach dem letzten nicht abgebrochenen Neuansatz je Ort (Plan 27, Prüfer Runde 1 Befund 1 und 2): die
+ * Aufgaben-Rechnung braucht den Tag, an dem die Nachfüllsumme das Betriebsvolumen erreicht, und das letzte Nachfüllen
+ * nach einer Messung «unter ⅓» (Kratky), auch wenn danach eine pH-Korrektur folgt.
+ */
+export function nachfuellenSeitNeuansatz<
+  T extends { platz_id: string | null; begonnen_am: string; typ?: string; status?: string },
+>(zeilen: readonly T[]): T[] {
+  const seit = new Map(
+    letzterJeOrt(zeilen.filter((z) => z.typ === 'neuansatz' && z.status !== 'abgebrochen')).map((z) => [
+      z.platz_id,
+      Date.parse(z.begonnen_am),
+    ]),
+  );
+  return zeilen.filter((z) => {
+    const ab = seit.get(z.platz_id);
+    return z.typ === 'nachfuellen' && ab !== undefined && Date.parse(z.begonnen_am) > ab;
+  });
+}
+
 /** je Ort (platz_id) nur der zuletzt begonnene Ansatz (04 4.2 «letzter Ansatz je Ort») */
 export function letzterJeOrt<T extends { platz_id: string | null; begonnen_am: string }>(
   zeilen: readonly T[],
