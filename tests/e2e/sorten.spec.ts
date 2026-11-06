@@ -200,10 +200,9 @@ test('UC4-AK9 Neue Sorte aus Tütentext: KI-Vorschlag, Art bestätigen, Packung,
 }) => {
   const m = await mitDaten(page);
   await tuetentextLesen(page, TUETENTEXT);
+  await expect(page.getByLabel('Name', { exact: true })).toHaveValue('Testsorte Rot');
   expect(m.tuete).toHaveLength(1);
   expect(m.tuete[0]?.['text']).toBe(TUETENTEXT);
-
-  await expect(page.getByLabel('Name', { exact: true })).toHaveValue('Testsorte Rot');
   await expect(page.getByLabel('Art', { exact: true })).toHaveValue('lactuca_sativa');
   await ohneWaagrechtesScrollen(page);
   await knopf(page, 'Weiter').click();
