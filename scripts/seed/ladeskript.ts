@@ -9,6 +9,7 @@ import {
   type Schritt,
 } from '../../src/domain/w0/abbildung.ts';
 import { DATEI } from '../../src/domain/w0/schema.ts';
+import { WISSEN_LUECKEN_SQL, WISSEN_PRUEFUNG_SQL } from './wissen-abdeckung.ts';
 
 export const DOLLAR_TAG = '$hv_seed$';
 
@@ -404,6 +405,8 @@ class Skript {
       `    from public.v_vollstaendigkeit v join public.sorte_schluessel sk on sk.id = v.sorte_id where not v.vollstaendig;`,
       `  if k is not null then raise exception 'Seed: Gesamtfreigabe, Sorten unvollständig: %', k; end if;`,
       `end $$;`,
+      `-- Gesamtfreigabe (R7.2, UC12-AK1): jede Art und Phase der Startbelegung braucht eine Wissenskarte`,
+      WISSEN_PRUEFUNG_SQL,
     );
   }
 
@@ -427,7 +430,9 @@ class Skript {
       `    'zeileId', k.zeile_id, 'text', k.text) order by k.nr) from pg_temp.hv_seed_konflikt k), '[]'::jsonb),`,
       `  'vollstaendigkeit', coalesce((select jsonb_agg(jsonb_build_object('sorte', sk.sorte_key,`,
       `    'fehlendeGroessen', v.fehlende_groessen, 'pruefauftraege', v.pruefauftraege, 'vollstaendig', v.vollstaendig)`,
-      `    order by sk.sorte_key) from public.v_vollstaendigkeit v join public.sorte_schluessel sk on sk.id = v.sorte_id), '[]'::jsonb))`,
+      `    order by sk.sorte_key) from public.v_vollstaendigkeit v join public.sorte_schluessel sk on sk.id = v.sorte_id), '[]'::jsonb),`,
+      `  'wissenLuecken', coalesce((select jsonb_agg(jsonb_build_object('artId', l.art_id, 'phase', l.phase)`,
+      `    order by l.art_id, l.phase) from (${WISSEN_LUECKEN_SQL}) l), '[]'::jsonb))`,
     );
   }
 
