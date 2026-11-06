@@ -216,3 +216,8 @@ tests/unit/router-ansatz.test.ts
 # I1b-04 Runde 1 (#29)
 tests/unit/abhakliste-rechnung.test.ts
 tests/unit/abhakliste-gefaess.test.ts
+# I2-02 Ansatz für Umsetzen (#34)
+tests/fixtures/zielbereich.ts
+tests/unit/zielbereich.test.ts
+tests/unit/zielbereich-leitkultur.test.ts
+tests/unit/abhakliste-rechnung-zielbereich.test.ts
