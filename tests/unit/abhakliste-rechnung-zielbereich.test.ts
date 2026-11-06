@@ -30,10 +30,15 @@ import { zeilenAus } from '../../src/domain/abhakliste/zeilen.ts';
 import { vorgangPruefen, type Schritt, type Vorgang } from '../../src/domain/datenpfad/erfassung.ts';
 import { neuansatz, type NeuansatzErgebnis } from '../../src/domain/rechner.ts';
 import { ZEITZONE } from '../../src/domain/zeit.ts';
+import { ansatzZweck, zaehlendePflanzungen } from '../../src/domain/zielbereich.ts';
+import { stadiumEingabe } from '../../src/domain/zielbereich-leitkultur.ts';
 import type { Teile } from '../fixtures/regal.ts';
 import {
+  ansatzDazu,
   ART,
   ereignisDazu,
+  netztopfId,
+  pflanzungId,
   platzId,
   RESERVIERT_23,
   satzDazu,
@@ -175,6 +180,96 @@ describe('R2.2 Zielbereich nach Zweck in rechnungEingaben', () => {
     expect(tag14.stadiumVorschlag).toBe('wurzeln_keimung');
     const tag15 = rechnungEingaben(t, P44, new Date('2027-01-19T08:00:00Z'), Z);
     expect(tag15.stadiumVorschlag).toBe('echte_blaetter');
+  });
+});
+
+describe('R2.2 R4.3 Prüferbefunde Runde 1 (Direktsaat, Station ohne Satz, Bewertung ohne Band)', () => {
+  const P32 = platzId('3.2');
+  const P44 = platzId('4.4');
+
+  it('R2.2 Direktsaat mit Reservierungen auf die Zieltöpfe: Zweck direktsaat, gesäte in Wachstum, nicht einziehend', () => {
+    const t = zielbereichTeile();
+    // wie saeen.ts: Säen reserviert die Zieltöpfe mit umsetzen_geplant_am = Saattag (15.1., überfällig)
+    satzDazu(t, {
+      nr: 61,
+      sorte: 'rucola',
+      kulturform: 'babyleaf',
+      saatdatum: '2027-01-15',
+      phase: 'keimung',
+      anzahl: 2,
+      direktsaat: '3.2',
+      direktsaatToepfe: ['3.2.1', '3.2.2'],
+    });
+    const gesaet = [pflanzungId(61, 1), pflanzungId(61, 2)];
+    expect(
+      (t['v_reservierung_aktiv'] ?? [])
+        .filter((r) => gesaet.includes(String(r['pflanzung_id'])))
+        .map((r) => [r['netztopf_id'], r['umsetzen_geplant_am']]),
+    ).toEqual([
+      [netztopfId('3.2.1'), '2027-01-15'],
+      [netztopfId('3.2.2'), '2027-01-15'],
+    ]);
+    expect(ansatzZweck(t, P32, J, Z)).toBe('direktsaat');
+    const z = zaehlendePflanzungen(t, P32, 'direktsaat', J, Z);
+    expect(sortiert(z.map((p) => p.pflanzungId))).toEqual(sortiert(gesaet));
+    expect(z.every((p) => p.rolle === 'gesaet' && p.phase === 'wachstum')).toBe(true);
+    // auch als Ansatz für Umsetzen gerechnet zieht keine gesäte ein
+    expect(zaehlendePflanzungen(t, P32, 'umsetzen', J, Z).some((p) => p.rolle === 'einziehend')).toBe(false);
+    const r = rechnungEingaben(t, P32, J, Z);
+    expect(r.zweck).toBe('direktsaat');
+    // Rucola Wachstum 0.5–0.9 Zuwachs + ECWasser 0.5
+    expect(r.eingabe.zielbereich).toEqual({ min: 100, max: 140 });
+    expect(r.phBand).toEqual({ min: 600, max: 650 });
+    expect(r.stadiumVorschlag).toBe('wachstum');
+    expect(r.gerechnetFuer).toBe('2 × Rucola Wachstum');
+    expect(sortiert(r.pflanzungIds)).toEqual(sortiert(gesaet));
+    expect(rechnen(r)).toBeDefined();
+  });
+
+  it('R4.3 Stadium Station ohne Satz: wurzeln_keimung, feste Dosis (R4.5, RF8)', () => {
+    const t = zielbereichTeile();
+    expect(ansatzZweck(t, P44, J, Z)).toBe('ohne');
+    expect(stadiumEingabe(t, P44, 'ohne', undefined, [], J, Z)).toEqual({
+      ort: 'station',
+      aeltesterEintrittAm: J,
+    });
+    const r = rechnungEingaben(t, P44, J, Z);
+    expect(r.eingabe.istStation).toBe(true);
+    expect(r.stadiumVorschlag).toBe('wurzeln_keimung');
+    expect(r.eingabe.stadium).toBe('wurzeln_keimung');
+    expect(r.pflanzungIds).toEqual([]);
+    expect(rechnen(r)).toBeDefined();
+  });
+
+  it('R2.2 Bewertung ohne Band: Zielbereich aus dem Schnappschuss des letzten Ansatzes (B13)', () => {
+    const t = zielbereichTeile();
+    // Spinat Matador direkt in 3.2 gesät, nach dem ersten Neuansatz in Keimung (ohne Sollwerte) → ohne_band
+    satzDazu(t, {
+      nr: 62,
+      sorte: 'matador',
+      kulturform: 'babyleaf',
+      saatdatum: '2027-01-10',
+      phase: 'keimung',
+      anzahl: 2,
+      direktsaat: '3.2',
+    });
+    const aelter = ansatzDazu(t, { kennung: '3.2', begonnenAm: '2027-01-11T17:00:00.000Z' });
+    const letzter = ansatzDazu(t, { kennung: '3.2', begonnenAm: '2027-01-14T17:00:00.000Z' });
+    for (const a of t['naehrloesungsansatz'] ?? []) {
+      if (a['id'] === aelter)
+        a['schnappschuss'] = {
+          zielbereich: { ph_min: 5.5, ph_max: 6.0, ec_min: 0.8, ec_max: 1.0, temp_min: 18, temp_max: 22 },
+        };
+      if (a['id'] === letzter)
+        a['schnappschuss'] = {
+          zielbereich: { ph_min: 6.0, ph_max: 7.0, ec_min: 1.2, ec_max: 1.8, temp_min: 18, temp_max: 22 },
+        };
+    }
+    expect(ansatzZweck(t, P32, J, Z)).toBe('bewertung');
+    const r = rechnungEingaben(t, P32, J, Z);
+    expect(r.zweck).toBe('bewertung');
+    expect(r.eingabe.zielbereich).toEqual({ min: 120, max: 180 });
+    expect(r.phBand).toEqual({ min: 600, max: 700 });
   });
 });
 

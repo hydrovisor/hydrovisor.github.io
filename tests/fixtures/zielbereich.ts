@@ -165,6 +165,8 @@ export interface SatzDef {
   direktsaat?: string;
   /** reserviert auf diese Töpfe mit umsetzen_geplant_am */
   reserviert?: { toepfe: string[]; umsetzenAm: string };
+  /** Direktsaat: Reservierungen auf diese Zieltöpfe mit umsetzen_geplant_am = Saattag, wie saeen.ts (Plan 34 Runde 1) */
+  direktsaatToepfe?: string[];
 }
 
 export const satzId = (nr: number) => uid('27', nr);
@@ -231,15 +233,17 @@ export function satzDazu(t: Teile, d: SatzDef): string[] {
         giltAb: d.station.eintrittAm,
         daten: { von_platz_id: platzId('A1'), nach_platz_id: platzId(d.station.kennung), nach_loch_nr: i },
       });
-    const ziel = d.reserviert?.toepfe[i - 1];
-    if (ziel && d.reserviert) {
+    const ziel = d.reserviert?.toepfe[i - 1] ?? (d.direktsaat ? d.direktsaatToepfe?.[i - 1] : undefined);
+    // Direktsaat reserviert mit dem Saattag; umgesetzt wird nie, die Reservierung bleibt aktiv (saeen.ts)
+    const am = d.reserviert?.umsetzenAm ?? d.saatdatum;
+    if (ziel) {
       const r = {
         id: reservierungId(d.nr, i),
         client_id: reservierungId(d.nr, i),
         pflanzung_id: p,
         netztopf_id: netztopfId(ziel),
-        umsetzen_vorgabe_am: d.reserviert.umsetzenAm,
-        umsetzen_geplant_am: d.reserviert.umsetzenAm,
+        umsetzen_vorgabe_am: am,
+        umsetzen_geplant_am: am,
         gilt_ab: `${d.saatdatum}T09:00:00.000Z`,
         ...o,
       };

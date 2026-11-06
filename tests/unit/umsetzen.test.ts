@@ -528,6 +528,54 @@ describe('R6.2 Zieltopf belegt, In der Station lassen, Hinweise, Rest', () => {
     expect(umsetzZusammenfassung(t, geplant(t, SATZ.tomate), J, Z).ansatz).toBe('2.1: Ansatz für Umsetzen');
   });
 
+  it('R6.2 R2.2 Ansatz je Zielgefäss: Lösung 1 Tag alt und von heute in der Einzahl, wechselIn mit allen Zielgefässen (Plan 34 Runde 1)', () => {
+    /** Neuansatz in 2.3 (aus regalTeile) auf `beginn` verlegen */
+    const mitLoesungVom = (beginn: string) => {
+      const t = umsetzTeile();
+      t['naehrloesungsansatz'] = (t['naehrloesungsansatz'] ?? []).map((a) =>
+        a['platz_id'] === platzId('2.3') ? { ...a, begonnen_am: beginn, gilt_ab: beginn } : a,
+      );
+      t['v_fuellzustand'] = (t['v_fuellzustand'] ?? []).map((f) =>
+        f['platz_id'] === platzId('2.3') ? { ...f, letzter_ansatz: beginn } : f,
+      );
+      return t;
+    };
+    const ansatz = (t: Teile) => umsetzZusammenfassung(t, geplant(t), J, Z).ansatz;
+    // Umsetztag 19.1.: Lösung vom 18.1. ist 1 Tag alt, vom 19.1. 08:00 Zürich von heute
+    expect(ansatz(mitLoesungVom('2027-01-18T08:00:00.000Z'))).toBe(
+      '2.3: Lösung bleibt (1 Tag alt), Zielbereich und Nachfülldosis neu',
+    );
+    expect(ansatz(mitLoesungVom('2027-01-19T07:00:00.000Z'))).toBe(
+      '2.3: Lösung von heute bleibt, Zielbereich und Nachfülldosis neu',
+    );
+    // jünger als 7 Tage: kein Wechsel vorgeschlagen
+    const jung = mitLoesungVom('2027-01-18T08:00:00.000Z');
+    expect(umsetzZusammenfassung(jung, geplant(jung), J, Z).wechselIn).toBeUndefined();
+
+    // zwei Zielgefässe mit 12 Tage alter Lösung: der letzte Lollo Rossa geht nach 2.2.1 statt nach 2.3
+    const t = umsetzTeile();
+    const ansatz23 = (t['naehrloesungsansatz'] ?? []).find((a) => a['platz_id'] === platzId('2.3'));
+    if (!ansatz23) throw new Error('Ansatz in 2.3 fehlt');
+    (t['naehrloesungsansatz'] ??= []).push({
+      ...ansatz23,
+      id: uid('5d', 1),
+      client_id: uid('5d', 1),
+      platz_id: platzId('2.2'),
+    });
+    const e = geplant(t);
+    const letzte = e.zuweisung.at(-1);
+    if (!letzte) throw new Error('Zuweisung fehlt');
+    const zwei: UmsetzEingabe = {
+      ...e,
+      zuweisung: [...e.zuweisung.slice(0, -1), { ...letzte, netztopfId: netztopfId('2.2.1') }],
+    };
+    const z = umsetzZusammenfassung(t, zwei, J, Z);
+    expect(z.ansatz).toBe(
+      '2.3: Lösung wechseln am Umsetztag (Lösung 12 Tage alt) · 2.2: Lösung wechseln am Umsetztag (Lösung 12 Tage alt)',
+    );
+    expect(z.wechselIn).toEqual([platzId('2.3'), platzId('2.2')]);
+  });
+
   it('R6.2 Rest: «In 4.4 verbleiben 2 Sämlinge ohne Ziel»', () => {
     const vier = umsetzTeile({ zieltoepfe: ['2.3.1', '2.3.2', '2.3.3', '2.3.4'] });
     expect(umsetzZusammenfassung(vier, geplant(vier), J, Z).rest).toBe(

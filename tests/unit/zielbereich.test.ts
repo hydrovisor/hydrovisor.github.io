@@ -340,6 +340,19 @@ describe('R2.2 Zweck und Direktsaat', () => {
     expect(z.every((p) => p.phase === 'keimung')).toBe(true);
   });
 
+  it('R2.2 Direktsaat: der laufende eigene Neuansatz beendet den Zweck nicht, erst der abgeschlossene', () => {
+    const t = direktsaat('2027-01-10');
+    // der Neuansatz, den Tim gerade mit der Abhakliste ansetzt (heute 08:30 Zürich, nach dem Saattag)
+    ansatzDazu(t, { kennung: '3.2', status: 'laufend', begonnenAm: '2027-01-18T07:30:00.000Z' });
+    expect(ansatzZweck(t, P32, J, Z)).toBe('direktsaat');
+    const z = zaehlendePflanzungen(t, P32, 'direktsaat', J, Z);
+    expect(ids(z)).toEqual(sortiert(GESAET));
+    expect(z.every((p) => p.phase === 'wachstum' && p.rolle === 'gesaet')).toBe(true);
+    // abgeschlossen: Direktsaat vorbei, Bewertung
+    for (const a of t['naehrloesungsansatz'] ?? []) if (a['platz_id'] === P32) a['status'] = 'abgeschlossen';
+    expect(ansatzZweck(t, P32, J, Z)).toBe('bewertung');
+  });
+
   it('R2.2 ohne zählende und ohne Umsetzung innert 3 Tagen: niemand, Rechner verlangt Ziel-EC und Stadium (RF7)', () => {
     const t = zielbereichTeile();
     satzDazu(t, {
