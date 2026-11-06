@@ -137,8 +137,13 @@ export function zielEc(e: { zielbereich: Zielbereich; ecSoll: Bruch; ecWasser: n
   hinweise: RechnerHinweis[];
 } {
   const { zielbereich: zb, ecWasser: w } = e;
+  // ECWasser auf oder über o: Ziel = ECWasser, dann gibt es nichts zu dosieren (R4.4 keine negative Menge, Befund 1)
   if (w > zb.max - UNTERGRENZE)
-    return { ecZiel: bruch(zb.max), skalieren: true, hinweise: [hinweis('wasser_zu_hoch_fuer_gefaess')] };
+    return {
+      ecZiel: bruch(Math.max(zb.max, w)),
+      skalieren: true,
+      hinweise: [hinweis('wasser_zu_hoch_fuer_gefaess')],
+    };
   const band = inneresBand(zb);
   if (vergleich(e.ecSoll, band.unten) >= 0 && vergleich(e.ecSoll, band.oben) <= 0)
     return { ecZiel: e.ecSoll, skalieren: false, hinweise: [] };
@@ -275,6 +280,7 @@ export function neuansatz(e: NeuansatzEingabe): NeuansatzErgebnis | EingabeNoeti
       hinweise.push(...z.hinweise);
     }
     if (skaliert) dNeu = durch(mal(D, minus(ecZiel, e.ecWasser)), minus(ecSoll, e.ecWasser));
+    if (dNeu.z < 0) dNeu = bruch(0);
     const grenze = kappungsgrenze(dosis);
     if (vergleich(dNeu, grenze) > 0) {
       if (e.ueberHerstellerdosisBestaetigt) {
@@ -301,7 +307,8 @@ export function neuansatz(e: NeuansatzEingabe): NeuansatzErgebnis | EingabeNoeti
   return {
     art: 'ergebnis',
     stadium,
-    dosisHersteller: HERSTELLERDOSIS[stadium],
+    // Dosis, auf der die Rechnung beruht: übergebenes Schema (duengerschema), feste Stationsdosis oder Konstante R4.3
+    dosisHersteller: dosis,
     dosisVerwendet,
     ecSoll: runde(ecSoll),
     ecZiel: runde(ecZiel),

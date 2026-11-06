@@ -105,10 +105,11 @@ export function kVorschlag(e: {
   unsicher: boolean;
   datenart: Datenart;
 }): KVorschlag {
+  // Das Banner ist ein Warnhinweis und gilt auch bei Demo und «unsicher»; G5 betrifft nur den k-Vorschlag (Befund 4)
+  if (e.endmessung !== undefined && e.endmessung > e.ecSollIstGesamt + 30) return { art: 'banner' };
   if (e.datenart !== 'echt') return { art: 'kein', grund: 'nicht_echt' };
   if (e.unsicher) return { art: 'kein', grund: 'unsicher' };
   if (e.endmessung === undefined) return { art: 'kein', grund: 'endmessung_fehlt' };
-  if (e.endmessung > e.ecSollIstGesamt + 30) return { art: 'banner' };
   if (Math.abs(e.kontrolle - e.ecSollIstKontrolle) <= e.uEc)
     return { art: 'kein', grund: 'abweichung_klein' };
   if (e.istDosis.z <= 0) return { art: 'kein', grund: 'abweichung_klein' };

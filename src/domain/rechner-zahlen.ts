@@ -17,7 +17,7 @@ function ggt(a: number, b: number): number {
 }
 
 export function bruch(zaehler: number, nenner = 1): Bruch {
-  if (!Number.isInteger(zaehler) || !Number.isInteger(nenner) || nenner === 0)
+  if (!Number.isSafeInteger(zaehler) || !Number.isSafeInteger(nenner) || nenner === 0)
     throw new Error(`Bruch braucht Ganzzahlen: ${zaehler}/${nenner}`);
   const v = nenner < 0 ? -1 : 1;
   const t = ggt(zaehler, nenner);

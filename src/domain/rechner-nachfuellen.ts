@@ -85,6 +85,17 @@ export function nachfuellen(e: {
   spritzen?: readonly number[];
 }): NachfuellErgebnis {
   const v2 = e.nachgefuellt;
+  if (!(v2 > 0)) {
+    const leer: Mengen = { grow: 0, micro_hard_water: 0, bloom: 0 };
+    return {
+      dMlL: 0,
+      mengen: leer,
+      messmittel: messmittelJe(leer, e.spritzen),
+      nurWasser: false,
+      kontrolleFolgetag: false,
+      hinweise: [hinweis('eingabe_noetig', 'Nachgefüllte Menge eingeben')],
+    };
+  }
   const fertig = (d: Bruch, dMlL: number, hinweise: RechnerHinweis[], kontrolleFolgetag = false) => {
     const mengen = gerundet(mengenRoh(d, e.dosis, v2));
     return {
@@ -125,12 +136,13 @@ export function nachfuellen(e: {
   const dExakt = durch(mal(1000, zaehler), mal(kw, v2));
   let dH = Math.max(1, runde(dExakt));
   // Grenze 1.5 · D_Ansatz als Ganzzahlvergleich 2 · d ≤ 3 · D_Ansatz (R4.9)
-  const grenzeAnsatz = bruch(3 * e.dAnsatz, 2);
+  // Grenze 1.5 · D_Ansatz einmal auf Hundertstel ml/L (R4.9; Befund 2: D_Ansatz 2.33 ergibt genau 3.50)
+  const grenzeAnsatz = runde(bruch(3 * e.dAnsatz, 2));
   const grenzeR44 = kappungsgrenze(e.dosis);
   let kontrolleFolgetag = false;
   let gekappt = false;
-  if (2 * dH > 3 * e.dAnsatz) {
-    dH = runde(grenzeAnsatz);
+  if (dH > grenzeAnsatz) {
+    dH = grenzeAnsatz;
     gekappt = true;
   }
   if (vergleich(dH, grenzeR44) > 0) {
