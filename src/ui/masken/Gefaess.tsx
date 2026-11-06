@@ -121,7 +121,6 @@ export function Gefaess({ code }: { code: string }) {
         ) : null}
         {a.zielbereichPflanzen ? <p className="hv-gefaess-zeile hv-num">{a.zielbereichPflanzen}</p> : null}
       </section>
-      {a.deckel.length > 0 && buendel ? <DeckelAnsicht a={a} teile={buendel.teile} /> : null}
       {a.hauptknopf && !a.entfernt ? (
         <a
           className="hv-btn hv-btn-primary hv-gefaess-haupt"
@@ -131,6 +130,8 @@ export function Gefaess({ code }: { code: string }) {
         </a>
       ) : null}
       {a.nebenknoepfe.length > 0 && buendel ? <Nebenknoepfe a={a} teile={buendel.teile} /> : null}
+      {/* Deckelgrafik darf scrollen; Kopf, Zustand und Hauptknopf bleiben oben (UC1-AK2) */}
+      {a.deckel.length > 0 && buendel ? <DeckelAnsicht a={a} teile={buendel.teile} /> : null}
       {a.verlauf.length > 0 ? (
         <section aria-labelledby="verlauf-titel" className="hv-gefaess-verlauf">
           <h2 id="verlauf-titel" className="hv-gefaess-h2">
