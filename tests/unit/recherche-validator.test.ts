@@ -358,4 +358,11 @@ describe('UC4-AK7 Validator der Recherche (9.1, 9.4)', () => {
       expect(recherche, `pH ${min}–${max}`).toBe(w0Ok(String(min), String(max)));
     }
   });
+
+  it('UC4-AK7 (Validator) B7 EC-Randwerte in Tausendsteln: 279 ppm700 = 0.399 verworfen, 280 ppm700 = 0.4 angenommen', () => {
+    expect(grund(wertPruefen(ec(279, 980, 'ppm700'), BLATT))).toBe('ec');
+    const r = wertPruefen(ec(280, 980, 'ppm700'), BLATT);
+    if (!r.ok) throw new Error(`verworfen mit ${r.grund}`);
+    expect(r.zeile).toMatchObject({ wert_min: 0.4, wert_max: 1.4, ec_min_quelle: 280, ec_max_quelle: 980 });
+  });
 });

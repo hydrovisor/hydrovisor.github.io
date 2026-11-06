@@ -215,4 +215,18 @@ describe('UC4-AK7 Schema und Anfragen der Recherche (11.3)', () => {
     expect(quelleId('https://forschung.example.invalid/blattsalat-nft')).not.toBe(a);
     expect(quelleId('https://forschung.example.invalid/blattsalat-dwc')).toBe(a);
   });
+
+  it('UC4-AK7 (Schema) B5 Prüfanfrage: max_uses höchstens 10, sonst die Zahl der Links', () => {
+    const viele = Array.from({ length: 12 }, (_, i) => ({
+      id: `w${i + 1}`,
+      link: `https://forschung.example.invalid/quelle-${i + 1}`,
+      fundstelle: 'Tabelle 1',
+      kurzzitat: `Zitat ${i + 1}`,
+      wert: 'pH Wachstum 5.8–6.2',
+    }));
+    const abruf = (k: typeof viele) =>
+      werkzeuge(pruefAnfrageBauen(k, SONNET)).find((w) => w.name === 'web_fetch')?.['max_uses'];
+    expect(abruf(viele)).toBe(10);
+    expect(abruf(viele.slice(0, 2))).toBe(2);
+  });
 });

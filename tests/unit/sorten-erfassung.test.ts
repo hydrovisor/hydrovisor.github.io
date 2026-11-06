@@ -26,6 +26,8 @@ import {
   erfassungBauen,
   formularNachKi,
   formularPruefen,
+  keimartDerArt,
+  keimartHinweis,
   leeresFormular,
   vorhandeneSorte,
   type KiLauf,
@@ -337,5 +339,74 @@ describe('UC4 Sortenformular', () => {
     expect(b).toEqual(a);
     const ids = a.vorgang.flatMap((s) => (s.art === 'neu' ? [s.felder.client_id] : []));
     expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it('UC4 B3 neue Art in einer Gruppe mit Blatt-Leitkultur: Kulturtyp Frucht passt nicht zur Art', () => {
+    const gruppen = [{ kulturgruppe_id: 'blatt', leitkultur_art_id: 'lactuca_sativa' }];
+    const f = {
+      ...VOLL(),
+      artId: undefined,
+      neueArt: { nameDe: 'Testsalat', nameWiss: 'Testus lactucoides', kulturgruppeId: 'blatt' },
+    } as SortenFormular;
+    expect(formularPruefen({ ...f, kulturtyp: 'frucht' }, ARTEN, gruppen)).toContainEqual({
+      feld: 'kulturtyp',
+      text: 'Kulturtyp passt nicht zur Art',
+    });
+    expect(formularPruefen({ ...f, kulturtyp: 'blatt' }, ARTEN, gruppen)).toEqual([]);
+  });
+
+  it('UC4 B4 neue Art mit dem wissenschaftlichen Namen einer bestehenden Art abgelehnt', () => {
+    const f = {
+      ...VOLL(),
+      artId: undefined,
+      neueArt: { nameDe: 'Kopfsalat', nameWiss: 'Lactuca sativa', kulturgruppeId: 'blatt' },
+    } as SortenFormular;
+    expect(formularPruefen(f, ARTEN)).toContainEqual({
+      feld: 'neueArt.nameWiss',
+      text: 'Diese Art gibt es schon: Salat. Wähle sie in der Liste.',
+    });
+  });
+
+  it('UC4 B2 Keimart der Tüte weicht vom Profil der Art ab: Hinweis, die Tüte gilt', () => {
+    expect(keimartHinweis('licht', 'dunkel')).toBe('Tüte: Lichtkeimer, Art: Dunkelkeimer. Die Tüte gilt.');
+    expect(keimartHinweis('licht', 'licht')).toBeUndefined();
+    expect(keimartHinweis(undefined, 'dunkel')).toBeUndefined();
+    expect(keimartHinweis('licht', undefined)).toBeUndefined();
+
+    const andere = '37000000-0000-4000-8000-000000000101';
+    const eigene = '37000000-0000-4000-8000-000000000102';
+    const sorten = [
+      { sorte_id: andere, name: 'Lollo Rossa', art_id: 'lactuca_sativa', gueltig_bis: null },
+      { sorte_id: eigene, name: 'Testsorte Rot', art_id: 'lactuca_sativa', gueltig_bis: null },
+    ] as unknown as Sorten;
+    const keim = (sorte_id: string, text_wert: string, herkunft_ebene: string) => ({
+      sorte_id,
+      phase: 'keimung',
+      groesse: 'keimart',
+      text_wert,
+      herkunft_ebene,
+    });
+    expect(
+      keimartDerArt(
+        [keim(eigene, 'licht', 'sorte'), keim(andere, 'dunkel', 'art')],
+        sorten,
+        'lactuca_sativa',
+      ),
+    ).toBe('dunkel');
+    expect(keimartDerArt([keim(andere, 'licht', 'sorte')], sorten, 'lactuca_sativa')).toBeUndefined();
+    expect(keimartDerArt([keim(andere, 'dunkel', 'art')], sorten, 'solanum_lycopersicum')).toBeUndefined();
+    expect(keimartDerArt([keim(andere, 'dunkel', 'art')], sorten, undefined)).toBeUndefined();
+  });
+
+  it('UC4 B9 Keimfähigkeit 85.5 % → 0.855', () => {
+    const r = erfassungBauen(
+      { ...VOLL(), keimfaehigkeitProzent: '85.5' },
+      { sorteId: SORTE, saatgutId: SAATGUT, clientIds: zaehler() },
+      LAUF,
+      KONTEXT,
+    );
+    const saatgut = r.vorgang.find((s) => s.art === 'neu' && s.tabelle === 'saatgut');
+    expect(saatgut?.art === 'neu' && saatgut.felder['keimfaehigkeit_packung']).toBeCloseTo(0.855, 10);
+    expect(formularPruefen({ ...VOLL(), keimfaehigkeitProzent: '85.5' }, ARTEN)).toEqual([]);
   });
 });
