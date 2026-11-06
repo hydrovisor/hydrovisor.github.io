@@ -251,14 +251,17 @@ describe('R5.2 Lösung wechseln', () => {
     ]);
   });
 
-  it('R5.2 Lösung wechseln fällig: Nachfüllsumme ≥ Betriebsvolumen (9 l), heute', () => {
+  // Prüfer Fachlogik Runde 1 Befund 1: fällig am Tag, an dem die Summe das Volumen erreicht (Konzept R5.2), nicht
+  // jeden Tag heute; sonst gälte «Morgen höchstens 3 Tage» nie und die Aufgabe wäre nie überfällig
+  it('R5.2 Lösung wechseln fällig: Nachfüllsumme ≥ Betriebsvolumen (9 l), am Tag des Erreichens', () => {
     const t = mitLoesung(leer(), { code: 'R-1.1', betriebsart: 'dwc', volumenL: 9 });
     ansatzDazu(t, 'R-1.1', { begonnen: zh('2027-01-05'), typ: 'nachfuellen', nachgefuelltL: 5 });
     ansatzDazu(t, 'R-1.1', { begonnen: zh('2027-01-08'), typ: 'nachfuellen', nachgefuelltL: 4 });
     fertig(t);
     expect(an(faellig(t), 'loesung_wechseln', 'R-1.1')).toEqual([
-      schluessel('loesung_wechseln', platzId('R-1.1'), HEUTE),
+      schluessel('loesung_wechseln', platzId('R-1.1'), '2027-01-08'),
     ]);
+    expect(einzig(von(faellig(t), 'loesung_wechseln'), 'Wechsel 1.1').tageUeberfaellig).toBe(4);
   });
 
   it('R5.2 Lösung wechseln nicht fällig: Nachfüllsumme 8.5 l unter dem Betriebsvolumen 9 l', () => {
