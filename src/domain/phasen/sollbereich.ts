@@ -103,11 +103,33 @@ export function sollText(s: Pick<Sollbereich, 'ph' | 'ec' | 'temp' | 'ecBasisUnk
   else fehlt.push('pH');
   if (s.ec) teile.push(`EC ${dezimal(s.ec.min)}–${dezimal(s.ec.max)}`);
   else fehlt.push('EC');
-  if (s.temp)
-    teile.push(`${String(Math.round(s.temp.min / 100))}–${String(Math.round(s.temp.max / 100))} °C`);
+  // ganze Grad ohne Nachkommastelle, sonst wie pH und EC (Prüfer Runde 1 Befund 9)
+  const grad = (h: number) => (h % 100 === 0 ? String(h / 100) : dezimal(h));
+  if (s.temp) teile.push(`${grad(s.temp.min)}–${grad(s.temp.max)} °C`);
   else fehlt.push('°C');
   if (fehlt.length === 3) return 'Sollwert nicht belegt';
   if (fehlt.length > 0) teile.push(`${fehlt.join(', ')} Sollwert nicht belegt`);
   if (s.ecBasisUnklar) teile.push('EC-Basis unklar');
   return teile.join(' · ');
+}
+
+const EBENE: Readonly<Record<string, string>> = {
+  sorte: 'Sorte',
+  art: 'Art',
+  kulturgruppe: 'Kulturgruppe',
+  standard: 'Standard',
+};
+
+/** Herkunft je Wert (UC6, R1.3): «Herkunft: pH Art · EC Kulturgruppe · °C Standard»; ohne Werte undefined */
+export function herkunftText(s: Pick<Sollbereich, 'herkunft'>): string | undefined {
+  const teile = (
+    [
+      ['pH', s.herkunft.ph],
+      ['EC', s.herkunft.ec],
+      ['°C', s.herkunft.temp],
+    ] as const
+  ).flatMap(([name, h]) =>
+    h ? [`${name} ${EBENE[h.ebene] ?? h.ebene}${h.vermerk === 'leitkultur' ? ' (Leitkultur)' : ''}`] : [],
+  );
+  return teile.length > 0 ? `Herkunft: ${teile.join(' · ')}` : undefined;
 }

@@ -112,7 +112,7 @@ export function Erntekarten({ jetzt }: { jetzt: Date }) {
             return a.typ === 'ernte_moeglich' ? (
               <li key={a.schluessel} className="hv-aufgabe hv-aufgabe-umbruch">
                 <a
-                  className="hv-btn hv-btn-secondary"
+                  className="hv-btn hv-btn-secondary hv-btn-block hv-ernte-link"
                   href={hashZu({ name: 'pflanze', pflanzung: a.pflanzungId })}
                 >
                   {a.text}

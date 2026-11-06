@@ -10,7 +10,7 @@ import { tagKurz, type Zeitzone } from '../zeit.ts';
 import { endzustand, teileNach, type Endzustand } from './ende.ts';
 import { ernteStand, type ErnteStand } from './ernte.ts';
 import { phasenStand, type PhasenStand } from './fragen.ts';
-import { dezimal, sollbereich, sollText, type Sollbereich } from './sollbereich.ts';
+import { dezimal, herkunftText, sollbereich, sollText, type Sollbereich } from './sollbereich.ts';
 
 export type SchrittArt = 'keimung' | 'umsetzen' | 'phase' | 'kultur_entscheid' | 'ernte_moeglich';
 
@@ -22,7 +22,7 @@ export interface PflanzenAnsicht {
   status: string;
   kopf: { titel: string; ort: string; tagSeitSaat: number; mitTopf: boolean };
   phase?: PhasenStand;
-  soll: Sollbereich & { text: string };
+  soll: Sollbereich & { text: string; herkunftText?: string };
   ziel?: { platzId: string; text: string; pflanzen: number };
   ernte?: ErnteStand;
   ende?: Endzustand;
@@ -221,7 +221,11 @@ export function pflanzenAnsicht(
       mitTopf: z.netztopf_id !== null && z.netztopf_id !== undefined,
     },
     ...(phase ? { phase } : {}),
-    soll: { ...soll, text: sollText(soll) },
+    soll: {
+      ...soll,
+      text: sollText(soll),
+      ...(herkunftText(soll) ? { herkunftText: herkunftText(soll) as string } : {}),
+    },
     ...(ziel ? { ziel } : {}),
     ...(ernte ? { ernte } : {}),
     ...(ende ? { ende } : {}),

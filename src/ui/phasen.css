@@ -62,3 +62,10 @@
   align-items: center;
   gap: var(--space-2);
 }
+
+/* lange Sortennamen in «Ernte und Kulturende» umbrechen statt abschneiden (Abnahme 1) */
+.hv-ernte-link {
+  white-space: normal;
+  text-align: left;
+  justify-content: flex-start;
+}

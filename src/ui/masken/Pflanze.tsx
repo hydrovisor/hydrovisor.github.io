@@ -307,7 +307,7 @@ export function Pflanze({ pflanzung }: { pflanzung: string }) {
             </span>
           }
         >
-          {`Gefäss ${weiter.kennung} ist leer.`}
+          {`Gefäss ${weiter.kennung} ohne Pflanzen`}
         </Notice>
       ) : null}
       {wissen && aktiv ? (
@@ -385,8 +385,14 @@ export function Pflanze({ pflanzung }: { pflanzung: string }) {
         )
       ) : null}
 
-      <Card title="Sollbereich" meta={a.soll.verlaesslichkeit === 'belegt' ? 'belegt' : 'Prüfauftrag'}>
+      <Card title="Sollbereich">
+        <p className="hv-pflanze-zeile">
+          <StatusBadge tone="info">
+            {a.soll.verlaesslichkeit === 'belegt' ? 'belegt' : 'Prüfauftrag'}
+          </StatusBadge>
+        </p>
         <p className="hv-pflanze-zeile">{a.soll.text}</p>
+        {a.soll.herkunftText ? <p className="hv-pflanze-zeile">{a.soll.herkunftText}</p> : null}
         {a.ziel ? <p className="hv-pflanze-zeile">{a.ziel.text}</p> : null}
       </Card>
 
@@ -454,9 +460,8 @@ export function Pflanze({ pflanzung }: { pflanzung: string }) {
           </Button>
           {bluete ? (
             <Notice
-              kompakt
               tone="info"
-              title="Blüte: Schossen"
+              title="Blüte heisst hier Schossen"
               action={
                 <Button
                   variant="secondary"
@@ -497,6 +502,7 @@ export function Pflanze({ pflanzung }: { pflanzung: string }) {
                   Verschieben
                 </a>
               ) : null}
+              <p className="hv-pflanze-zeile">Ausfall melden, Ursache wahlweise</p>
               <Choice
                 label="Ursache (wahlweise)"
                 zeile

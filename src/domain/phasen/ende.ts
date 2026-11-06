@@ -167,8 +167,16 @@ export function endeWiederherstellenVorgang(
   const schritte: Schritt[] = [];
   let hinweis: string | undefined;
   if (e.grund === 'ausfall') {
+    // nur eine Reservierung, die mit dem Wiederherstellen wieder auflebt: kein umsetzen danach (wie
+    // v_reservierung_aktiv; Prüfer Runde 1 Befund 3)
+    const umgesetzt = ereignisseVon(teile, pflanzungId).filter((x) => x.typ === 'umsetzen');
     const res = zeilen<Reservierung>(teile, teile?.['reservierung'] ? 'reservierung' : 'v_reservierung_aktiv')
-      .filter((r) => offen(r) && r.pflanzung_id === pflanzungId)
+      .filter(
+        (r) =>
+          offen(r) &&
+          r.pflanzung_id === pflanzungId &&
+          !umgesetzt.some((u) => ms(u.gilt_ab) >= ms(r.gilt_ab)),
+      )
       .sort((a, b) => ms(a.gilt_ab) - ms(b.gilt_ab))
       .at(-1);
     if (res && reservierungVergeben(teile, pflanzungId, res.netztopf_id)) {
@@ -402,7 +410,10 @@ export function zielbereichZeile(teile: Teile, platzId: string): ZielbereichZeil
           x['sorte_id'] === z.sorteId && x['phase'] === (z.phase ?? 'keimung') && x['groesse'] === groesse,
       );
       const w = zahlOderNull(s?.[feld]);
-      return w !== null && groesse === 'ec' && s?.['ec_basis_quelle'] === 'zuwachs' ? w + ecWasser : w;
+      // in Hundertsteln addieren (R10.1; Prüfer Runde 1 Befund 6), Einheit der Sicht zurück
+      return w !== null && groesse === 'ec' && s?.['ec_basis_quelle'] === 'zuwachs'
+        ? (Math.round(w * 100) + Math.round(ecWasser * 100)) / 100
+        : w;
     });
   return {
     platz_id: platzId,
