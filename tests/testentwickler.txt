@@ -147,3 +147,5 @@ tests/unit/phasen-fragen.test.ts
 tests/unit/phasen-buendel.test.ts
 tests/unit/router-pflanze.test.ts
 tests/e2e/phasen.spec.ts
+# I2-03 Runde 2 (#35)
+tests/unit/phasen-runde2.test.ts
