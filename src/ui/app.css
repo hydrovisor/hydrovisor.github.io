@@ -381,6 +381,11 @@ body {
   overflow-wrap: anywhere;
 }
 
+/* Aufgabe mit langem Knopf (Umsetzen, Plan 33): Knopf bricht unter den Text statt über 360 dp hinaus */
+.hv-aufgabe-umbruch {
+  flex-wrap: wrap;
+}
+
 /* Gefäss: Satzzeile mit Knopf «Keimung prüfen» (Plan 24 A12) */
 .hv-gefaess-pflanze {
   display: flex;

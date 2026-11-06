@@ -156,7 +156,9 @@ export function verschiebZiele(
         : l.zustand === 'belegt'
           ? `belegt${l.sorte ? ` · ${l.sorte}` : ''}`
           : l.zustand;
-    return { ...l, ...(v.length > 0 ? { nichtWaehlbar: true as const } : {}), zustandName };
+    // Wurzeln und Sperre gelten fürs ganze Gefäss (Hinweis über dem Deckel); ein Tipp schreibt dann nichts (R8.4)
+    const lochGrund = v.some((x) => x.feld !== 'wurzeln' && x.feld !== 'gesperrt');
+    return { ...l, ...(lochGrund ? { nichtWaehlbar: true as const } : {}), zustandName };
   });
 }
 

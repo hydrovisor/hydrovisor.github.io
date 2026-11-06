@@ -8,7 +8,9 @@ import { ereignisseAm, ms, type Teile } from '../../domain/anlage/teile.ts';
 import type { Vorgang } from '../../domain/datenpfad/erfassung.ts';
 import { ortAufloesen } from '../../domain/ort.ts';
 import { ZEITZONE } from '../../domain/zeit.ts';
+import { deckelReihen, lochName } from '../../domain/pflanzung/topf.ts';
 import { Button } from '../bausteine/Button.tsx';
+import { Deckel } from '../bausteine/Deckel.tsx';
 import { Notice } from '../bausteine/Notice.tsx';
 import { StatusBadge } from '../bausteine/StatusBadge.tsx';
 import { useBuendel } from '../buendel.tsx';
@@ -103,13 +105,23 @@ export function Gefaess({ code }: { code: string }) {
                     Keimung prüfen
                   </a>
                 ) : null}
+                {p.umsetzen ? (
+                  <a
+                    className="hv-btn hv-btn-secondary hv-btn-compact"
+                    href={hashZu({ name: 'umsetzen', satz: p.satzId })}
+                  >
+                    Umsetzen
+                  </a>
+                ) : null}
               </li>
             ))}
           </ul>
         ) : a.rolle === 'gefaess' || a.rolle === 'anzuchtort' ? (
           <p className="hv-gefaess-zeile">Keine Pflanzen</p>
         ) : null}
+        {a.zielbereichPflanzen ? <p className="hv-gefaess-zeile hv-num">{a.zielbereichPflanzen}</p> : null}
       </section>
+      {a.deckel.length > 0 && buendel ? <DeckelAnsicht a={a} teile={buendel.teile} /> : null}
       {a.hauptknopf && !a.entfernt ? (
         <a
           className="hv-btn hv-btn-primary hv-gefaess-haupt"
@@ -235,5 +247,39 @@ function Nebenknoepfe({ a, teile }: { a: Gefaessansicht; teile: Teile }) {
       )}
       {fehler ? <Notice tone="danger" title={fehler} kompakt /> : null}
     </nav>
+  );
+}
+
+/** Deckel des Gefässes mit Töpfen (Plan 33): Tipp auf einen Topf zeigt «Topf 2.3.1 · Eichblatt» und «Verschieben» */
+function DeckelAnsicht({ a, teile }: { a: Gefaessansicht; teile: Teile }) {
+  const [gewaehlt, setGewaehlt] = useState<number>();
+  const platzId = ortAufloesen(a.code, teile as Record<string, readonly unknown[]>)?.platzId;
+  if (!platzId) return null;
+  const loch = a.deckel.find((l) => l.lochNr === gewaehlt);
+  const verschiebbar = loch?.kennung !== undefined && !loch.ziel;
+  return (
+    <section className="hv-gefaess-deckel" aria-label="Deckel">
+      <Deckel
+        reihen={deckelReihen(teile, platzId)}
+        loecher={a.deckel.map((l) => ({
+          nr: l.lochNr,
+          zustand: l.zustand,
+          zustandName: lochName(l) || 'kein Topf',
+          ...(l.kennung ? { text: l.kennung.split('.').at(-1) ?? String(l.lochNr) } : {}),
+        }))}
+        onLoch={(nr) => setGewaehlt(nr === gewaehlt ? undefined : nr)}
+      />
+      {loch && verschiebbar ? (
+        <div className="hv-gefaess-topf">
+          <span>{`Topf ${loch.kennung ?? ''}${loch.sorte ? ` · ${loch.sorte}` : ''}`}</span>
+          <a
+            className="hv-btn hv-btn-secondary hv-btn-compact"
+            href={hashZu({ name: 'verschieben', topf: `${a.kuerzel}-${loch.kennung ?? ''}` })}
+          >
+            Verschieben
+          </a>
+        </div>
+      ) : null}
+    </section>
   );
 }

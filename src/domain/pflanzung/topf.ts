@@ -200,3 +200,24 @@ export function deckelBelegung(teile: Teile, platzId: string): DeckelLoch[] {
     return loch;
   });
 }
+
+/** Löcher je Reihe des Deckels am Platz (für die Grafik) */
+export function deckelReihen(teile: Teile, platzId: string): number[] {
+  const g = gefaessAm(teile, platzId);
+  const d = g?.deckeltyp_id ? deckeltyp(teile, g.deckeltyp_id) : undefined;
+  return d ? d.loecher_je_reihe.map(Number) : [];
+}
+
+/** zugänglicher Zustand eines Lochs: Kennung, Sorte, Zustand, «ausser Heimplatz», Ziel, abwesend */
+export function lochName(l: DeckelLoch): string {
+  return [
+    l.kennung,
+    l.sorte,
+    l.zustand === 'frei' && l.abwesend ? undefined : l.zustand,
+    l.fremd ? 'ausser Heimplatz' : undefined,
+    l.ziel,
+    l.abwesend,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+}
