@@ -78,22 +78,24 @@ function kAus(teile: Teile, jetzt: Date): { k: KSatz; quellen: string[]; geaende
 function stabilZeilen(teile: Teile, datenart: Datenart): StabilZeile[] {
   const messungen = new Map(teil(teile, 'messung').map((m) => [text(m['id']), m]));
   const unsicher = new Set(teil(teile, 'v_messung_unsicher').map((u) => text(u['messung_id'])));
-  return teil(teile, 'naehrloesungsansatz')
-    // nur abgeschlossene: ein laufender Wechsel hat noch keine Kontrolle und zählt nicht als instabil (A12)
-    .filter((a) => a['typ'] === 'neuansatz' && a['status'] === 'abgeschlossen')
-    .map((a) => {
-      const kontrolle = messungen.get(text(a['kontrollmessung_id']));
-      return {
-        begonnenAm: new Date(text(a['begonnen_am'])),
-        kontrolle: hundertstel(kontrolle?.['ec']),
-        ecSollIst: hundertstel(a['ec_erwartet_final']),
-        unsicher: kontrolle ? unsicher.has(text(kontrolle['id'])) : false,
-        datenart,
-        istStation: false,
-        storniert: (a['storniert_am'] ?? null) !== null,
-        abgebrochen: a['status'] === 'abgebrochen',
-      };
-    });
+  return (
+    teil(teile, 'naehrloesungsansatz')
+      // nur abgeschlossene: ein laufender Wechsel hat noch keine Kontrolle und zählt nicht als instabil (A12)
+      .filter((a) => a['typ'] === 'neuansatz' && a['status'] === 'abgeschlossen')
+      .map((a) => {
+        const kontrolle = messungen.get(text(a['kontrollmessung_id']));
+        return {
+          begonnenAm: new Date(text(a['begonnen_am'])),
+          kontrolle: hundertstel(kontrolle?.['ec']),
+          ecSollIst: hundertstel(a['ec_erwartet_final']),
+          unsicher: kontrolle ? unsicher.has(text(kontrolle['id'])) : false,
+          datenart,
+          istStation: false,
+          storniert: (a['storniert_am'] ?? null) !== null,
+          abgebrochen: a['status'] === 'abgebrochen',
+        };
+      })
+  );
 }
 
 /** Leitkultur = ältester aktiver Satz im Gefäss (A11) und «Gerechnet für: 3 × Lollo Rossa Wachstum» */
