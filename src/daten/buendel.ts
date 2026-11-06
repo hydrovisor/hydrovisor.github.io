@@ -90,6 +90,10 @@ export const BUENDEL_TEILE: readonly Buendelteil[] = [
       'tausch',
       'umsetzdatum_geaendert',
       'ernte',
+      // Plan 38: Schossen an der Pflanzung, Kulturentscheid am Satz (ereignis_satz bleibt phase_antwort)
+      'schossen_handlung',
+      'beobachtung',
+      'kultur_entscheid',
     ],
   },
   // Säen (Plan 23): Packungen, Keimrate je Packung (nur echt, G5), aktueller Platz je Topf

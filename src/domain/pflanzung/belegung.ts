@@ -55,6 +55,8 @@ interface ArtKulturformZeile {
   kulturform: string;
   ernteart: Ernteart | null;
   ernte_ab_d: number | string | null;
+  ernteintervall_d?: number | string | null;
+  schnitte_max?: number | string | null;
   kulturdauer_max_d: number | string | null;
   kulturdauer_typisch_d?: number | string | null;
   gueltig_bis?: string | null;
@@ -115,7 +117,10 @@ export function voraussichtlichesEnde(
   const ernteart = ak.ernteart;
   if (ernteart === 'mehrfach') {
     const max = zahl(ak.kulturdauer_max_d);
-    return max === undefined ? { ernteart } : { ernteart, endeAm: tagPlus(satz.saatdatum, max) };
+    // Verlängerungen aus kultur_entscheid zählen dazu (Plan 38 A12)
+    return max === undefined
+      ? { ernteart }
+      : { ernteart, endeAm: tagPlus(satz.saatdatum, max + verlaengerungTage(teile, satz.id)) };
   }
   const ab = zahl(ak.ernte_ab_d);
   if (ab === undefined) return { ernteart };
@@ -130,11 +135,47 @@ export function voraussichtlichesEnde(
   return bezug === undefined ? { ernteart } : { ernteart, endeAm: tagPlus(bezug, ab) };
 }
 
+interface KulturEntscheidZeile {
+  id: string;
+  typ: string;
+  satz_id: string | null;
+  daten?: Record<string, unknown> | null;
+  gilt_ab: string;
+  storniert_am?: string | null;
+}
+
+/**
+ * Gültige Kulturentscheide eines Satzes, älteste zuerst (Plan 38): aus den Bündelteilen ereignis_pflanzung (Zeilen am
+ * Satz) und ereignis_satz, je id einmal.
+ */
+export function kulturEntscheide(teile: Teile, satzId: string): KulturEntscheidZeile[] {
+  const gesehen = new Set<string>();
+  return [
+    ...zeilen<KulturEntscheidZeile>(teile, 'ereignis_pflanzung'),
+    ...zeilen<KulturEntscheidZeile>(teile, 'ereignis_satz'),
+  ]
+    .filter((e) => {
+      if (e.typ !== 'kultur_entscheid' || e.satz_id !== satzId || (e.storniert_am ?? null) !== null)
+        return false;
+      if (gesehen.has(e.id)) return false;
+      gesehen.add(e.id);
+      return true;
+    })
+    .sort((a, b) => Date.parse(a.gilt_ab) - Date.parse(b.gilt_ab));
+}
+
+/** Summe der Verlängerungstage aus kultur_entscheid {verlaengern, tage} des Satzes (Plan 38 A12) */
+export function verlaengerungTage(teile: Teile, satzId: string): number {
+  return kulturEntscheide(teile, satzId)
+    .filter((e) => e.daten?.['entscheid'] === 'verlaengern')
+    .reduce((s, e) => s + Number(e.daten?.['tage'] ?? 0), 0);
+}
+
 /**
  * Kalendertag des letzten nicht stornierten Ereignisses umsetzen einer stehenden Pflanzung (Plan 33 A27, Plan 25
  * Befund 17): Bezug für «Ernte möglich ab» statt Saat + «Umsetzen ab». Zeitzone der Anlage nach G1 (A).
  */
-function umsetzTag(teile: Teile, pflanzungId: string, zeitzone: string): string | undefined {
+export function umsetzTag(teile: Teile, pflanzungId: string, zeitzone: string): string | undefined {
   const e = zeilen<{
     typ: string;
     pflanzung_id: string | null;

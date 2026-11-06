@@ -266,6 +266,16 @@ body {
   padding-left: var(--space-4);
 }
 
+/* Satzzeile am Profilende als Link zur Pflanzenansicht (Plan 38 A10), gleiche Höhe wie der Text */
+.hv-gefaess-satzlink {
+  color: inherit;
+  text-decoration: underline;
+}
+
+.hv-gefaess-beendet {
+  margin-top: var(--space-4);
+}
+
 .hv-gefaess-haupt {
   min-height: 72px;
   font-size: var(--text-heading-size);
