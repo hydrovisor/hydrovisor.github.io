@@ -54,6 +54,8 @@ export const BUENDEL_TEILE: readonly Buendelteil[] = [
   ].map((n) => tabelle(n, { ohneStorno: true })),
   sicht('v_gefaess_status', ['gefaess_id']),
   sicht('v_fuellzustand', ['platz_id']),
+  // Plan 27: Nachfüllwasser seit dem letzten Neuansatz für «Lösung wechseln» (R5.2)
+  sicht('v_nachfuellsumme', ['platz_id']),
   // Leitungswasser-EC je Anlage für Punkt 4 der Einrichtung, unabhängig vom 14-Tage-Fenster (Plan 18)
   sicht('v_ec_wasser', ['anlage_id']),
   sicht('v_zielbereich', ['platz_id']),
@@ -97,6 +99,8 @@ export const BUENDEL_TEILE: readonly Buendelteil[] = [
       'schossen_handlung',
       'beobachtung',
       'kultur_entscheid',
+      // Plan 27: Abdeckung entfernen am Direktsaat-Satz (Aufgaben-Rechnung)
+      'abdeckung_entfernt',
     ],
   },
   // Säen (Plan 23): Packungen, Keimrate je Packung (nur echt, G5), aktueller Platz je Topf
@@ -142,6 +146,10 @@ export const BUENDEL_TEILE: readonly Buendelteil[] = [
       'ruhe',
       // Plan 33 (R8.4): Abweichung der Kurzprüfung sperrt das Verschieben in ein anderes Gefäss
       'kurzpruefung',
+      // Plan 27: Aufgaben-Rechnung (Würfel feucht, Reinigen, Deckel öffnen)
+      'aufgabe_erledigt',
+      'gereinigt',
+      'deckel_geoeffnet',
     ],
   },
   // Push (Plan 13): Abos ohne Schlüssel, Versände für «Letzte Erinnerung» und #/push
