@@ -140,3 +140,13 @@ tests/unit/keimung-termine.test.ts
 tests/unit/router-keimung.test.ts
 tests/seed/keimung.test.ts
 tests/e2e/keimung.spec.ts
+# I1b-01 Messmaske (#26)
+tests/fixtures/messen.ts
+tests/unit/bewertung.test.ts
+tests/unit/bewertung-hinweise.test.ts
+tests/unit/messung-verlauf.test.ts
+tests/unit/messung-sprung.test.ts
+tests/unit/messung-ziffern.test.ts
+tests/unit/messung-kontext.test.ts
+tests/unit/messung-bewertung-speichern.test.ts
+tests/e2e/messen-maske.spec.ts
