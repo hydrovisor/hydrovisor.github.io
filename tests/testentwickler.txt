@@ -194,3 +194,4 @@ tests/fixtures/ki/recherche/pruefer_belegt.json
 tests/fixtures/ki/recherche/pruefer_nicht_belegt.json
 tests/e2e/sorten.spec.ts
 tests/e2e/sorten-exif.spec.ts
+tests/unit/sorten-liste.test.ts
