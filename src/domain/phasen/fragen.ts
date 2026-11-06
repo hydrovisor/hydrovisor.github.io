@@ -437,6 +437,47 @@ export function nachfuehrVorgang(
 }
 
 /** Korrektur des letzten Wechseldatums: Storno korrektur, dann neue Zeile mit ersetzt_id (R1.5) */
+/** Erlaubtes Fenster der Datumskorrektur: vom Beginn der Phase davor (sonst Saatdatum) bis heute; ohne Ja keine (Befund 12) */
+export function korrekturGrenze(
+  teile: Teile,
+  satzId: string,
+  jetzt: Date,
+  zeitzone: Zeitzone,
+): { von: string; bis: string; tag: string } | undefined {
+  const satz = satzVon(teile, satzId);
+  const ja = antwortenVon(teile, satzId).filter((e) => datenVon(e)['antwort'] === 'ja');
+  const alt = ja.at(-1);
+  if (!satz || !alt) return undefined;
+  const davor = ja.at(-2);
+  return {
+    von: davor ? kalendertag(new Date(davor.gilt_ab), zeitzone) : satz.saatdatum,
+    bis: kalendertag(jetzt, zeitzone),
+    tag: kalendertag(new Date(alt.gilt_ab), zeitzone),
+  };
+}
+
+/** Wissenskarte für Art und Phase (R7.2, A15): zuerst Ebene Art, sonst Kulturgruppe; nur gültige Einträge */
+export function wissenFuer(teile: Teile, sorteId: string, phase: Phase): string | undefined {
+  const sorte = zeilen<{ sorte_id: string; art_id: string }>(teile, 'sorte').find(
+    (s) => s.sorte_id === sorteId,
+  );
+  if (!sorte) return undefined;
+  const gruppe = zeilen<{ art_id: string; kulturgruppe_id: string }>(teile, 'art').find(
+    (a) => a.art_id === sorte.art_id,
+  )?.kulturgruppe_id;
+  const eintraege = zeilen<{
+    art_id: string | null;
+    kulturgruppe_id: string | null;
+    phase: string | null;
+    text: string;
+    gueltig_bis?: string | null;
+  }>(teile, 'wissenseintrag').filter((w) => w.phase === phase && !w.gueltig_bis);
+  return (
+    eintraege.find((w) => w.art_id === sorte.art_id)?.text ??
+    (gruppe ? eintraege.find((w) => w.kulturgruppe_id === gruppe)?.text : undefined)
+  );
+}
+
 export function korrekturVorgang(
   teile: Teile,
   satzId: string,

@@ -7,16 +7,20 @@ import type { Vorgang } from '../../domain/datenpfad/erfassung.ts';
 import { KULTURFORM_NAME } from '../../domain/pflanzung/saeen.ts';
 import {
   antwortVorgang,
+  korrekturGrenze,
   korrekturVorgang,
+  phasenRueckgaengig,
   phasenStand,
   phasenVerlauf,
   PHASENLOGIK_AB,
+  wissenFuer,
 } from '../../domain/phasen/fragen.ts';
-import { PHASE_NAME } from '../../domain/phasen/profil.ts';
+import { PHASE_NAME, type Phase } from '../../domain/phasen/profil.ts';
 import { kalendertag, tagKurz, tagPlus, tageZwischen, ZEITZONE } from '../../domain/zeit.ts';
 import { Button } from '../bausteine/Button.tsx';
 import { Card } from '../bausteine/Card.tsx';
 import { Notice } from '../bausteine/Notice.tsx';
+import { StatusBadge } from '../bausteine/StatusBadge.tsx';
 import { Stepper } from '../bausteine/Stepper.tsx';
 import { useBuendel } from '../buendel.tsx';
 import { hashZu } from '../router.ts';
@@ -24,6 +28,7 @@ import '../phasen.css';
 
 const uhrJetzt = () => new Date(Date.now());
 const SPERRE_MS = 400;
+const ANTWORT_TEXT = { ja: 'Ja', noch_nicht: 'Noch nicht', problem: 'Problem' } as const;
 
 export function Pflanze({ pflanzung }: { pflanzung: string }) {
   const { buendel, liest } = useBuendel();
@@ -33,6 +38,9 @@ export function Pflanze({ pflanzung }: { pflanzung: string }) {
   const [korrigieren, setKorrigieren] = useState(false);
   const [versatz, setVersatz] = useState(0);
   const [fehler, setFehler] = useState<string>();
+  // Ergebnis mit Stand vor dem Speichern für Rückgängig (Runde 1 Befund 4)
+  const [ergebnis, setErgebnis] = useState<{ text: string; vorgang: Vorgang; teile: typeof teile }>();
+  const [wissenPhase, setWissenPhase] = useState<Phase>();
   const [sendet, setSendet] = useState(false);
   const sperre = useRef(false);
   const vorgangFuer = useRef<{ schluessel: string; vorgang: Vorgang } | undefined>(undefined);
@@ -66,7 +74,7 @@ export function Pflanze({ pflanzung }: { pflanzung: string }) {
   const verlauf = phasenVerlauf(teile, satz.id, ZEITZONE);
   const n = stand.naechste;
 
-  async function senden(schluessel: string, bauen: () => Vorgang) {
+  async function senden(schluessel: string, bauen: () => Vorgang, text: string, danach?: () => void) {
     if (sperre.current) return;
     sperre.current = true;
     setSendet(true);
@@ -88,6 +96,8 @@ export function Pflanze({ pflanzung }: { pflanzung: string }) {
       vorgangFuer.current = undefined;
       setKorrigieren(false);
       setVersatz(0);
+      setErgebnis({ text, vorgang, teile });
+      danach?.();
     } finally {
       const frei = () => {
         sperre.current = false;
@@ -99,17 +109,36 @@ export function Pflanze({ pflanzung }: { pflanzung: string }) {
   }
 
   const antworten = (antwort: 'ja' | 'noch_nicht' | 'problem') =>
-    void senden(`${satz.id}|${antwort}|${stand.phase}`, () =>
-      antwortVorgang(
-        teile,
-        [{ satzId: satz.id, antwort }],
-        neueClientId,
-        uhrJetzt(),
-        ZEITZONE,
-        PHASENLOGIK_AB,
-      ),
+    void senden(
+      `${satz.id}|${antwort}|${stand.phase}`,
+      () =>
+        antwortVorgang(
+          teile,
+          // die angesehene Pflanze löst Blüte und Fruchtbildung aus (Runde 1 Befund 6; die Domäne nimmt sie nur dort)
+          [{ satzId: satz.id, antwort, ausloesendePflanzungId: pflanzung }],
+          neueClientId,
+          uhrJetzt(),
+          ZEITZONE,
+          PHASENLOGIK_AB,
+        ),
+      antwort === 'ja' && n ? `Gespeichert: ${PHASE_NAME[n.phase]}` : `Gespeichert: ${ANTWORT_TEXT[antwort]}`,
+      () => setWissenPhase(antwort === 'ja' ? n?.phase : stand.phase),
     );
-  const neuerTag = tagPlus(stand.beginn, versatz);
+  const grenze = korrekturGrenze(teile, satz.id, jetzt, ZEITZONE);
+  const neuerTag = grenze ? tagPlus(grenze.tag, versatz) : stand.beginn;
+  const wissenFuerPhase = wissenPhase ?? (stand.pruefen || stand.problemAm ? stand.phase : undefined);
+  const wissen = wissenFuerPhase ? wissenFuer(teile, satz.sorte_id, wissenFuerPhase) : undefined;
+
+  function zuruecknehmen() {
+    if (!ergebnis) return;
+    const v = phasenRueckgaengig(ergebnis.vorgang, ergebnis.teile, neueClientId);
+    void senden(
+      `rueck|${JSON.stringify(ergebnis.vorgang)}`,
+      () => v,
+      'Rückgängig gemacht',
+      () => setWissenPhase(undefined),
+    );
+  }
 
   return (
     <main className="hv-seite hv-pflanze" data-density="regal">
@@ -124,8 +153,30 @@ export function Pflanze({ pflanzung }: { pflanzung: string }) {
       ) : null}
       {stand.wechselmerkmal ? <p className="hv-pflanze-zeile">{stand.wechselmerkmal}</p> : null}
       {stand.pruefen ? (
-        <Notice kompakt tone="warn">
-          Länger als üblich: prüfen
+        <p className="hv-pflanze-zeile">
+          <StatusBadge tone="info">prüfen</StatusBadge>
+          {' Länger als üblich'}
+        </p>
+      ) : null}
+      {stand.problemAm ? (
+        <p className="hv-pflanze-zeile">{`Problem gemeldet am ${tagKurz(stand.problemAm)}`}</p>
+      ) : null}
+      {stand.dauerFehlt ? (
+        <p className="hv-pflanze-zeile">Dauer fehlt im Katalog: Wechsel nach Merkmal bestätigen</p>
+      ) : null}
+      {ergebnis ? (
+        <div className="hv-phasen-ergebnis" role="status">
+          <span>{ergebnis.text}</span>
+          {ergebnis.text !== 'Rückgängig gemacht' ? (
+            <Button variant="secondary" size="compact" disabled={sendet} onClick={zuruecknehmen}>
+              Rückgängig machen
+            </Button>
+          ) : null}
+        </div>
+      ) : null}
+      {wissen ? (
+        <Notice kompakt tone="info">
+          {wissen}
         </Notice>
       ) : null}
       {fehler ? (
@@ -149,22 +200,24 @@ export function Pflanze({ pflanzung }: { pflanzung: string }) {
           </Button>
         </div>
       ) : null}
-      {verlauf.some((v) => !v.korrektur) || verlauf.length > 0 ? (
+      {grenze ? (
         korrigieren ? (
           <div className="hv-pflanze-knoepfe">
             <Stepper
               label="Wechseldatum"
               wert={versatz}
-              min={-60}
-              max={tageZwischen(stand.beginn, heute)}
-              anzeige={(w) => tagKurz(tagPlus(stand.beginn, w))}
+              min={-tageZwischen(grenze.von, grenze.tag)}
+              max={tageZwischen(grenze.tag, heute)}
+              anzeige={(w) => tagKurz(tagPlus(grenze.tag, w))}
               onWert={setVersatz}
             />
             <Button
               disabled={sendet}
               onClick={() =>
-                void senden(`korr|${satz.id}|${neuerTag}`, () =>
-                  korrekturVorgang(teile, satz.id, neuerTag, neueClientId, uhrJetzt(), ZEITZONE),
+                void senden(
+                  `korr|${satz.id}|${neuerTag}`,
+                  () => korrekturVorgang(teile, satz.id, neuerTag, neueClientId, uhrJetzt(), ZEITZONE),
+                  `Gespeichert: ${PHASE_NAME[stand.phase]} ab ${tagKurz(neuerTag)}`,
                 )
               }
             >
@@ -179,8 +232,9 @@ export function Pflanze({ pflanzung }: { pflanzung: string }) {
       ) : null}
       <Card title="Verlauf">
         <ul className="hv-phasen-liste">
-          {verlauf.map((v) => (
-            <li key={`${v.tag}|${v.text}`}>{v.text}</li>
+          {verlauf.map((v, i) => (
+            // Text und Tag sind nicht eindeutig (zwei gleiche Antworten am selben Tag): Position dazu (Runde 1 Befund 16)
+            <li key={`${String(i)}|${v.tag}|${v.text}`}>{v.text}</li>
           ))}
         </ul>
       </Card>
