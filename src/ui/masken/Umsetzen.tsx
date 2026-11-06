@@ -253,10 +253,11 @@ function Maske({ satz, wie, jetzt }: { satz: string; wie: 'geplant' | undefined;
             zuweisung: zuordnen(a.saemlinge, schritt.fuer, gewaehlt),
           };
     const z = umsetzZusammenfassung(teile, eingabe, jetzt, ZEITZONE);
-    const wechselPlatz = z.wechselIn?.[0];
-    const wechselCode = wechselPlatz
-      ? messbareOrte(teile ?? {}).find((o) => o.platzId === wechselPlatz)?.code
-      : undefined;
+    // ein Knopf je Zielgefäss mit Vorschlag (Runde 1 Befund 8)
+    const wechselOrte = (z.wechselIn ?? []).flatMap((p) => {
+      const o = messbareOrte(teile ?? {}).find((x) => x.platzId === p);
+      return o ? [o] : [];
+    });
     return (
       <main className="hv-seite hv-umsetzen" data-density="regal">
         {kopf}
@@ -278,13 +279,18 @@ function Maske({ satz, wie, jetzt }: { satz: string; wie: 'geplant' | undefined;
             kompakt
             tone={z.wechselIn ? 'warn' : 'info'}
             action={
-              wechselCode ? (
-                <a
-                  className="hv-btn hv-btn-secondary hv-btn-compact"
-                  href={hashZu({ name: 'ansatz', code: wechselCode })}
-                >
-                  Lösung wechseln
-                </a>
+              wechselOrte.length > 0 ? (
+                <>
+                  {wechselOrte.map((o) => (
+                    <a
+                      key={o.platzId}
+                      className="hv-btn hv-btn-secondary hv-btn-compact"
+                      href={hashZu({ name: 'ansatz', code: o.code })}
+                    >
+                      {wechselOrte.length > 1 ? `Lösung wechseln in ${o.kennung}` : 'Lösung wechseln'}
+                    </a>
+                  ))}
+                </>
               ) : undefined
             }
           >

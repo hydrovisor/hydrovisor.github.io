@@ -829,6 +829,8 @@ function Abhakliste({ ort, teile: teileBuendel }: { ort: Ort; teile: Teile }) {
       ...(zustand === 'erledigt' ? { abwaehlbar: abwaehlbar(aktuell, d.nr) } : {}),
       ...(istAktiv && messzeile && !z?.messungId ? { gesperrt: true } : {}),
       ...(istAktiv && d.nr === 4 && !rechnung ? { gesperrt: true } : {}),
+      // R2.3: im Gleichstand wählt Tim die Leitkultur vor dem Kopf (Runde 1 Befund 7)
+      ...(istAktiv && d.nr === 4 && eingaben.leitkultur.art === 'wahl_noetig' ? { gesperrt: true } : {}),
     };
   });
   const hinweise = [...wasserHinweise, ...(rechnung?.hinweise ?? [])].map((h) => h.text);

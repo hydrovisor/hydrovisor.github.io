@@ -41,7 +41,7 @@ export type Wechsel =
 
 type Zeile = Record<string, unknown>;
 const teil = (t: Teile, name: string) => (t[name] ?? []) as readonly Zeile[];
-const text = (x: unknown) => (typeof x === 'string' ? x : '');
+const text = (x: unknown) => String(x ?? '');
 const offen = (z: Zeile) => (z['storniert_am'] ?? null) === null;
 const aktuell = (z: Zeile) => offen(z) && (z['gueltig_bis'] ?? null) === null;
 
@@ -116,7 +116,9 @@ function einziehende(teile: Teile, platzId: string, jetzt: Date, zeitzone: Zeitz
     if (!am || am > bis) return [];
     const z = zustand.get(text(r['pflanzung_id']));
     const satz = z ? saetze.get(text(z['satz_id'])) : undefined;
-    if (!z || !satz || gesehen.has(text(z['pflanzung_id']))) return [];
+    // Direktsaat: Säen reserviert die Zieltöpfe mit dem Saattag, umgesetzt wird nie (saeen.ts; Runde 1 Befund 1)
+    if (!z || !satz || (satz['direktsaat_platz_id'] ?? null) !== null || gesehen.has(text(z['pflanzung_id'])))
+      return [];
     gesehen.add(text(z['pflanzung_id']));
     const phase = spaeter((text(z['phase']) || 'keimung') as Phase, 'anzucht');
     return [
@@ -132,10 +134,11 @@ function neuansaetze(teile: Teile, platzId: string): Zeile[] {
   );
 }
 
-/** Direktsaat-Sätze am Platz ohne gültigen Neuansatz seit dem Saattag (A5) */
+/** Direktsaat-Sätze am Platz ohne abgeschlossenen Neuansatz seit dem Saattag (A5; der laufende eigene zählt nicht,
+ * Runde 1 Befund 3) */
 function direktsaatSaetze(teile: Teile, platzId: string, zeitzone: Zeitzone): Set<string> {
   const ansaetze = neuansaetze(teile, platzId)
-    .filter((a) => a['status'] !== 'abgebrochen')
+    .filter((a) => a['status'] === 'abgeschlossen')
     .map((a) => kalendertag(new Date(text(a['begonnen_am'])), zeitzone));
   return new Set(
     teil(teile, 'satz')

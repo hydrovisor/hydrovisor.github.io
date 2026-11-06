@@ -483,7 +483,9 @@ export function umsetzZusammenfassung(
           ? 'Ansatz für Umsetzen'
           : w.art === 'wechsel_vorschlagen'
             ? `Lösung wechseln am Umsetztag (Lösung ${String(w.alterTage)} Tage alt)`
-            : `Lösung bleibt (${String(w.alterTage)} Tage alt), Zielbereich und Nachfülldosis neu`;
+            : w.alterTage === 0
+              ? 'Lösung von heute bleibt, Zielbereich und Nachfülldosis neu'
+              : `Lösung bleibt (${w.alterTage === 1 ? '1 Tag' : `${String(w.alterTage)} Tage`} alt), Zielbereich und Nachfülldosis neu`;
       return `${kennungVon(teile, p)}: ${text}`;
     })
     .join(' · ');

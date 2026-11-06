@@ -1,5 +1,6 @@
 // Leitkultur und Herstellerstadium des Ansatzes (Konzept R2.3, R4.3, R4.5; UC7 Rechenbasis 1; Plan 34). Rein: Teile des
 // Bündels, «jetzt» und die Zeitzone als Parameter; Tage als Kalendertage in Zürich (G2).
+import { umsetzTag } from './pflanzung/belegung.ts';
 import { PHASEN, type Phase } from './phasen/profil.ts';
 import { herstellerstadium, type Stadium, type StadiumEingabe } from './rechner.ts';
 import type { Teile } from './teile.ts';
@@ -35,12 +36,15 @@ export interface AnsatzGrundlage {
 
 type Zeile = Record<string, unknown>;
 const teil = (t: Teile, name: string) => (t[name] ?? []) as readonly Zeile[];
-const text = (x: unknown) => (typeof x === 'string' ? x : '');
+const text = (x: unknown) => String(x ?? '');
 const offen = (z: Zeile) => (z['storniert_am'] ?? null) === null;
-const aktuell = (z: Zeile) => offen(z) && (z['gueltig_bis'] ?? null) === null;
+/** gültige Fassung einer Stammzeile (art, art_kulturform, gefaess) */
+const aktuell = (z: Zeile) => (z['gueltig_bis'] ?? null) === null;
 /** fehlender Wert zählt als tiefster (A11) */
-const wert = (x: unknown) =>
-  x === null || x === undefined || x === '' || !Number.isFinite(Number(x)) ? -Infinity : Number(x);
+const wert = (x: unknown) => {
+  const n = x === '' ? Number.NaN : Number(x ?? Number.NaN);
+  return Number.isFinite(n) ? n : -Infinity;
+};
 
 /** Arten mit dem höchsten Wert behalten */
 function besten(arten: readonly string[], f: (art: string) => number): string[] {
@@ -123,14 +127,20 @@ function phaseVon(liste: readonly ZaehlendePflanzung[], satzId: string): Phase {
     .reduce((a, b) => (phaseIndex(b) > phaseIndex(a) ? b : a));
 }
 
-/** jüngstes gültiges Umsetzen einer Pflanzung des Satzes (Konzept 8.1 Nr. 10) */
-function umgesetztAm(teile: Teile, liste: readonly ZaehlendePflanzung[], satzId: string): Date | undefined {
-  const pflanzungen = new Set(liste.filter((p) => p.satzId === satzId).map((p) => p.pflanzungId));
-  const zeit = teil(teile, 'ereignis_pflanzung')
-    .filter((e) => e['typ'] === 'umsetzen' && offen(e) && pflanzungen.has(text(e['pflanzung_id'])))
-    .map((e) => Date.parse(text(e['gilt_ab'])))
-    .sort((a, b) => b - a)[0];
-  return zeit === undefined ? undefined : new Date(zeit);
+/** jüngster Umsetztag einer Pflanzung des Satzes aus umsetzTag() (Plan 34, Runde 1 Befund 6), 12:00 Ortszeit */
+function umgesetztAm(
+  teile: Teile,
+  liste: readonly ZaehlendePflanzung[],
+  satzId: string,
+  zeitzone: Zeitzone,
+): Date | undefined {
+  const tag = liste
+    .filter((p) => p.satzId === satzId)
+    .map((p) => umsetzTag(teile, p.pflanzungId, zeitzone))
+    .filter((x): x is string => x !== undefined)
+    .sort()
+    .at(-1);
+  return tag === undefined ? undefined : mittag(tag, zeitzone);
 }
 
 /** frühestes gültiges Verschieben einer Pflanzung des Satzes auf den Platz (Eintritt in die Station, R4.5) */
@@ -169,18 +179,17 @@ export function stadiumEingabe(
 ): StadiumEingabe | undefined {
   const platz = teil(teile, 'platz').find((p) => p['id'] === platzId);
   if (platz?.['rolle'] === 'anzuchtort') return { ort: 'anzuchtbox' };
-  if (zweck === 'ohne' || zaehlende.length === 0) return undefined;
-  const gefaess = teil(teile, 'gefaess').find((g) => g['platz_id'] === platzId && aktuell(g));
+  // Station vor der Leer-Abfrage: eine Station ohne Satz beginnt mit der festen Dosis (R4.5, RF8; Runde 1 Befund 2)
+  const gefaess = teil(teile, 'gefaess').find((g) => g['platz_id'] === platzId && offen(g) && aktuell(g));
   if (gefaess?.['feste_dosis'] === true) {
     const aeltester = saetzeAeltesteZuerst(teile, zaehlende)[0];
-    const eintritt = aeltester ? eintrittAm(teile, aeltester, platzId) : undefined;
-    const ersatz = aeltester ? Date.parse(text(aeltester['gilt_ab'])) : Number.NaN;
     return {
       ort: 'station',
-      aeltesterEintrittAm: eintritt ?? (Number.isFinite(ersatz) ? new Date(ersatz) : jetzt),
+      aeltesterEintrittAm: (aeltester && eintrittAm(teile, aeltester, platzId)) ?? jetzt,
     };
   }
-  if (zweck === 'direktsaat') return { ort: 'zielgefaess', direktsaat: true, phaseLeitkultur: 'wachstum' };
+  if (zweck === 'ohne') return undefined;
+  // Direktsaat: die gesäten zählen in Wachstum, ihr Satz trägt direktsaat_platz_id (R4.3)
   const derLeitkultur = zaehlende.filter((p) => leitkulturArtId === undefined || p.artId === leitkulturArtId);
   const da = derLeitkultur.filter((p) => p.rolle !== 'einziehend');
   if (da.length === 0) {
@@ -200,7 +209,7 @@ export function stadiumEingabe(
   const saetze = saetzeAeltesteZuerst(teile, da);
   const [aeltester, ...uebrige] = saetze as [Zeile, ...Zeile[]];
   const id = text(aeltester['id']);
-  const am = umgesetztAm(teile, da, id);
+  const am = umgesetztAm(teile, da, id, zeitzone);
   const eingabe: StadiumEingabe = {
     ort: 'zielgefaess',
     direktsaat: (aeltester['direktsaat_platz_id'] ?? null) !== null,

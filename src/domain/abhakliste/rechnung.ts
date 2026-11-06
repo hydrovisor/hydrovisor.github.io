@@ -159,9 +159,12 @@ export function rechnungEingaben(
   // gezählte Kannen beim ersten Ansatz gehen dem Betriebsvolumen vor (R4.4)
   const volumen = e.volumen ?? Math.round((zahl(g?.['betriebsvolumen_l']) ?? 0) * 100);
   // Station: Kontrollband (R4.5); sonst die Schnittmenge der zählenden nach Zweck (R2.1, R2.2)
-  const band = istStation ? bewertungsband(teile, platzId, jetzt) : undefined;
   const grundlage = ansatzGrundlage(teile, platzId, jetzt, zeitzone);
   const schnitt = grundlage.schnittmenge.art === 'ok' ? grundlage.schnittmenge : undefined;
+  // Bewertung ohne Band (Phasen ohne Sollwerte, B13): Schnappschuss des letzten Ansatzes wie bewertungsband()
+  // (Runde 1 Befund 4); eine leere Schnittmenge bleibt beim Mischentscheid von Hand (A15)
+  const ohneBand = grundlage.zweck === 'bewertung' && grundlage.schnittmenge.art === 'ohne_band';
+  const band = istStation || ohneBand ? bewertungsband(teile, platzId, jetzt) : undefined;
   const ecBand = band?.ec ?? schnitt?.ec;
   const phBand = band?.ph ?? schnitt?.ph;
   const datenart = datenartAm(teile, platzId);
