@@ -29,6 +29,7 @@ export type Route =
   | { name: 'saeen'; box?: string; ziel?: string; von?: 'gefaess' }
   // Plan 24: Keimung prüfen je Satz (04 Abschnitt 3)
   | { name: 'keimung'; satz: string }
+  | { name: 'pflanze'; pflanzung: string }
   | { name: 'umsetzen'; satz: string; wie?: 'geplant' }
   | { name: 'verschieben'; topf: string }
   | { name: 'anlage'; kuerzel?: string }
@@ -57,6 +58,10 @@ export function routeAusHash(hash: string): Route {
   if (etikett?.[1]) return { name: 'etikett', code: decodeURIComponent(etikett[1]) };
   const keimung = /^\/keimung\/([^/]+)$/.exec(pfad);
   if (keimung?.[1]) return UUID.test(keimung[1]) ? { name: 'keimung', satz: keimung[1] } : { name: 'heute' };
+  // Plan 35: Pflanzenansicht (Phasen) je Pflanzung
+  const pflanze = /^\/pflanze\/([^/]+)$/.exec(pfad);
+  if (pflanze?.[1])
+    return UUID.test(pflanze[1]) ? { name: 'pflanze', pflanzung: pflanze[1] } : { name: 'heute' };
   // Plan 33: Umsetzen je Satz, Verschieben je Topf (Kürzel und Topfkennung)
   const umsetzen = /^\/umsetzen\/([^/]+)$/.exec(pfad);
   if (umsetzen?.[1]) {
@@ -177,6 +182,7 @@ export function hashZu(route: Route): string {
   if (route.name === 'pruefen') return `#/pruefen/${route.code}${route.scan ? '?scan=1' : ''}`;
   if (route.name === 'etikett') return `#/e/${route.code}`;
   if (route.name === 'keimung') return `#/keimung/${route.satz}`;
+  if (route.name === 'pflanze') return `#/pflanze/${route.pflanzung}`;
   if (route.name === 'umsetzen') return `#/umsetzen/${route.satz}${route.wie ? `?wie=${route.wie}` : ''}`;
   if (route.name === 'verschieben') return `#/verschieben/${route.topf}`;
   if (route.name === 'saeen') {

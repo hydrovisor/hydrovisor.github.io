@@ -1,0 +1,45 @@
+/* Phasenfragen in Heute und Pflanzenansicht (Plan 35): Layout mit Tokens, Knöpfe aus dem Design System */
+.hv-phasen {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.hv-phasen-zeile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
+  border-top: 1px solid var(--line);
+}
+
+.hv-phasen-knoepfe,
+.hv-pflanze-knoepfe {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.hv-phasen-liste {
+  margin: 0;
+  padding-left: var(--space-4);
+}
+
+.hv-phasen-ergebnis {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.hv-phasen-frage,
+.hv-pflanze-kopf,
+.hv-pflanze-zeile,
+.hv-pflanze-phase {
+  margin: 0;
+}
+
+.hv-pflanze-phase {
+  font-size: var(--text-heading-size);
+  font-weight: 700;
+}

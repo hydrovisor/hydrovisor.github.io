@@ -8,6 +8,8 @@ import { ereignisseAm, ms, type Teile } from '../../domain/anlage/teile.ts';
 import type { Vorgang } from '../../domain/datenpfad/erfassung.ts';
 import { ortAufloesen } from '../../domain/ort.ts';
 import { ZEITZONE } from '../../domain/zeit.ts';
+import { pflanzungVonSatz } from '../../domain/phasen/fragen.ts';
+import { PROFILENDE, type Kulturform } from '../../domain/phasen/profil.ts';
 import { deckelReihen, lochArt, lochName, lochText } from '../../domain/pflanzung/topf.ts';
 import { Button } from '../bausteine/Button.tsx';
 import { Deckel } from '../bausteine/Deckel.tsx';
@@ -103,6 +105,20 @@ export function Gefaess({ code }: { code: string }) {
                     href={hashZu({ name: 'keimung', satz: p.satzId })}
                   >
                     Keimung prüfen
+                  </a>
+                ) : null}
+                {/* nur solange ein Phasenwechsel möglich ist (A, Plan 35): am Profilende kein Knopf, Kopf bleibt ohne Scrollen */}
+                {buendel &&
+                pflanzungVonSatz(buendel.teile, p.satzId) &&
+                phaseOffen(buendel.teile, p.satzId) ? (
+                  <a
+                    className="hv-btn hv-btn-secondary hv-btn-compact"
+                    href={hashZu({
+                      name: 'pflanze',
+                      pflanzung: pflanzungVonSatz(buendel.teile, p.satzId) ?? '',
+                    })}
+                  >
+                    Phase
                   </a>
                 ) : null}
                 {p.umsetzen ? (
@@ -249,6 +265,19 @@ function Nebenknoepfe({ a, teile }: { a: Gefaessansicht; teile: Teile }) {
       {fehler ? <Notice tone="danger" title={fehler} kompakt /> : null}
     </nav>
   );
+}
+
+/** Phase der Sicht noch vor dem Profilende (R1.2): nur dann ein Knopf «Phase» (A, Plan 35) */
+function phaseOffen(teile: Teile, satzId: string): boolean {
+  const satz = (teile?.['satz'] ?? []).find((x) => (x as { id: string }).id === satzId) as
+    { kulturform: string } | undefined;
+  const zustand = (teile?.['v_pflanzung_zustand'] ?? []).find(
+    (z) =>
+      (z as { satz_id: string; status: string }).satz_id === satzId &&
+      (z as { status: string }).status === 'aktiv',
+  ) as { phase: string } | undefined;
+  if (!satz || !zustand) return false;
+  return zustand.phase !== (PROFILENDE[satz.kulturform as Kulturform] ?? 'wachstum');
 }
 
 /** Deckel des Gefässes mit Töpfen (Plan 33): Tipp auf einen Topf zeigt «Topf 2.3.1 · Eichblatt» und «Verschieben» */

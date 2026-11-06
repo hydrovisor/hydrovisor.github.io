@@ -104,6 +104,15 @@ export const BUENDEL_TEILE: readonly Buendelteil[] = [
   tabelle('kalibrierung', { ohneStorno: true }),
   sicht('v_kalibrierung_faellig', ['messgeraet_id', 'datenart']),
   tabelle('messgeraet'),
+  // Plan 35: Phasenantworten am Satz für Phasenstand, Phasenfragen und Verlauf
+  {
+    name: 'ereignis_satz',
+    tabelle: 'ereignis',
+    spalten: '*',
+    ordnung: ['id'],
+    ohneStorno: true,
+    typen: ['phase_antwort'],
+  },
   tabelle('aufschub', { ohneStorno: true }),
   // Geräte-Ereignisse für Kalibrierstand und «unsicher» ohne Netz (R10.3, R5.2; Plan 12)
   tabelle('ereignis', { ohneStorno: true, typen: ['sonde_gereinigt', 'als_unsicher_markiert'] }),

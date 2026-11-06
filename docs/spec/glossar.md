@@ -46,6 +46,9 @@ Stand 1.11.2026 · Auftrag 2 «Spezifikation». Bedeutungen stehen in Konzept v1
 | Pflanzung, Schwamm | `pflanzung` | `Pflanzung` |
 | Pflanzvorgang | `pflanzvorgang` | `Pflanzvorgang` |
 | Keimprüfung, Keimansicht, Keimeingabe | Ereignis `keimung` | `keimVorgang()`, `keimAnsicht()`, `KeimEingabe` |
+| Phasenfrage, Phasenstand, Phasenwechsel | Ereignis `phase_antwort` (`daten.phase`, `daten.antwort`) | `phasenStand()`, `phasenKarten()`, `antwortVorgang()`, `Fragekarte` |
+| Phasen nachführen, Profilende, Phasenfolge | `v_sollwert` (`dauer`, `wechselmerkmal`, `anwendbar`) | `nachfuehrVorgang()`, `PROFILENDE`, `phasenfolge()`, `NachfuehrZeile` |
+| Datumskorrektur, Verlauf, Wissenskarte der Phase | `ersetzt_id`, `wissenseintrag` | `korrekturVorgang()`, `korrekturGrenze()`, `phasenVerlauf()`, `wissenFuer()` |
 | Keimbilanz (Summe je Packung wie `v_keimrate`) | `v_keimrate.gesaet`, `gekeimt` | `keimbilanz()`, `keimrateGeglaettet()` |
 | Keimt nicht, Wiederherstellen | Ereignis `abschluss {grund: keimt_nicht}`, `wiederherstellen` | `wiederherstellenVorgang()` |
 | Stationseintritt (aus der Box auf die Station) | Ereignis `verschieben` | `stationsVorbelegung()`, `freieStationsloecher()` |
