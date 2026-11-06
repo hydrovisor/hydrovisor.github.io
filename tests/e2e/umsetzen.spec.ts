@@ -336,11 +336,13 @@ test('UC5-AK3 TO2 Umsetzen nach Zeitüberschreitung erneut senden schreibt diese
   page,
 }) => {
   const m = await mitDaten(page, umsetzTeile(), `/#/umsetzen/${SATZ.lollo}?wie=geplant`);
+  // erst nach dem Laden des Bündels abfangen, sonst trifft der Fehler rpc/ist_tim
+  await expect(page.getByText('Lollo Rossa · Kopf · gesät 7.1. · Tag 12')).toBeVisible();
   let fehler = true;
   const versucht: string[] = [];
   await page.route(`${REST}/**`, async (route) => {
     const anfrage = route.request();
-    if (anfrage.method() === 'POST') {
+    if (anfrage.method() === 'POST' && !anfrage.url().includes('/rpc/')) {
       const roh = (anfrage.postDataJSON() ?? {}) as Record<string, unknown> | Record<string, unknown>[];
       for (const z of Array.isArray(roh) ? roh : [roh]) versucht.push(String(z['client_id']));
       if (fehler) {
