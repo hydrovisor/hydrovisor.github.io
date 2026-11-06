@@ -2,7 +2,8 @@
 // aufgabe_erledigt. Ergänzung des Leads zu den Tests des Testentwicklers (Knopf in Heute).
 import { describe, expect, it } from 'vitest';
 import { einstellungenAus, faelligeAufgaben } from '../../src/domain/aufgaben.ts';
-import { deckelVorgang } from '../../src/domain/aufgaben-aufschub.ts';
+import { aufschubVorgang, deckelVorgang, erledigtVorgang } from '../../src/domain/aufgaben-aufschub.ts';
+import { vorgangPruefen } from '../../src/domain/datenpfad/erfassung.ts';
 import {
   JETZT,
   ZONE,
@@ -65,5 +66,39 @@ describe('R5.2 Deckel öffnen und Abdeckung entfernen als eigenes Ereignis', () 
     ]);
     for (const a of liste.filter((x) => x.typ !== 'deckel_oeffnen' && x.typ !== 'abdeckung_entfernen'))
       expect(deckelVorgang(a, ID, JETZT)).toEqual([]);
+  });
+
+  it('11.4 alle Vorgänge aus Aufgaben bestehen vorgangPruefen (Morgen, Überspringen, Pegel ok, Erledigt, Deckel, Umsetzdatum)', () => {
+    const t = leer();
+    boxDazu(t, 'R-A3', 'box_dunkel');
+    satzDazu(t, { nr: 42, sorte: 'koriander', box: 'R-A3', saat: '2027-01-09' });
+    fertig(t);
+    const liste = faelligeAufgaben(t, einstellungenAus(t), JETZT, ZONE);
+    const vorgaenge = liste.flatMap((a) => [
+      aufschubVorgang(a, 'morgen', ID, JETZT, ZONE),
+      aufschubVorgang(a, 'ueberspringen', ID, JETZT, ZONE),
+      aufschubVorgang(a, 'pegel_ok', ID, JETZT, ZONE),
+      aufschubVorgang(
+        { ...a, typ: 'umsetzen', morgen: { ...a.morgen, erlaubt: true } },
+        'morgen',
+        ID,
+        JETZT,
+        ZONE,
+      ),
+      erledigtVorgang(a, ID, JETZT),
+      deckelVorgang(a, ID, JETZT),
+    ]);
+    const tabellen = new Set(
+      vorgaenge
+        .flat()
+        .map((s) => (s.art === 'neu' ? `${s.tabelle}:${String(s.felder['typ'] ?? s.felder['art'])}` : '')),
+    );
+    expect([...tabellen].sort()).toEqual([
+      'aufschub:morgen',
+      'ereignis:aufgabe_erledigt',
+      'ereignis:deckel_geoeffnet',
+      'ereignis:umsetzdatum_geaendert',
+    ]);
+    for (const v of vorgaenge) expect(vorgangPruefen(v)).toEqual([]);
   });
 });
