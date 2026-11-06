@@ -176,3 +176,21 @@ tests/unit/ernte-ende.test.ts
 tests/unit/pflanzenansicht.test.ts
 tests/unit/ernte-buendel.test.ts
 tests/e2e/ernte.spec.ts
+# I2-05 Sorten mit KI und Recherche (#37)
+supabase/tests/database/15_sorten_erfassung.test.sql
+tests/unit/recherche-validator.test.ts
+tests/unit/recherche-luecken.test.ts
+tests/unit/recherche-schema.test.ts
+tests/unit/sorten-erfassung.test.ts
+tests/unit/ki-eval-bereit.test.ts
+supabase/functions/ki-recherche/kern_test.ts
+supabase/functions/ki-recherche/modell_test.ts
+tests/fixtures/ki/recherche/antwort_gueltig.json
+tests/fixtures/ki/recherche/antwort_erde.json
+tests/fixtures/ki/recherche/antwort_ungueltig.json
+tests/fixtures/ki/recherche/antwort_pause_turn.json
+tests/fixtures/ki/recherche/fehler_529.json
+tests/fixtures/ki/recherche/pruefer_belegt.json
+tests/fixtures/ki/recherche/pruefer_nicht_belegt.json
+tests/e2e/sorten.spec.ts
+tests/e2e/sorten-exif.spec.ts
