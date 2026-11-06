@@ -74,3 +74,7 @@ export declare function s3ListeLesen(xml: string): {
   dateien: { pfad: string; bytes: number }[];
   weiter: string | null;
 };
+
+export declare function s3Kodieren(text: string): string;
+
+export declare function s3Url(basis: string, segmente: string[], abfrage?: Record<string, string>): string;

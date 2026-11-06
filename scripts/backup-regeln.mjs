@@ -335,7 +335,7 @@ export function speicherToken(geheimnis, jetzt, ablauf) {
 // ---------------------------------------------------------------------
 
 /** RFC 3986 wie AWS SigV4 (unreservierte Zeichen bleiben) */
-function s3Kodieren(text) {
+export function s3Kodieren(text) {
   return encodeURIComponent(text).replace(
     /[!'()*]/g,
     (z) => `%${z.charCodeAt(0).toString(16).toUpperCase()}`,
@@ -425,4 +425,21 @@ export function s3ListeLesen(xml) {
     : null;
   if (/<IsTruncated>true<\/IsTruncated>/.test(xml) && !weiter) throw new Error('Fortsetzung ohne Token');
   return { dateien, weiter };
+}
+
+/**
+ * S3-Adresse mit kodiertem Pfad und sortierter, kodierter Query. Gesendet wird genau diese Zeichenkette; sigV4 kommt
+ * für sie auf dieselbe kanonische Form (Prüfer Sicherheit, Befund 3).
+ * @param {string} basis z. B. https://<ref>.supabase.co/storage/v1/s3
+ * @param {string[]} segmente Bucket und Teile des Schlüssels
+ * @param {Record<string, string>} [abfrage]
+ */
+export function s3Url(basis, segmente, abfrage = {}) {
+  const pfad = segmente.map(s3Kodieren).join('/');
+  const q = Object.entries(abfrage)
+    .map(([k, w]) => [s3Kodieren(k), s3Kodieren(w)])
+    .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+    .map(([k, w]) => `${k}=${w}`)
+    .join('&');
+  return `${basis.replace(/\/+$/, '')}/${pfad}${q ? `?${q}` : ''}`;
 }

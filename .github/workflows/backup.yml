@@ -1,6 +1,7 @@
 # Verschlüsseltes Backup (Konzept 11.7, docs/spec/04_architektur.md Abschnitt 9, Plan 16), täglich 03:00 UTC.
 # Umgebung backup ohne Freigabe; Secrets setzt Tim (scripts/backup-einrichten.mjs). Ohne Datenbank-Secrets endet der
-# Lauf mit einer Warnung; ohne Storage-Token sichert er nur die Datenbank und warnt.
+# Lauf mit einer Warnung. Den Bucket saattueten liest er über die S3-Schnittstelle (Entscheid 0013) oder mit dem
+# Storage-Token; ohne beides sichert er nur die Datenbank und warnt.
 # Rolle backup_leser (Migration 20261104150000_backup_rollen.sql): Modus zur Laufzeit (BYPASSRLS oder Rückfall E7
 # mit Policies backup_lesen). Dump mit pg_dump 17, weil supabase db dump intern SET ROLE postgres setzt (Plan 16 A2,
 # lokal belegt). Nur Schema public, Daten als INSERT für die Wiederherstellungsprobe über die Management-API.
@@ -31,6 +32,7 @@ jobs:
   backup:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     environment: backup
     steps:
       - id: bereit

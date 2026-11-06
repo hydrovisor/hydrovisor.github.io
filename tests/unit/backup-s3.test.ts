@@ -2,7 +2,7 @@
 // Testvektoren von AWS (Beispielschlüssel aus der AWS-Dokumentation, keine echten Geheimnisse) und das Lesen der
 // Antwort von ListObjectsV2. Hilfstests ohne eigenes AK, Präfix «Backup-Storage».
 import { expect, it } from 'vitest';
-import { LEER_SHA256, s3ListeLesen, sigV4 } from '../../scripts/backup-regeln.mjs';
+import { LEER_SHA256, s3ListeLesen, s3Url, sigV4 } from '../../scripts/backup-regeln.mjs';
 
 const BEISPIEL = { zugangId: 'AKIDEXAMPLE', geheimnis: 'wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY' };
 const signatur = (h: Record<string, string>) => h['authorization']?.split('Signature=')[1];
@@ -70,4 +70,32 @@ it('Backup-Storage S3-Liste: unsichere Schlüssel, fehlende Fortsetzung und frem
   expect(() => s3ListeLesen(liste(eintrag('x/a.jpg').replace('<Size>10</Size>', '')))).toThrow(/Grösse/);
   expect(() => s3ListeLesen(liste('', '<IsTruncated>true</IsTruncated>'))).toThrow(/Fortsetzung/);
   expect(() => s3ListeLesen('<Error><Code>AccessDenied</Code></Error>')).toThrow(/ListBucketResult/);
+});
+
+it('Backup-Storage s3Url: Pfad und Query nach RFC 3986, sortiert; gesendete und signierte Form stimmen überein', () => {
+  const basis = 'https://projekt.example.invalid/storage/v1/s3/';
+  expect(s3Url(basis, ['saattueten', 'ordner (1)', "a!b'c*.jpg"])).toBe(
+    'https://projekt.example.invalid/storage/v1/s3/saattueten/ordner%20%281%29/a%21b%27c%2A.jpg',
+  );
+  const url = s3Url(basis, ['saattueten'], {
+    'max-keys': '1000',
+    'continuation-token': 'a+b/c= ~',
+    'list-type': '2',
+  });
+  expect(url).toBe(
+    'https://projekt.example.invalid/storage/v1/s3/saattueten?continuation-token=a%2Bb%2Fc%3D%20~&list-type=2&max-keys=1000',
+  );
+  // dieselbe Anfrage mit anderer Schreibweise (%7E, andere Reihenfolge) ergibt dieselbe Signatur: sigV4 kanonisiert
+  const signieren = (u: string) =>
+    sigV4({
+      methode: 'GET',
+      url: u,
+      region: 'local',
+      dienst: 's3',
+      jetzt: new Date('2027-01-15T09:30:00Z'),
+      ...BEISPIEL,
+    });
+  const anders =
+    'https://projekt.example.invalid/storage/v1/s3/saattueten?max-keys=1000&list-type=2&continuation-token=a%2Bb%2Fc%3D%20%7E';
+  expect(signieren(url)['authorization']).toBe(signieren(anders)['authorization']);
 });

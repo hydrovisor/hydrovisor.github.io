@@ -10,11 +10,13 @@
 import { createHash } from 'node:crypto';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
-import { LEER_SHA256, listeAufloesen, manifestZeile, s3ListeLesen, sigV4 } from './backup-regeln.mjs';
+import { LEER_SHA256, listeAufloesen, manifestZeile, s3ListeLesen, s3Url, sigV4 } from './backup-regeln.mjs';
 
 const BUCKET = 'saattueten';
 const SEITE = 1000;
 const VERSUCHE = 3;
+/** Obergrenze der Listenseiten (1000 je Seite): Schutz gegen eine endlose Fortsetzung (Prüfer Sicherheit, Befund 2) */
+const SEITEN_MAX = 100;
 
 const i = process.argv.indexOf('--ziel');
 const ziel = i >= 0 ? process.argv[i + 1] : undefined;
@@ -73,26 +75,32 @@ function s3Kopf(url) {
 
 async function alleDateienS3() {
   const dateien = [];
+  const gesehen = new Set();
   let weiter = null;
-  do {
-    const url = new URL(`${s3Basis}/${BUCKET}`);
-    url.searchParams.set('list-type', '2');
-    url.searchParams.set('max-keys', String(SEITE));
-    if (weiter) url.searchParams.set('continuation-token', weiter);
+  for (let seiten = 1; ; seiten += 1) {
+    if (seiten > SEITEN_MAX) throw new Error(`Mehr als ${SEITEN_MAX} Listenseiten`);
+    const url = s3Url(s3Basis, [BUCKET], {
+      'list-type': '2',
+      'max-keys': String(SEITE),
+      ...(weiter ? { 'continuation-token': weiter } : {}),
+    });
     const seite = await mitWiederholung('Liste S3', async () => {
-      const antwort = await fetch(url, { headers: s3Kopf(url.toString()) });
+      const antwort = await fetch(url, { headers: s3Kopf(url) });
       if (!antwort.ok) throw new Error(`HTTP ${antwort.status}`);
       return s3ListeLesen(await antwort.text());
     });
     dateien.push(...seite.dateien);
+    if (!seite.weiter) return dateien;
+    if (gesehen.has(seite.weiter)) throw new Error('Fortsetzung wiederholt sich');
+    if (seite.dateien.length === 0) throw new Error('Leere Listenseite mit Fortsetzung');
+    gesehen.add(seite.weiter);
     weiter = seite.weiter;
-  } while (weiter);
-  return dateien;
+  }
 }
 
 async function ladenS3(pfad) {
   return mitWiederholung(`Datei ${pfad}`, async () => {
-    const url = `${s3Basis}/${BUCKET}/${pfadKodiert(pfad)}`;
+    const url = s3Url(s3Basis, [BUCKET, ...pfad.split('/')]);
     const antwort = await fetch(url, { headers: s3Kopf(url) });
     if (!antwort.ok) throw new Error(`HTTP ${antwort.status}`);
     return new Uint8Array(await antwort.arrayBuffer());
