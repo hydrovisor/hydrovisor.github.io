@@ -112,3 +112,5 @@ Stand 1.11.2026 · Auftrag 2 «Spezifikation». Bedeutungen stehen in Konzept v1
 | Verschieben, Tausch, Wurzelregel (Plan 33) | Ereignisse `verschieben`, `tausch` (`vorgang_id`) | `verschiebenPruefen()`, `verschiebZiele()`, `verschiebAnsicht()`, `verschiebVorgang()`, `umgesetztAm()`, `HINWEIS_WURZELN` |
 | Topf und Deckel (Plan 33) | `v_netztopf_platz`, `netztopf` | `topfOrt()`, `pflanzungenImTopf()`, `lochGroesse()`, `topfPasst()`, `deckelBelegung()`, `DeckelLoch` |
 | Deckel-Hilfen und Typen (Plan 33) | – | `lochText()`, `lochArt()`, `lochName()`, `deckelReihen()`, `istStation()`, `UmsetzEingabe`, `Saemling` |
+| Hydroponik-Recherche (Plan 37, E8) | `ki_aufruf.zweck`, Vermerk `recherche`, `wissen_app_schreiben('recherche_wert' \| 'recherche_saatempfehlung')` | `rechercheLuecken()`, `wertPruefen()`, `saatPruefen()`, `recherchieren()`, `RechercheErgebnis` |
+| Sortenerfassung (Plan 37) | `sorte`, `saatgut`, `ki_feldprotokoll`, `v_vollstaendigkeit` | `SortenFormular`, `formularNachKi()`, `erfassungBauen()`, `sortenListe()`, `sortenDetail()` |

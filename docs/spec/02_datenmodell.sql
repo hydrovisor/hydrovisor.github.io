@@ -86,7 +86,8 @@ create type public.quelle_klasse as enum ('peer_review', 'universitaet_beratung'
 create type public.system as enum ('dwc', 'kratky', 'nft', 'ebbe_flut', 'substrat_inert', 'keine');
 create type public.umgebung as enum ('indoor_led', 'gewaechshaus', 'andere');
 create type public.evidenzklasse as enum ('A', 'B1', 'B2', 'C');
-create type public.vermerk as enum ('keine', 'katalog', 'tuete', 'testbetrieb', 'leitkultur');
+create type public.vermerk as enum ('keine', 'katalog', 'tuete', 'testbetrieb', 'leitkultur', 'recherche');
+-- 'recherche' seit E8 (Plan 37, Migration 20261107120000): Werte der Hydroponik-Recherche aus UC4.
 create type public.klasse_saatmenge as enum ('A', 'B', 'C', 'D');
 create type public.systemeignung as enum ('dwc', 'kratky', 'beide');
 create type public.liter_status as enum ('belegt', 'testbetrieb_offen');
@@ -1058,9 +1059,11 @@ create table public.ki_aufruf (
   status text not null check (status in ('gestartet', 'ok', 'ausweichmodell', 'fehler', 'zeitueberschreitung')),
   dauer_ms integer,
   erfasst_am timestamptz not null default now(),
-  app_version text not null
+  app_version text not null,
+  -- seit Plan 37 (nullable, additiv): tuete, recherche oder quellenpruefer
+  zweck text check (zweck in ('tuete', 'recherche', 'quellenpruefer'))
 );
-comment on table public.ki_aufruf is 'Jeder Aufruf von ki-tuete, geschrieben vor dem API-Request; Grundlage der Grenze 30 Aufrufe je Tag (11.1).';
+comment on table public.ki_aufruf is 'Jeder Aufruf von ki-tuete und ki-recherche, geschrieben vor dem API-Request; gemeinsame Grenze 30 Aufrufe je Tag (11.1, 11.3).';
 
 create table public.etikett_aufruf (
   id uuid primary key default gen_random_uuid(),
@@ -1318,6 +1321,9 @@ comment on function public.ec_gesamt(numeric, public.ec_basis, numeric) is
   'Basis zuwachs addiert ECWasser; unbekannt rechnet als gesamt, die App zeigt «EC-Basis unklar».';
 
 -- Wissenszeilen aus der App (UC4, 8.1 Regel 6), nur für Tim.
+-- Seit Plan 37 (Migration 20261107120100) zusätzlich: recherche_wert (profilwert Ebene art, Vermerk recherche,
+-- Evidenz B1 bis C, nie überschreibend, sonst null), recherche_saatempfehlung (Klasse B oder C, bestaetigt_am
+-- gesetzt; Ebene art, sonst sorte, sonst null) und bei sorte_neu mit katalog_link die Quelle katalog-<sorte_key>.
 create or replace function public.wissen_app_schreiben(aktion text, daten jsonb)
 returns uuid language plpgsql security definer set search_path = '' as $$
 declare
