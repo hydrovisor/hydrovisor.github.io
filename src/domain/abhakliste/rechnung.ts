@@ -14,7 +14,7 @@ import {
   type NeuansatzErgebnis,
   type Stadium,
 } from '../rechner.ts';
-import { kStabil, teilDosis, type StabilZeile } from '../rechner-korrektur.ts';
+import { ecSollIst, kStabil, teilDosis, type StabilZeile } from '../rechner-korrektur.ts';
 import type { KSatz } from '../rechner-zahlen.ts';
 import type { PhArt } from '../rechner-ph.ts';
 import type { Zeitzone } from '../zeit.ts';
@@ -74,8 +74,40 @@ function kAus(teile: Teile, jetzt: Date): { k: KSatz; quellen: string[]; geaende
   return { k: k as unknown as KSatz, quellen, geaendertAm: new Date(geaendert) };
 }
 
-/** Neuansätze im Bündel für kStabil (A12) */
-function stabilZeilen(teile: Teile, datenart: Datenart): StabilZeile[] {
+/**
+ * ECSoll_ist der Teil-Dosis eines Neuansatzes (R4.7, Prüferbefund 3): erste Position je Komponente (Zeilen 5, 7, 9;
+ * die Restdosis ist die zweite), k aus dem Schnappschuss des Kopfs, ECWasser des Kopfs; ohne Positionen
+ * ec_erwartet_teildosis.
+ */
+function ecSollIstTeil(teile: Teile, a: Zeile, kJetzt: KSatz): number | undefined {
+  const positionen = teil(teile, 'ansatz_position')
+    .filter((p) => p['ansatz_id'] === a['id'] && (p['storniert_am'] ?? null) === null)
+    .sort((x, y) => text(x['erfasst_am']).localeCompare(text(y['erfasst_am'])));
+  const ist: Record<string, number> = {};
+  for (const c of KOMPONENTEN) {
+    const p = positionen.find((x) => x['produkt_id'] === c);
+    if (!p) return hundertstel(a['ec_erwartet_teildosis']);
+    ist[c] = Math.round(Number(p['ist_ml'] ?? p['soll_ml']) * 10);
+  }
+  const volumen = Math.round((zahl(a['volumen_l']) ?? 0) * 100);
+  if (volumen <= 0) return hundertstel(a['ec_erwartet_teildosis']);
+  const schnapp = (a['schnappschuss'] ?? {}) as { k?: Record<string, unknown> };
+  const k = Object.fromEntries(
+    KOMPONENTEN.map((c) => {
+      const w = zahl(schnapp.k?.[c]);
+      return [c, w === undefined ? kJetzt[c] : Math.round(w * 1000)];
+    }),
+  ) as unknown as KSatz;
+  return ecSollIst({
+    ist: ist as unknown as KSatz,
+    volumen,
+    k,
+    ecWasser: hundertstel(a['ec_wasser']) ?? 50,
+  }).gerundet;
+}
+
+/** Neuansätze im Bündel für kStabil (A12): nur abgeschlossene, Vergleich mit ECSoll_ist der Teil-Dosis */
+function stabilZeilen(teile: Teile, datenart: Datenart, kJetzt: KSatz): StabilZeile[] {
   const messungen = new Map(teil(teile, 'messung').map((m) => [text(m['id']), m]));
   const unsicher = new Set(teil(teile, 'v_messung_unsicher').map((u) => text(u['messung_id'])));
   return (
@@ -87,7 +119,7 @@ function stabilZeilen(teile: Teile, datenart: Datenart): StabilZeile[] {
         return {
           begonnenAm: new Date(text(a['begonnen_am'])),
           kontrolle: hundertstel(kontrolle?.['ec']),
-          ecSollIst: hundertstel(a['ec_erwartet_final']),
+          ecSollIst: ecSollIstTeil(teile, a, kJetzt),
           unsicher: kontrolle ? unsicher.has(text(kontrolle['id'])) : false,
           datenart,
           istStation: false,
@@ -96,6 +128,14 @@ function stabilZeilen(teile: Teile, datenart: Datenart): StabilZeile[] {
         };
       })
   );
+}
+
+/** Erster Ansatz im Gefäss: Status «in Betrieb (Volumen offen)», Kannen zählen (R4.4, Plan 21 A2) */
+export function erstAnsatzAm(teile: Teile, platzId: string): boolean {
+  const g = gefaessAm(teile, platzId);
+  if (!g) return false;
+  const status = teil(teile, 'v_gefaess_status').find((v) => v['gefaess_id'] === g['id'])?.['status'];
+  return status === 'in_betrieb_volumen_offen';
 }
 
 /** Leitkultur = ältester aktiver Satz im Gefäss (A11) und «Gerechnet für: 3 × Lollo Rossa Wachstum» */
@@ -136,7 +176,7 @@ export function rechnungEingaben(
   platzId: string,
   jetzt: Date,
   zeitzone: Zeitzone,
-  e: { frischwasserEc?: number; stadiumGewaehlt?: Stadium; zielEcGewaehlt?: number } = {},
+  e: { frischwasserEc?: number; stadiumGewaehlt?: Stadium; zielEcGewaehlt?: number; volumen?: number } = {},
 ): Rechnungseingaben {
   const g = gefaessAm(teile, platzId);
   const istStation = g?.['feste_dosis'] === true;
@@ -146,26 +186,37 @@ export function rechnungEingaben(
     : ((['dwc', 'konstantpegel', 'kratky', 'kratky_belueftet'].includes(betriebsart)
         ? betriebsart
         : 'dwc') as PhArt);
-  const volumen = Math.round((zahl(g?.['betriebsvolumen_l']) ?? 0) * 100);
+  // gezählte Kannen beim ersten Ansatz gehen dem Betriebsvolumen vor (R4.4)
+  const volumen = e.volumen ?? Math.round((zahl(g?.['betriebsvolumen_l']) ?? 0) * 100);
   const band = bewertungsband(teile, platzId, jetzt);
   const datenart = datenartAm(teile, platzId);
   const { k, quellen, geaendertAm } = kAus(teile, jetzt);
   const uEc = hundertstel(teil(teile, 'messgeraet')[0]?.['u_ec']) ?? 10;
-  const stabil = kStabil(stabilZeilen(teile, datenart), uEc, geaendertAm);
+  const stabil = kStabil(stabilZeilen(teile, datenart, k), uEc, geaendertAm);
   const anlageW = teil(teile, 'v_ec_wasser')[0];
   const wasser = ecWasser({ frischwasser: e.frischwasserEc, letzteW: hundertstel(anlageW?.['ec']) });
   const pflanzen = pflanzenAm(teile, platzId);
-  const vorschlag = pflanzen.phaseLeit
+  // Station (R4.5): Stadium nach dem ältesten Eintritt; sonst nach der Phase der Leitkultur (A11)
+  const vorschlag = istStation
     ? herstellerstadium(
         {
-          ort: 'zielgefaess',
-          direktsaat: (pflanzen.aeltester?.['direktsaat_platz_id'] ?? null) !== null,
-          phaseLeitkultur: pflanzen.phaseLeit,
+          ort: 'station',
+          aeltesterEintrittAm: pflanzen.aeltester ? new Date(text(pflanzen.aeltester['gilt_ab'])) : jetzt,
         },
         jetzt,
         zeitzone,
       )
-    : undefined;
+    : pflanzen.phaseLeit
+      ? herstellerstadium(
+          {
+            ort: 'zielgefaess',
+            direktsaat: (pflanzen.aeltester?.['direktsaat_platz_id'] ?? null) !== null,
+            phaseLeitkultur: pflanzen.phaseLeit,
+          },
+          jetzt,
+          zeitzone,
+        )
+      : undefined;
   const stadiumVorschlag = vorschlag === 'anfeuchten' ? undefined : vorschlag;
   const eingabe: NeuansatzEingabe = {
     volumen,

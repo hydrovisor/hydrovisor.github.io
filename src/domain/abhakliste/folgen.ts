@@ -4,7 +4,7 @@ import type { AnsatzZeile } from '../bewertung/verlauf.ts';
 import { kalendertag, tagPlus, type Zeitzone } from '../zeit.ts';
 import { zustandAusSchritten, type SchrittZeile } from './stand.ts';
 
-/** Ab diesem Abstand zwischen gilt_ab und erfasst_am gilt ein Ansatz als nacherfasst (TZ9, A) */
+/** Über diesem Abstand zwischen gilt_ab und erfasst_am gilt ein Ansatz als nacherfasst, wie die Spalte nacherfasst (TZ9) */
 const NACHERFASST_AB_MS = 2 * 60 * 60 * 1000;
 
 /** «Kontrollmessung am Folgetag» (R5.2, UC8-AK5): Kalendertag in Zürich nach dem Beginn, nicht bei Nacherfassung */
@@ -14,7 +14,7 @@ export function kontrollmessungFolgetag(
 ): string | undefined {
   if (ansatz.typ !== 'neuansatz' || ansatz.storniert_am !== null || ansatz.status === 'abgebrochen')
     return undefined;
-  if (ansatz.erfasst_am && Date.parse(ansatz.erfasst_am) - Date.parse(ansatz.gilt_ab) >= NACHERFASST_AB_MS)
+  if (ansatz.erfasst_am && Date.parse(ansatz.erfasst_am) - Date.parse(ansatz.gilt_ab) > NACHERFASST_AB_MS)
     return undefined;
   return tagPlus(kalendertag(new Date(ansatz.begonnen_am), zeitzone), 1);
 }

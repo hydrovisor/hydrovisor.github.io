@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { ablaufLoeschen, offeneAblaeufe, type AblaufEintrag } from '../../ablauf/speicher.ts';
 import { laufendeAnsaetze, offeneNachmessungen } from '../../domain/abhakliste/folgen.ts';
-import { aktiveZeile, type AblaufStand } from '../../domain/abhakliste/stand.ts';
+import { aktiveZeile, timerEnde, type AblaufStand } from '../../domain/abhakliste/stand.ts';
 import type { AnsatzZeile } from '../../domain/bewertung/verlauf.ts';
 import { messbareOrte } from '../../domain/ort.ts';
 import { uhrzeit, ZEITZONE } from '../../domain/zeit.ts';
@@ -21,6 +21,17 @@ interface Eintrag {
   knopf: 'Fortsetzen' | 'Messen';
   lokalId?: string;
   alt: boolean;
+}
+
+/** «Zeile 7 Grow», «Zeile 11 · weiter ab 19:02», «Zeile 14 · messen ab 19:12» (Use Case Lösungswechsel) */
+function wasAktiv(s: AblaufStand, nr: number | undefined): string {
+  if (nr === undefined) return 'Zeile 17';
+  const z = s.zeilen.find((x) => x.nr === nr);
+  const ende = timerEnde(s, nr);
+  if (ende) return `Zeile ${String(nr)} · weiter ab ${uhrzeit(ende, ZEITZONE)}`;
+  const vor = timerEnde(s, nr - 1);
+  if ((nr === 14 || nr === 17) && vor) return `Zeile ${String(nr)} · messen ab ${uhrzeit(vor, ZEITZONE)}`;
+  return z?.zugabe ? `Zeile ${String(nr)} ${z.zugabe}` : `Zeile ${String(nr)}`;
 }
 
 export function Ablaeufe({ jetzt }: { jetzt: Date }) {
@@ -58,7 +69,7 @@ export function Ablaeufe({ jetzt }: { jetzt: Date }) {
     const nr = aktiveZeile(s);
     eintraege.push({
       schluessel: e.id,
-      text: `${ort?.kennung ?? code} Wechsel läuft · Zeile ${String(nr ?? 17)}`,
+      text: `${ort?.kennung ?? code} Wechsel läuft · ${wasAktiv(s, nr)}`,
       ziel: hashZu({ name: 'ansatz', code }),
       knopf: 'Fortsetzen',
       lokalId: e.id,
@@ -105,7 +116,8 @@ export function Ablaeufe({ jetzt }: { jetzt: Date }) {
       ziel: hashZu({ name: 'messen', code: ort.code, nachmessen: ansatzId }),
       knopf: 'Messen',
       ...(n.lokalId ? { lokalId: n.lokalId } : {}),
-      alt: false,
+      // ab 24 h auch hier «Abbrechen», sonst blockiert der Eintrag den Versionshinweis (Risiko 4)
+      alt: jetzt.getTime() - Date.parse(n.faelligAb) > TAG_MS,
     });
   }
   if (eintraege.length === 0) return null;

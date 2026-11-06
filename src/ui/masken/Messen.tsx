@@ -208,7 +208,8 @@ function Messmaske({ ort, modus }: { ort: Ort; modus: Ablaufmodus }) {
   const kalibrierLink = hashZu(
     ort.datenart === 'echt' ? { name: 'kalibrieren' } : { name: 'kalibrieren', datenart: ort.datenart },
   );
-  const kratky = ort.betriebsart !== undefined && MIT_FUELLSTAND.has(ort.betriebsart);
+  // im Ablauf (Zeilen 3, 14, 17) entfällt der Füllstand (Plan 29, Kommentar zu messung)
+  const kratky = ort.betriebsart !== undefined && MIT_FUELLSTAND.has(ort.betriebsart) && !modus.zeile;
   const bereit = geraet !== undefined && speichernMoeglich(eingabe) && (!kratky || fuellstand !== undefined);
   // Messstelle W: keine Bewertung und keine Ergebniszone; der Leitungswasser-Hinweis steht im Bannerplatz (A9)
   const messstelle = ort.rolle === 'messstelle';

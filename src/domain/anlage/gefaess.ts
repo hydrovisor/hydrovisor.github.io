@@ -269,8 +269,8 @@ export function gefaessAnsicht(
       }
     } else {
       if (roh === 'in_pruefung') ansicht.nebenknoepfe.push({ art: 'pruefen', text: 'Prüfen' });
-      // Plan 29: Lösungswechsel mit der Abhakliste; bei laufendem Wechsel im Bündel «Wechsel fortsetzen»
-      if ((roh === 'in_betrieb' || roh === 'in_betrieb_volumen_offen') && !g.feste_dosis) {
+      // Plan 29: Lösungswechsel mit der Abhakliste, auch an Stationen (R4.5); bei laufendem Wechsel «Wechsel fortsetzen»
+      if (roh === 'in_betrieb' || roh === 'in_betrieb_volumen_offen') {
         const laufend = laufendeAnsaetze(
           zeilen<AnsatzZeile>(teile, 'naehrloesungsansatz'),
           zeilen<SchrittZeile & { ansatz_id: string }>(teile, 'ansatz_schritt'),

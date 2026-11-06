@@ -53,3 +53,15 @@
   min-width: 0;
   font-weight: 700;
 }
+
+/* Ziffernblock für Menge und Ziel-EC (R4.6) */
+.hv-ansatz-zahl {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.hv-ansatz-zahl-titel {
+  margin: 0;
+  font-weight: 700;
+}

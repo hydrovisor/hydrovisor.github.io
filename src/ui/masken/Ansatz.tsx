@@ -1,13 +1,15 @@
-// Maske «Ansatz» #/ansatz/:code (05_masken.md 3.5; UC7, R4.6, U4, U7, U13, Konzept 11.4; Plan 29): Kopf, Rechnung,
-// Abhakliste der Zeilen 0 bis 17, Rückfrage nach einer Pause, Abschluss. Regal-Dichte, nur Antippen. Jeder Tipp
-// schreibt zuerst den Ablaufstand in IndexedDB, dann den Vorgang über schreiben(); was nicht gesendet ist, bleibt in
-// `ausstehend` und geht beim nächsten Tipp mit derselben client_id erneut hinaus (TO2).
+// Maske «Ansatz» #/ansatz/:code (05_masken.md 3.5; UC7, R4.4 bis R4.8, U4, U7, U13, Konzept 11.4; Plan 29): Kopf,
+// Rechnung, Abhakliste der Zeilen 0 bis 17, Rückfrage nach einer Pause, Abschluss. Regal-Dichte, nur Antippen.
+// Jeder Tipp schreibt zuerst den Ablaufstand in IndexedDB, dann den Vorgang über schreiben(). Was nicht gesendet ist,
+// bleibt in `ausstehend` und geht beim nächsten Tipp, beim Öffnen und beim Sichtbarwerden mit derselben client_id
+// erneut hinaus (TO2, Prüferbefunde 1 und 2). Gesendet wird immer nur ein Paket zugleich; danach fällt genau dieses
+// Paket aus `ausstehend`, später angehängte Vorgänge bleiben und gehen gleich hinterher.
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ablaufLesen, ablaufLoeschen, ablaufSchreiben, type AblaufEintrag } from '../../ablauf/speicher.ts';
 import { timerSignal, useWachhalten } from '../../ablauf/wachhalten.ts';
 import { neueClientId, schreiben } from '../../daten/schreiben.ts';
 import { laufendeAnsaetze } from '../../domain/abhakliste/folgen.ts';
-import { rechnen, rechnungEingaben } from '../../domain/abhakliste/rechnung.ts';
+import { erstAnsatzAm, rechnen, rechnungEingaben } from '../../domain/abhakliste/rechnung.ts';
 import {
   abhakbar,
   abhaken,
@@ -23,6 +25,7 @@ import {
   standNeu,
   timerEnde,
   wachBis,
+  type AblaufMessung,
   type AblaufStand,
 } from '../../domain/abhakliste/stand.ts';
 import {
@@ -35,17 +38,21 @@ import {
 import { zeilenAus, ZUGABEN } from '../../domain/abhakliste/zeilen.ts';
 import type { AnsatzZeile } from '../../domain/bewertung/verlauf.ts';
 import type { Schritt } from '../../domain/datenpfad/erfassung.ts';
+import { pruefschritt4Vorgang, volumenVorschlag } from '../../domain/etikett/pruefung.ts';
 import { kalibrierStand } from '../../domain/kalibrierung/stand.ts';
 import { ortAufloesen, type Ort } from '../../domain/ort.ts';
+import { ecWasser, type Stadium } from '../../domain/rechner.ts';
 import { phZielErsteinstellung } from '../../domain/rechner-ph.ts';
-import { ecSollIst, restdosis } from '../../domain/rechner-korrektur.ts';
-import { bruch, ecText, mlText } from '../../domain/rechner-zahlen.ts';
+import { doppeltDosiert, ecSollIst, kVorschlag, restdosis } from '../../domain/rechner-korrektur.ts';
+import { bruch, ecText, mlText, type Mengen } from '../../domain/rechner-zahlen.ts';
 import type { Teile } from '../../domain/teile.ts';
 import { ZEITZONE } from '../../domain/zeit.ts';
 import { Button } from '../bausteine/Button.tsx';
 import { Card } from '../bausteine/Card.tsx';
 import { Checklist, type Zeile as ChecklistZeile } from '../bausteine/Checklist.tsx';
+import { Choice } from '../bausteine/Choice.tsx';
 import { Notice } from '../bausteine/Notice.tsx';
+import { NumPad, type Taste } from '../bausteine/NumPad.tsx';
 import { Stepper } from '../bausteine/Stepper.tsx';
 import { useBuendel } from '../buendel.tsx';
 import { kalibrierdaten, messgeraet } from '../bundeldaten.ts';
@@ -55,10 +62,19 @@ import '../ansatz.css';
 type Zeile = Record<string, unknown>;
 const teil = (t: Teile, name: string) => (t[name] ?? []) as readonly Zeile[];
 const text = (x: unknown) => (typeof x === 'string' ? x : '');
+const hundertstel = (x: unknown) =>
+  x === null || x === undefined || x === '' ? undefined : Math.round(Number(x) * 100);
 /** Uhr der Oberfläche (Date.now nur in der Oberfläche, CLAUDE.md) */
 const uhrJetzt = () => new Date(Date.now());
 /** Sperre nach dem Öffnen der Bestätigung «Wechsel abbrechen» (U13) */
 const SPERRE_MS = 400;
+
+const STADIEN: readonly { wert: Stadium; titel: string }[] = [
+  { wert: 'echte_blaetter', titel: '1. echte Blätter' },
+  { wert: 'wachstum', titel: 'Wachstum' },
+  { wert: 'vorbluete', titel: 'Vorblüte' },
+  { wert: 'bluete_frucht', titel: 'Blüte und Frucht' },
+];
 
 export const ablaufIdAbhakliste = (platzId: string) => `abhakliste:${platzId}`;
 
@@ -78,14 +94,90 @@ export function Ansatz({ code }: { code: string }) {
   return <Abhakliste key={ort.platzId} ort={ort} teile={buendel?.teile ?? {}} />;
 }
 
-/** laufender Neuansatz dieses Platzes mit Schritten aus dem Bündel (Gerätewechsel) */
+/** laufender Neuansatz dieses Platzes mit Schritten und Messungen aus dem Bündel (Gerätewechsel, A13) */
 function ausBuendel(teile: Teile, platzId: string) {
   const ansaetze = teil(teile, 'naehrloesungsansatz') as unknown as (AnsatzZeile & Zeile)[];
   const schritte = teil(teile, 'ansatz_schritt') as unknown as Parameters<typeof laufendeAnsaetze>[1];
   const laufend = laufendeAnsaetze(ansaetze, schritte).find((a) => a.platzId === platzId);
   if (!laufend) return undefined;
   const kopf = ansaetze.find((a) => a.id === laufend.ansatzId);
-  return { laufend, kopf };
+  const messung = (art: string): AblaufMessung | undefined => {
+    const m = teil(teile, 'messung')
+      .filter((x) => x['ansatz_id'] === laufend.ansatzId && x['messart'] === art && !x['storniert_am'])
+      .sort((a, b) => Date.parse(text(b['gilt_ab'])) - Date.parse(text(a['gilt_ab'])))[0];
+    if (!m) return undefined;
+    const ph = hundertstel(m['ph']);
+    const ec = hundertstel(m['ec']);
+    const temperatur = hundertstel(m['temperatur']);
+    return {
+      id: text(m['id']),
+      giltAb: text(m['gilt_ab']),
+      ...(ph !== undefined ? { ph } : {}),
+      ...(ec !== undefined ? { ec } : {}),
+      ...(temperatur !== undefined ? { temperatur } : {}),
+    };
+  };
+  return {
+    laufend,
+    kopf,
+    frischwasser: messung('frischwasser'),
+    kontrolle: messung('kontrolle_ansatz'),
+    end: messung('end_ansatz'),
+  };
+}
+
+/** Ziffernblock für «Menge ändern» und die Ziel-EC (R4.6 «öffnet den Ziffernblock», Prüferbefund 8) */
+function ZahlEingabe({
+  titel,
+  start,
+  dezimalen,
+  schritt,
+  onFertig,
+}: {
+  titel: string;
+  start: number;
+  dezimalen: number;
+  schritt: number;
+  onFertig: (wert: number | undefined) => void;
+}) {
+  const [puffer, setPuffer] = useState(start.toFixed(dezimalen));
+  function tippen(t: Taste) {
+    if (t === 'weiter') {
+      const w = Number(puffer);
+      onFertig(puffer === '' || !Number.isFinite(w) ? undefined : w);
+      return;
+    }
+    setPuffer((p) => {
+      if (t === 'leeren') return '';
+      if (t === 'zurueck') return p.slice(0, -1);
+      if (t === 'minus' || t === 'plus') {
+        const w = Math.max(0, (Number(p) || 0) + (t === 'plus' ? schritt : -schritt));
+        return w.toFixed(dezimalen);
+      }
+      if (t === '.') return p.includes('.') || dezimalen === 0 ? p : `${p || '0'}.`;
+      const [, nach = ''] = p.split('.');
+      if (p.includes('.') && nach.length >= dezimalen) return p;
+      return p.length >= 6 ? p : `${p}${t}`;
+    });
+  }
+  return (
+    <div className="hv-ansatz-zahl">
+      <p className="hv-ansatz-zahl-titel">{titel}</p>
+      <NumPad
+        onTaste={tippen}
+        echo={puffer || '–'}
+        schritt={schritt}
+        speichern={
+          <div className="hv-ansatz-frage">
+            <Button variant="secondary" onClick={() => onFertig(undefined)}>
+              Abbrechen
+            </Button>
+            <Button onClick={() => tippen('weiter')}>Übernehmen</Button>
+          </div>
+        }
+      />
+    </div>
+  );
 }
 
 function Abhakliste({ ort, teile }: { ort: Ort; teile: Teile }) {
@@ -93,15 +185,24 @@ function Abhakliste({ ort, teile }: { ort: Ort; teile: Teile }) {
   const geraet = messgeraet(buendel);
   const [jetztMs, setJetztMs] = useState(() => Date.now());
   const jetzt = useMemo(() => new Date(jetztMs), [jetztMs]);
-  const [stand, setStand] = useState<AblaufStand>();
+  const [stand, setStandRoh] = useState<AblaufStand>();
+  const standRef = useRef<AblaufStand | undefined>(undefined);
   const [geladen, setGeladen] = useState(false);
   const [fehler, setFehler] = useState<string>();
   const [abbrechenFrage, setAbbrechenFrage] = useState<number>();
-  const [mengeOffen, setMengeOffen] = useState(false);
+  const [eingabe, setEingabe] = useState<'menge' | 'ziel_ec'>();
+  const [zielEc, setZielEc] = useState<number>();
+  const [stadiumWahl, setStadiumWahl] = useState<Stadium>();
+  const [kannen, setKannen] = useState<number>();
   const [abgeschlossen, setAbgeschlossen] = useState<{ text: string[] }>();
   const sendet = useRef(false);
   const aktivRef = useRef<HTMLDivElement>(null);
   const signalFuer = useRef<number | undefined>(undefined);
+
+  function setStand(s: AblaufStand) {
+    standRef.current = s;
+    setStandRoh(s);
+  }
 
   // Uhr: jede Sekunde neu, für Timer und Rückfrage
   useEffect(() => {
@@ -109,15 +210,19 @@ function Abhakliste({ ort, teile }: { ort: Ort; teile: Teile }) {
     return () => window.clearInterval(id);
   }, []);
 
-  // Rechnung aus dem Bündel; ECWasser aus der Frischwassermessung (Zeile 3)
+  const ersterAnsatz = erstAnsatzAm(teile, ort.platzId);
   const minute = Math.floor(jetztMs / 60_000);
   const frischEc = stand?.frischwasser?.ec;
+  const volumenFest = stand?.volumen;
   const eingaben = useMemo(
     () =>
       rechnungEingaben(teile, ort.platzId, new Date(minute * 60_000), ZEITZONE, {
         ...(frischEc !== undefined ? { frischwasserEc: frischEc } : {}),
+        ...(zielEc !== undefined ? { zielEcGewaehlt: zielEc } : {}),
+        ...(stadiumWahl ? { stadiumGewaehlt: stadiumWahl } : {}),
+        ...(volumenFest !== undefined ? { volumen: volumenFest } : {}),
       }),
-    [teile, ort.platzId, frischEc, minute],
+    [teile, ort.platzId, frischEc, minute, zielEc, stadiumWahl, volumenFest],
   );
   const rechnung = stand?.rechnung ?? rechnen(eingaben);
   const daten = kalibrierdaten(buendel);
@@ -129,46 +234,112 @@ function Abhakliste({ ort, teile }: { ort: Ort; teile: Teile }) {
     ...(eingaben.phBand ? { phBand: eingaben.phBand } : {}),
   });
   const volumen = stand?.volumen ?? eingaben.volumen;
+  const uEc = geraet ? Math.round(geraet.u_ec * 100) : 10;
+  // Hinweise der Frischwassermessung (R4.6 Zeile 3) und des Rechners (Prüferbefund 9)
+  const wasserHinweise = ecWasser({
+    frischwasser: frischEc,
+    letzteW: hundertstel(teil(teile, 'v_ec_wasser')[0]?.['ec']),
+  }).hinweise;
 
-  // Restdosis nach der Kontrollmessung (R4.7)
-  const rest = useMemo(() => {
-    const ec = stand?.messungen.kontrolle?.ec;
-    if (!rechnung || ec === undefined || !stand) return undefined;
-    const ist = Object.fromEntries(
-      ZUGABEN.map((z) => [z.komponente, stand.zeilen.find((x) => x.nr === z.nr)?.istMl ?? 0]),
-    ) as Record<(typeof ZUGABEN)[number]['komponente'], number>;
-    return restdosis({
+  /** Ist-Mengen der Zeilen 5, 7, 9 (Teil-Dosis) */
+  const istTeil = (s: AblaufStand): Mengen =>
+    Object.fromEntries(
+      ZUGABEN.map((z) => [z.komponente, s.zeilen.find((x) => x.nr === z.nr)?.istMl ?? 0]),
+    ) as unknown as Mengen;
+
+  // Restdosis und Prüfung «doppelt dosiert» nach der Kontrollmessung (R4.7, R4.8)
+  const kontrolleEc = stand?.messungen.kontrolle?.ec;
+  const folgeKontrolle = useMemo(() => {
+    if (!rechnung || kontrolleEc === undefined || !stand) return undefined;
+    const ist = istTeil(stand);
+    const soll = ecSollIst({ ist, volumen, k: eingaben.eingabe.k, ecWasser: eingaben.eingabe.ecWasser });
+    const rest = restdosis({
       ecZiel: bruch(rechnung.ecZiel),
-      ecIst: ec,
+      ecIst: kontrolleEc,
       ecWasser: eingaben.eingabe.ecWasser,
       ist,
       volumen,
       k: eingaben.eingabe.k,
       dosis: rechnung.dosisVerwendet,
     });
-  }, [stand, rechnung, eingaben, volumen]);
+    const doppelt = doppeltDosiert({
+      kontrolle: kontrolleEc,
+      ecSollIstTeil: soll.gerundet,
+      teilwechsel: {
+        volumen,
+        ecIst: kontrolleEc,
+        ecZiel: rechnung.ecZiel,
+        ecWasser: eingaben.eingabe.ecWasser,
+      },
+    });
+    return { rest, doppelt, soll };
+  }, [stand, rechnung, eingaben, volumen, kontrolleEc]);
 
   const defs = useMemo(
     () =>
       zeilenAus(
         {
           rechnung,
-          ersterAnsatz: false,
+          ersterAnsatz,
           volumen,
           kalibrierung,
           festeTermine: daten.festeTermine,
           phZiel,
-          ...(rest ? { restdosis: rest } : {}),
+          ...(folgeKontrolle ? { restdosis: folgeKontrolle.rest } : {}),
           gerechnetFuer: eingaben.gerechnetFuer,
         },
         jetzt,
         ZEITZONE,
       ),
     // eslint-disable-next-line react-hooks/exhaustive-deps -- die Zeilen hängen nicht an der Sekunde
-    [rechnung, volumen, kalibrierung.art, daten.festeTermine, phZiel, rest, eingaben.gerechnetFuer],
+    [
+      rechnung,
+      ersterAnsatz,
+      volumen,
+      kalibrierung.art,
+      daten.festeTermine,
+      phZiel,
+      folgeKontrolle,
+      eingaben.gerechnetFuer,
+    ],
   );
 
-  // Laden: lokaler Stand, sonst laufender Ansatz aus dem Bündel, sonst neu
+  /** ein Paket senden; danach fällt genau dieses Paket aus `ausstehend` (Prüferbefund 1) */
+  async function nachsenden(): Promise<void> {
+    const s = standRef.current;
+    if (sendet.current || !s || s.ausstehend.length === 0) return;
+    sendet.current = true;
+    const paket = s.ausstehend;
+    const antwort = await schreiben(paket, { jetzt: uhrJetzt(), zeitzone: ZEITZONE });
+    sendet.current = false;
+    const aktuell = standRef.current;
+    if (!aktuell) return;
+    if (antwort.status === 'nicht_gespeichert') {
+      setFehler(`${antwort.fehler.text}. Lokal gespeichert, nicht gesendet.`);
+      return;
+    }
+    setFehler(undefined);
+    const neu = { ...aktuell, ausstehend: aktuell.ausstehend.slice(paket.length) };
+    setStand(neu);
+    const fertig = neu.ausstehend.length === 0 && neu.zeilen.find((z) => z.nr === 17)?.schrittClientId;
+    if (fertig) await ablaufLoeschen(neu.id).catch(() => undefined);
+    else await ablaufSchreiben(neu as AblaufStand & AblaufEintrag).catch(() => undefined);
+    if (neu.ausstehend.length > 0) await nachsenden();
+  }
+
+  async function weiter(neu: AblaufStand, vorgang: readonly Schritt[]): Promise<void> {
+    // angehängt an den neuesten Stand, nie an einen älteren (Prüferbefund 1)
+    const mit = { ...neu, ausstehend: [...(standRef.current?.ausstehend ?? []), ...vorgang] };
+    setStand(mit);
+    try {
+      await ablaufSchreiben(mit as AblaufStand & AblaufEintrag);
+    } catch {
+      setFehler('Lokal nicht gespeichert: Speicher des Browsers voll oder gesperrt');
+    }
+    await nachsenden();
+  }
+
+  // Laden: lokaler Stand, sonst laufender Ansatz aus dem Bündel, sonst neu; danach Ausstehendes senden
   useEffect(() => {
     let aktiv = true;
     void (async () => {
@@ -183,27 +354,43 @@ function Abhakliste({ ort, teile }: { ort: Ort; teile: Teile }) {
       else {
         const b = ausBuendel(teile, ort.platzId);
         const t = uhrJetzt();
-        setStand(
-          b
-            ? standAusSchritten(
-                {
-                  platzId: ort.platzId,
-                  code: ort.code,
-                  ansatzId: b.laufend.ansatzId,
-                  defs,
-                  schritte: b.laufend.schritte,
-                  begonnenAm: text(b.kopf?.['begonnen_am']),
-                  volumen: Math.round(Number(b.kopf?.['volumen_l'] ?? 0) * 100),
-                },
-                t,
-              )
-            : standNeu({ platzId: ort.platzId, code: ort.code, ansatzId: neueClientId(), defs }, t),
-        );
+        if (b) {
+          const s = standAusSchritten(
+            {
+              platzId: ort.platzId,
+              code: ort.code,
+              ansatzId: b.laufend.ansatzId,
+              defs,
+              schritte: b.laufend.schritte,
+              begonnenAm: text(b.kopf?.['begonnen_am']),
+              volumen: Math.round(Number(b.kopf?.['volumen_l'] ?? 0) * 100),
+            },
+            t,
+          );
+          // Messungen des Ansatzes aus dem Bündel: Restdosis und Abschluss auch nach einem Gerätewechsel (Befund 10)
+          setStand({
+            ...s,
+            ...(b.frischwasser ? { frischwasser: b.frischwasser } : {}),
+            messungen: {
+              ...(b.kontrolle ? { kontrolle: b.kontrolle } : {}),
+              ...(b.end ? { end: b.end } : {}),
+            },
+          });
+        } else
+          setStand(standNeu({ platzId: ort.platzId, code: ort.code, ansatzId: neueClientId(), defs }, t));
       }
       setGeladen(true);
+      await nachsenden();
     })();
+    const beiSichtbar = () => {
+      if (document.visibilityState === 'visible') void nachsenden();
+    };
+    document.addEventListener('visibilitychange', beiSichtbar);
+    window.addEventListener('online', beiSichtbar);
     return () => {
       aktiv = false;
+      document.removeEventListener('visibilitychange', beiSichtbar);
+      window.removeEventListener('online', beiSichtbar);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- nur beim Öffnen
   }, [ort.platzId]);
@@ -228,31 +415,56 @@ function Abhakliste({ ort, teile }: { ort: Ort; teile: Teile }) {
 
   const frage = aktuell ? rueckfrage(aktuell, defs, jetzt, ZEITZONE) : undefined;
 
-  async function weiter(neu: AblaufStand, vorgang: Schritt[]): Promise<void> {
-    const alle = [...neu.ausstehend, ...vorgang];
-    const mit = { ...neu, ausstehend: alle };
-    setStand(mit);
-    try {
-      await ablaufSchreiben(mit as AblaufStand & AblaufEintrag);
-    } catch {
-      setFehler('Lokal nicht gespeichert: Speicher des Browsers voll oder gesperrt');
-    }
-    if (alle.length === 0 || sendet.current) return;
-    sendet.current = true;
-    const antwort = await schreiben(alle, { jetzt: uhrJetzt(), zeitzone: ZEITZONE });
-    sendet.current = false;
-    if (antwort.status === 'gespeichert' || antwort.status === 'abweichend') {
-      const fertig = { ...mit, ausstehend: [] };
-      setFehler(undefined);
-      const abschluss = fertig.zeilen.find((z) => z.nr === 17)?.schrittClientId !== undefined;
-      if (abschluss) {
-        await ablaufLoeschen(fertig.id).catch(() => undefined);
-        setStand(fertig);
-        return;
-      }
-      setStand((s) => (s && s.id === fertig.id ? { ...s, ausstehend: [] } : s));
-      await ablaufSchreiben({ ...fertig } as AblaufStand & AblaufEintrag).catch(() => undefined);
-    } else setFehler(`${antwort.fehler.text}. Der Haken ist lokal gespeichert, erneut senden.`);
+  /** ECSoll_ist der gesamten Ist-Dosis einschliesslich Restdosis (R4.7) und k-Vorschlag nach der Endmessung */
+  function abschlussWerte(s: AblaufStand): {
+    ecErwartetFinal?: number;
+    kVorschlag?: number;
+    echt: boolean;
+    banner: boolean;
+    kText?: string;
+  } {
+    const echt = eingaben.datenart === 'echt';
+    const teilIst = istTeil(s);
+    const gesamt = Object.fromEntries(
+      ZUGABEN.map((z) => {
+        const restMl =
+          s.zeilen.find((x) => x.nr === 15)?.teilschritte?.find((t) => t.komponente === z.komponente)
+            ?.sollMl ?? 0;
+        return [z.komponente, teilIst[z.komponente] + restMl];
+      }),
+    ) as unknown as Mengen;
+    if (volumen <= 0 || !rechnung) return { echt, banner: false };
+    const k = eingaben.eingabe.k;
+    const wasser = eingaben.eingabe.ecWasser;
+    const final = ecSollIst({ ist: gesamt, volumen, k, ecWasser: wasser });
+    const teil = ecSollIst({ ist: teilIst, volumen, k, ecWasser: wasser });
+    const kontrolle = s.messungen.kontrolle?.ec;
+    const end = s.messungen.end?.ec;
+    if (kontrolle === undefined) return { ecErwartetFinal: final.gerundet, echt, banner: false };
+    const v = kVorschlag({
+      kontrolle,
+      ecSollIstKontrolle: teil.gerundet,
+      istDosis: teil.istDosis,
+      endmessung: end,
+      ecSollIstGesamt: final.gerundet,
+      ecWasser: wasser,
+      k,
+      dosis: rechnung.dosisVerwendet,
+      uEc,
+      unsicher: kalibrierung.art !== 'gueltig',
+      datenart: eingaben.datenart,
+    });
+    return {
+      ecErwartetFinal: final.gerundet,
+      echt,
+      banner: v.art === 'banner',
+      ...(v.art === 'vorschlag'
+        ? {
+            kVorschlag: v.kIst,
+            kText: `k-Vorschlag ${(v.kIst / 1000).toFixed(3)} (bisher ${(Object.values(k)[0] ?? 0) / 1000})`,
+          }
+        : {}),
+    };
   }
 
   /** Vorgänge für neu erledigte Zeilen nach dem Kopf; der Kopf selbst beim Haken von Zeile 4 */
@@ -261,6 +473,7 @@ function Abhakliste({ ort, teile }: { ort: Ort; teile: Teile }) {
     const vorgang: Schritt[] = [];
     const vier = st.zeilen.find((z) => z.nr === 4);
     if (!st.kopfGeschrieben && vier?.erledigtAm && rechnung) {
+      const zb = eingaben.eingabe.zielbereich;
       const k = kopfVorgang(
         st,
         {
@@ -269,17 +482,13 @@ function Abhakliste({ ort, teile }: { ort: Ort; teile: Teile }) {
           stadiumGewaehlt: rechnung.stadium,
           pflanzungIds: eingaben.pflanzungIds,
           schnappschuss: {
-            ...(eingaben.phBand
+            ...(eingaben.phBand || zb
               ? {
                   zielbereich: {
-                    ph_min: eingaben.phBand.min / 100,
-                    ph_max: eingaben.phBand.max / 100,
-                    ...(eingaben.eingabe.zielbereich
-                      ? {
-                          ec_min: eingaben.eingabe.zielbereich.min / 100,
-                          ec_max: eingaben.eingabe.zielbereich.max / 100,
-                        }
+                    ...(eingaben.phBand
+                      ? { ph_min: eingaben.phBand.min / 100, ph_max: eingaben.phBand.max / 100 }
                       : {}),
+                    ...(zb ? { ec_min: zb.min / 100, ec_max: zb.max / 100 } : {}),
                   },
                 }
               : {}),
@@ -311,22 +520,6 @@ function Abhakliste({ ort, teile }: { ort: Ort; teile: Teile }) {
     return { stand: st, vorgang };
   }
 
-  /** ECSoll_ist der gesamten Ist-Dosis einschliesslich Restdosis (R4.7) */
-  function abschlussWerte(s: AblaufStand): { ecErwartetFinal?: number; echt: boolean } {
-    const ist = Object.fromEntries(
-      ZUGABEN.map((z) => {
-        const haupt = s.zeilen.find((x) => x.nr === z.nr)?.istMl ?? 0;
-        const restMl =
-          s.zeilen.find((x) => x.nr === 15)?.teilschritte?.find((t) => t.komponente === z.komponente)
-            ?.sollMl ?? 0;
-        return [z.komponente, haupt + restMl];
-      }),
-    ) as Record<(typeof ZUGABEN)[number]['komponente'], number>;
-    if (volumen <= 0) return { echt: eingaben.datenart === 'echt' };
-    const e = ecSollIst({ ist, volumen, k: eingaben.eingabe.k, ecWasser: eingaben.eingabe.ecWasser });
-    return { ecErwartetFinal: e.gerundet, echt: eingaben.datenart === 'echt' };
-  }
-
   function tippen(nr: number) {
     if (!aktuell) return;
     const t = uhrJetzt();
@@ -350,7 +543,7 @@ function Abhakliste({ ort, teile }: { ort: Ort; teile: Teile }) {
         };
         delete neu.rechnung;
       }
-      void weiter(neu, [...storno]);
+      void weiter(neu, storno);
       return;
     }
     // vor dem nächsten Tipp: Rückfrage nach einer Pause (R4.6)
@@ -359,10 +552,21 @@ function Abhakliste({ ort, teile }: { ort: Ort; teile: Teile }) {
       return;
     }
     if (!abhakbar(aktuell, nr, t)) return;
-    const neu = (z?.aufzuege ?? 1) > 1 ? aufzugAbhaken(aktuell, nr, t) : abhaken(aktuell, nr, t);
-    setMengeOffen(false);
+    let neu = (z?.aufzuege ?? 1) > 1 ? aufzugAbhaken(aktuell, nr, t) : abhaken(aktuell, nr, t);
+    setEingabe(undefined);
+    const extra: Schritt[] = [];
+    // erster Ansatz: Kannen gezählt in Zeile 2 → Prüfschritt 4 und Volumen der Rechnung (R4.4, Plan 21 A2)
+    if (nr === 2 && ersterAnsatz && neu.zeilen.find((x) => x.nr === 2)?.erledigtAm) {
+      const betrieb = eingaben.volumen / 100;
+      const gezaehlt = kannen !== undefined ? kannen / 2 : betrieb;
+      const vorschlag = volumenVorschlag(gezaehlt, betrieb);
+      extra.push(
+        ...pruefschritt4Vorgang(teile, ort.platzId, gezaehlt, vorschlag !== undefined, neueClientId, t),
+      );
+      neu = { ...neu, volumen: Math.round(gezaehlt * 100) };
+    }
     const n = nachziehen(neu);
-    void weiter(n.stand, n.vorgang);
+    void weiter(n.stand, [...extra, ...n.vorgang]);
     if (nr === 17 && n.stand.zeilen.find((x) => x.nr === 17)?.erledigtAm) abschlussZeigen(n.stand);
   }
 
@@ -370,9 +574,14 @@ function Abhakliste({ ort, teile }: { ort: Ort; teile: Teile }) {
     const end = s.messungen.end?.ec;
     const w = abschlussWerte(s);
     const zeilen: string[] = [];
-    if (end !== undefined) zeilen.push(`Endmessung EC ${ecText(end)}`);
-    if (end !== undefined && w.ecErwartetFinal !== undefined && end > w.ecErwartetFinal + 30)
-      zeilen.push('Mehr EC als erwartet: Dosis, Volumen oder Kanne prüfen');
+    if (end !== undefined && rechnung) {
+      const abw = end - rechnung.ecZiel;
+      zeilen.push(
+        `Endmessung EC ${ecText(end)}, Ziel ${ecText(rechnung.ecZiel)} (${ecText(abw, { vorzeichen: true })})`,
+      );
+    }
+    if (w.banner) zeilen.push('Mehr EC als erwartet: Dosis, Volumen oder Kanne prüfen');
+    else if (w.kText) zeilen.push(w.kText);
     zeilen.push('Kontrollmessung morgen');
     setAbgeschlossen({ text: zeilen });
   }
@@ -388,11 +597,9 @@ function Abhakliste({ ort, teile }: { ort: Ort; teile: Teile }) {
     if (!aktuell) return;
     const v = abbruchVorgang(aktuell, neueClientId, uhrJetzt());
     void (async () => {
-      if (v.length > 0) {
-        const antwort = await schreiben([...aktuell.ausstehend, ...v], {
-          jetzt: uhrJetzt(),
-          zeitzone: ZEITZONE,
-        });
+      const alle = [...(standRef.current?.ausstehend ?? []), ...v];
+      if (alle.length > 0) {
+        const antwort = await schreiben(alle, { jetzt: uhrJetzt(), zeitzone: ZEITZONE });
         if (antwort.status === 'nicht_gespeichert') {
           setFehler(`${antwort.fehler.text}. Abbruch nicht gespeichert.`);
           return;
@@ -401,11 +608,6 @@ function Abhakliste({ ort, teile }: { ort: Ort; teile: Teile }) {
       await ablaufLoeschen(aktuell.id).catch(() => undefined);
       oeffnen({ name: 'heute' });
     })();
-  }
-
-  function mengeSetzen(ist: number) {
-    if (!aktuell || aktiv === undefined) return;
-    void weiter(mengeAendern(aktuell, aktiv, ist, uhrJetzt()), []);
   }
 
   const kopf = (
@@ -430,6 +632,19 @@ function Abhakliste({ ort, teile }: { ort: Ort; teile: Teile }) {
             <p key={z}>{z}</p>
           ))}
         </Card>
+        {fehler ? (
+          <Notice
+            kompakt
+            tone="danger"
+            action={
+              <Button variant="secondary" size="compact" onClick={() => void nachsenden()}>
+                Erneut senden
+              </Button>
+            }
+          >
+            {fehler}
+          </Notice>
+        ) : null}
         <a className="hv-btn hv-btn-primary hv-btn-block" href={hashZu({ name: 'heute' })}>
           Zu Heute
         </a>
@@ -446,6 +661,41 @@ function Abhakliste({ ort, teile }: { ort: Ort; teile: Teile }) {
     );
   }
 
+  const aktivZeile = aktuell.zeilen.find((x) => x.nr === aktiv);
+  if (eingabe === 'menge' && aktivZeile && aktiv !== undefined)
+    return (
+      <main className="hv-seite hv-ansatz" data-density="regal">
+        {kopf}
+        <ZahlEingabe
+          titel={`Ist-Menge Zeile ${String(aktiv)} in ml`}
+          start={(aktivZeile.istMl ?? aktivZeile.sollMl ?? 0) / 10}
+          dezimalen={1}
+          schritt={0.1}
+          onFertig={(w) => {
+            setEingabe(undefined);
+            if (w !== undefined)
+              void weiter(mengeAendern(aktuell, aktiv, Math.round(w * 10), uhrJetzt()), []);
+          }}
+        />
+      </main>
+    );
+  if (eingabe === 'ziel_ec')
+    return (
+      <main className="hv-seite hv-ansatz" data-density="regal">
+        {kopf}
+        <ZahlEingabe
+          titel="Ziel-EC in mS/cm"
+          start={(zielEc ?? 120) / 100}
+          dezimalen={2}
+          schritt={0.1}
+          onFertig={(w) => {
+            setEingabe(undefined);
+            if (w !== undefined && w > 0) setZielEc(Math.round(w * 100));
+          }}
+        />
+      </main>
+    );
+
   const zeilen: ChecklistZeile[] = defs.map((d) => {
     const z = aktuell.zeilen.find((x) => x.nr === d.nr);
     const zustand: ChecklistZeile['zustand'] =
@@ -461,6 +711,15 @@ function Abhakliste({ ort, teile }: { ort: Ort; teile: Teile }) {
         >
           Messen
         </a>
+      ) : istAktiv && d.nr === 2 && ersterAnsatz ? (
+        <Stepper
+          label="Kannen zu 0.5 l"
+          wert={kannen ?? Math.round((eingaben.volumen / 100) * 2)}
+          min={1}
+          max={200}
+          onWert={setKannen}
+          anzeige={(w) => `${(w / 2).toFixed(1)} l`}
+        />
       ) : istAktiv && d.nr === 4 ? (
         <a
           className="hv-btn hv-btn-secondary hv-btn-compact"
@@ -473,19 +732,20 @@ function Abhakliste({ ort, teile }: { ort: Ort; teile: Teile }) {
           {(z?.aufzuege ?? 1) > 1 ? (
             <span className="hv-num">{`Aufzug ${String((z?.aufzuegeErledigt ?? 0) + 1)} von ${String(z?.aufzuege ?? 1)}`}</span>
           ) : null}
-          <Button variant="secondary" size="compact" onClick={() => setMengeOffen((o) => !o)}>
+          <Button variant="secondary" size="compact" onClick={() => setEingabe('menge')}>
             Menge ändern
           </Button>
         </span>
       ) : istAktiv && d.nr === 15 && (z?.aufzuege ?? 1) > 1 ? (
         <span className="hv-num">{`Teilschritt ${String((z?.aufzuegeErledigt ?? 0) + 1)} von ${String(z?.aufzuege ?? 1)}`}</span>
       ) : undefined;
-    const menge =
-      z?.istMl !== undefined && z.istMl !== d.sollMl
-        ? `Ist ${mlText(z.istMl)}`
-        : d.messmittel && d.nr !== 15
-          ? undefined
-          : undefined;
+    // R4.8 in Zeile 15: «möglicherweise doppelt dosiert» und das Angebot Teilwechsel
+    const doppelt = d.nr === 15 ? folgeKontrolle?.doppelt : undefined;
+    const hinweis =
+      doppelt?.hinweis === true
+        ? `Möglicherweise doppelt dosiert${doppelt.angebot?.art === 'absaugen' ? `: ${doppelt.angebot.text}` : ''}`
+        : d.hinweis;
+    const menge = z?.istMl !== undefined && z.istMl !== d.sollMl ? `Ist ${mlText(z.istMl)}` : undefined;
     return {
       nr: d.nr,
       titel: d.titel,
@@ -493,31 +753,75 @@ function Abhakliste({ ort, teile }: { ort: Ort; teile: Teile }) {
       ...(te && zustand !== 'erledigt' ? { timerEnde: te.getTime() } : {}),
       zustand,
       ...(aktion ? { aktion } : {}),
-      ...(d.hinweis ? { hinweis: d.hinweis } : {}),
+      ...(hinweis ? { hinweis } : {}),
       ...(zustand === 'erledigt' ? { abwaehlbar: abwaehlbar(aktuell, d.nr) } : {}),
       ...(istAktiv && messzeile && !z?.messungId ? { gesperrt: true } : {}),
       ...(istAktiv && d.nr === 4 && !rechnung ? { gesperrt: true } : {}),
     };
   });
-  const aktivZeile = aktuell.zeilen.find((x) => x.nr === aktiv);
+  const hinweise = [...wasserHinweise, ...(rechnung?.hinweise ?? [])].map((h) => h.text);
+  const zb = eingaben.eingabe.zielbereich;
 
   return (
     <main className="hv-seite hv-ansatz" data-density="regal">
       {kopf}
       {fehler ? (
-        <Notice kompakt tone="danger">
+        <Notice
+          kompakt
+          tone="danger"
+          action={
+            <Button variant="secondary" size="compact" onClick={() => void nachsenden()}>
+              Erneut senden
+            </Button>
+          }
+        >
           {fehler}
         </Notice>
       ) : null}
-      {!rechnung && !aktuell.kopfGeschrieben ? (
-        <Notice kompakt tone="warn">
-          Kein Zielbereich: Ziel-EC in der Maske Gefäss prüfen
-        </Notice>
-      ) : rechnung && !aktuell.kopfGeschrieben ? (
-        <p className="hv-ansatz-rechnung hv-num">
-          {`Ziel-EC ${ecText(rechnung.ecZiel)} · Teil-Dosis ${String(rechnung.teilDosis)} %`}
-        </p>
+      {!aktuell.kopfGeschrieben ? (
+        <Card title="Rechnung">
+          {!rechnung ? (
+            // RF7: ohne Zielbereich Ziel-EC von Hand, Stadium mit Vorschlag Wachstum
+            <>
+              <p>Kein Zielbereich: Ziel-EC und Stadium wählen</p>
+              <Choice
+                label="Stadium"
+                zeile
+                optionen={STADIEN}
+                gewaehlt={[stadiumWahl ?? eingaben.stadiumVorschlag ?? 'wachstum']}
+                onWahl={(w) => setStadiumWahl(w as Stadium)}
+              />
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setStadiumWahl((s) => s ?? eingaben.stadiumVorschlag ?? 'wachstum');
+                  setEingabe('ziel_ec');
+                }}
+              >
+                Ziel-EC eingeben
+              </Button>
+            </>
+          ) : (
+            <>
+              <p className="hv-ansatz-rechnung hv-num">
+                {`${zb ? `Zielbereich ${ecText(zb.min)} bis ${ecText(zb.max)} · ` : ''}Ziel-EC ${ecText(rechnung.ecZiel)} · Teil-Dosis ${String(rechnung.teilDosis)} %${rechnung.teilDosis < 100 ? ' bis k stabil' : ''}`}
+              </p>
+              <Choice
+                label="Stadium"
+                zeile
+                optionen={STADIEN}
+                gewaehlt={[rechnung.stadium]}
+                onWahl={(w) => setStadiumWahl(w as Stadium)}
+              />
+            </>
+          )}
+        </Card>
       ) : null}
+      {hinweise.slice(0, 2).map((h) => (
+        <Notice key={h} kompakt tone="warn">
+          {h}
+        </Notice>
+      ))}
       {frage ? (
         <Card title="Rückfrage">
           <p>{frage.text}</p>
@@ -530,16 +834,6 @@ function Abhakliste({ ort, teile }: { ort: Ort; teile: Teile }) {
             </Button>
           </div>
         </Card>
-      ) : null}
-      {mengeOffen && aktivZeile && aktiv !== undefined ? (
-        <Stepper
-          label="Ist-Menge"
-          wert={aktivZeile.istMl ?? aktivZeile.sollMl ?? 0}
-          min={0}
-          max={5000}
-          onWert={mengeSetzen}
-          anzeige={(w) => mlText(w)}
-        />
       ) : null}
       <div ref={aktivRef} className="hv-ansatz-liste">
         <Checklist zeilen={zeilen} jetzt={jetztMs} onHaken={tippen} label="Abhakliste Lösungswechsel" />

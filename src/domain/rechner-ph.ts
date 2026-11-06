@@ -3,7 +3,7 @@
 // 0.1 pH. Gerechnet wird exakt mit Brüchen, gerundet genau einmal am Ende (G3).
 import type { Hinweis } from './bewertung/hinweise.ts';
 import type { Band, Hundertstel } from './bewertung/bewertung.ts';
-import { bruch, durch, mal, minus, runde, rundeMenge, vergleich, type Bruch } from './rechner-zahlen.ts';
+import { bruch, durch, mal, minus, runde, vergleich, type Bruch } from './rechner-zahlen.ts';
 
 export type PhArt = 'dwc' | 'konstantpegel' | 'kratky' | 'kratky_belueftet' | 'station';
 
@@ -24,6 +24,16 @@ export function phZielErsteinstellung(e: { art: PhArt; phBand?: Band }): Hundert
 export function phWirkung(sicht: number | null): Bruch {
   if (sicht === null || !Number.isFinite(sicht) || sicht <= 0) return WIRKUNG_STANDARD;
   return bruch(Math.round(sicht * 10000), 10000);
+}
+
+/**
+ * «zuerst» höchstens die Hälfte (R4.14): auf die Stufe nach R4.11 abgerundet, unter 5 ml 0.1 ml, sonst 0.5 ml;
+ * mindestens 0.1 ml (keine Komponente auf 0, R4.4). Prüferbefund 15.
+ */
+function hoechstensMenge(roh: Bruch): number {
+  const stufe = vergleich(roh, 50) < 0 ? 1 : 5;
+  const zehntel = stufe * Math.floor(roh.z / (roh.n * stufe));
+  return Math.max(1, zehntel);
 }
 
 export type PhVorschlag =
@@ -49,7 +59,7 @@ export function phKorrekturVorschlag(e: {
   // Zehntel ml = w · (V/100 l) · ((Δ/100 pH) / 0.1) · 10 = w · V · Δ / 100
   const wV = mal(e.w, e.volumen);
   const vorschlagMl = durch(mal(wV, e.phIst - e.phZiel), 100);
-  const zuerstMl = e.mengeMl ?? rundeMenge(durch(vorschlagMl, 2));
+  const zuerstMl = e.mengeMl ?? hoechstensMenge(durch(vorschlagMl, 2));
   // Hundertstel pH = (zuerst/10 ml) / (w · V/100) · 0.1 · 100 = zuerst · 100 / (w · V)
   const erwartet = runde(minus(e.phIst, durch(zuerstMl * 100, wV)));
   return {
