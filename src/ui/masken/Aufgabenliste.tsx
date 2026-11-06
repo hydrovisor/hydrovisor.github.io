@@ -25,6 +25,16 @@ const ANDERSWO: ReadonlySet<AufgabenTyp> = new Set<AufgabenTyp>(['umsetzen', 'ka
 const WOCHENTAG = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'] as const;
 const uhrJetzt = () => new Date(Date.now());
 
+/** Aufgaben ohne Absturz der Maske: ein Fehler der Rechnung zeigt Heute ohne Liste und meldet ihn in der Konsole */
+export function aufgabenSicher<T>(rechnen: () => T, sonst: T): T {
+  try {
+    return rechnen();
+  } catch (fehler) {
+    console.error('Aufgaben-Rechnung', fehler);
+    return sonst;
+  }
+}
+
 function wochentag(tag: string): string {
   const [j, m, d] = tag.split('-').map(Number) as [number, number, number];
   return WOCHENTAG[new Date(Date.UTC(j, m - 1, d)).getUTCDay()] ?? '';
@@ -47,13 +57,17 @@ function ziel(a: Aufgabe): { route: Route; text: string } | undefined {
 export function Aufgabenliste({ jetzt }: { jetzt: Date }) {
   const { buendel } = useBuendel();
   const [weg, setWeg] = useState<ReadonlySet<string>>(new Set());
+  // «Pegel ok» bis zum neuen Bündel nur einmal je Schlüssel (Prüfer Sicherheit Runde 1, Hinweis 3)
+  const [pegel, setPegel] = useState<ReadonlySet<string>>(new Set());
   const [fehler, setFehler] = useState<string>();
   const [sendet, setSendet] = useState(false);
   const sperre = useRef(false);
   const teile = buendel?.teile;
   if (!teile) return null;
   const einstellungen = einstellungenAus(teile);
-  const alle = faelligeAufgaben(teile, einstellungen, jetzt, ZEITZONE).filter((a) => !weg.has(a.schluessel));
+  const alle = aufgabenSicher(() => faelligeAufgaben(teile, einstellungen, jetzt, ZEITZONE), []).filter(
+    (a) => !weg.has(a.schluessel),
+  );
   const liste = alle.filter((a) => !ANDERSWO.has(a.typ));
 
   /** «Pegel ok» blendet nicht aus (gilt einen Tag, keine Erledigung, A7) */
@@ -69,6 +83,7 @@ export function Aufgabenliste({ jetzt }: { jetzt: Date }) {
       }
       setFehler(undefined);
       if (ausblenden) setWeg((alt) => new Set([...alt, a.schluessel]));
+      else setPegel((alt) => new Set([...alt, a.schluessel]));
     } finally {
       sperre.current = false;
       setSendet(false);
@@ -76,7 +91,7 @@ export function Aufgabenliste({ jetzt }: { jetzt: Date }) {
   }
 
   if (alle.length === 0) {
-    const n = naechsteAufgabe(teile, einstellungen, jetzt, ZEITZONE);
+    const n = aufgabenSicher(() => naechsteAufgabe(teile, einstellungen, jetzt, ZEITZONE), undefined);
     return (
       <p className="hv-aufgaben-leer">
         {n
@@ -135,7 +150,7 @@ export function Aufgabenliste({ jetzt }: { jetzt: Date }) {
                     Überspringen
                   </Button>
                 ) : null}
-                {a.pegelOk ? (
+                {a.pegelOk && !pegel.has(a.schluessel) ? (
                   <Button
                     variant="ghost"
                     disabled={sendet}

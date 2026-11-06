@@ -53,6 +53,7 @@ interface AnsatzZeile {
   typ: string;
   status: string;
   begonnen_am: string;
+  nachgefuellt_l?: number | string | null;
   gilt_ab: string;
   client_zeit?: string | null;
   erfasst_am?: string | null;
@@ -241,16 +242,31 @@ export const nachfuellenKratky: Regel = (k, lage) => {
   return aufgefuellt ? [] : amPlatz(lage, 'nachfuellen_kratky', tag(k, m.gilt_ab), 'Nachfüllen Kratky');
 };
 
-/** Lösung wechseln: Neuansatz + Intervall der Belegung (UC3-AK7), einmalig naechster_wechsel_am (A3), Nachfüllsumme */
+/**
+ * Lösung wechseln (DWC, Konstantpegel, Station): Neuansatz + Intervall der Belegung (UC3-AK7), einmalig
+ * naechster_wechsel_am (A3); zusätzlich ab dem Tag, an dem die Nachfüllsumme seit dem Neuansatz das Betriebsvolumen
+ * erreicht (Konzept R5.2, Prüfer Runde 1 Befund 1). Ob sie es erreicht, sagt v_nachfuellsumme; den Tag liefern die
+ * Nachfüll-Ansätze im Bündel, ohne sie (älteres Bündel) der letzte Nachfüll-Ansatz, sonst heute.
+ */
 export const loesungWechseln: Regel = (k, lage) => {
   const g = lage.gefaess;
   const n = lage.letzterNeuansatz;
-  if (!g || g.intervall_wechseln_d === null || !n) return [];
+  if (!g || kratky(g) || g.intervall_wechseln_d === null || !n) return [];
   const seit = tag(k, n.begonnen_am);
   const vorgabe = g.naechster_wechsel_am ?? undefined;
   const regulaer = vorgabe !== undefined && vorgabe > seit ? vorgabe : tagPlus(seit, g.intervall_wechseln_d);
-  const voll = lage.nachfuellsummeL >= Number(g.betriebsvolumen_l);
-  const faelligAm = voll && k.heute < regulaer ? k.heute : regulaer;
+  const volumen = Number(g.betriebsvolumen_l);
+  let faelligAm = regulaer;
+  if (lage.nachfuellsummeL >= volumen) {
+    const nachfuellen = lage.ansaetze
+      .filter((a) => a.typ === 'nachfuellen' && ms(a.begonnen_am) > ms(n.begonnen_am))
+      .sort((a, b) => ms(a.begonnen_am) - ms(b.begonnen_am));
+    let summe = 0;
+    const erreicht =
+      nachfuellen.find((a) => (summe += Number(a.nachgefuellt_l ?? 0)) >= volumen) ?? nachfuellen.at(-1);
+    const voll = erreicht === undefined ? k.heute : tag(k, erreicht.begonnen_am);
+    if (voll < regulaer) faelligAm = voll;
+  }
   return amPlatz(lage, 'loesung_wechseln', faelligAm, 'Lösung wechseln', { gewicht: 'wechsel' });
 };
 
@@ -423,7 +439,10 @@ export const ORTSREGELN: readonly Regel[] = [
   reinigen,
 ];
 
-/** bei Füllzustand leer entfallen (R5.4, UC8-AK13); Wärme prüfen braucht eine Messung der Lösung (A) */
+/**
+ * bei Füllzustand leer entfallen (R5.4, UC8-AK13); Wärme prüfen braucht eine Messung der Lösung, Belüftung prüfen eine
+ * Kurzprüfung, die es bei leer nicht gibt (A, Prüfer Runde 1 Befund 6)
+ */
 const ENTFAELLT_BEI_LEER: ReadonlySet<AufgabenTyp> = new Set<AufgabenTyp>([
   'messen_nachfuellen',
   'messen',
@@ -431,6 +450,7 @@ const ENTFAELLT_BEI_LEER: ReadonlySet<AufgabenTyp> = new Set<AufgabenTyp>([
   'loesung_wechseln',
   'kontrolle_folgetag',
   'kurzpruefung',
+  'belueftung_pruefen',
   'wurzeln_pruefen',
   'waerme_pruefen',
   'station_echte_blaetter',

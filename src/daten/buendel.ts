@@ -1,6 +1,12 @@
 // Offline-Bündel laden und lesen (04_architektur.md 4.2, Konzept 11.1, Plan 11): erst ist_tim(), dann alle Teile
 // seitenweise; nur wenn alles vollständig ist, ersetzt ein einziges put den Eintrag «aktuell» (sonst bleibt der alte).
-import { buendelPruefen, fensterBeginn, letzterJeOrt, type Buendel } from '../domain/datenpfad/buendel.ts';
+import {
+  buendelPruefen,
+  fensterBeginn,
+  letzterJeOrt,
+  nachfuellenSeitNeuansatz,
+  type Buendel,
+} from '../domain/datenpfad/buendel.ts';
 import type { Zeitkontext } from '../domain/datenpfad/erfassung.ts';
 import { fehlerEinordnen, type RohFehler, type Schreibfehler } from '../domain/datenpfad/fehler.ts';
 import { gespeicherteNutzerId, SITZUNG_SCHLUESSEL } from '../anmeldung/sitzung.ts';
@@ -278,6 +284,14 @@ export function erstelleBuendelLaden(
       );
       const schritte = teile['ansatz_schritt'] as { ansatz_id: string }[] | undefined;
       if (schritte) teile['ansatz_schritt'] = schritte.filter((x) => laufend.has(x.ansatz_id));
+      // Nachfüllen seit dem letzten Neuansatz für die Aufgaben-Rechnung (Plan 27), ohne Positionen und Schritte
+      if (ansaetze)
+        teile['naehrloesungsansatz'] = [
+          ...new Set([
+            ...((teile['naehrloesungsansatz'] as typeof ansaetze | undefined) ?? []),
+            ...nachfuellenSeitNeuansatz(ansaetze),
+          ]),
+        ];
       // v_messung_unsicher hat kein gilt_ab: auf die Messungen im Fenster beschränken (Runde 1, Befund 9)
       const imFenster = new Set((teile['messung'] as { id: string }[] | undefined)?.map((m) => m.id));
       const unsicher = teile['v_messung_unsicher'] as { messung_id: string }[] | undefined;

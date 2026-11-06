@@ -304,7 +304,8 @@ function lageVon(teile: Teile, satzId: string, jetzt: Date, zeitzone: Zeitzone):
 }
 
 function terminVon(lage: Lage, zeitzone: Zeitzone) {
-  const erfasst = lage.satz.client_zeit ?? lage.satz.erfasst_am ?? lage.satz.gilt_ab;
+  // ohne Zeitpunkt (unvollständige Zeile) der Saattag, damit Heute nie an einem Satz scheitert (Plan 27)
+  const erfasst = lage.satz.client_zeit ?? lage.satz.erfasst_am ?? lage.satz.gilt_ab ?? lage.satz.saatdatum;
   return keimPruefTermin(
     {
       satzId: lage.satz.id,
@@ -737,7 +738,8 @@ export function keimTermine(teile: Teile, jetzt: Date, zeitzone: Zeitzone): Keim
       anlageId: lage.anlageId,
       datenart: lage.datenart,
       saatdatum: satz.saatdatum,
-      erfasstAm: satz.client_zeit ?? satz.erfasst_am ?? satz.gilt_ab,
+      // ohne Zeitpunkt (unvollständige Zeile) zählt der Saattag, damit die Rechnung nie wirft
+      erfasstAm: satz.client_zeit ?? satz.erfasst_am ?? satz.gilt_ab ?? satz.saatdatum,
       keimdauer: lage.keimdauer,
       ...(keimart ? { keimart } : {}),
       geprueft: lage.letztePruefung !== undefined,

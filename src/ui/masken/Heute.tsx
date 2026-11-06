@@ -7,7 +7,7 @@ import { kalibrierStand, kalibrierText } from '../../domain/kalibrierung/stand.t
 import { messFaelligkeit, type Messfaelligkeit } from '../../domain/messung/faelligkeit.ts';
 import { heuteGruppiert, nachAnlage } from '../../domain/anlage/gruppen.ts';
 import { einstellungenAus, faelligeAufgaben } from '../../domain/aufgaben.ts';
-import { Aufgabenliste } from './Aufgabenliste.tsx';
+import { Aufgabenliste, aufgabenSicher } from './Aufgabenliste.tsx';
 import { Ablaeufe } from './Ablaeufe.tsx';
 import { Phasenkarten } from './Phasenkarten.tsx';
 import { Erntekarten } from './Erntekarten.tsx';
@@ -140,7 +140,9 @@ function Uebersicht({ jetzt }: { jetzt: Date }) {
   const messungen = messungenIm(buendel);
   // erste fällige Aufgabe je Ort aus der Aufgaben-Rechnung (Plan 27), sonst die Messfälligkeit
   const ersteAufgabe = new Map<string, string>();
-  for (const a of teile ? faelligeAufgaben(teile, einstellungenAus(teile), jetzt, ZEITZONE) : [])
+  for (const a of teile
+    ? aufgabenSicher(() => faelligeAufgaben(teile, einstellungenAus(teile), jetzt, ZEITZONE), [])
+    : [])
     if (a.ort && !ersteAufgabe.has(a.ort.platzId)) ersteAufgabe.set(a.ort.platzId, a.titel);
   return (
     <>
