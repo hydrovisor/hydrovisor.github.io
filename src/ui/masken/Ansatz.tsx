@@ -200,7 +200,7 @@ function Abhakliste({ ort, teile }: { ort: Ort; teile: Teile }) {
   const [zielEc, setZielEc] = useState<number>();
   const [stadiumWahl, setStadiumWahl] = useState<Stadium>();
   const [kannen, setKannen] = useState<number>();
-  const [volumenFrage, setVolumenFrage] = useState<{ gezaehlt: number; text: string }>();
+  const [volumenFrage, setVolumenFrage] = useState<{ gezaehlt: number; betrieb: number; text: string }>();
   const [abgeschlossen, setAbgeschlossen] = useState<{ text: string[] }>();
   const sendet = useRef(false);
   const aktivRef = useRef<HTMLDivElement>(null);
@@ -575,7 +575,7 @@ function Abhakliste({ ort, teile }: { ort: Ort; teile: Teile }) {
       const vorschlag = volumenVorschlag(gezaehlt, betrieb);
       neu = { ...neu, volumen: Math.round(gezaehlt * 100) };
       // mehr als 10 % Abweichung: Korrekturvorschlag mit Ja/Nein statt stiller Übernahme (R9.3, Prüfer R2-1)
-      if (vorschlag) setVolumenFrage({ gezaehlt, text: vorschlag.text });
+      if (vorschlag) setVolumenFrage({ gezaehlt, betrieb, text: vorschlag.text });
       else {
         const v = pruefschritt4Vorgang(teile, ort.platzId, gezaehlt, false, neueClientId, t);
         extra.push(...v);
@@ -857,7 +857,7 @@ function Abhakliste({ ort, teile }: { ort: Ort; teile: Teile }) {
       ))}
       {volumenFrage ? (
         <Card title="Gezählt weicht ab">
-          <p>{`${volumenFrage.gezaehlt.toFixed(1)} l statt ${(eingaben.volumen / 100).toFixed(1)} l gezählt. ${volumenFrage.text}?`}</p>
+          <p>{`${volumenFrage.gezaehlt.toFixed(1)} l statt ${volumenFrage.betrieb.toFixed(1)} l gezählt. ${volumenFrage.text}?`}</p>
           <div className="hv-ansatz-frage">
             <Button variant="secondary" onClick={() => volumenAntwort(false)}>
               Nein, beibehalten
