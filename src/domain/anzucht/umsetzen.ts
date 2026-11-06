@@ -136,12 +136,19 @@ export function umsetzAnsicht(
     .filter((p) => p.satz_id === satzId)
     .map((p) => p.id)
     .sort((x, y) => {
-      // Folge wie am Regal: Station und Loch, dann Box (Runde 1 Befund 13)
-      const schluessel = (id: string) => {
-        const z = zustand.get(id);
-        return `${z?.platz_id ?? '~'}|${String(z?.loch_nr ?? 999).padStart(3, '0')}|${id}`;
-      };
-      return schluessel(x).localeCompare(schluessel(y));
+      // Folge wie am Regal: zuerst Stationen nach Kennung und Loch, dann Box, zuletzt nach ID (Runde 2 Befund 1)
+      const zx = zustand.get(x);
+      const zy = zustand.get(y);
+      const sx = zx?.platz_id && istStation(teile, zx.platz_id) ? 0 : 1;
+      const sy = zy?.platz_id && istStation(teile, zy.platz_id) ? 0 : 1;
+      return (
+        sx - sy ||
+        kennungVon(teile, zx?.platz_id).localeCompare(kennungVon(teile, zy?.platz_id), 'de', {
+          numeric: true,
+        }) ||
+        Number(zx?.loch_nr ?? 999) - Number(zy?.loch_nr ?? 999) ||
+        x.localeCompare(y)
+      );
     });
 
   const saemlinge: Saemling[] = [];
@@ -291,6 +298,10 @@ export function umsetzEingabePruefen(
       continue;
     }
     const ziel = zielOrt(teile, z.netztopfId);
+    // entfernte Gefässe sind kein Ziel, auch in der letzten Prüfung vor dem Schreiben (Runde 2 Befund 6)
+    const zielGefaess = ziel ? gefaessAm(teile, ziel.platzId) : undefined;
+    if (zielGefaess && gefaessStatus(teile, zielGefaess.id) === 'entfernt')
+      v.push({ feld: 'entfernt', grund: 'Zielgefäss ist entfernt' });
     if (
       topf.groesseMm !== 80 ||
       !ziel ||

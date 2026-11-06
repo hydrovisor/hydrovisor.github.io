@@ -23,7 +23,8 @@ import {
   lochName,
   lochText,
 } from '../../domain/pflanzung/topf.ts';
-import { tagKurz } from '../../domain/zeit.ts';
+import { kalendertag, tagKurz, tagPlus, tageZwischen } from '../../domain/zeit.ts';
+import { Stepper } from '../bausteine/Stepper.tsx';
 import { ZEITZONE } from '../../domain/zeit.ts';
 import { Button } from '../bausteine/Button.tsx';
 import { Deckel } from '../bausteine/Deckel.tsx';
@@ -33,6 +34,8 @@ import { hashZu } from '../router.ts';
 import '../umsetzen.css';
 
 const uhrJetzt = () => new Date(Date.now());
+/** Sperre nach einem Tipp (U13) */
+const SPERRE_MS = 400;
 
 type Schritt =
   | { art: 'uebersicht' }
@@ -92,31 +95,38 @@ function Maske({ satz, wie, jetzt }: { satz: string; wie: 'geplant' | undefined;
   const [sendet, setSendet] = useState(false);
   // derselbe Vorgang bei jeder Wiederholung derselben Eingabe (TO2): gleiche client_id
   const vorgangFuer = useRef<{ schluessel: string; vorgang: Vorgang } | undefined>(undefined);
-  const sendetRef = useRef(false);
-  const letzterTipp = useRef(0);
+  const sperre = useRef(false);
 
   if (!a) return null;
+  const heute = kalendertag(jetzt, ZEITZONE);
   const ohneZiel = a.saemlinge.filter((s) => !s.zieltopf).map((s) => s.pflanzungId);
   const belegt = a.saemlinge.filter((s) => s.zieltopf && !s.zieltopf.frei);
   const geplant = wieGeplant(a);
   const planZeilen = umsetzZusammenfassung(teile, geplant, jetzt, ZEITZONE).zeilen;
 
-  async function senden(eingabe: UmsetzEingabe) {
-    // Sperre 400 ms gegen Doppeltipps (U13; Runde 1 Befund 3)
-    const nun = uhrJetzt().getTime();
-    if (sendetRef.current || nun - letzterTipp.current < 400) return;
-    letzterTipp.current = nun;
-    sendetRef.current = true;
+  /** Sperre wie in Keimung (U13; Runde 2 Befund 2): nach Erfolg noch 400 ms, nach einem Fehler sofort frei */
+  async function mitSperre(f: () => Promise<boolean>) {
+    if (sperre.current) return;
+    sperre.current = true;
+    setSendet(true);
+    let ok = false;
     try {
-      await sendenOhneSperre(eingabe);
+      ok = await f();
     } finally {
-      // nach der Antwort ist ein neuer Tipp erlaubt; die Sperre gilt nur für Doppeltipps während des Sendens
-      sendetRef.current = false;
-      letzterTipp.current = 0;
+      const frei = () => {
+        sperre.current = false;
+        setSendet(false);
+      };
+      if (ok) setTimeout(frei, SPERRE_MS);
+      else frei();
     }
   }
 
-  async function sendenOhneSperre(eingabe: UmsetzEingabe) {
+  function senden(eingabe: UmsetzEingabe) {
+    void mitSperre(() => sendenOhneSperre(eingabe));
+  }
+
+  async function sendenOhneSperre(eingabe: UmsetzEingabe): Promise<boolean> {
     const jetztSenden = uhrJetzt();
     const bewegt = new Set([
       ...eingabe.zuweisung.map((z) => z.pflanzungId),
@@ -133,16 +143,17 @@ function Maske({ satz, wie, jetzt }: { satz: string; wie: 'geplant' | undefined;
         : umsetzVorgang(teile, eingabe, neueClientId, jetztSenden, ZEITZONE);
     if (vorgang.length === 0) {
       setFehler('Eingabe nicht gültig, nicht gespeichert');
-      return;
+      return false;
     }
     vorgangFuer.current = { schluessel, vorgang };
     const z = umsetzZusammenfassung(teile, eingabe, jetzt, ZEITZONE);
-    setSendet(true);
     const r = await schreiben(vorgang, { jetzt: jetztSenden, zeitzone: ZEITZONE });
-    setSendet(false);
-    if (r.status === 'nicht_gespeichert') {
-      setFehler(r.fehler.text);
-      return;
+    // auch «abweichend» ist kein Erfolg (Runde 2 Befund 10)
+    if (r.status !== 'gespeichert') {
+      setFehler(
+        r.status === 'nicht_gespeichert' ? r.fehler.text : 'Schon anders gespeichert, nicht übernommen',
+      );
+      return false;
     }
     setFehler(undefined);
     setSchritt({
@@ -153,15 +164,20 @@ function Maske({ satz, wie, jetzt }: { satz: string; wie: 'geplant' | undefined;
       ...(z.rest ? { rest: z.rest } : {}),
       ...(z.stationLeer ? { stationLeer: z.stationLeer } : {}),
     });
+    return true;
   }
 
-  async function zuruecknehmen(vorgang: Vorgang) {
-    const r = await schreiben(saatRueckgaengig(vorgang), { jetzt: uhrJetzt(), zeitzone: ZEITZONE });
-    if (r.status === 'nicht_gespeichert') setFehler(r.fehler.text);
-    else {
+  function zuruecknehmen(vorgang: Vorgang) {
+    void mitSperre(async () => {
+      const r = await schreiben(saatRueckgaengig(vorgang), { jetzt: uhrJetzt(), zeitzone: ZEITZONE });
+      if (r.status !== 'gespeichert') {
+        setFehler(r.status === 'nicht_gespeichert' ? r.fehler.text : 'Nicht zurückgenommen');
+        return false;
+      }
       vorgangFuer.current = undefined;
       setSchritt({ art: 'uebersicht' });
-    }
+      return true;
+    });
   }
 
   const fehlerBanner = fehler ? (
@@ -192,6 +208,11 @@ function Maske({ satz, wie, jetzt }: { satz: string; wie: 'geplant' | undefined;
               ? `In der Station gelassen bis ${tagKurz(gelassen[0]?.bis ?? '')}: ${saemlingeText(gelassen.length)}`
               : `Beendet: ${saemlingeText(schritt.eingabe.ueberzaehlig.length)}`}
         </p>
+        {n > 0 && gelassen.length > 0 ? (
+          <p className="hv-umsetzen-ansatz">
+            {`In der Station gelassen bis ${tagKurz(gelassen[0]?.bis ?? '')}: ${saemlingeText(gelassen.length)}`}
+          </p>
+        ) : null}
         {schritt.rest ? (
           <Notice kompakt tone="info">
             {schritt.rest}
@@ -206,12 +227,12 @@ function Maske({ satz, wie, jetzt }: { satz: string; wie: 'geplant' | undefined;
           <Button
             variant="secondary"
             disabled={sendet}
-            onClick={() => void senden({ ...leer(satz), ueberzaehlig: rest })}
+            onClick={() => senden({ ...leer(satz), ueberzaehlig: rest })}
           >
             Überzählige beenden
           </Button>
         ) : null}
-        <Button variant="secondary" disabled={sendet} onClick={() => void zuruecknehmen(schritt.vorgang)}>
+        <Button variant="secondary" disabled={sendet} onClick={() => zuruecknehmen(schritt.vorgang)}>
           Rückgängig machen
         </Button>
         <a className="hv-btn hv-btn-primary" href={hashZu({ name: 'heute' })}>
@@ -247,6 +268,25 @@ function Maske({ satz, wie, jetzt }: { satz: string; wie: 'geplant' | undefined;
           </Notice>
         ))}
         {z.ansatz ? <p className="hv-umsetzen-ansatz">{z.ansatz}</p> : null}
+        {schritt.art === 'bestaetigen' && eingabe.inStationLassen.length > 0 && a.inStationLassenBis ? (
+          // R6.2 / A11: Datum zwischen morgen und Saat + «Umsetzen bis» wählbar (Runde 2 Befund 3)
+          <Stepper
+            label="In der Station lassen bis"
+            wert={tageZwischen(heute, eingabe.inStationLassen[0]?.bis ?? a.inStationLassenBis)}
+            min={1}
+            max={tageZwischen(heute, a.inStationLassenBis)}
+            anzeige={(w) => tagKurz(tagPlus(heute, w))}
+            onWert={(w) =>
+              setSchritt({
+                art: 'bestaetigen',
+                eingabe: {
+                  ...eingabe,
+                  inStationLassen: eingabe.inStationLassen.map((x) => ({ ...x, bis: tagPlus(heute, w) })),
+                },
+              })
+            }
+          />
+        ) : null}
         <div className="hv-umsetzen-fuss">
           <Button
             variant="secondary"
@@ -262,7 +302,7 @@ function Maske({ satz, wie, jetzt }: { satz: string; wie: 'geplant' | undefined;
           </Button>
           <Button
             disabled={sendet || eingabe.zuweisung.length + eingabe.inStationLassen.length === 0}
-            onClick={() => void senden(eingabe)}
+            onClick={() => senden(eingabe)}
           >
             {schritt.art === 'zusammen' ? 'Umsetzen' : 'Umsetzen bestätigen'}
           </Button>
@@ -469,7 +509,7 @@ function Maske({ satz, wie, jetzt }: { satz: string; wie: 'geplant' | undefined;
             <Button
               variant="secondary"
               disabled={sendet}
-              onClick={() => void senden({ ...leer(satz), ueberzaehlig: ohneZiel })}
+              onClick={() => senden({ ...leer(satz), ueberzaehlig: ohneZiel })}
             >
               Überzählige beenden
             </Button>

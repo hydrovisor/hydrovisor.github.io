@@ -297,6 +297,6 @@ button.hv-tile { cursor: pointer; touch-action: manipulation; }
 
 /* Deckel mit Töpfen (Plan 33): Topf ausser Heimplatz gestrichelt mit «↔», abwesender Heimtopf gepunktet mit «weg»,
    gewählter Quelltopf umrandet; der Text im Loch trägt den Zustand mit, nie nur Farbe */
-.hv-loch-fremd { border-style: dashed; }
+.hv-loch-fremd { border-style: double; border-width: 4px; }
 .hv-loch-abwesend { border-style: dotted; color: var(--ink-muted); }
 .hv-loch-markiert { outline: 3px solid var(--brand); outline-offset: 2px; }

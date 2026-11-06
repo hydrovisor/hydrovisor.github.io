@@ -107,6 +107,10 @@ export function verschiebenPruefen(
   if (ort.platzId === e.zielPlatzId && ort.lochNr === e.zielLochNr)
     return [{ feld: 'gleich', grund: 'Topf steht schon hier' }];
   // R8.3: Station verlassen nur über Umsetzen, nicht auf eine Station verschieben
+  // entfernte Gefässe sind kein Ziel, auch in der letzten Prüfung vor dem Schreiben (Runde 2 Befund 6)
+  const zielGefaess = gefaessAm(teile, e.zielPlatzId);
+  if (zielGefaess && gefaessStatus(teile, zielGefaess.id) === 'entfernt')
+    v.push({ feld: 'entfernt', grund: 'Zielgefäss ist entfernt' });
   if (istStation(teile, ort.platzId) || istStation(teile, e.zielPlatzId))
     v.push({ feld: 'station', grund: HINWEIS_STATION });
   // R8.3: gleiche Topfgrösse, auch für den Partner beim Tausch

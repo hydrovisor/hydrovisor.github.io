@@ -26,8 +26,7 @@ export function Verschieben({ topf }: { topf: string }) {
   const [ergebnis, setErgebnis] = useState<{ text: string; vorgang: Vorgang }>();
   const [fehler, setFehler] = useState<string>();
   const [sendet, setSendet] = useState(false);
-  const laeuft = useRef(false);
-  const letzterTipp = useRef(0);
+  const sperre = useRef(false);
   const vorgangFuer = useRef<{ schluessel: string; r: ReturnType<typeof verschiebVorgang> } | undefined>(
     undefined,
   );
@@ -49,11 +48,30 @@ export function Verschieben({ topf }: { topf: string }) {
   const loecher = verschiebZiele(teile, a.topf.netztopfId, zielPlatz, jetzt, ZEITZONE);
   const gefaessCode = topf.replace(/\.\d+$/, '');
 
-  async function tippen(nr: number) {
-    // Sperre 400 ms und kein zweiter Vorgang, solange einer läuft (U13; Runde 1 Befund 3)
-    const nun = uhrJetzt().getTime();
-    if (!a || laeuft.current || nun - letzterTipp.current < 400) return;
-    letzterTipp.current = nun;
+  /** Sperre wie in Keimung (U13; Runde 2 Befund 2): nach Erfolg noch 400 ms, nach einem Fehler sofort frei */
+  async function mitSperre(f: () => Promise<boolean>) {
+    if (sperre.current) return;
+    sperre.current = true;
+    setSendet(true);
+    let ok = false;
+    try {
+      ok = await f();
+    } finally {
+      const frei = () => {
+        sperre.current = false;
+        setSendet(false);
+      };
+      if (ok) setTimeout(frei, 400);
+      else frei();
+    }
+  }
+
+  function tippen(nr: number) {
+    void mitSperre(() => tippenOhneSperre(nr));
+  }
+
+  async function tippenOhneSperre(nr: number): Promise<boolean> {
+    if (!a) return false;
     const jetztSenden = uhrJetzt();
     const eingabe = { netztopfId: a.topf.netztopfId, zielPlatzId: zielPlatz, zielLochNr: nr };
     const schluessel = JSON.stringify(eingabe);
@@ -62,27 +80,33 @@ export function Verschieben({ topf }: { topf: string }) {
       vorgangFuer.current?.schluessel === schluessel
         ? vorgangFuer.current.r
         : verschiebVorgang(teile, eingabe, neueClientId, jetztSenden, ZEITZONE);
-    if (r.vorgang.length === 0) return;
+    if (r.vorgang.length === 0) return false;
     vorgangFuer.current = { schluessel, r };
-    laeuft.current = true;
-    setSendet(true);
     const antwort = await schreiben(r.vorgang, { jetzt: jetztSenden, zeitzone: ZEITZONE });
-    laeuft.current = false;
-    letzterTipp.current = 0;
-    setSendet(false);
-    if (antwort.status === 'nicht_gespeichert') setFehler(antwort.fehler.text);
-    else {
-      setFehler(undefined);
-      vorgangFuer.current = undefined;
-      setErgebnis({ text: r.text, vorgang: r.vorgang });
+    if (antwort.status !== 'gespeichert') {
+      setFehler(antwort.status === 'nicht_gespeichert' ? antwort.fehler.text : 'Schon anders gespeichert');
+      return false;
     }
+    setFehler(undefined);
+    vorgangFuer.current = undefined;
+    setErgebnis({ text: r.text, vorgang: r.vorgang });
+    return true;
   }
 
-  async function zuruecknehmen() {
-    if (!ergebnis) return;
-    const r = await schreiben(saatRueckgaengig(ergebnis.vorgang), { jetzt: uhrJetzt(), zeitzone: ZEITZONE });
-    if (r.status === 'nicht_gespeichert') setFehler(r.fehler.text);
-    else setErgebnis(undefined);
+  function zuruecknehmen() {
+    void mitSperre(async () => {
+      if (!ergebnis) return false;
+      const r = await schreiben(saatRueckgaengig(ergebnis.vorgang), {
+        jetzt: uhrJetzt(),
+        zeitzone: ZEITZONE,
+      });
+      if (r.status !== 'gespeichert') {
+        setFehler(r.status === 'nicht_gespeichert' ? r.fehler.text : 'Nicht zurückgenommen');
+        return false;
+      }
+      setErgebnis(undefined);
+      return true;
+    });
   }
 
   return (
@@ -101,7 +125,7 @@ export function Verschieben({ topf }: { topf: string }) {
           <p className="hv-umsetzen-ergebnis" role="status">
             {ergebnis.text}
           </p>
-          <Button variant="secondary" disabled={sendet} onClick={() => void zuruecknehmen()}>
+          <Button variant="secondary" disabled={sendet} onClick={() => zuruecknehmen()}>
             Rückgängig machen
           </Button>
           <a className="hv-btn hv-btn-primary" href={hashZu({ name: 'gefaess', code: gefaessCode })}>
@@ -139,10 +163,14 @@ export function Verschieben({ topf }: { topf: string }) {
               zustand: l.zustand,
               zustandName: [l.zustandName, lochName(l)].filter(Boolean).join(' · '),
               ...(lochText(l) !== undefined ? { text: lochText(l) as string } : {}),
-              ...(lochArt(l) ? { art: lochArt(l) } : {}),
+              ...(l.zustandName === 'dieser Topf'
+                ? { art: 'markiert' as const }
+                : lochArt(l)
+                  ? { art: lochArt(l) }
+                  : {}),
               ...(l.nichtWaehlbar ? { nichtWaehlbar: true } : {}),
             }))}
-            onLoch={(nr) => void tippen(nr)}
+            onLoch={(nr) => tippen(nr)}
           />
         </>
       )}
