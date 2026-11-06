@@ -281,7 +281,7 @@ test('UC5-AK7 nur freie 8-cm-Töpfe sind wählbar, reservierte, belegte und 5-cm
   await expect(loch(page, 2)).toHaveAccessibleName(/reserviert/);
   await expect(loch(page, 1)).toHaveAccessibleName(/belegt/);
   // ein Tipp auf ein nicht wählbares Loch wählt nichts
-  await loch(page, 1).click();
+  await loch(page, 1).click({ force: true });
   await expect(page.getByText('0 von 5 gewählt')).toBeVisible();
   await knopf(page, 'Zurück').click();
   await tipp(m, gefaessWahl(page, '2.1'));
