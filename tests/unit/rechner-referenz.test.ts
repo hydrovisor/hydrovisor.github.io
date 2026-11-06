@@ -1,3 +1,4 @@
+/// <reference types="node" />
 // Golden-Test des Düngerrechners gegen die Referenzdatei (Plan 28 Testliste «rechner-referenz.test.ts»; UC7-AK12;
 // Konzept R4.12; 06_tests.md Abschnitt 3; Entscheid 0012). Die Erwartungen kommen nur aus der Datei; was ihre Spalten
 // nicht tragen, steht unten in ZUSATZ je zeile_id mit Fundstelle (A20).
@@ -109,9 +110,9 @@ function quelle(): { pfad: string; fehler?: string } {
 
 function lesen(pfad: string): { kopf: string[]; zeilen: Zeile[] } {
   const text = readFileSync(join(process.cwd(), pfad), 'utf8').replace(/^\uFEFF/, '');
-  const [kopfzeile = '', ...rest] = text.split(/\r?\n/).filter((z) => z.trim() !== '');
+  const [kopfzeile = '', ...rest] = text.split(/\r?\n/).filter((z: string) => z.trim() !== '');
   const kopf = kopfzeile.split(',');
-  const zeilen = rest.map((z) => {
+  const zeilen = rest.map((z: string) => {
     const felder = z.split(',');
     // hinweis ist die letzte Spalte; ein Komma darin bleibt Teil des Hinweises
     const werte = [...felder.slice(0, KOPF.length - 1), felder.slice(KOPF.length - 1).join(',')];
