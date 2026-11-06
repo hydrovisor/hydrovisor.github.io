@@ -197,6 +197,14 @@ export interface Fragekarte {
   zeilen: Fragezeile[];
 }
 
+/** Kürzel der Anlage eines Platzes; der Titel nennt es nur, wenn es mehrere Anlagen gibt (A) */
+const anlageKuerzel = (teile: Teile, platzId: string) => {
+  const anlage = zeilen<{ id: string; anlage_id: string }>(teile, 'platz').find(
+    (p) => p.id === platzId,
+  )?.anlage_id;
+  return zeilen<{ id: string; kuerzel: string }>(teile, 'anlage').find((a) => a.id === anlage)?.kuerzel;
+};
+
 const kennung = (teile: Teile, platzId: string | null | undefined) =>
   zeilen<{ id: string; kennung: string }>(teile, 'platz').find((p) => p.id === platzId)?.kennung ?? '';
 
@@ -248,6 +256,10 @@ export function phasenKarten(
 ): { nachfuehren?: { titel: string; zeilen: NachfuehrZeile[] }; fragen: Fragekarte[] } {
   const heute = kalendertag(jetzt, zeitzone);
   const nachfuehren: NachfuehrZeile[] = [];
+  const mehrereAnlagen =
+    zeilen<{ aktiv?: boolean; storniert_am?: string | null }>(teile, 'anlage').filter(
+      (x) => x.aktiv !== false && (x.storniert_am ?? null) === null,
+    ).length > 1;
   const karten = new Map<string, Fragekarte>();
   for (const satz of zeilen<Satz>(teile, 'satz').filter((s) => s.storniert_am === null)) {
     const pflanzung = pflanzungVonSatz(teile, satz.id);
@@ -256,8 +268,20 @@ export function phasenKarten(
     if (!stand) continue;
     const folge = phasenfolge(teile, satz.sorte_id, satz.kulturform);
     const { sorte, art } = sorteUndArt(teile, satz.sorte_id);
-    const zustand = zeilen<Zustand>(teile, 'v_pflanzung_zustand').find((z) => z.pflanzung_id === pflanzung);
-    const ort = kennung(teile, zustand?.platz_id ?? satz.direktsaat_platz_id ?? satz.anzuchtort_platz_id);
+    // Ort = Platz mit den meisten aktiven Pflanzungen des Satzes, bei Gleichstand nach Kennung (A12; Befund 10)
+    const zaehler = new Map<string, number>();
+    for (const z of zeilen<Zustand>(teile, 'v_pflanzung_zustand'))
+      if (z.satz_id === satz.id && z.status === 'aktiv') {
+        const p = z.platz_id ?? satz.direktsaat_platz_id ?? satz.anzuchtort_platz_id ?? '';
+        zaehler.set(p, (zaehler.get(p) ?? 0) + 1);
+      }
+    const ortId =
+      [...zaehler.entries()].sort(
+        (a, b) =>
+          b[1] - a[1] || kennung(teile, a[0]).localeCompare(kennung(teile, b[0]), 'de', { numeric: true }),
+      )[0]?.[0] ?? '';
+    const ort = kennung(teile, ortId);
+    const kuerzel = anlageKuerzel(teile, ortId);
     // vor dem Stichtag oder vor dem Erfassungstag erwartete Wechsel: Karte «Phasen nachführen» (R1.6, A3)
     const grenze = [phasenlogikAb, erfasstAm(satz, zeitzone)].sort().at(-1) as string;
     const wechsel = erwarteteWechsel(folge, stand.phase, stand.beginn, heute);
@@ -289,9 +313,9 @@ export function phasenKarten(
       frage: stand.wechselmerkmal ?? FRAGE_OHNE_MERKMAL,
       faelligAm: stand.frageAm,
     };
-    const schluessel = `${art}|${ort}|${satz.saatdatum}`;
+    const schluessel = `${art}|${ortId}|${satz.saatdatum}`;
     const karte = karten.get(schluessel) ?? {
-      titel: `${art} · ${ort} · gesät ${tagKurz(satz.saatdatum)}`,
+      titel: `${art} · ${kuerzel && mehrereAnlagen ? `${kuerzel}-` : ''}${ort} · gesät ${tagKurz(satz.saatdatum)}`,
       art,
       ort,
       saatdatum: satz.saatdatum,
@@ -309,7 +333,12 @@ export function phasenKarten(
       const [eins] = [...merkmale];
       return merkmale.size === 1 && eins && eins !== FRAGE_OHNE_MERKMAL ? { ...k, frage: eins } : k;
     })
-    .sort((a, b) => a.faelligAm.localeCompare(b.faelligAm) || a.titel.localeCompare(b.titel));
+    .sort(
+      (a, b) =>
+        a.faelligAm.localeCompare(b.faelligAm) ||
+        a.ort.localeCompare(b.ort, 'de', { numeric: true }) ||
+        a.titel.localeCompare(b.titel),
+    );
   return {
     ...(nachfuehren.length > 0
       ? {
@@ -349,7 +378,8 @@ export function antwortVorgang(
       zeile(ids, {
         satz_id: a.satzId,
         gilt_ab: jetzt.toISOString(),
-        ...(stand.frageAm
+        // nur bei fälliger Frage (A10; Runde 1 Befund 3)
+        ...(stand.frageAm && stand.frageAm <= kalendertag(jetzt, zeitzone)
           ? {
               war_faellig_am: stand.frageAm,
               aufgabe_schluessel: `phase_bestaetigen|${a.satzId}|${stand.frageAm}`,
@@ -434,7 +464,11 @@ export function korrekturVorgang(
 }
 
 /** Rückgängig: Stornos in umgekehrter Reihenfolge; eine korrigierte Zeile kommt mit Daten und gilt_ab zurück (U4) */
-export function phasenRueckgaengig(vorgang: Vorgang, teile: Teile): Vorgang {
+export function phasenRueckgaengig(
+  vorgang: Vorgang,
+  teile: Teile,
+  ids: () => string = () => globalThis.crypto.randomUUID(),
+): Vorgang {
   const alle = [...zeilen<Antwort>(teile, 'ereignis'), ...zeilen<Antwort>(teile, 'ereignis_satz')];
   const r: Schritt[] = [];
   for (const s of [...vorgang].reverse()) {
@@ -444,8 +478,9 @@ export function phasenRueckgaengig(vorgang: Vorgang, teile: Teile): Vorgang {
     }
     if (s.art !== 'storno') continue;
     const alt = alle.find((e) => (e.client_id ?? e.id) === s.clientId);
-    if (!alt) continue;
-    const id = globalThis.crypto.randomUUID();
+    // ohne die alte Zeile kein halbes Rückgängig (Runde 1 Befund 5): die Maske gibt den Stand vor dem Speichern mit
+    if (!alt) return [];
+    const id = ids();
     r.push({
       art: 'neu',
       tabelle: 'ereignis',
