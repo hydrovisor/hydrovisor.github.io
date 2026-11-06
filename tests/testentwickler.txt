@@ -170,3 +170,9 @@ tests/unit/messung-ziffern.test.ts
 tests/unit/messung-kontext.test.ts
 tests/unit/messung-bewertung-speichern.test.ts
 tests/e2e/messen-maske.spec.ts
+# I2-06 UC6 Rest (#38)
+tests/fixtures/ernte.ts
+tests/unit/ernte-ende.test.ts
+tests/unit/pflanzenansicht.test.ts
+tests/unit/ernte-buendel.test.ts
+tests/e2e/ernte.spec.ts
