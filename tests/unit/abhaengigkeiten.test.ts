@@ -20,6 +20,9 @@ describe('Abhängigkeiten', () => {
   it('DEP-AK1 jedes qs in package-lock.json ist mindestens 6.17.1 (Warnungen bis 6.16.0)', () => {
     const qs = Object.entries(lock.packages).filter(([pfad]) => pfad.endsWith('node_modules/qs'));
     expect(qs.length).toBeGreaterThan(0);
-    for (const [pfad, p] of qs) expect(mindestens(p.version ?? '0.0.0', '6.17.1'), pfad).toBe(true);
+    for (const [pfad, p] of qs) {
+      expect(mindestens(p.version ?? '0.0.0', '6.17.1'), pfad).toBe(true);
+      expect(zahl(p.version ?? '0.0.0')[0], `${pfad} bleibt in Hauptversion 6`).toBe(6);
+    }
   });
 });
