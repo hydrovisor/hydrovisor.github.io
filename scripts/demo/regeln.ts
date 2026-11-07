@@ -7,11 +7,14 @@
 //   "heute", "heute-12"       Kalendertag in der Zeitzone
 //   "jetzt", "jetzt-12d", "jetzt-12d 18:00"  Zeitpunkt; mit Tagen ohne Uhrzeit gilt die Uhrzeit von jetzt
 //   Zahl, Text, true/false, null, Liste (SQL-Array), Objekt (jsonb)
-// Jede Zeile erhält id = md5('demo:' || ref)::uuid, client_id = md5('demo-client:' || ref)::uuid und app_version.
+// Jede Zeile ausser einmal-Zeilen erhält id = md5('demo:' || ref)::uuid, client_id = md5('demo-client:' || ref)::uuid;
+// alle erhalten app_version.
 // «einmal»: Zeile nur anlegen, wenn keine offene Zeile mit demselben Wert in dieser Spalte besteht; die Referenz
 // zeigt dann auf die vorhandene Zeile (Vorlagen ohne Anlage, die datenart_loeschen nicht entfernt). Weicht die offene
 // Zeile in einem Feld der Fixture ab, wird sie storniert und neu angelegt (Korrektur = Storno plus neue Zeile, #130);
-// id und client_id einer einmal-Zeile hängen darum vom Inhalt ab.
+// id und client_id einer einmal-Zeile hängen darum von Inhalt und Uhr ab: eine neue Fassung, auch die Rückkehr zu einer
+// früheren, trifft nie auf die ID einer stornierten Zeile. Ein Feld, das aus der Fixture verschwindet, gilt nicht als
+// Änderung (A).
 import { md5 } from './md5.ts';
 import { kalendertag, tagPlus, uhrzeit, versatz, type Zeitzone } from '../../src/domain/zeit.ts';
 
@@ -166,7 +169,9 @@ class Umsetzer {
     if (!z.ref) throw new Error(`${wo}: ref fehlt`);
     if (this.bekannt.has(z.ref)) throw new Error(`${wo}: ref doppelt: ${z.ref}`);
     // einmal-Zeilen: neue Fassung neue IDs, sonst verhindert die alte, stornierte Zeile das Anlegen (#130)
-    const schluessel = z.einmal ? `${z.ref}:${md5(JSON.stringify(z.felder)).slice(0, 12)}` : z.ref;
+    const schluessel = z.einmal
+      ? `${z.ref}:${md5(JSON.stringify(z.felder)).slice(0, 12)}:${this.uhr.jetzt.toISOString()}`
+      : z.ref;
     const felder: Record<string, Wert> = {
       id: idFuer(schluessel),
       client_id: clientIdFuer(schluessel),
@@ -191,7 +196,7 @@ class Umsetzer {
         .map((s) => name(s, wo))
         .map(
           (s) =>
-            `to_jsonb(t.${s}) = ${literal(JSON.stringify(this.json(z.felder[s] ?? null, `${wo}.${s}`)))}::jsonb`,
+            `coalesce(to_jsonb(t.${s}), 'null'::jsonb) = ${literal(JSON.stringify(this.json(z.felder[s] ?? null, `${wo}.${s}`)))}::jsonb`,
         )
         .join(' and ');
       befehl =
