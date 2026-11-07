@@ -55,9 +55,10 @@ Stand 1.11.2026 · Auftrag 3 «Arbeitsweise und Plan» · Grundlage: Konzept v1.
 | I1b-06 | Sammel-Push und Timer-Push produktiv (Tagesliste, Titel nach Gewicht, Kurzprüfung 20:00, E-Mail-Rückfall, Timer jede Minute) | F | UC8-AK7 [SQL]; UC8-AK11 (TP3) [Unit, Deno test]; TP5 bis TP7; UC8-AK8 EK5 [G] | ja | 0.75 | 75 | 30.12. |
 | I1b-07 | Einstellungen (Push-Zeit, Test-Push, Kanne, Messmittel, k, Messgerät, Thema, Pflegebudget, Ruhe, Telefon nur in der Datenbank), Notfall- und Vertretungsblatt, Anleitung «Gerät neu» | R | UC0-AK3, AK4 [Unit]; UC0-AK8 [G] | nein | 0.75 | 45 | 31.12. |
 | I1b-08 | Folgepaket #113: R5.6 Verteilung der Ansätze (`vorziehbar`, Vorziehen auf Vortage, «4 Ansätze heute»), Zeile «Offene Aufgaben» in der Maske Gefäss, «Morgen» im Kopf «Messgerät», Rundgang «Jetzt korrigieren» direkt ins Angebot «pH-Minus gegeben» | F | R5.6 und UC8 laut Plan 113 [Unit, E2E] | nein | 0.5 | 30 | 31.12. |
+| I1b-09 | Folgepaket #118: Push liest die nach R5.6 verteilte Liste (`verteilteAufgaben()`), Hinweis in den Push-Zeilen, `v_termintreue` je Schlüssel einmal, `v_push_zustellung.vor_faelligkeitstag` | F | UC8-AK10 [Unit, Deno test]; R5.6-AK8, AK10 [Unit]; R5.6-AK9, AK11 [SQL] | ja | 0.25 | 0 | 31.12. |
 | | **Summe I1b** | | | | **9.0** | **375** | |
 
-I1b-08 entstand am 7.11.2026 als Folgepaket aus Plan 30 und PR #111 (Issue #113). Es steht nicht in der Summe und in den Summen unten, weil der Paketplan seit dem 13.11. als Vergleichsbasis gilt (A); es zählt als Mehraufwand gegenüber dem Plan.
+I1b-08 entstand am 7.11.2026 als Folgepaket aus Plan 30 und PR #111 (Issue #113). Es steht nicht in der Summe und in den Summen unten, weil der Paketplan seit dem 13.11. als Vergleichsbasis gilt (A); es zählt als Mehraufwand gegenüber dem Plan. Dasselbe gilt für I1b-09 (Issue #118, Übergabe aus Plan 113 Nachtrag 13).
 
 M1 31.12.; Regalfreigabe 7.1.; M1 am Regal bestätigt 7.1. und 14.1. Die Nachholwoche 1. bis 7.1. arbeitet die `offen-regal`-AK ab (höchstens 20 offen).
 

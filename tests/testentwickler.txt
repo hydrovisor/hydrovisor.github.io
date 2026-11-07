@@ -256,3 +256,8 @@ tests/unit/aufgaben-verteilung.test.ts
 tests/e2e/verteilung-gefaess.spec.ts
 tests/e2e/rundgang-korrektur.spec.ts
 tests/unit/eingabe-aus.test.ts
+# I1b-09 Push verteilt (#118)
+tests/unit/verteilung-fixture.ts
+supabase/functions/push-taeglich/verteilung_test.ts
+tests/unit/push-verteilung.test.ts
+supabase/tests/database/19_termintreue.test.sql

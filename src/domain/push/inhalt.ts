@@ -1,5 +1,6 @@
-// Inhalt der Pushes (R5.5 Titel nach Gewicht, R5.1 gleiche Liste wie Heute, R5.4, G5; Plan 31). Grundlage ist immer
-// nurEcht(faelligeAufgaben(…)); diese Funktionen erhalten die schon gefilterte Liste und rechnen nur den Text.
+// Inhalt der Pushes (R5.5 Titel nach Gewicht, R5.1 gleiche Liste wie Heute, R5.4, R5.6, G5; Pläne 31 und 118).
+// Grundlage ist immer nurEcht(verteilteAufgaben(…)); diese Funktionen erhalten die schon gefilterte Liste und rechnen
+// nur den Text.
 import { titelNachGewicht, type Aufgabe, type Gewicht } from '../aufgaben.ts';
 
 /** Länge der ersten Zeile (A3); Android zeigt im gesperrten Zustand ungefähr so viel */
@@ -8,7 +9,18 @@ export const ERSTE_ZEILE_MAX = 120;
 const REIHENFOLGE: readonly Gewicht[] = ['ausserhalb', 'wechsel', 'routine'];
 const GRUPPE: Record<Gewicht, string> = { ausserhalb: 'Ausserhalb', wechsel: 'Wechsel', routine: 'Routine' };
 
-const zeile = (a: Aufgabe) => (a.ort ? `${a.titel} ${a.ort.code}` : a.titel);
+/** Hinweis wie in Heute (Aufgabenliste): «mitmarkiert» → «Pumpe mitmarkiert», sonst wörtlich (Plan 118 A1) */
+export function hinweisText(a: Aufgabe): string | undefined {
+  if (!a.hinweis) return undefined;
+  return a.hinweis === 'mitmarkiert' ? 'Pumpe mitmarkiert' : a.hinweis;
+}
+
+/** Zeile ab der zweiten: «Titel Code · Hinweis» («vorgezogen», «4 Ansätze heute», R5.6) */
+const zeile = (a: Aufgabe) => {
+  const text = a.ort ? `${a.titel} ${a.ort.code}` : a.titel;
+  const hinweis = hinweisText(a);
+  return hinweis ? `${text} · ${hinweis}` : text;
+};
 
 interface Gruppe {
   titel: string;

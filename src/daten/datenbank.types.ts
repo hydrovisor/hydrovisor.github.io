@@ -1816,7 +1816,7 @@ isOneToOne: false
                   ]
                 },"v_push_zustellung": {
                   Row: {
-                    "am_faelligkeitstag": number | null,"angezeigt_am": string | null,"aufgaben": number | null,"datum_lokal": string | null,"email_gesendet_am": string | null,"gesendet_am": string | null,"soll": string | null,"verspaetung_min": number | null
+                    "am_faelligkeitstag": number | null,"angezeigt_am": string | null,"aufgaben": number | null,"datum_lokal": string | null,"email_gesendet_am": string | null,"gesendet_am": string | null,"soll": string | null,"verspaetung_min": number | null,"vor_faelligkeitstag": number | null
                   }
                   ComputedFields: never
                   Relationships: [

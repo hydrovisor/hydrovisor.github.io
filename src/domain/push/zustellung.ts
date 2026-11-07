@@ -10,11 +10,14 @@ export interface ZustellungTag {
   email_gesendet_am: string | null;
   aufgaben: number | null;
   am_faelligkeitstag: number | null;
+  /** nach R5.6 vorgezogen: in der Push vor dem Fälligkeitstag (Plan 118 A4) */
+  vor_faelligkeitstag: number | null;
 }
 
 /**
- * EK5: Anteil der Aufgaben der Tagesliste, die am Fälligkeitstag in einer angezeigten Push standen; Nenner alle
- * Aufgaben der Tage. undefined ohne Aufgaben.
+ * EK5: Anteil der Aufgaben der Tagesliste, die spätestens in der Push des Fälligkeitstags standen (Konzept 2.3), also
+ * am Fälligkeitstag oder nach R5.6 vorgezogen davor, und deren Push angezeigt wurde; Nenner alle Aufgaben der Tage
+ * (Plan 118 A4). undefined ohne Aufgaben.
  */
 export function ek5Anteil(
   tage: readonly ZustellungTag[],
@@ -23,7 +26,7 @@ export function ek5Anteil(
   let nenner = 0;
   for (const t of tage) {
     nenner += t.aufgaben ?? 0;
-    if (t.angezeigt_am) zaehler += t.am_faelligkeitstag ?? 0;
+    if (t.angezeigt_am) zaehler += (t.am_faelligkeitstag ?? 0) + (t.vor_faelligkeitstag ?? 0);
   }
   return nenner === 0 ? undefined : { anteil: zaehler / nenner, zaehler, nenner };
 }

@@ -49,6 +49,7 @@ function ZustellungZeile({ t }: { t: ZustellungTag }) {
       <span className="hv-num">{tagKurz(t.datum_lokal ?? '')}</span> {gesendet}, angezeigt{' '}
       {t.angezeigt_am ? uhrzeit(new Date(t.angezeigt_am), ZEITZONE) : '–'}, Aufgaben {t.aufgaben ?? 0}, davon
       am Fälligkeitstag {t.am_faelligkeitstag ?? 0}
+      {t.vor_faelligkeitstag ? `, vorgezogen ${t.vor_faelligkeitstag}` : ''}
     </li>
   );
 }
@@ -75,7 +76,7 @@ function Zustellung() {
         <>
           {ek5 ? (
             <p>
-              Am Fälligkeitstag zugestellt:{' '}
+              Spätestens am Fälligkeitstag zugestellt:{' '}
               <span className="hv-num">
                 {Math.round(ek5.anteil * 100)} % ({ek5.zaehler} von {ek5.nenner})
               </span>
