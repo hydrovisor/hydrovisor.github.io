@@ -10,6 +10,9 @@
 //   auch die Wochentagsform «fällig Do» aus dem AK-Text zu.
 // - Welche von vier gleichrangigen Aufgaben wandert, legt der Test nicht fest (A3: Sortierung von alleAufgaben()),
 //   nur, dass es genau eine ist und dass gleiche Eingaben gleiche Listen geben.
+// Nachträge nach Prüfer Runde 1 (Plan 113 Punkte 10 bis 12): Wechsel mit «mit 1. echte Blätter» trägt
+// `fruehestens` = Stationstag und wird nie davor gezogen; «Station auf 1. echte Blätter» zählt als Ansatz und ist
+// nicht vorziehbar; «Morgen» gilt auch bei der Erstkalibrierung.
 import { describe, expect, it } from 'vitest';
 import {
   alleAufgaben,
@@ -67,6 +70,7 @@ const faellig = (t: Teile, jetzt: Date = MI_JETZT, e?: AufgabenEinstellungen) =>
   faelligeAufgaben(t, e ?? einstellungenAus(t), jetzt, ZONE);
 const alle = (t: Teile, jetzt: Date = MI_JETZT) => alleAufgaben(t, einstellungenAus(t), jetzt, ZONE);
 const vorziehbar = (a: Aufgabe) => (a as Aufgabe & { vorziehbar?: true }).vorziehbar;
+const fruehestens = (a: Aufgabe) => (a as Aufgabe & { fruehestens?: string }).fruehestens;
 const ansatzArt = (l: readonly Aufgabe[]) =>
   l.filter((a) => a.typ === 'loesung_wechseln' || a.typ === 'ansatz');
 const GRUND_DO = /^fällig (Do|14\.1\.)$/;
@@ -94,6 +98,28 @@ function mitWechsel(
 const VIER = ['R-1.1', 'R-1.2', 'R-2.1', 'R-2.2'] as const;
 const vierAmDonnerstag = () => fertig(mitWechsel(leer(), VIER));
 
+/**
+ * Station 4.4 (Konstantpegel, feste Dosis) mit Neuansatz am Tag `neuansatz` (Wechsel nach Intervall + 14) und
+ * Stationseintritt von Satz 2 am Tag `eintritt` (1. echte Blätter am Eintritt + 15)
+ */
+function mitStation(t: Teile, neuansatz: string, eintritt: string): Teile {
+  gefaessDazu(t, {
+    code: 'R-4.4',
+    betriebsart: 'konstantpegel',
+    luftpumpe: 'P4',
+    festeDosis: true,
+    volumenL: 2.3,
+  });
+  ansatzDazu(t, 'R-4.4', { begonnen: zh(neuansatz) });
+  boxDazu(t, 'R-A1', 'box_licht');
+  const p = satzDazu(t, { nr: 2, sorte: 'lollo', box: 'R-A1', saat: '2026-12-01' });
+  p.forEach((id, i) => {
+    keimungDazu(t, id, 2, zh('2026-12-05'));
+    verschiebenDazu(t, id, 'R-4.4', zh(eintritt), i + 1);
+  });
+  return t;
+}
+
 // ---------------------------------------------------------------- synthetische Aufgaben für verteilen()
 
 let laufnummer = 0;
@@ -101,10 +127,11 @@ let laufnummer = 0;
 function aufgabe(e: {
   faelligAm: string;
   anzeigeAb?: string;
-  typ?: 'loesung_wechseln' | 'ansatz' | 'messen_nachfuellen';
+  typ?: 'loesung_wechseln' | 'ansatz' | 'station_echte_blaetter' | 'messen_nachfuellen';
   anlage?: string;
   vorziehbar?: boolean;
   titel?: string;
+  fruehestens?: string;
 }): Aufgabe {
   laufnummer += 1;
   const typ = e.typ ?? 'loesung_wechseln';
@@ -128,7 +155,11 @@ function aufgabe(e: {
     pegelOk: false,
     erledigtKnopf: false,
   };
-  return (e.vorziehbar === false ? basis : { ...basis, vorziehbar: true }) as Aufgabe;
+  return {
+    ...basis,
+    ...(e.vorziehbar === false ? {} : { vorziehbar: true }),
+    ...(e.fruehestens !== undefined ? { fruehestens: e.fruehestens } : {}),
+  } as Aufgabe;
 }
 function uidVon(n: number): string {
   return `f0000000-0000-4000-8000-${n.toString(16).padStart(12, '0')}`;
@@ -148,9 +179,10 @@ const mitUeberzahl = (m: ReadonlyMap<string, Verteilt>, l: readonly Aufgabe[]) =
 // ---------------------------------------------------------------- R5.6-AK1
 
 describe('R5.6-AK1 Vorziehen bei Überlast', () => {
-  it('R5.6-AK1 Grenze 3 Ansätze je Tag; Ansatz-Typen sind Lösung wechseln und Ansatz', () => {
+  it('R5.6-AK1 Grenze 3 Ansätze je Tag; Ansatz-Typen sind Lösung wechseln, Ansatz und Station', () => {
     expect(MAX_ANSAETZE_JE_TAG).toBe(3);
-    expect([...ANSATZ_TYPEN].sort()).toEqual(['ansatz', 'loesung_wechseln']);
+    // Plan 113 Punkt 11: «Station auf 1. echte Blätter» wird durch einen Neuansatz erledigt (R4.3)
+    expect([...ANSATZ_TYPEN].sort()).toEqual(['ansatz', 'loesung_wechseln', 'station_echte_blaetter']);
     // nur Ansatz-Aufgaben stehen in der Map
     const routine = aufgabe({ faelligAm: DO, typ: 'messen_nachfuellen', vorziehbar: false });
     const m = verteilen([routine, ...viele(4, { faelligAm: DO })], MI, KEINE);
@@ -195,35 +227,74 @@ describe('R5.6-AK1 Vorziehen bei Überlast', () => {
     expect(verteilt(t)).toEqual(faellig(t));
   });
 
-  it('R5.6-AK1 Station mit «mit 1. echte Blätter» vorgezogen → Hinweis «mit 1. echte Blätter · vorgezogen»', () => {
-    const t = leer();
-    // drei Wechsel aus naechster_wechsel_am (nicht vorziehbar) am Do, Neuansatz 2.1. (Intervall wäre 16.1.)
-    mitWechsel(t, ['R-1.1', 'R-1.2', 'R-2.1'], '2027-01-02', { naechsterWechselAm: DO });
-    // Station 4.4: Neuansatz 31.12. (Wechsel nach Intervall am Do), Stationseintritt 30.12. → 1. echte Blätter am Do
-    gefaessDazu(t, {
-      code: 'R-4.4',
-      betriebsart: 'konstantpegel',
-      luftpumpe: 'P4',
-      festeDosis: true,
-      volumenL: 2.3,
-    });
-    ansatzDazu(t, 'R-4.4', { begonnen: zh('2026-12-31') });
-    boxDazu(t, 'R-A1', 'box_licht');
-    const p = satzDazu(t, { nr: 2, sorte: 'lollo', box: 'R-A1', saat: '2026-12-10' });
-    p.forEach((id, i) => {
-      keimungDazu(t, id, 2, zh('2026-12-14'));
-      verschiebenDazu(t, id, 'R-4.4', zh('2026-12-30'), i + 1);
-    });
+  it('R5.6-AK1 Station mit «mit 1. echte Blätter» am Stationstag (Abstand 0) → nicht vorgezogen', () => {
+    // Plan 113 Punkt 10: drei Wechsel aus naechster_wechsel_am (nicht vorziehbar) am Do, Neuansatz 2.1.; Station 4.4
+    // mit Neuansatz 31.12. (Wechsel nach Intervall am Do) und Eintritt 30.12. (1. echte Blätter am Do)
+    const t = mitWechsel(leer(), ['R-1.1', 'R-1.2', 'R-2.1'], '2027-01-02', { naechsterWechselAm: DO });
+    mitStation(t, '2026-12-31', '2026-12-30');
     fertig(t);
-    const wechsel = von(alle(t), 'loesung_wechseln', platzId('R-4.4'));
-    expect(einzig(wechsel, 'Wechsel 4.4 in alleAufgaben').hinweis).toBe('mit 1. echte Blätter');
+    const wechsel = einzig(von(alle(t), 'loesung_wechseln', platzId('R-4.4')), 'Wechsel 4.4 in alleAufgaben');
+    expect(wechsel).toMatchObject({ faelligAm: DO, hinweis: 'mit 1. echte Blätter' });
+    expect(fruehestens(wechsel)).toBe(DO);
+    expect(von(alle(t), 'station_echte_blaetter')).toEqual([]);
+
+    // Do ist voll, aber der Wechsel darf nicht vor den Stationstag
+    expect(von(verteilt(t), 'loesung_wechseln')).toEqual([]);
+    const amDo = von(verteilt(t, jetztAm(DO)), 'loesung_wechseln');
+    expect(amDo).toHaveLength(4);
+    expect(amDo.filter((a) => a.hinweis?.includes('vorgezogen'))).toEqual([]);
+  });
+
+  it('R5.6-AK1 Station mit «mit 1. echte Blätter» (Abstand 2) bis zum Stationstag vorgezogen → Hinweis «mit 1. echte Blätter · vorgezogen»', () => {
+    // Station 4.4: Eintritt 29.12. → 1. echte Blätter heute (Mi); Neuansatz 1.1. → Wechsel Fr (Abstand 2); Do voll
+    // (drei Vorgaben), Fr mit drei weiteren Vorgaben → der Stationswechsel geht auf D−2 = Mi = Stationstag
+    const t = mitWechsel(leer(), ['R-1.1', 'R-1.2', 'R-1.3'], '2027-01-02', { naechsterWechselAm: DO });
+    mitWechsel(t, ['R-2.1', 'R-2.2', 'R-2.3'], '2027-01-02', { naechsterWechselAm: FR });
+    mitStation(t, '2027-01-01', '2026-12-29');
+    fertig(t);
+    const wechsel = einzig(von(alle(t), 'loesung_wechseln', platzId('R-4.4')), 'Wechsel 4.4 in alleAufgaben');
+    expect(wechsel).toMatchObject({ faelligAm: FR, hinweis: 'mit 1. echte Blätter' });
+    expect(fruehestens(wechsel)).toBe(MI);
 
     const a = einzig(von(verteilt(t), 'loesung_wechseln'), 'vorgezogene Station');
     expect(a).toMatchObject({
-      schluessel: schluessel('loesung_wechseln', platzId('R-4.4'), DO),
+      schluessel: schluessel('loesung_wechseln', platzId('R-4.4'), FR),
       hinweis: 'mit 1. echte Blätter · vorgezogen',
       anzeigeAb: MI,
     });
+  });
+
+  it('R5.6-AK1 synthetisch: nie vor fruehestens', () => {
+    // Do voll, Mi frei: mit fruehestens Do bleibt der Wechsel am Fr, mit fruehestens Mi wandert er auf Mi
+    const voll = viele(3, { faelligAm: DO, vorziehbar: false });
+    const fr = viele(3, { faelligAm: FR, vorziehbar: false });
+    const gesperrt = aufgabe({ faelligAm: FR, fruehestens: DO });
+    const m = verteilen([...voll, ...fr, gesperrt], MI, KEINE);
+    expect(lies(m, gesperrt)).toMatchObject({ tag: FR, vorgezogenUm: 0 });
+    expect(lies(m, gesperrt).ueberzahl).toBeDefined();
+
+    const erlaubt = aufgabe({ faelligAm: FR, fruehestens: MI });
+    const m2 = verteilen([...voll, ...fr, erlaubt], MI, KEINE);
+    expect(lies(m2, erlaubt)).toMatchObject({ tag: MI, vorgezogenUm: 2 });
+    expect([...m2.values()].every((v) => v.ueberzahl === undefined)).toBe(true);
+  });
+
+  it('R5.6-AK1 Station zählt als Ansatz, nicht vorziehbar: 3 Wechsel und Station am selben Tag → «4 Ansätze heute»', () => {
+    // Plan 113 Punkt 11: Station 4.4 mit Eintritt 30.12. (1. echte Blätter Do) und Neuansatz 5.1. (Wechsel 19.1.,
+    // Abstand 5, nicht zusammengelegt); drei Vorgaben am Do
+    const t = mitWechsel(leer(), ['R-1.1', 'R-1.2', 'R-2.1'], '2027-01-02', { naechsterWechselAm: DO });
+    mitStation(t, '2027-01-05', '2026-12-30');
+    fertig(t);
+    const station = einzig(von(alle(t), 'station_echte_blaetter', platzId('R-4.4')), 'Station 4.4');
+    expect(station.faelligAm).toBe(DO);
+    expect(vorziehbar(station)).toBeUndefined();
+
+    expect(verteilt(t).filter((a) => a.hinweis?.includes('vorgezogen'))).toEqual([]);
+    const amDo = verteilt(t, jetztAm(DO)).filter(
+      (a) => a.typ === 'loesung_wechseln' || a.typ === 'station_echte_blaetter',
+    );
+    expect(amDo).toHaveLength(4);
+    expect(amDo.filter((a) => a.hinweis === '4 Ansätze heute')).toHaveLength(1);
   });
 
   it('R5.6-AK1 TZ Wechsel am 28.3.2027 (Sommerzeit) auf den 27.3. vorgezogen, Tageszählung über kalendertag()', () => {
@@ -282,6 +353,59 @@ describe('R5.6-AK2 Hinweis «n Ansätze heute»', () => {
     expect(liste).toHaveLength(5);
     expect(liste.filter((a) => a.hinweis === '5 Ansätze heute')).toHaveLength(2);
     expect(liste.filter((a) => a.hinweis === undefined)).toHaveLength(3);
+  });
+});
+
+describe('R5.6-AK2 Überzahl, Reihenfolge und Hinweise (Prüfer Runde 1 Befund 5)', () => {
+  it('R5.6-AK2 Überzahl heute mit Neuansätzen von heute: 2 erfasst + 2 überfällig → genau einer «4 Ansätze heute»', () => {
+    const t = mitWechsel(leer(), ['R-1.1', 'R-1.2'], MI);
+    mitWechsel(t, ['R-2.1', 'R-2.2'], '2026-12-28');
+    fertig(t);
+    expect(ansaetzeHeute(t, MI_JETZT, ZONE).get(ANLAGE.R)).toBe(2);
+    const liste = von(verteilt(t), 'loesung_wechseln');
+    expect(liste).toHaveLength(2);
+    expect(liste.filter((a) => a.hinweis === '4 Ansätze heute')).toHaveLength(1);
+
+    const synth = viele(2, { faelligAm: '2027-01-11' });
+    const m = verteilen(synth, MI, new Map([[ANLAGE.R, 2]]));
+    expect(mitUeberzahl(m, synth)).toHaveLength(1);
+  });
+
+  it('R5.6-AK2 nicht vorziehbare zuerst gezählt: den Hinweis trägt die vorziehbare, auch wenn sie vorne steht', () => {
+    // A2: alle heute, Vortage vergangen; die vorziehbare steht in der Liste vor den drei nicht vorziehbaren
+    const vorz = aufgabe({ faelligAm: '2027-01-11' });
+    const fest = viele(3, { faelligAm: '2027-01-11', vorziehbar: false });
+    const m = verteilen([vorz, ...fest], MI, KEINE);
+    expect(mitUeberzahl(m, [vorz, ...fest])).toEqual([vorz]);
+  });
+
+  it('R5.6-AK2 Tage aufsteigend ab heute abgearbeitet, unabhängig von der Eingabereihenfolge', () => {
+    // heute 2 (nicht vorziehbar), Do 4, Fr 4; Eingabe Fr vor Do vor heute. Aufsteigend gibt Do einen an Mi ab
+    // (Mi dann voll), Fr findet Do und Mi voll und bleibt mit Hinweis. Absteigend träfe der Hinweis den Do.
+    const mi = viele(2, { faelligAm: MI, vorziehbar: false });
+    const tagDo = viele(4, { faelligAm: DO });
+    const tagFr = viele(4, { faelligAm: FR });
+    const m = verteilen([...tagFr, ...tagDo, ...mi], MI, KEINE);
+    expect(tageVon(m, tagDo).filter((x) => x === MI)).toHaveLength(1);
+    expect(tageVon(m, tagDo).filter((x) => x === DO)).toHaveLength(3);
+    expect(mitUeberzahl(m, tagDo)).toEqual([]);
+    expect(tageVon(m, tagFr)).toEqual([FR, FR, FR, FR]);
+    expect(mitUeberzahl(m, tagFr)).toHaveLength(1);
+  });
+
+  it('R5.6-AK2 Überzahl mit vorhandenem Hinweis → «mit 1. echte Blätter · 4 Ansätze heute»', () => {
+    // Station 4.4: Eintritt 28.12. und Neuansatz 29.12. → Wechsel mit Station am 12.1. (Abstand 0), überfällig;
+    // drei Vorgaben am 12.1. (nicht vorziehbar) → am Mi vier auf heute, die vorziehbare Station trägt den Hinweis
+    const t = mitWechsel(leer(), ['R-1.1', 'R-1.2', 'R-2.1'], '2027-01-02', {
+      naechsterWechselAm: '2027-01-12',
+    });
+    mitStation(t, '2026-12-29', '2026-12-28');
+    fertig(t);
+    const liste = von(verteilt(t), 'loesung_wechseln');
+    expect(liste).toHaveLength(4);
+    const a = einzig(von(liste, 'loesung_wechseln', platzId('R-4.4')), 'Wechsel 4.4');
+    expect(a.hinweis).toBe('mit 1. echte Blätter · 4 Ansätze heute');
+    expect(liste.filter((x) => x.hinweis === undefined)).toHaveLength(3);
   });
 });
 
@@ -539,13 +663,14 @@ describe('R5.6-AK6 faelligeAufgaben unverändert, deterministisch', () => {
 
 // ---------------------------------------------------------------- UC8-AK6
 
-describe('UC8-AK6 Kalibrieren mit und ohne Morgen', () => {
-  it('UC8-AK6 Erstkalibrierung ohne Morgen', () => {
+describe('UC8-AK6 Kalibrieren mit Morgen', () => {
+  it('UC8-AK6 Erstkalibrierung mit Morgen', () => {
+    // Plan 113 Punkt 12: Konzept R5.2 «Messgerät kalibrieren»: Morgen ja, auch bei der Erstkalibrierung
     const t = fertig(leer());
     const erst = einzig(von(verteilt(t, JETZT, OHNE), 'kalibrieren', MESSGERAET), 'Erstkalibrierung');
     expect(erst.titel).toBe('Erstkalibrierung');
-    expect(erst.morgen.erlaubt).toBe(false);
-    expect(einzig(von(faellig(t, JETZT, OHNE), 'kalibrieren'), 'faellig').morgen.erlaubt).toBe(false);
+    expect(erst.morgen.erlaubt).toBe(true);
+    expect(einzig(von(faellig(t, JETZT, OHNE), 'kalibrieren'), 'faellig').morgen.erlaubt).toBe(true);
 
     // Kalibrierung vor 30 Tagen → «Messgerät kalibrieren» mit Morgen
     kalibrierungDazu(t, zh('2026-12-13'));

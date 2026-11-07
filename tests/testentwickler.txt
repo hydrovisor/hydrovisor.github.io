@@ -244,3 +244,4 @@ tests/e2e/rundgang.spec.ts
 tests/unit/aufgaben-verteilung.test.ts
 tests/e2e/verteilung-gefaess.spec.ts
 tests/e2e/rundgang-korrektur.spec.ts
+tests/unit/eingabe-aus.test.ts

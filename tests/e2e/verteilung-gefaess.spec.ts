@@ -8,8 +8,8 @@
 //   den Hinweis «vorgezogen» und den Grund mit dem ursprünglichen Termin («fällig 13.1.» oder «fällig Mi»).
 // - Maske Gefäss: <section aria-label="Offene Aufgaben"> mit Listeneinträgen «Titel · Grund», ohne Links und Knöpfe;
 //   Hauptknopf weiter als Link, dessen Name auf «Messen» endet.
-// - Heute, Kopf <section aria-label="Messgerät">: Knopf «Morgen» (button) bei fälliger Kalibrierung, nicht bei der
-//   Erstkalibrierung; der Tipp schreibt eine Zeile aufschub mit art «morgen» und blendet den Knopf aus.
+// - Heute, Kopf <section aria-label="Messgerät">: Knopf «Morgen» (button) bei fälliger Kalibrierung und bei der
+//   Erstkalibrierung (Plan 113 Punkt 12); der Tipp schreibt eine Zeile aufschub mit art «morgen» und blendet den Knopf aus.
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import { ansatzHinzu } from '../fixtures/messen.ts';
 import { platzId, uid, type Teile } from '../fixtures/regal.ts';
@@ -152,13 +152,22 @@ test('UC8-AK6 Kopf Messgerät mit Morgen bei fälliger Kalibrierung', async ({ p
   await expect(kopf.getByRole('button', { name: 'Morgen', exact: true })).toHaveCount(0);
 });
 
-test('UC8-AK6 Kopf Messgerät ohne Morgen bei Erstkalibrierung', async ({ page }) => {
+test('UC8-AK6 Kopf Messgerät mit Morgen bei Erstkalibrierung', async ({ page }) => {
+  // Plan 113 Punkt 12: Konzept R5.2 «Messgerät kalibrieren»: Morgen ja, auch bei der Erstkalibrierung
   const t = rundgangTeile();
   t['kalibrierung'] = [];
-  await mitDaten(page, t);
+  const m = await mitDaten(page, t);
   await heute(page);
 
   const kopf = page.getByRole('region', { name: 'Messgerät' });
   await expect(kopf).toBeVisible();
+  const morgen = kopf.getByRole('button', { name: 'Morgen', exact: true });
+  await expect(morgen).toBeVisible();
+  await morgen.click();
+
+  await expect.poll(() => zeilenVon(m, 'aufschub').length).toBe(1);
+  const z = zeilenVon(m, 'aufschub')[0] as Record<string, unknown>;
+  expect(z['art']).toBe('morgen');
+  expect(String(z['aufgabe_schluessel'])).toMatch(/^kalibrieren\|/);
   await expect(kopf.getByRole('button', { name: 'Morgen', exact: true })).toHaveCount(0);
 });
