@@ -156,7 +156,9 @@ function neu(
   faelligAm: string,
   wo: { anlageId: string; datenart: Rohaufgabe['datenart']; ort?: AufgabenOrt },
   titel: string,
-  extra: Partial<Pick<Rohaufgabe, 'gewicht' | 'hinweis' | 'morgenBis' | 'ohneUeberspringen'>> = {},
+  extra: Partial<
+    Pick<Rohaufgabe, 'gewicht' | 'hinweis' | 'morgenBis' | 'ohneUeberspringen' | 'vorziehbar' | 'ohneMorgen'>
+  > = {},
 ): Rohaufgabe {
   const gewicht: Gewicht = extra.gewicht ?? 'routine';
   return {
@@ -256,7 +258,8 @@ export const loesungWechseln: Regel = (k, lage) => {
   if (!g || kratky(g) || g.intervall_wechseln_d === null || !n) return [];
   const seit = tag(k, n.begonnen_am);
   const vorgabe = g.naechster_wechsel_am ?? undefined;
-  const regulaer = vorgabe !== undefined && vorgabe > seit ? vorgabe : tagPlus(seit, g.intervall_wechseln_d);
+  const nachVorgabe = vorgabe !== undefined && vorgabe > seit;
+  const regulaer = nachVorgabe ? vorgabe : tagPlus(seit, g.intervall_wechseln_d);
   // Liter in Hundertsteln als Ganzzahl (G3, numeric(5,2)), damit 4.5 + 4.5 sicher 9 ergibt
   const volumen = Math.round(Number(g.betriebsvolumen_l) * 100);
   let faelligAm = regulaer;
@@ -271,7 +274,12 @@ export const loesungWechseln: Regel = (k, lage) => {
     const voll = erreicht === undefined ? k.heute : tag(k, erreicht.begonnen_am);
     if (voll < regulaer) faelligAm = voll;
   }
-  return amPlatz(lage, 'loesung_wechseln', faelligAm, 'Lösung wechseln', { gewicht: 'wechsel' });
+  // R5.6: nur der Wechsel nach Intervall ist vorziehbar; die Vorgabe gälte vorgezogen ein zweites Mal (Plan 113 A1)
+  const nachIntervall = !nachVorgabe && faelligAm === regulaer;
+  return amPlatz(lage, 'loesung_wechseln', faelligAm, 'Lösung wechseln', {
+    gewicht: 'wechsel',
+    ...(nachIntervall ? { vorziehbar: true as const } : {}),
+  });
 };
 
 /** Ansatz für Umsetzen (Reservierungen auf Töpfe dieses Platzes) oder Direktsaat (Saattag), nur bei leer */
@@ -296,7 +304,8 @@ export const ansatz: Regel = (k, lage) => {
     'ansatz',
     (fuerDirektsaat ? direktsaat : umsetzen) as string,
     fuerDirektsaat ? 'Ansatz für Direktsaat' : 'Ansatz für Umsetzen',
-    { gewicht: 'wechsel' },
+    // R5.6: Direktsaat-Termine bleiben, der Ansatz für Umsetzen ist bis 2 Tage vorziehbar (Konzept R5.2)
+    fuerDirektsaat ? { gewicht: 'wechsel' } : { gewicht: 'wechsel', vorziehbar: true },
   );
 };
 
@@ -557,7 +566,7 @@ export function geraeteregeln(k: Regelkontext): Rohaufgabe[] {
     const stand = kalibrierStand(daten, { messgeraetId: g.id, datenart: 'echt' }, k.stichtag, k.zeitzone);
     aufgaben.push(
       stand.art === 'erstkalibrierung'
-        ? neu('kalibrieren', g.id, 'messgeraet', k.heute, wo, 'Erstkalibrierung')
+        ? neu('kalibrieren', g.id, 'messgeraet', k.heute, wo, 'Erstkalibrierung', { ohneMorgen: true })
         : neu('kalibrieren', g.id, 'messgeraet', stand.faelligAm, wo, 'Messgerät kalibrieren'),
     );
     const kontrollen = zeilen<MessungZeile>(k.teile, 'messung')

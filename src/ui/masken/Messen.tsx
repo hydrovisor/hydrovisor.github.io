@@ -20,6 +20,7 @@ import { istUnsicher, kalibrierStand } from '../../domain/kalibrierung/stand.ts'
 import { RANG, TON, alsText, type Bewertung } from '../../domain/bewertung/bewertung.ts';
 import {
   eingabeAbgeschlossen,
+  eingabeAus,
   eingabeStart,
   eingabeTippen,
   feldVollstaendig,
@@ -107,6 +108,17 @@ export interface Ablaufmodus {
     aufgabeSchluessel?: string;
     onGespeichert: (m: RundgangMessung) => void;
   };
+  /**
+   * Rundgang «Jetzt korrigieren» (Plan 113, Rundgang-AK3): die gespeicherte Messung des Rundgangs steht schon in der
+   * Ergebniszone, ohne neue Ziffern und ohne zweites Speichern; angeboten wird «pH-Minus gegeben» (R4.14), danach
+   * führt «Rundgang fortsetzen» zum nächsten Schritt
+   */
+  korrektur?: {
+    messungId: string;
+    /** Hundertstel (G3) */
+    werte: Partial<Record<Groesse, number>>;
+    onWeiter: () => void;
+  };
 }
 
 export function Messen({
@@ -192,9 +204,11 @@ export function Messmaske({ ort, modus }: { ort: Ort; modus: Ablaufmodus }) {
     Boolean(modus.zeile) || korrektur !== undefined,
     korrektur ? new Date(korrektur.ende + WACH_NACH_MS) : undefined,
   );
-  const [eingabe, setEingabe] = useState<Messeingabe>(() => eingabeStart(felder));
+  const [eingabe, setEingabe] = useState<Messeingabe>(() =>
+    modus.korrektur ? eingabeAus(felder, modus.korrektur.werte) : eingabeStart(felder),
+  );
   const aktuell = useRef(eingabe);
-  const [zone, setZone] = useState<Zone>('eingabe');
+  const [zone, setZone] = useState<Zone>(modus.korrektur ? 'ergebnis' : 'eingabe');
   // «Ja, speichern» gilt für genau diese Eingabe; jede Änderung verlangt die Rückfrage neu (R10.3)
   const [bestaetigt, setBestaetigt] = useState(false);
   const [fuellstand, setFuellstand] = useState<'ueber_drittel' | 'unter_drittel'>();
@@ -258,6 +272,8 @@ export function Messmaske({ ort, modus }: { ort: Ort; modus: Ablaufmodus }) {
   }
 
   function waehlen(g: Groesse) {
+    // im Modus Korrektur sind die Werte gespeichert und bleiben, wie sie sind
+    if (modus.korrektur) return;
     // pH vor EC in der Kontroll- und Endmessung (Herstellerregel Konzept 5.6)
     if (modus.zeile && !feldFrei(modus.zeile, messwerteHundertstel(aktuell.current), g)) return;
     const neu = feldWaehlen(aktuell.current, g);
@@ -437,8 +453,9 @@ export function Messmaske({ ort, modus }: { ort: Ort; modus: Ablaufmodus }) {
 
   async function phMinusGegeben() {
     if (!phVorschlag) return;
-    // zuerst die Messung (falls noch nicht gespeichert), dann Korrektur und Position (Plan 29 «Schreibweg»)
-    const ok = gespeichert ? true : await senden(bestaetigt);
+    // zuerst die Messung (falls noch nicht gespeichert), dann Korrektur und Position (Plan 29 «Schreibweg»); im Modus
+    // Korrektur hat der Rundgang die Messung schon gespeichert (Plan 113)
+    const ok = gespeichert || modus.korrektur ? true : await senden(bestaetigt);
     if (!ok) return;
     const t = uhrJetzt();
     const vorgang = phKorrekturVorgang(
@@ -472,6 +489,15 @@ export function Messmaske({ ort, modus }: { ort: Ort; modus: Ablaufmodus }) {
     }).catch(() => undefined);
     setUhr(t.getTime());
     setKorrektur({ ende, ansatzId });
+    if (modus.korrektur && !gespeichert) {
+      const schlecht = schlechteste(auswertung?.bewertungen ?? {});
+      setGespeichert({
+        zeit: uhrzeit(t, ZEITZONE),
+        clientId: modus.korrektur.messungId,
+        unsicher,
+        ...(schlecht ? { bewertung: schlecht } : {}),
+      });
+    }
   }
 
   async function zuruecknehmen() {
@@ -527,14 +553,21 @@ export function Messmaske({ ort, modus }: { ort: Ort; modus: Ablaufmodus }) {
             {fehler.text}
           </Notice>
         ) : null}
-        {rueckgaengig ? null : (
+        {/* im Modus Korrektur gehört die Messung dem Rundgang, ohne Rückgängig (Plan 113 A8) */}
+        {rueckgaengig || modus.korrektur ? null : (
           <Button variant="secondary" block onClick={() => void zuruecknehmen()}>
             Rückgängig machen
           </Button>
         )}
-        <a className="hv-btn hv-btn-primary hv-btn-block" href={hashZu({ name: 'heute' })}>
-          Zu Heute
-        </a>
+        {modus.korrektur ? (
+          <Button block onClick={modus.korrektur.onWeiter}>
+            Rundgang fortsetzen
+          </Button>
+        ) : (
+          <a className="hv-btn hv-btn-primary hv-btn-block" href={hashZu({ name: 'heute' })}>
+            Zu Heute
+          </a>
+        )}
       </main>
     );
   }
@@ -603,7 +636,13 @@ export function Messmaske({ ort, modus }: { ort: Ort; modus: Ablaufmodus }) {
       </Notice>
     );
 
-  const speichernZeile = (
+  const speichernZeile = modus.korrektur ? (
+    <div className="hv-messen-speichern">
+      <Button className="hv-messen-speichern-knopf" onClick={modus.korrektur.onWeiter}>
+        Rundgang fortsetzen
+      </Button>
+    </div>
+  ) : (
     <div className="hv-messen-speichern">
       {kratky ? (
         <>
@@ -671,7 +710,7 @@ export function Messmaske({ ort, modus }: { ort: Ort; modus: Ablaufmodus }) {
         titel={ort.code}
         zeilen={kopfzeilen}
         badge={fehler ? badgeUnsicher : undefined}
-        zuHeute={banner === null && !modus.rundgang}
+        zuHeute={banner === null && !modus.rundgang && !modus.korrektur}
       />
       {banner}
       <div
@@ -722,7 +761,7 @@ export function Messmaske({ ort, modus }: { ort: Ort; modus: Ablaufmodus }) {
                       <Button
                         variant="secondary"
                         size="compact"
-                        disabled={sendet || !bereit}
+                        disabled={sendet || (!bereit && !modus.korrektur)}
                         onClick={() => void phMinusGegeben()}
                       >
                         pH-Minus gegeben

@@ -73,6 +73,10 @@ export interface Rohaufgabe {
   morgenBis?: string;
   /** Messen bei Kratky ohne Pumpe: kein festes Intervall im Sinn von R5.3 */
   ohneUeberspringen?: boolean;
+  /** R5.6: darf 1 bis 2 Tage vorgezogen werden (Wechsel nach Intervall, Ansatz für Umsetzen; Plan 113) */
+  vorziehbar?: true;
+  /** kein «Morgen» (Erstkalibrierung mit täglich neuem Schlüssel, Befund 12 aus #27; Plan 113) */
+  ohneMorgen?: true;
 }
 
 export interface Aufgabe {
@@ -98,8 +102,10 @@ export interface Aufgabe {
   /** Knopf «Pegel ok» anbieten (nur messen_nachfuellen ohne Pegel ok heute) */
   pegelOk: boolean;
   erledigtKnopf: boolean;
-  /** «zuerst umrühren», «Umsetzen überfällig», «mitmarkiert», «mit 1. echte Blätter» */
+  /** «zuerst umrühren», «Umsetzen überfällig», «mitmarkiert», «mit 1. echte Blätter», «vorgezogen» (R5.6) */
   hinweis?: string;
+  /** R5.6: darf 1 bis 2 Tage vorgezogen werden (Plan 113) */
+  vorziehbar?: true;
 }
 
 export interface AufgabenEinstellungen {
@@ -160,7 +166,7 @@ function anzahlText(n: number, was: string): string {
 }
 
 function mitAufschub(roh: Rohaufgabe, aufschuebe: readonly AufschubZeile[], heute: string): Aufgabe {
-  const { morgenBis, ohneUeberspringen, ...rest } = roh;
+  const { morgenBis, ohneUeberspringen, ohneMorgen, ...rest } = roh;
   const anzahl = verschoben(roh, aufschuebe);
   const ueber = Math.max(0, tageZwischen(roh.faelligAm, heute));
   const grund =
@@ -177,7 +183,7 @@ function mitAufschub(roh: Rohaufgabe, aufschuebe: readonly AufschubZeile[], heut
     tageUeberfaellig: ueber,
     grund,
     morgen: {
-      erlaubt: morgenErlaubt(roh, morgenBis, aufschuebe, heute),
+      erlaubt: ohneMorgen !== true && morgenErlaubt(roh, morgenBis, aufschuebe, heute),
       verschoben: anzahl,
       ...(anzahl >= 2 ? { hinweis: 'intervall_anpassen' as const } : {}),
     },

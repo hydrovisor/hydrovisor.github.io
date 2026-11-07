@@ -7,7 +7,11 @@ import { standAnzeige } from '../../domain/datenpfad/buendel.ts';
 import { kalibrierStand, kalibrierText } from '../../domain/kalibrierung/stand.ts';
 import { messFaelligkeit, type Messfaelligkeit } from '../../domain/messung/faelligkeit.ts';
 import { heuteGruppiert, nachAnlage } from '../../domain/anlage/gruppen.ts';
-import { einstellungenAus, faelligeAufgaben, type Aufgabe } from '../../domain/aufgaben.ts';
+import { einstellungenAus, type Aufgabe } from '../../domain/aufgaben.ts';
+import { aufschubVorgang } from '../../domain/aufgaben-aufschub.ts';
+import { verteilteAufgaben } from '../../domain/aufgaben-verteilung.ts';
+import { neueClientId, schreiben } from '../../daten/schreiben.ts';
+import { Button } from '../bausteine/Button.tsx';
 import { rundgangAnlage, rundgangPlan } from '../../domain/rundgang/plan.ts';
 import { Aufgabenliste, aufgabenSicher } from './Aufgabenliste.tsx';
 import { Ablaeufe } from './Ablaeufe.tsx';
@@ -59,10 +63,11 @@ export function Heute() {
     ablaufOffen,
   });
   const ablauf = ablaufOffen === undefined ? 'unbekannt' : ablaufOffen ? 'offen' : 'keiner';
-  // die fälligen Aufgaben einmal je Render für Karten, Übersicht und Rundgang (Plan 30, UC8-AK9)
+  // die fälligen Aufgaben einmal je Render für Karten, Übersicht und Rundgang (Plan 30, UC8-AK9), mit den nach
+  // R5.6 vorgezogenen Ansätzen (Plan 113); der Rundgang führt keine Ansätze und bleibt davon unberührt (A6)
   const teile = buendel?.teile;
   const faellig = teile
-    ? aufgabenSicher(() => faelligeAufgaben(teile, einstellungenAus(teile), new Date(jetzt), ZEITZONE), [])
+    ? aufgabenSicher(() => verteilteAufgaben(teile, einstellungenAus(teile), new Date(jetzt), ZEITZONE), [])
     : [];
   return (
     <main className="hv-seite" data-density="regal" data-ablauf={ablauf}>
@@ -170,6 +175,29 @@ function Uebersicht({ jetzt, faellig }: { jetzt: Date; faellig: readonly Aufgabe
   const teile = buendel?.teile;
   const orte = buendel ? messbareOrte(buendel.teile) : [];
   const messungen = messungenIm(buendel);
+  // «Morgen» für die fällige Kalibrierung (R5.2: Morgen ja), nicht für die Erstkalibrierung (Plan 113, UC8-AK6)
+  const kalibrieren = faellig.find((a) => a.typ === 'kalibrieren' && a.morgen.erlaubt);
+  const [verschoben, setVerschoben] = useState<string>();
+  const [sendet, setSendet] = useState(false);
+  const [fehler, setFehler] = useState<string>();
+  async function morgen(a: Aufgabe) {
+    if (sendet) return;
+    setSendet(true);
+    try {
+      const t = new Date(Date.now());
+      const r = await schreiben(aufschubVorgang(a, 'morgen', neueClientId(), t, ZEITZONE), {
+        jetzt: t,
+        zeitzone: ZEITZONE,
+      });
+      if (r.status === 'nicht_gespeichert') setFehler(r.fehler.text);
+      else {
+        setFehler(undefined);
+        setVerschoben(a.schluessel);
+      }
+    } finally {
+      setSendet(false);
+    }
+  }
   // erste fällige Aufgabe je Ort aus der Aufgaben-Rechnung (Plan 27), sonst die Messfälligkeit
   const ersteAufgabe = new Map<string, string>();
   for (const a of faellig)
@@ -191,8 +219,14 @@ function Uebersicht({ jetzt, faellig }: { jetzt: Date; faellig: readonly Aufgabe
           <a className="hv-btn hv-btn-secondary" href={hashZu({ name: 'kalibrieren' })}>
             Kalibrieren
           </a>
+          {kalibrieren && verschoben !== kalibrieren.schluessel ? (
+            <Button variant="ghost" disabled={sendet} onClick={() => void morgen(kalibrieren)}>
+              Morgen
+            </Button>
+          ) : null}
         </section>
       ) : null}
+      {fehler ? <Notice tone="warn" title={fehler} /> : null}
       {orte.length === 0 ? (
         <p>Noch keine Orte erfasst</p>
       ) : (
