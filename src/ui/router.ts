@@ -42,7 +42,10 @@ export type Route =
   | { name: 'sorte-neu' }
   | { name: 'sorte'; sorte: string }
   | { name: 'notfallblatt'; kuerzel?: string }
-  | { name: 'kalibrieren'; datenart?: 'demo' | 'test' };
+  | { name: 'kalibrieren'; datenart?: 'demo' | 'test' }
+  // Plan 30: Rundgang je Anlage, Stromausfall erfassen
+  | { name: 'rundgang'; kuerzel: string }
+  | { name: 'stromausfall' };
 
 const KUERZEL = /^[A-Z]{1,3}$/;
 const CODE = /^[A-Z]{1,3}-[A-Za-z0-9.]+$/;
@@ -167,6 +170,9 @@ export function routeAusHash(hash: string): Route {
       ? { name: 'kalibrieren', datenart }
       : { name: 'kalibrieren' };
   }
+  const rundgang = /^\/rundgang\/([A-Z]{1,3})$/.exec(pfad);
+  if (rundgang?.[1]) return { name: 'rundgang', kuerzel: rundgang[1] };
+  if (pfad === '/stromausfall') return { name: 'stromausfall' };
   if (pfad === '/notfallblatt') {
     const kuerzel = new URLSearchParams(abfrage).get('a');
     return kuerzel && KUERZEL.test(kuerzel) ? { name: 'notfallblatt', kuerzel } : { name: 'notfallblatt' };
@@ -248,6 +254,7 @@ export function hashZu(route: Route): string {
     return `#/gefaess-neu${q ? `?${q}` : ''}`;
   }
   if (route.name === 'anlage-neu') return '#/anlage/neu';
+  if (route.name === 'rundgang') return `#/rundgang/${route.kuerzel}`;
   if (route.name === 'notfallblatt' && route.kuerzel) return `#/notfallblatt?a=${route.kuerzel}`;
   if (route.name === 'anlage' && route.kuerzel) return `#/anlage?a=${route.kuerzel}`;
   if (route.name === 'kalibrieren' && route.datenart) return `#/kalibrieren?datenart=${route.datenart}`;

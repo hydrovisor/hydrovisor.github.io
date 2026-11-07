@@ -229,3 +229,14 @@ tests/fixtures/zielbereich.ts
 tests/unit/zielbereich.test.ts
 tests/unit/zielbereich-leitkultur.test.ts
 tests/unit/abhakliste-rechnung-zielbereich.test.ts
+# I1b-05 Heute und Rundgang (#30)
+tests/unit/rundgang-fixture.ts
+tests/unit/rundgang-abschluss.test.ts
+tests/unit/rundgang-ablauf.test.ts
+tests/unit/rundgang-plan.test.ts
+tests/unit/rundgang-kurzpruefung.test.ts
+tests/unit/rundgang-nachfuellen.test.ts
+tests/unit/rundgang-heute.test.ts
+tests/unit/aufgaben-stromausfall.test.ts
+tests/fixtures/rundgang.ts
+tests/e2e/rundgang.spec.ts

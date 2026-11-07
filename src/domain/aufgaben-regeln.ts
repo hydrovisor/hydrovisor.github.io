@@ -25,8 +25,10 @@ import { kalibrierStand, type GeraeteEreignis, type KalibrierZeile } from './kal
 import { messFaelligkeit } from './messung/faelligkeit.ts';
 import { keimTermine, type KeimTermin } from './pflanzung/keimung.ts';
 import { aufgabenSchluessel, erfassungOderUebersprungen, type AufschubZeile } from './aufgaben-aufschub.ts';
+import { stromausfallAufgaben } from './aufgaben-stromausfall.ts';
 import { kalendertag, tagPlus, tageZwischen, type Zeitzone } from './zeit.ts';
 import type {
+  AufgabenArt,
   AufgabenEinstellungen,
   AufgabenOrt,
   AufgabenTyp,
@@ -445,7 +447,7 @@ export const ORTSREGELN: readonly Regel[] = [
  * bei Füllzustand leer entfallen (R5.4, UC8-AK13); Wärme prüfen braucht eine Messung der Lösung, Belüftung prüfen eine
  * Kurzprüfung, die es bei leer nicht gibt (A, Prüfer Runde 1 Befund 6)
  */
-const ENTFAELLT_BEI_LEER: ReadonlySet<AufgabenTyp> = new Set<AufgabenTyp>([
+const ENTFAELLT_BEI_LEER: ReadonlySet<AufgabenArt> = new Set<AufgabenArt>([
   'messen_nachfuellen',
   'messen',
   'nachfuellen_kratky',
@@ -458,7 +460,7 @@ const ENTFAELLT_BEI_LEER: ReadonlySet<AufgabenTyp> = new Set<AufgabenTyp>([
   'station_echte_blaetter',
 ]);
 /** bei Prüfstatus ruht bleiben nur Aufgaben, die keine Pflege sind (R5.4) */
-const BLEIBT_BEI_RUHT: ReadonlySet<AufgabenTyp> = new Set<AufgabenTyp>(['gefaess_pruefen', 'reinigen']);
+const BLEIBT_BEI_RUHT: ReadonlySet<AufgabenArt> = new Set<AufgabenArt>(['gefaess_pruefen', 'reinigen']);
 
 /** alle Ortsaufgaben eines Platzes nach R5.4; Station mit dem Wechsel zusammengelegt (A11) */
 export function ortAufgaben(k: Regelkontext, lage: OrtLage): Rohaufgabe[] {
@@ -665,7 +667,8 @@ function abweichungenAus(k: Pick<Regelkontext, 'zeitzone'>, lagen: readonly OrtL
       ergebnis.push({
         platzId: lage.platz.id,
         anlageId: lage.anlage.id,
-        luftpumpe: punkt === 'pumpe' ? (lage.gefaess.luftpumpe ?? null) : null,
+        // Pumpe und Luftzone hängen an derselben Luftpumpe (R10.5, Rundgang-AK5, Plan 30 Lösungsweg 4)
+        luftpumpe: lage.gefaess.luftpumpe ?? null,
         tag: tag(k, erste.gilt_ab),
       });
     }
@@ -700,5 +703,10 @@ export function rohaufgaben(
     reservierungen: zeilen<ReservierungZeile>(teile, 'v_reservierung_aktiv').filter(offen),
     abweichungen: abweichungenAus({ zeitzone }, lagen),
   };
-  return [...geraeteregeln(k), ...satzregeln(k, orte), ...lagen.flatMap((l) => ortAufgaben(k, l))];
+  return [
+    ...geraeteregeln(k),
+    ...satzregeln(k, orte),
+    ...lagen.flatMap((l) => ortAufgaben(k, l)),
+    ...stromausfallAufgaben(k, orte),
+  ];
 }

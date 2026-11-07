@@ -338,3 +338,15 @@ button.hv-tile { cursor: pointer; touch-action: manipulation; }
 
 /* nur für Vorlesehilfen sichtbar (zugänglicher Name ohne Platz, Tile «veraltet») */
 .hv-visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+/* Button zweizeilig (Plan 30): Verb oben, Unterzeile darunter; im Regal 72 dp, damit beide Zeilen Platz haben */
+.hv-btn-zweizeilig { flex-direction: column; gap: 0; white-space: normal; line-height: 20px;
+  min-height: calc(var(--size-touch-regal) + var(--space-1)); }
+.hv-btn-zweizeilig small { font-size: var(--text-caption-size); line-height: 16px; font-weight: 500; }
+
+/* Kennung bildschirmfüllend (Plan 30, Rundgang): 1 s zwischen zwei Orten, ohne Tipp */
+.hv-kennung { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-4);
+  min-height: 70vh; text-align: center; }
+.hv-kennung-code { font-size: calc(var(--text-value-xl-size) * 2); line-height: 1; font-weight: 700;
+  font-variant-numeric: tabular-nums; letter-spacing: var(--text-display-tracking); }
+.hv-kennung-zeile { font-size: var(--text-text-regal-size); line-height: 28px; color: var(--ink-muted); }

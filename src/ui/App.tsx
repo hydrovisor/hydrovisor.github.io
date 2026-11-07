@@ -28,6 +28,8 @@ import { Sorte } from './masken/Sorte.tsx';
 import { SorteNeu } from './masken/SorteNeu.tsx';
 import { Sorten } from './masken/Sorten.tsx';
 import { Notfallblatt } from './masken/Notfallblatt.tsx';
+import { Rundgang } from './masken/Rundgang.tsx';
+import { Stromausfall } from './masken/Stromausfall.tsx';
 import { BuendelAnbieter } from './buendel.tsx';
 import { maskeFuer, useRoute } from './router.ts';
 import { SitzungAnbieter, useSitzung } from './sitzung.tsx';
@@ -105,6 +107,10 @@ function Masken() {
         <Sorte sorte={maske.sorte} />
       ) : maske.name === 'notfallblatt' ? (
         <Notfallblatt {...(maske.kuerzel ? { kuerzel: maske.kuerzel } : {})} />
+      ) : maske.name === 'rundgang' ? (
+        <Rundgang kuerzel={maske.kuerzel} />
+      ) : maske.name === 'stromausfall' ? (
+        <Stromausfall />
       ) : maske.name === 'push' ? (
         <Push />
       ) : maske.name === 'schreibprobe' ? (

@@ -6,6 +6,7 @@ import { laufendeAnsaetze, offeneNachmessungen } from '../../domain/abhakliste/f
 import { aktiveZeile, timerEnde, type AblaufStand } from '../../domain/abhakliste/stand.ts';
 import type { AnsatzZeile } from '../../domain/bewertung/verlauf.ts';
 import { messbareOrte } from '../../domain/ort.ts';
+import { fortschritt, standGueltig, type RundgangStand } from '../../domain/rundgang/ablauf.ts';
 import { uhrzeit, ZEITZONE } from '../../domain/zeit.ts';
 import { Button } from '../bausteine/Button.tsx';
 import { useBuendel } from '../buendel.tsx';
@@ -42,7 +43,14 @@ export function Ablaeufe({ jetzt }: { jetzt: Date }) {
     let aktiv = true;
     const lesen = () =>
       offeneAblaeufe().then(
-        (e) => aktiv && setLokal(e),
+        (e) => {
+          // Rundgang von gestern gilt nicht mehr und blockiert sonst den Versionshinweis (Plan 30 A6)
+          const alt = e.filter(
+            (x) => x.art === 'rundgang' && !standGueltig(x as unknown as RundgangStand, new Date(), ZEITZONE),
+          );
+          for (const x of alt) void ablaufLoeschen(x.id).catch(() => undefined);
+          if (aktiv) setLokal(e.filter((x) => !alt.includes(x)));
+        },
         () => undefined,
       );
     void lesen();
@@ -88,6 +96,24 @@ export function Ablaeufe({ jetzt }: { jetzt: Date }) {
       text: `${ort.kennung} Wechsel läuft · Zeile ${String(naechste)}`,
       ziel: hashZu({ name: 'ansatz', code: ort.code }),
       knopf: 'Fortsetzen',
+      alt: false,
+    });
+  }
+  // Rundgang (Plan 30): offener Stand von heute mit «Fortsetzen»; ein Stand von gestern gilt nicht mehr (A6)
+  for (const e of lokal) {
+    if (e.art !== 'rundgang') continue;
+    const r = e as unknown as RundgangStand;
+    if (r.schritt.art === 'abschluss' || !standGueltig(r, jetzt, ZEITZONE)) continue;
+    const kuerzel = (teile['anlage'] ?? []).find((a) => (a as { id?: string }).id === r.anlageId) as
+      { kuerzel?: string } | undefined;
+    if (!kuerzel?.kuerzel) continue;
+    const f = fortschritt(r);
+    eintraege.push({
+      schluessel: e.id,
+      text: `Rundgang läuft · ${String(f.fertig)} von ${String(f.von)}`,
+      ziel: hashZu({ name: 'rundgang', kuerzel: kuerzel.kuerzel }),
+      knopf: 'Fortsetzen',
+      lokalId: e.id,
       alt: false,
     });
   }

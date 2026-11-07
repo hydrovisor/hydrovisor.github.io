@@ -15,6 +15,7 @@ import {
   type AufschubZeile,
 } from './aufgaben-aufschub.ts';
 import { rohaufgaben } from './aufgaben-regeln.ts';
+import { STROM_TYPEN, type StromTyp } from './aufgaben-stromausfall.ts';
 import { kalendertag, tagKurz, tageZwischen, type Zeitzone } from './zeit.ts';
 
 export { aufgabenSchluessel, schluesselLesen } from './aufgaben-aufschub.ts';
@@ -41,8 +42,10 @@ export type AufgabenTyp =
   | 'station_echte_blaetter'
   | 'reservierung_pruefen'
   | 'reinigen';
+/** alle Typen mit Stufe 2 «Nach Stromausfall» (Plan 30); AufgabenTyp bleibt die Tabelle R5.2 Stufe 1 */
+export type AufgabenArt = AufgabenTyp | StromTyp;
 export type Gewicht = 'ausserhalb' | 'wechsel' | 'routine';
-export type BezugArt = 'platz' | 'satz' | 'messgeraet';
+export type BezugArt = 'platz' | 'satz' | 'messgeraet' | 'anlage';
 
 export interface AufgabenOrt {
   platzId: string;
@@ -56,7 +59,7 @@ export interface AufgabenOrt {
 /** Aufgabe aus einer Regel, vor der Wirkung von «Morgen», «Überspringen» und «Pegel ok» */
 export interface Rohaufgabe {
   schluessel: string;
-  typ: AufgabenTyp;
+  typ: AufgabenArt;
   bezug: string;
   bezugArt: BezugArt;
   faelligAm: string;
@@ -75,7 +78,7 @@ export interface Rohaufgabe {
 export interface Aufgabe {
   /** typ|bezug|faellig_am */
   schluessel: string;
-  typ: AufgabenTyp;
+  typ: AufgabenArt;
   bezug: string;
   bezugArt: BezugArt;
   /** 'JJJJ-MM-TT' Zürich, ursprüngliche Fälligkeit */
@@ -180,7 +183,7 @@ function mitAufschub(roh: Rohaufgabe, aufschuebe: readonly AufschubZeile[], heut
     },
     ueberspringen: UEBERSPRINGEN.has(roh.typ) && ohneUeberspringen !== true,
     pegelOk: roh.typ === 'messen_nachfuellen' && !pegelOkHeute(roh, aufschuebe, heute),
-    erledigtKnopf: ERLEDIGT_KNOPF.has(roh.typ),
+    erledigtKnopf: ERLEDIGT_KNOPF.has(roh.typ) || STROM_TYPEN.has(roh.typ as StromTyp),
   };
 }
 
