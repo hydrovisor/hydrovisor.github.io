@@ -141,6 +141,8 @@ test('Rundgang-AK3 Jetzt korrigieren ohne pH-Vorschlag öffnet Gefäss', async (
   await ziffern(page, '180');
   await ziffern(page, '200');
   await speichern(page).click();
+  // EC 1.20 → 1.80 ist ein Sprung (R10.5): Rückfrage «Richtiges Gefäss?» mit «Ja, speichern» bestätigen
+  await knopf(page, 'Ja, speichern').click();
   const jetzt = knopf(page, 'Jetzt korrigieren');
   await expect(jetzt).toBeVisible({ timeout: 10_000 });
   await jetzt.click();
