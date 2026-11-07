@@ -100,7 +100,11 @@ async function aufraeumen(): Promise<void> {
   await sql`delete from public.deckeltyp where id = ${DECKEL}::uuid`;
   await sql`delete from public.anlage where id = ${ANLAGE}::uuid`;
   await sql`delete from public.einstellung where id = ${EINSTELLUNG}::uuid`;
-  await sql`delete from public.messgeraet where id = ${MESSGERAET}::uuid`;
+  // nur ohne fremde Messungen (andere Läufe auf derselben lokalen Datenbank, Prüferbefund 5)
+  await sql`delete from public.messgeraet m
+            where m.id = ${MESSGERAET}::uuid
+              and not exists (select 1 from public.messung x where x.messgeraet_id = m.id)
+              and not exists (select 1 from public.kalibrierung k where k.messgeraet_id = m.id)`;
 }
 
 async function anlegen(): Promise<void> {
