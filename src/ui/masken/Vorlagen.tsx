@@ -15,6 +15,12 @@ import {
   type Vorlagenart,
 } from '../../domain/vorlagen/bestand.ts';
 import {
+  deckelVorschlagEingabe,
+  deckelVorschlagText,
+  offeneDeckelVorschlaege,
+  type DeckelVorschlag,
+} from '../../domain/vorlagen/deckel-vorschlaege.ts';
+import {
   deckeltypPruefen,
   deckeltypSchritt,
   type DeckeltypEingabe,
@@ -40,7 +46,9 @@ import { hashZu } from '../router.ts';
 import '../vorlagen.css';
 
 type Offen =
-  { art: 'deckel'; ersetzt?: DeckeltypZeile } | { art: 'box'; ersetzt?: GefaessmodellZeile } | undefined;
+  | { art: 'deckel'; ersetzt?: DeckeltypZeile; vorschlag?: DeckelVorschlag }
+  | { art: 'box'; ersetzt?: GefaessmodellZeile }
+  | undefined;
 
 const liter = (l: number) => `${String(l)} l`;
 
@@ -144,11 +152,14 @@ function Formularknoepfe({ sendet, abbrechen }: { sendet: boolean; abbrechen: ()
 function DeckelFormular({
   bestand,
   ersetzt,
+  vorschlag,
   fertig,
   abbrechen,
 }: {
   bestand: readonly DeckeltypZeile[];
   ersetzt?: DeckeltypZeile | undefined;
+  /** Vorschlag aus dem Konzept 5.4 (#125): füllt das Formular, gespeichert wird erst mit «Speichern» */
+  vorschlag?: DeckelVorschlag | undefined;
   fertig: (text: string) => void;
   abbrechen: () => void;
 }) {
@@ -160,7 +171,9 @@ function DeckelFormular({
           loecherJeReihe: lochbildText(ersetzt.loecher_je_reihe),
           serviceOeffnung: ersetzt.service_oeffnung,
         }
-      : { name: '', topfdurchmesserCm: null, loecherJeReihe: '', serviceOeffnung: true },
+      : vorschlag
+        ? deckelVorschlagEingabe(vorschlag)
+        : { name: '', topfdurchmesserCm: null, loecherJeReihe: '', serviceOeffnung: true },
   );
   const [verstoesse, setVerstoesse] = useState<Verstoss[]>([]);
   const { ergebnis, sendet, senden, eigene } = useSenden();
@@ -191,10 +204,19 @@ function DeckelFormular({
         void speichern();
       }}
     >
+      {vorschlag ? (
+        <Notice kompakt tone={vorschlag.reihenAngenommen ? 'warn' : 'info'}>
+          {vorschlag.reihenAngenommen
+            ? `Vorschlag ${vorschlag.name} für ${vorschlag.fuer.join(', ')}: Das Konzept nennt nur ${String(
+                lochzahl(vorschlag.reihen),
+              )} Löcher. Vergleiche die Reihen mit deinem Deckel, dann speichern.`
+            : `Vorschlag ${vorschlag.name} für ${vorschlag.fuer.join(', ')} aus dem Konzept. Vergleiche mit deinem Deckel, dann speichern.`}
+        </Notice>
+      ) : null}
       <TextField
         label="Name"
         value={e.name}
-        hint="z. B. D6 oder S5"
+        hint="Name aus dem 3D-Modell, z. B. D1 für 1.1 und 1.2"
         error={fehlerZu(verstoesse, 'name')}
         onChange={(ev) => aendern({ name: ev.target.value })}
       />
@@ -467,6 +489,7 @@ export function Vorlagen() {
   const { buendel } = useBuendel();
   const teile = buendel?.teile;
   const { modelle, deckel } = vorlagenAusTeilen(teile);
+  const vorschlaege = offeneDeckelVorschlaege(deckel);
   const [offen, setOffen] = useState<Offen>();
   const [meldung, setMeldung] = useState<string>();
   const [loeschfehler, setLoeschfehler] = useState<Schreibergebnis>();
@@ -532,16 +555,42 @@ export function Vorlagen() {
         ) : null}
         {offen?.art === 'deckel' ? (
           <DeckelFormular
-            key={offen.ersetzt?.id ?? 'neu'}
+            key={offen.ersetzt?.id ?? offen.vorschlag?.name ?? 'neu'}
             bestand={deckel}
             ersetzt={offen.ersetzt}
+            vorschlag={offen.vorschlag}
             fertig={fertig}
             abbrechen={() => setOffen(undefined)}
           />
         ) : offen === undefined ? (
-          <Button variant="secondary" block onClick={() => oeffnen({ art: 'deckel' })}>
-            Deckel erfassen
-          </Button>
+          <>
+            {vorschlaege.length > 0 ? (
+              <section className="hv-vorlagen-vorschlaege" aria-label="Vorschläge aus dem Konzept">
+                <h3 className="hv-vorlagen-untertitel">Vorschläge aus dem Konzept (3D-Modell V12.10)</h3>
+                <ul className="hv-vorlagen-liste">
+                  {vorschlaege.map((v) => (
+                    <li key={v.name} className="hv-vorlagen-eintrag">
+                      <p className="hv-vorlagen-name">{v.name}</p>
+                      <p className="hv-vorlagen-angabe hv-num">{deckelVorschlagText(v)}</p>
+                      <div className="hv-vorlagen-aktionen">
+                        <Button
+                          variant="secondary"
+                          size="compact"
+                          aria-label={`${v.name} übernehmen`}
+                          onClick={() => oeffnen({ art: 'deckel', vorschlag: v })}
+                        >
+                          Übernehmen
+                        </Button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ) : null}
+            <Button variant="secondary" block onClick={() => oeffnen({ art: 'deckel' })}>
+              Deckel erfassen
+            </Button>
+          </>
         ) : null}
       </Card>
 
