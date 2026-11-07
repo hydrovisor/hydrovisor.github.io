@@ -9,7 +9,9 @@
 //   Zahl, Text, true/false, null, Liste (SQL-Array), Objekt (jsonb)
 // Jede Zeile erhält id = md5('demo:' || ref)::uuid, client_id = md5('demo-client:' || ref)::uuid und app_version.
 // «einmal»: Zeile nur anlegen, wenn keine offene Zeile mit demselben Wert in dieser Spalte besteht; die Referenz
-// zeigt dann auf die vorhandene Zeile (Vorlagen ohne Anlage, die datenart_loeschen nicht entfernt).
+// zeigt dann auf die vorhandene Zeile (Vorlagen ohne Anlage, die datenart_loeschen nicht entfernt). Weicht die offene
+// Zeile in einem Feld der Fixture ab, wird sie storniert und neu angelegt (Korrektur = Storno plus neue Zeile, #130);
+// id und client_id einer einmal-Zeile hängen darum vom Inhalt ab.
 import { md5 } from './md5.ts';
 import { kalendertag, tagPlus, uhrzeit, versatz, type Zeitzone } from '../../src/domain/zeit.ts';
 
@@ -163,9 +165,11 @@ class Umsetzer {
     const tabelle = name(z.tabelle, wo);
     if (!z.ref) throw new Error(`${wo}: ref fehlt`);
     if (this.bekannt.has(z.ref)) throw new Error(`${wo}: ref doppelt: ${z.ref}`);
+    // einmal-Zeilen: neue Fassung neue IDs, sonst verhindert die alte, stornierte Zeile das Anlegen (#130)
+    const schluessel = z.einmal ? `${z.ref}:${md5(JSON.stringify(z.felder)).slice(0, 12)}` : z.ref;
     const felder: Record<string, Wert> = {
-      id: idFuer(z.ref),
-      client_id: clientIdFuer(z.ref),
+      id: idFuer(schluessel),
+      client_id: clientIdFuer(schluessel),
       app_version: APP_VERSION,
       ...z.felder,
     };
@@ -181,7 +185,19 @@ class Umsetzer {
       const w = felder[spalte];
       if (typeof w !== 'string') throw new Error(`${wo}: einmal braucht einen Text in ${spalte}`);
       this.bekannt.set(z.ref, { tabelle, einmal: { spalte, wert: literal(w) } });
+      // Abweichende offene Fassung stornieren: Vergleich je Feld der Fixture über jsonb (30 = 30.0, Reihenfolge in
+      // Listen zählt)
+      const gleich = Object.keys(z.felder)
+        .map((s) => name(s, wo))
+        .map(
+          (s) =>
+            `to_jsonb(t.${s}) = ${literal(JSON.stringify(this.json(z.felder[s] ?? null, `${wo}.${s}`)))}::jsonb`,
+        )
+        .join(' and ');
       befehl =
+        `update public.${tabelle} t set storniert_am = ${literal(this.uhr.jetzt.toISOString())}::timestamptz` +
+        ` where t.${spalte} = ${literal(w)} and t.storniert_am is null and not (${gleich});
+` +
         `insert into public.${tabelle} (${spalten.join(', ')}) select ${werte.join(', ')}` +
         ` where not exists (select 1 from public.${tabelle} where ${spalte} = ${literal(w)} and storniert_am is null)` +
         ' on conflict (id) do nothing;';
