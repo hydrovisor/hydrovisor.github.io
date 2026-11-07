@@ -60,7 +60,7 @@ const messungen = (m: Mitschnitt) => m.geschrieben.filter(([t]) => t === 'messun
 
 /** Messwert-Kachel (Button, Name beginnt mit der Bezeichnung) */
 const kachel = (page: Page, bezeichnung: 'pH' | 'EC' | '°C') =>
-  page.getByRole('button', { name: new RegExp(`^${bezeichnung}`) });
+  page.getByRole('button', { name: new RegExp(`^${bezeichnung}( |$)`) });
 const taste = (page: Page, name: string) => page.getByRole('button', { name, exact: true });
 const speichern = (page: Page) => taste(page, 'Speichern');
 const ziffernblock = (page: Page) => page.getByRole('group', { name: 'Ziffernblock' });

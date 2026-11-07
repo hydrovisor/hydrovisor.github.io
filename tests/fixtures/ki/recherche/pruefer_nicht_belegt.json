@@ -1,0 +1,21 @@
+{
+  "id": "msg_pruefer_02",
+  "type": "message",
+  "role": "assistant",
+  "model": "claude-sonnet-5-5",
+  "content": [
+    {
+      "type": "text",
+      "text": "{\"pruefungen\":[{\"id\":\"w1\",\"belegt\":true,\"grund\":\"Zitat steht in Tabelle 2, DWC\"},{\"id\":\"w2\",\"belegt\":false,\"grund\":\"Zitat an der Fundstelle nicht gefunden\"},{\"id\":\"s1\",\"belegt\":true,\"grund\":\"Zitat steht auf Seite 3, NFT\"}]}"
+    }
+  ],
+  "stop_reason": "end_turn",
+  "stop_sequence": null,
+  "usage": {
+    "input_tokens": 2400,
+    "output_tokens": 300,
+    "server_tool_use": {
+      "web_search_requests": 2
+    }
+  }
+}

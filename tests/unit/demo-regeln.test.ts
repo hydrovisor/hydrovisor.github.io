@@ -14,6 +14,7 @@ import {
   type Zeile,
 } from '../../scripts/demo/regeln.ts';
 import { md5 } from '../../scripts/demo/md5.ts';
+import { DECKEL_VORSCHLAEGE } from '../../src/domain/vorlagen/deckel-vorschlaege.ts';
 
 const ZONE = 'Europe/Zurich';
 const uhr = (iso: string): Uhr => ({ jetzt: new Date(iso), zeitzone: ZONE });
@@ -278,6 +279,16 @@ describe('Fixtures S1 bis S9 und Y', () => {
     expect(z.filter((r) => r.tabelle === 'deckeltyp').map((r) => r.felder['name'])).toEqual(
       ['D1', 'D2', 'D3', 'D4', 'D6', 'S8', 'S5'].map((d) => `Demo ${d}`),
     );
+  });
+
+  it('DS8-AK1 S1: Demo S8 hat Löcher je Reihe 1, 1, 1, 1 mit 8 cm Topf, gleich wie der Vorschlag S8 (#128)', () => {
+    const s8 = zeilenAus('s1-regal.json').find(
+      (r) => r.tabelle === 'deckeltyp' && r.felder['name'] === 'Demo S8',
+    );
+    const vorschlag = DECKEL_VORSCHLAEGE.find((v) => v.name === 'S8');
+    expect(s8?.felder).toMatchObject({ topfdurchmesser_mm: 80, loecher_je_reihe: [1, 1, 1, 1] });
+    expect(s8?.felder['loecher_je_reihe']).toEqual(vorschlag?.reihen);
+    expect((s8?.felder['topfdurchmesser_mm'] as number) / 10).toBe(vorschlag?.topfCm);
   });
 
   it('Y ist identisch mit tests/e2e/orte.ts: Testanlage, Datenart test, Y-2.3 DWC 2 Tage, Y-3.1 Kratky belüftet 7 Tage, Y-W', () => {

@@ -1,6 +1,7 @@
 # Verschlüsseltes Backup (Konzept 11.7, docs/spec/04_architektur.md Abschnitt 9, Plan 16), täglich 03:00 UTC.
 # Umgebung backup ohne Freigabe; Secrets setzt Tim (scripts/backup-einrichten.mjs). Ohne Datenbank-Secrets endet der
-# Lauf mit einer Warnung; ohne Storage-Token sichert er nur die Datenbank und warnt.
+# Lauf mit einer Warnung. Den Bucket saattueten liest er über die S3-Schnittstelle (Entscheid 0013) oder mit dem
+# Storage-Token; ohne beides sichert er nur die Datenbank und warnt.
 # Rolle backup_leser (Migration 20261104150000_backup_rollen.sql): Modus zur Laufzeit (BYPASSRLS oder Rückfall E7
 # mit Policies backup_lesen). Dump mit pg_dump 17, weil supabase db dump intern SET ROLE postgres setzt (Plan 16 A2,
 # lokal belegt). Nur Schema public, Daten als INSERT für die Wiederherstellungsprobe über die Management-API.
@@ -31,6 +32,7 @@ jobs:
   backup:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     environment: backup
     steps:
       - id: bereit
@@ -39,6 +41,9 @@ jobs:
           AGE_SCHLUESSEL: ${{ secrets.BACKUP_AGE_PUBLIC_KEY }}
           GH_TOKEN: ${{ secrets.BACKUP_REPO_TOKEN }}
           STORAGE_TOKEN: ${{ secrets.SUPABASE_STORAGE_TOKEN_BACKUP }}
+          S3_ZUGANG_ID: ${{ secrets.SUPABASE_S3_ZUGANG_ID_BACKUP }}
+          S3_GEHEIMNIS: ${{ secrets.SUPABASE_S3_GEHEIMNIS_BACKUP }}
+          S3_REGION: ${{ vars.SUPABASE_S3_REGION }}
         run: |
           if [ -z "$DB_URL" ] || [ -z "$AGE_SCHLUESSEL" ] || [ -z "$GH_TOKEN" ]; then
             echo "::warning::Umgebung backup ist noch nicht eingerichtet (Tim, scripts/backup-einrichten.mjs); kein Backup"
@@ -46,7 +51,12 @@ jobs:
           else
             echo ok=true >> "$GITHUB_OUTPUT"
           fi
-          if [ -n "$STORAGE_TOKEN" ]; then echo storage=true >> "$GITHUB_OUTPUT"; else echo storage=false >> "$GITHUB_OUTPUT"; fi
+          # Storage über S3 (Entscheid 0013) oder den Token der Rolle backup_speicher_leser (I0-11)
+          if { [ -n "$S3_ZUGANG_ID" ] && [ -n "$S3_GEHEIMNIS" ] && [ -n "$S3_REGION" ]; } || [ -n "$STORAGE_TOKEN" ]; then
+            echo storage=true >> "$GITHUB_OUTPUT"
+          else
+            echo storage=false >> "$GITHUB_OUTPUT"
+          fi
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         if: steps.bereit.outputs.ok == 'true'
       - name: Modus und Rechte prüfen
@@ -102,6 +112,9 @@ jobs:
         if: steps.bereit.outputs.ok == 'true'
         env:
           STORAGE_TOKEN: ${{ secrets.SUPABASE_STORAGE_TOKEN_BACKUP }}
+          S3_ZUGANG_ID: ${{ secrets.SUPABASE_S3_ZUGANG_ID_BACKUP }}
+          S3_GEHEIMNIS: ${{ secrets.SUPABASE_S3_GEHEIMNIS_BACKUP }}
+          S3_REGION: ${{ vars.SUPABASE_S3_REGION }}
           SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
           SUPABASE_APIKEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
           MIT_STORAGE: ${{ steps.bereit.outputs.storage }}
@@ -109,8 +122,8 @@ jobs:
           if [ "$MIT_STORAGE" = "true" ]; then
             node scripts/backup-storage.mjs --ziel sicherung/storage --mindestens "$FOTOS"
           else
-            echo "::warning::Storage nicht gesichert: SUPABASE_STORAGE_TOKEN_BACKUP fehlt (scripts/backup-einrichten.mjs)"
-            echo "Storage nicht gesichert (kein Token)" > sicherung/storage-nicht-gesichert.txt
+            echo "::warning::Storage nicht gesichert: SUPABASE_S3_ZUGANG_ID_BACKUP, SUPABASE_S3_GEHEIMNIS_BACKUP und SUPABASE_S3_REGION fehlen (Entscheid 0013)"
+            echo "Storage nicht gesichert (kein S3-Schlüssel, kein Token)" > sicherung/storage-nicht-gesichert.txt
           fi
       - name: Verschlüsseln und ablegen (30 Stände)
         if: steps.bereit.outputs.ok == 'true'

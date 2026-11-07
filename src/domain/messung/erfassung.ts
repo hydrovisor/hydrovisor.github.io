@@ -31,12 +31,16 @@ export function messungVorgang(
   kontext: {
     platzId: string;
     messgeraetId: string;
-    messart: 'aufgabe' | 'w';
+    messart: 'aufgabe' | 'w' | 'frischwasser' | 'kontrolle_ansatz' | 'end_ansatz' | 'nachmessen' | 'rundgang';
+    /** Messung im Ablauf (Plan 29): gehört zum Ansatz und veraltet nicht (R10.3) */
+    ansatzId?: string;
     betriebsart?: Betriebsart;
     fuellstand?: 'ueber_drittel' | 'unter_drittel';
     uEc: number;
     uPh: number;
     warFaelligAm?: string;
+    /** Rundgang (Plan 30): Schlüssel der fälligen Mess-Aufgabe (Termintreue) */
+    aufgabeSchluessel?: string | undefined;
     erfassungsdauerS?: number;
     /** Plan 26 (R2.5): Zielbereich und Bewertung; ohne bleibt der Vorgang wie in I0-07 */
     bewertung?: {
@@ -60,6 +64,12 @@ export function messungVorgang(
     fuellstand: kontext.fuellstand ?? null,
     war_faellig_am: kontext.warFaelligAm ?? null,
   };
+  if (kontext.aufgabeSchluessel) felder['aufgabe_schluessel'] = kontext.aufgabeSchluessel;
+  if (kontext.ansatzId) {
+    // id = client_id wie die übrigen Zeilen im Ablauf (Plan 29 «Schreibweg»)
+    felder['id'] = bindung.clientId;
+    felder['ansatz_id'] = kontext.ansatzId;
+  }
   const b = kontext.bewertung;
   if (b) {
     felder['bewertung_ph'] = b.bewertungen.ph ?? null;

@@ -1,13 +1,20 @@
-// Heute (Kontext Regal, docs/spec/05_masken.md 3.1): Kopf, Hinweise, Einrichtungs-Checkliste (Plan 18); Karten folgen
-// mit I1b.
+// Heute (Kontext Regal, docs/spec/05_masken.md 3.1): Kopf, Hinweise, Einrichtungs-Checkliste (Plan 18), Ortskarten aus
+// der Aufgaben-Rechnung (Plan 27, Plan 30), unten im Daumenbereich «Rundgang starten (n Orte)» und «Stromausfall
+// erfassen» (Plan 30).
 import { useState } from 'react';
 import { useAblaufOffen } from '../../ablauf/offen.ts';
 import { standAnzeige } from '../../domain/datenpfad/buendel.ts';
 import { kalibrierStand, kalibrierText } from '../../domain/kalibrierung/stand.ts';
 import { messFaelligkeit, type Messfaelligkeit } from '../../domain/messung/faelligkeit.ts';
 import { heuteGruppiert, nachAnlage } from '../../domain/anlage/gruppen.ts';
-import { pruefAufgaben } from '../../domain/etikett/pruefung.ts';
-import { keimAufgaben } from '../../domain/pflanzung/keimung.ts';
+import { einstellungenAus, type Aufgabe } from '../../domain/aufgaben.ts';
+import { aufschubVorgang } from '../../domain/aufgaben-aufschub.ts';
+import { verteilteAufgaben } from '../../domain/aufgaben-verteilung.ts';
+import { neueClientId, schreiben } from '../../daten/schreiben.ts';
+import { Button } from '../bausteine/Button.tsx';
+import { rundgangAnlage, rundgangPlan } from '../../domain/rundgang/plan.ts';
+import { Aufgabenliste, aufgabenSicher } from './Aufgabenliste.tsx';
+import { Ablaeufe } from './Ablaeufe.tsx';
 import { Phasenkarten } from './Phasenkarten.tsx';
 import { Erntekarten } from './Erntekarten.tsx';
 import { umsetzAufgaben } from '../../domain/anzucht/umsetzen.ts';
@@ -56,6 +63,12 @@ export function Heute() {
     ablaufOffen,
   });
   const ablauf = ablaufOffen === undefined ? 'unbekannt' : ablaufOffen ? 'offen' : 'keiner';
+  // die fälligen Aufgaben einmal je Render für Karten, Übersicht und Rundgang (Plan 30, UC8-AK9), mit den nach
+  // R5.6 vorgezogenen Ansätzen (Plan 113); der Rundgang führt keine Ansätze und bleibt davon unberührt (A6)
+  const teile = buendel?.teile;
+  const faellig = teile
+    ? aufgabenSicher(() => verteilteAufgaben(teile, einstellungenAus(teile), new Date(jetzt), ZEITZONE), [])
+    : [];
   return (
     <main className="hv-seite" data-density="regal" data-ablauf={ablauf}>
       <header className="hv-seite-kopf hv-heute-kopf">
@@ -88,17 +101,42 @@ export function Heute() {
         </Notice>
       ) : null}
       {keinZugang ? <Notice tone="warn" title="Kein Zugang für dieses Konto" /> : null}
+      {buendel && !keinZugang ? <Ablaeufe jetzt={new Date(jetzt)} /> : null}
       {!keinZugang && anzeige.hinweis ? <Notice title={anzeige.hinweis} /> : null}
       {buendel && !keinZugang ? <Einrichtung /> : null}
       {zeigen ? <NeueVersionHinweis /> : null}
       {buendel && !keinZugang ? <PushHinweis /> : null}
       {buendel && !keinZugang ? <Phasenkarten jetzt={new Date(jetzt)} /> : null}
-      {buendel && !keinZugang ? <Pruefaufgaben /> : null}
-      {buendel && !keinZugang ? <Keimaufgaben jetzt={new Date(jetzt)} /> : null}
+      {buendel && !keinZugang ? <Aufgabenliste jetzt={new Date(jetzt)} faellig={faellig} /> : null}
       {buendel && !keinZugang ? <Umsetzaufgaben jetzt={new Date(jetzt)} /> : null}
       {buendel && !keinZugang ? <Erntekarten jetzt={new Date(jetzt)} /> : null}
-      {buendel ? <Uebersicht jetzt={new Date(jetzt)} /> : null}
+      {buendel ? <Uebersicht jetzt={new Date(jetzt)} faellig={faellig} /> : null}
+      {buendel && !keinZugang ? <RundgangFuss jetzt={new Date(jetzt)} faellig={faellig} /> : null}
     </main>
+  );
+}
+
+/** Fuss im Daumenbereich (Plan 30): Rundgang der echten Anlage, ohne echte der ersten (A1), und Stromausfall */
+function RundgangFuss({ jetzt, faellig }: { jetzt: Date; faellig: readonly Aufgabe[] }) {
+  const { buendel } = useBuendel();
+  const teile = buendel?.teile;
+  const anlage = rundgangAnlage(teile);
+  if (!teile || !anlage) return null;
+  const n = aufgabenSicher(() => rundgangPlan(teile, faellig, anlage.id, jetzt, ZEITZONE).orteZahl, 0);
+  return (
+    <nav className="hv-heute-fuss" aria-label="Rundgang">
+      {n > 0 ? (
+        <a
+          className="hv-btn hv-btn-primary hv-btn-block"
+          href={hashZu({ name: 'rundgang', kuerzel: anlage.kuerzel })}
+        >
+          {`Rundgang starten (${String(n)} ${n === 1 ? 'Ort' : 'Orte'})`}
+        </a>
+      ) : null}
+      <a className="hv-btn hv-btn-secondary hv-btn-block" href={hashZu({ name: 'stromausfall' })}>
+        Stromausfall erfassen
+      </a>
+    </nav>
   );
 }
 
@@ -131,16 +169,45 @@ function PushHinweis() {
 }
 
 /** Übergangsliste bis I1b: Kalibrierstand des Messgeräts (nur echt, G5, RR14) und Orte mit Messfälligkeit */
-function Uebersicht({ jetzt }: { jetzt: Date }) {
+function Uebersicht({ jetzt, faellig }: { jetzt: Date; faellig: readonly Aufgabe[] }) {
   const { buendel } = useBuendel();
   const geraet = messgeraet(buendel);
   const teile = buendel?.teile;
   const orte = buendel ? messbareOrte(buendel.teile) : [];
   const messungen = messungenIm(buendel);
+  // «Morgen» für die fällige Kalibrierung und die Erstkalibrierung (R5.2: Morgen ja; Plan 113 Nachtrag 12, UC8-AK6)
+  const kalibrieren = faellig.find(
+    (a) => a.typ === 'kalibrieren' && a.bezug === geraet?.id && a.morgen.erlaubt,
+  );
+  const [verschoben, setVerschoben] = useState<string>();
+  const [sendet, setSendet] = useState(false);
+  const [fehler, setFehler] = useState<string>();
+  async function morgen(a: Aufgabe) {
+    if (sendet) return;
+    setSendet(true);
+    try {
+      const t = new Date(Date.now());
+      const r = await schreiben(aufschubVorgang(a, 'morgen', neueClientId(), t, ZEITZONE), {
+        jetzt: t,
+        zeitzone: ZEITZONE,
+      });
+      if (r.status === 'nicht_gespeichert') setFehler(r.fehler.text);
+      else {
+        setFehler(undefined);
+        setVerschoben(a.schluessel);
+      }
+    } finally {
+      setSendet(false);
+    }
+  }
+  // erste fällige Aufgabe je Ort aus der Aufgaben-Rechnung (Plan 27), sonst die Messfälligkeit
+  const ersteAufgabe = new Map<string, string>();
+  for (const a of faellig)
+    if (a.ort && !ersteAufgabe.has(a.ort.platzId)) ersteAufgabe.set(a.ort.platzId, a.titel);
   return (
     <>
       {geraet ? (
-        <section className="hv-messen-kopf" aria-label="Messgerät">
+        <section className="hv-messen-kopf hv-heute-geraet" aria-label="Messgerät">
           <span className="hv-messen-titel">
             {kalibrierText(
               kalibrierStand(
@@ -154,8 +221,14 @@ function Uebersicht({ jetzt }: { jetzt: Date }) {
           <a className="hv-btn hv-btn-secondary" href={hashZu({ name: 'kalibrieren' })}>
             Kalibrieren
           </a>
+          {kalibrieren && verschoben !== kalibrieren.schluessel ? (
+            <Button variant="ghost" disabled={sendet} onClick={() => void morgen(kalibrieren)}>
+              Morgen
+            </Button>
+          ) : null}
         </section>
       ) : null}
+      {fehler ? <Notice tone="warn" title={fehler} /> : null}
       {orte.length === 0 ? (
         <p>Noch keine Orte erfasst</p>
       ) : (
@@ -177,19 +250,20 @@ function Uebersicht({ jetzt }: { jetzt: Date }) {
                   key={o.platzId}
                   kennung={o.code}
                   zeilen={[
-                    faelligText(
-                      messFaelligkeit(
-                        {
-                          platzId: o.platzId,
-                          intervallMessenD: o.intervallMessenD ?? null,
-                          ...zustandVon(buendel, o.platzId),
-                        },
-                        messungen,
-                        jetzt,
-                        ZEITZONE,
+                    ersteAufgabe.get(o.platzId) ??
+                      faelligText(
+                        messFaelligkeit(
+                          {
+                            platzId: o.platzId,
+                            intervallMessenD: o.intervallMessenD ?? null,
+                            ...zustandVon(buendel, o.platzId),
+                          },
+                          messungen,
+                          jetzt,
+                          ZEITZONE,
+                        ),
+                        o.rolle,
                       ),
-                      o.rolle,
-                    ),
                   ]}
                   onClick={() => {
                     // Gefäss öffnet die Maske «Gefäss», W die Messmaske (UC1, Plan 20)
@@ -206,48 +280,6 @@ function Uebersicht({ jetzt }: { jetzt: Date }) {
         ))
       )}
     </>
-  );
-}
-
-/** Aufgabe «Gefäss prüfen» je Gefäss «in Prüfung» echter Anlagen, bis zur Aufgaben-Rechnung (Plan 21 A7) */
-function Pruefaufgaben() {
-  const { buendel } = useBuendel();
-  const aufgaben = pruefAufgaben(buendel?.teile);
-  if (aufgaben.length === 0) return null;
-  return (
-    <ul className="hv-aufgaben" aria-label="Aufgaben">
-      {aufgaben.map((a) => (
-        <li key={a.platzId} className="hv-aufgabe">
-          <span>
-            {a.titel} · {a.kennung}
-          </span>
-          <a className="hv-btn hv-btn-secondary" href={hashZu({ name: 'pruefen', code: a.code })}>
-            Prüfen
-          </a>
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-/** Aufgabe «Keimung prüfen» je fälligem Satz, bis zur Aufgaben-Rechnung in I1b-02 (Plan 24, wie Plan 21 A7) */
-function Keimaufgaben({ jetzt }: { jetzt: Date }) {
-  const { buendel } = useBuendel();
-  const aufgaben = keimAufgaben(buendel?.teile, jetzt, ZEITZONE);
-  if (aufgaben.length === 0) return null;
-  return (
-    <ul className="hv-aufgaben" aria-label="Keimprüfungen">
-      {aufgaben.map((a) => (
-        <li key={a.satzId} className="hv-aufgabe">
-          <span className="hv-aufgabe-text">
-            {a.text} · {a.ort}
-          </span>
-          <a className="hv-btn hv-btn-secondary" href={hashZu({ name: 'keimung', satz: a.satzId })}>
-            Prüfen
-          </a>
-        </li>
-      ))}
-    </ul>
   );
 }
 

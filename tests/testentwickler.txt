@@ -140,6 +140,14 @@ tests/unit/keimung-termine.test.ts
 tests/unit/router-keimung.test.ts
 tests/seed/keimung.test.ts
 tests/e2e/keimung.spec.ts
+# I1b-02 Aufgaben-Rechnung (#27)
+tests/unit/aufgaben-fixture.ts
+tests/unit/aufgaben-schluessel.test.ts
+tests/unit/aufgaben-regeln.test.ts
+tests/unit/aufgaben-aufschub.test.ts
+tests/unit/aufgaben-fuellzustand.test.ts
+tests/unit/aufgaben-zeit.test.ts
+supabase/functions/push-taeglich/aufgaben_test.ts
 # I2-03 Phasen nachführen und Phasenfragen (#35)
 tests/fixtures/phasen.ts
 tests/unit/phasen-termine.test.ts
@@ -176,3 +184,80 @@ tests/unit/ernte-ende.test.ts
 tests/unit/pflanzenansicht.test.ts
 tests/unit/ernte-buendel.test.ts
 tests/e2e/ernte.spec.ts
+# I2-05 Sorten mit KI und Recherche (#37)
+supabase/tests/database/15_sorten_erfassung.test.sql
+tests/unit/recherche-validator.test.ts
+tests/unit/recherche-luecken.test.ts
+tests/unit/recherche-schema.test.ts
+tests/unit/sorten-erfassung.test.ts
+tests/unit/ki-eval-bereit.test.ts
+supabase/functions/ki-recherche/kern_test.ts
+supabase/functions/ki-recherche/modell_test.ts
+tests/fixtures/ki/recherche/antwort_gueltig.json
+tests/fixtures/ki/recherche/antwort_erde.json
+tests/fixtures/ki/recherche/antwort_ungueltig.json
+tests/fixtures/ki/recherche/antwort_pause_turn.json
+tests/fixtures/ki/recherche/fehler_529.json
+tests/fixtures/ki/recherche/pruefer_belegt.json
+tests/fixtures/ki/recherche/pruefer_nicht_belegt.json
+tests/e2e/sorten.spec.ts
+tests/e2e/sorten-exif.spec.ts
+tests/unit/sorten-liste.test.ts
+# I1b-03 UC7 Rechner (#28)
+tests/unit/rechner-zahlen.test.ts
+tests/unit/rechner-neuansatz.test.ts
+tests/unit/rechner-korrektur.test.ts
+tests/unit/rechner-nachfuellen.test.ts
+tests/unit/rechner-referenz.test.ts
+tests/unit/rechner-runde1.test.ts
+# I1b-04 Abhakliste Lösungswechsel (#29)
+supabase/tests/database/16_ansatz_zustand.test.sql
+tests/fixtures/ansatz.ts
+tests/unit/abhakliste-stand.test.ts
+tests/unit/abhakliste-folgen.test.ts
+tests/unit/rechner-ph.test.ts
+tests/unit/datenpfad-setzen-ansatz.test.ts
+tests/e2e/abhakliste.spec.ts
+tests/e2e/ph-korrektur.spec.ts
+tests/unit/abhakliste-vorgaenge.test.ts
+tests/unit/router-ansatz.test.ts
+# I1b-04 Runde 1 (#29)
+tests/unit/abhakliste-rechnung.test.ts
+tests/unit/abhakliste-gefaess.test.ts
+# I2-02 Ansatz für Umsetzen (#34)
+tests/fixtures/zielbereich.ts
+tests/unit/zielbereich.test.ts
+tests/unit/zielbereich-leitkultur.test.ts
+tests/unit/abhakliste-rechnung-zielbereich.test.ts
+# I1b-05 Heute und Rundgang (#30)
+tests/unit/rundgang-fixture.ts
+tests/unit/rundgang-abschluss.test.ts
+tests/unit/rundgang-ablauf.test.ts
+tests/unit/rundgang-plan.test.ts
+tests/unit/rundgang-kurzpruefung.test.ts
+tests/unit/rundgang-nachfuellen.test.ts
+tests/unit/rundgang-heute.test.ts
+tests/unit/aufgaben-stromausfall.test.ts
+tests/fixtures/rundgang.ts
+tests/e2e/rundgang.spec.ts
+# I1b-06 Sammel-Push und Timer-Push produktiv (#31); geändert: push-taeglich/kern.test.ts, push-fixture.ts,
+# push-inhalt.test.ts, push-zeitpunkt.test.ts, push-sw.test.ts (stehen oben unter I0-08)
+supabase/functions/push-taeglich/sammel_test.ts
+supabase/functions/push-taeglich/timer_test.ts
+supabase/functions/push-taeglich/email_test.ts
+supabase/functions/push-taeglich/daten_test.ts
+tests/unit/push-speicher.ts
+tests/unit/buendel-kuerzen.test.ts
+tests/unit/einstellungen-email.test.ts
+tests/seed/push-protokoll.test.ts
+supabase/tests/database/18_push_timer.test.sql
+# I1b-08 (#113)
+tests/unit/aufgaben-verteilung.test.ts
+tests/e2e/verteilung-gefaess.spec.ts
+tests/e2e/rundgang-korrektur.spec.ts
+tests/unit/eingabe-aus.test.ts
+# I1b-09 Push verteilt (#118)
+tests/unit/verteilung-fixture.ts
+supabase/functions/push-taeglich/verteilung_test.ts
+tests/unit/push-verteilung.test.ts
+supabase/tests/database/19_termintreue.test.sql

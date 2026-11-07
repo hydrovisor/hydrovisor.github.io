@@ -53,6 +53,21 @@ export function fotosJeTuete(fotos: EvalEingabe['fotos']): Map<string, Uint8Arra
   );
 }
 
+/** Voraussetzungen vor jedem Lauf; Meldungen einzeilig ohne Stapelspur (Plan 37) */
+export function evalVoraussetzungen(e: {
+  referenzPfad: string;
+  referenzVorhanden: boolean;
+  fotoPfad: string;
+  fotos: readonly string[] | undefined;
+}): { ok: true; tueten: number } | { ok: false; meldung: string } {
+  if (!e.referenzVorhanden) return { ok: false, meldung: `Referenzdatei fehlt: ${e.referenzPfad}` };
+  if (e.fotos === undefined) return { ok: false, meldung: `Fotoordner fehlt: ${e.fotoPfad}` };
+  const tueten = fotosJeTuete(e.fotos.map((name) => ({ name, bytes: new Uint8Array() }))).size;
+  if (tueten === 0)
+    return { ok: false, meldung: `Keine Fotos <zeile_id>-1.jpg und <zeile_id>-2.jpg in ${e.fotoPfad}` };
+  return { ok: true, tueten };
+}
+
 export async function evalAblauf(
   e: EvalEingabe,
 ): Promise<{ auswertung: Auswertung; defaultModell: string; markdown: string }> {

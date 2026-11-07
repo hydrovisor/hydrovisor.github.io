@@ -1,0 +1,42 @@
+{
+  "id": "msg_recherche_02",
+  "type": "message",
+  "role": "assistant",
+  "model": "claude-sonnet-5-5",
+  "content": [
+    {
+      "type": "server_tool_use",
+      "id": "srvtoolu_fixture_02",
+      "name": "web_search",
+      "input": {
+        "query": "Blattsalat DWC EC pH"
+      }
+    },
+    {
+      "type": "web_search_tool_result",
+      "tool_use_id": "srvtoolu_fixture_02",
+      "content": [
+        {
+          "type": "web_search_result",
+          "url": "https://forschung.example.invalid/blattsalat-dwc",
+          "title": "Blattsalat im DWC-Versuch",
+          "encrypted_content": "fixture",
+          "page_age": null
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "text": "{\"werte\":[{\"id\":\"w1\",\"phase\":\"wachstum\",\"groesse\":\"ec\",\"wert_min\":1.2,\"wert_typ\":1.4,\"wert_max\":1.6,\"text_wert\":null,\"ec_einheit\":\"mS/cm\",\"ec_basis\":\"gesamt\",\"system\":\"keine\",\"umgebung\":\"andere\",\"quelle\":{\"titel\":\"Salat im Beet\",\"link\":\"https://garten.example.invalid/salat-im-beet\",\"klasse\":\"praxis\",\"anbaumethode\":\"keine\"},\"fundstelle\":\"Absatz 2\",\"kurzzitat\":\"In lockerer Erde gedeiht Salat bei einer Leitfähigkeit um 1.4 mS/cm.\"},{\"id\":\"w2\",\"phase\":\"wachstum\",\"groesse\":\"ph\",\"wert_min\":4.5,\"wert_typ\":4.8,\"wert_max\":5,\"text_wert\":null,\"ec_einheit\":null,\"ec_basis\":null,\"system\":\"nft\",\"umgebung\":\"gewaechshaus\",\"quelle\":{\"titel\":\"NFT-Anleitung Blattgemüse\",\"link\":\"https://hersteller.example.invalid/nft-anleitung\",\"klasse\":\"hersteller\",\"anbaumethode\":\"nft\"},\"fundstelle\":\"Abschnitt 4\",\"kurzzitat\":\"Der pH-Wert lag bei 4.5 bis 5.0.\"}],\"saat\":[]}"
+    }
+  ],
+  "stop_reason": "end_turn",
+  "stop_sequence": null,
+  "usage": {
+    "input_tokens": 5200,
+    "output_tokens": 900,
+    "server_tool_use": {
+      "web_search_requests": 2
+    }
+  }
+}

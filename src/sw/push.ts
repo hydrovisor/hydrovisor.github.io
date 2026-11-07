@@ -7,6 +7,8 @@ export interface Quittung {
   ereignis: 'angezeigt' | 'geoeffnet';
 }
 
+const TAGS: readonly string[] = ['heute', 'test', 'kurzpruefung', 'timer'];
+
 const text = (w: unknown, ersatz: string) => (typeof w === 'string' && w !== '' ? w : ersatz);
 
 /** Titel und Optionen für showNotification aus der Nutzlast { titel, text, versand_id, signatur, tag, url } */
@@ -20,16 +22,20 @@ export function benachrichtigungAus(nutzlast: unknown): {
   };
 } {
   const n = (nutzlast && typeof nutzlast === 'object' ? nutzlast : {}) as Record<string, unknown>;
+  const tag = TAGS.includes(n['tag'] as string) ? (n['tag'] as string) : 'heute';
+  const url = n['url'];
   return {
     titel: text(n['titel'], 'Hydrovisor'),
     optionen: {
       body: text(n['text'], ''),
-      tag: n['tag'] === 'test' ? 'test' : 'heute',
-      renotify: false,
+      tag,
+      // nur der Timer klingelt erneut, damit ein zweiter Timer auffällt (Plan 31 A9)
+      renotify: tag === 'timer',
       data: {
         versand_id: text(n['versand_id'], ''),
         signatur: text(n['signatur'], ''),
-        url: text(n['url'], '#/heute'),
+        // nur Hash-Routen der App (Plan 31 A10)
+        url: typeof url === 'string' && url.startsWith('#/') ? url : '#/heute',
       },
     },
   };

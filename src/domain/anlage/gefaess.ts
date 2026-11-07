@@ -1,5 +1,8 @@
 // Maske «Gefäss» (UC1 Ablauf Maske «Gefäss», 05_masken.md 3.3; Plan 20): liest Kopf, Zustand, Hauptknopf und
 // Verlauf aus dem Bündel, ohne neu zu rechnen (R2.5, Plan 20 A3, A4). Rein: jetzt und Zeitzone als Parameter.
+import { laufendeAnsaetze } from '../abhakliste/folgen.ts';
+import type { SchrittZeile } from '../abhakliste/stand.ts';
+import type { AnsatzZeile } from '../bewertung/verlauf.ts';
 import { deckelBelegung, type DeckelLoch } from '../pflanzung/topf.ts';
 import { messFaelligkeit } from '../messung/faelligkeit.ts';
 import { ortAufloesen } from '../ort.ts';
@@ -47,7 +50,10 @@ export interface Gefaessansicht {
   dosis: { komponente: string; mlProL: string }[];
   hauptknopf?: { text: string; code: string };
   /** Plan 21: Nebenknöpfe «Prüfen», «Ändern», «Leeren» (nur bei Lösung), «Wiederherstellen» (bis 7 Tage) */
-  nebenknoepfe: { art: 'pruefen' | 'aendern' | 'leeren' | 'wiederherstellen' | 'saeen'; text: string }[];
+  nebenknoepfe: {
+    art: 'pruefen' | 'aendern' | 'leeren' | 'wiederherstellen' | 'saeen' | 'wechseln';
+    text: string;
+  }[];
   /** «Gefäss 2.3 entfernt am 10.12.» (R9.2) */
   entfernt?: string;
   verlauf: {
@@ -217,7 +223,8 @@ export function gefaessAnsicht(
   // letzter Ansatz für den Verlauf; Zielbereich und Dosis aus dem letzten nicht abgebrochenen Neuansatz oder
   // Teilwechsel, wie v_fuellzustand (Runde 1, Befund 4)
   const ansatz = ansaetze[0];
-  const basis = ansaetze.find((a) => BASIS_TYPEN.has(a.typ) && a.status !== 'abgebrochen');
+  // Basis nur abgeschlossene Ansätze: ein laufender Wechsel ist noch nicht die Lösung im Gefäss (Plan 29 Risiko 6)
+  const basis = ansaetze.find((a) => BASIS_TYPEN.has(a.typ) && a.status === 'abgeschlossen');
 
   const ansicht: Gefaessansicht = {
     code,
@@ -262,6 +269,17 @@ export function gefaessAnsicht(
       }
     } else {
       if (roh === 'in_pruefung') ansicht.nebenknoepfe.push({ art: 'pruefen', text: 'Prüfen' });
+      // Plan 29: Lösungswechsel mit der Abhakliste, auch an Stationen (R4.5); bei laufendem Wechsel «Wechsel fortsetzen»
+      if (roh === 'in_betrieb' || roh === 'in_betrieb_volumen_offen') {
+        const laufend = laufendeAnsaetze(
+          zeilen<AnsatzZeile>(teile, 'naehrloesungsansatz'),
+          zeilen<SchrittZeile & { ansatz_id: string }>(teile, 'ansatz_schritt'),
+        ).some((l) => l.platzId === ort.platzId);
+        ansicht.nebenknoepfe.push({
+          art: 'wechseln',
+          text: laufend ? 'Wechsel fortsetzen' : 'Lösung wechseln',
+        });
+      }
       ansicht.nebenknoepfe.push({ art: 'aendern', text: 'Ändern' });
       if (fuellNeben === 'loesung') ansicht.nebenknoepfe.push({ art: 'leeren', text: 'Leeren' });
       // Plan 23: Säen in Gefässe ohne feste Dosis (UC5 Auslöser)
@@ -364,6 +382,7 @@ export function gefaessAnsicht(
     const produkte = new Map(
       zeilen<{ produkt_id: string; name: string }>(teile, 'produkt').map((p) => [p.produkt_id, p.name]),
     );
+    const summe = new Map<string, number>();
     for (const pos of zeilen<{
       ansatz_id: string;
       produkt_id: string;
@@ -373,12 +392,12 @@ export function gefaessAnsicht(
       storniert_am: string | null;
     }>(teile, 'ansatz_position')) {
       if (pos.ansatz_id !== basis.id || pos.storniert_am !== null || pos.produkt_id === 'ph_minus') continue;
+      // Summe je Produkt: die Restdosis ergibt eine zweite Position (Plan 29 A10, Risiko 6)
       const ml = Number(pos.ist_ml ?? pos.soll_ml) / Number(pos.bezugsvolumen_l);
-      ansicht.dosis.push({
-        komponente: produkte.get(pos.produkt_id) ?? pos.produkt_id,
-        mlProL: ml.toFixed(2),
-      });
+      summe.set(pos.produkt_id, (summe.get(pos.produkt_id) ?? 0) + ml);
     }
+    for (const [produkt, ml] of summe)
+      ansicht.dosis.push({ komponente: produkte.get(produkt) ?? produkt, mlProL: ml.toFixed(2) });
   }
 
   // Hauptknopf: bis zur Aufgaben-Rechnung die Messfälligkeit (A4); Anzuchtbox ohne Knopf (A6)

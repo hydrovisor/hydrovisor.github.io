@@ -6,7 +6,7 @@ Private PWA mit Supabase für Tims Hydroponikregal; einziger Nutzer Tim, bedient
 
 | Was | Wo |
 |---|---|
-| Fachkonzept (massgebend) | `docs/input/konzept_v1.4.md`; Änderungen nur als neue Fassung mit Eintrag in Anhang B.2 |
+| Fachkonzept (massgebend) | `docs/input/konzept_v1.5.md`; Änderungen nur als neue Fassung mit Eintrag in Anhang B.2 |
 | Rangfolge bei Widerspruch | Konzept vor `docs/input/use_cases_f4.md` vor `docs/input/duengeplan_v1.6.md` vor W0 |
 | Spezifikation (abgenommen 1.11.2026) | `docs/spec/` (Fachregeln, Datenmodell, Import W0, Architektur, Masken, Tests, Glossar) |
 | Entscheide | `docs/spec/00_rueckfragen.md` (Auftrag 1) und `docs/entscheide/` (je Entscheid eine Datei) |
@@ -123,6 +123,7 @@ Vorschau: Cloudflare Pages `hydrovisor-vorschau` baut jeden Zweig (`<zweig>.hydr
 - [0010 Der Lead arbeitet selbständig durch](docs/entscheide/0010-lead-arbeitet-selbstaendig.md)
 - [0011 Kern-Pakete bis 95 % Kontingent, fachliche Lücken mit (A)](docs/entscheide/0011-kontingent-95-prozent.md)
 - [0012 Referenzdatei Rechner und Push-Migration durch den Lead (Ausnahme)](docs/entscheide/0012-referenzdatei-und-push-migration.md)
+- [0013 Tütenfotos über die S3-Schnittstelle sichern](docs/entscheide/0013-tuetenfotos-ueber-s3-sichern.md)
 - Übrige Entscheide vom 1.11.2026: `docs/spec/00_rueckfragen.md` (R1 bis R13, W1 bis W14, Annahmen 1 bis 16)
 
 ## Arbeitsweise in der Sitzung

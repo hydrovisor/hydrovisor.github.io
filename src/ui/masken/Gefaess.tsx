@@ -7,6 +7,9 @@ import { gefaessAnsicht, type Gefaessansicht } from '../../domain/anlage/gefaess
 import { ereignisseAm, ms, type Teile } from '../../domain/anlage/teile.ts';
 import type { Vorgang } from '../../domain/datenpfad/erfassung.ts';
 import { ortAufloesen } from '../../domain/ort.ts';
+import { einstellungenAus } from '../../domain/aufgaben.ts';
+import { verteilteAufgaben } from '../../domain/aufgaben-verteilung.ts';
+import { aufgabenSicher } from './Aufgabenliste.tsx';
 import { ZEITZONE } from '../../domain/zeit.ts';
 import { kuerzlichBeendet } from '../../domain/phasen/ende.ts';
 import { pflanzungVonSatz } from '../../domain/phasen/fragen.ts';
@@ -164,7 +167,8 @@ export function Gefaess({ code }: { code: string }) {
         </a>
       ) : null}
       {a.nebenknoepfe.length > 0 && buendel ? <Nebenknoepfe a={a} teile={buendel.teile} /> : null}
-      {/* Deckelgrafik darf scrollen; Kopf, Zustand und Hauptknopf bleiben oben (UC1-AK2) */}
+      {/* Offene Aufgaben und Deckelgrafik dürfen scrollen; Kopf, Zustand und Hauptknopf bleiben oben (UC1-AK2) */}
+      {buendel ? <OffeneAufgaben code={a.code} teile={buendel.teile} jetzt={zeitpunkt} /> : null}
       {a.deckel.length > 0 && buendel ? <DeckelAnsicht a={a} teile={buendel.teile} /> : null}
       {buendel ? <KuerzlichBeendet code={a.code} teile={buendel.teile} jetzt={zeitpunkt} /> : null}
       {a.verlauf.length > 0 ? (
@@ -229,6 +233,10 @@ function Nebenknoepfe({ a, teile }: { a: Gefaessansicht; teile: Teile }) {
           <a key={k.art} className="hv-btn hv-btn-secondary" href={hashZu({ name: 'pruefen', code: a.code })}>
             {k.text}
           </a>
+        ) : k.art === 'wechseln' ? (
+          <a key={k.art} className="hv-btn hv-btn-secondary" href={hashZu({ name: 'ansatz', code: a.code })}>
+            {k.text}
+          </a>
         ) : k.art === 'aendern' ? (
           <a
             key={k.art}
@@ -283,6 +291,46 @@ function Nebenknoepfe({ a, teile }: { a: Gefaessansicht; teile: Teile }) {
       )}
       {fehler ? <Notice tone="danger" title={fehler} kompakt /> : null}
     </nav>
+  );
+}
+
+/**
+ * Offene Aufgaben des Orts (05_masken.md 3.3, Plan 113) aus derselben Liste wie Heute (verteilteAufgaben(), R5.1,
+ * R5.6), nur Text: keine Links und Knöpfe, damit der Hauptknopf der einzige Link «… Messen» bleibt (UC1-AK2)
+ */
+function OffeneAufgaben({ code, teile, jetzt: zeit }: { code: string; teile: Teile; jetzt: Date }) {
+  const platzId = ortAufloesen(code, teile as Record<string, readonly unknown[]>)?.platzId;
+  const liste = platzId
+    ? aufgabenSicher(
+        () =>
+          verteilteAufgaben(teile, einstellungenAus(teile), zeit, ZEITZONE).filter(
+            (x) => x.ort?.platzId === platzId,
+          ),
+        [],
+      )
+    : [];
+  if (liste.length === 0) return null;
+  return (
+    <section className="hv-gefaess-beendet" aria-label="Offene Aufgaben">
+      <h2 className="hv-gefaess-h2">Offene Aufgaben</h2>
+      <ul className="hv-aufgaben">
+        {liste.map((x) => {
+          const hinweis = x.hinweis === 'mitmarkiert' ? 'Pumpe mitmarkiert' : x.hinweis;
+          return (
+            <li key={x.schluessel} className="hv-aufgabe hv-aufgabe-umbruch" data-gewicht={x.gewicht}>
+              <span className="hv-aufgabe-text">
+                {x.titel}
+                <br />
+                <small>
+                  {x.grund}
+                  {hinweis ? ` · ${hinweis}` : ''}
+                </small>
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
   );
 }
 

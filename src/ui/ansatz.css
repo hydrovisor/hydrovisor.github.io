@@ -1,0 +1,75 @@
+/* Maske «Ansatz» (05_masken.md 3.5, Plan 29 A14): nur Anordnung mit Tokens; die Liste scrollt senkrecht */
+.hv-ansatz {
+  gap: var(--space-2);
+}
+
+.hv-ansatz-liste {
+  min-width: 0;
+}
+
+.hv-ansatz-rechnung {
+  margin: 0;
+  font-size: var(--text-small-size);
+  line-height: var(--text-small-line);
+  color: var(--ink-muted);
+}
+
+.hv-ansatz-frage {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+}
+
+.hv-ansatz-aktionen {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Zeile 4 gesperrt: was oben fehlt und «Nach oben springen» (#123) */
+.hv-ansatz-sperre {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Heute: laufende Abläufe oben (Plan 29) */
+.hv-ablaeufe {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.hv-ablauf-zeile {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: 2px solid var(--brand);
+  border-radius: var(--radius-md);
+  background: var(--surface-raised);
+}
+
+.hv-ablauf-text {
+  flex: 1;
+  min-width: 0;
+  font-weight: 700;
+}
+
+/* Ziffernblock für Menge und Ziel-EC (R4.6) */
+.hv-ansatz-zahl {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.hv-ansatz-zahl-titel {
+  margin: 0;
+  font-weight: 700;
+}

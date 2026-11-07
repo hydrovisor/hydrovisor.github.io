@@ -129,6 +129,9 @@ Zusätzlich [Unit]: UC8-AK1 bis AK6, AK10, AK12, AK13; R5.6 (vier fällige Ansä
 | TK1 | Antwort mit Feld «ph: 6.0» | verworfen, Feldprotokoll «leer» |
 | TK2 | ungültiges JSON | Eingaben bleiben, «von Hand» |
 | TK3 | Hauptmodell 529 | Ausweichmodell; alle Modelle Fehler → «von Hand» nach höchstens 30 s |
+| TK1 Recherche (Plan 37) | Kandidat mit System «Erde» oder pH 4.5 | verworfen mit Grund, Lücke bleibt offen, nichts geschrieben |
+| TK2 Recherche | ungültiges JSON | abgebrochen «ungueltig», kein Schreibaufruf |
+| TK3 Recherche | Hauptmodell 529; alle Modelle Fehler oder Frist | Ausweichmodell; sonst abgebrochen nach höchstens 120 s, nichts geschrieben |
 
 ## 9 Datenmodell ([SQL] pgTAP)
 

@@ -4,7 +4,8 @@ Anleitung für Tim, Plan 14. Der Lead startet den echten Lauf nie, weil er den S
 
 ## 1 Fotos
 
-- Drei der 22 Tüten wählen.
+- Für M0 (I0-09) drei Tüten, für UC4-AK3 in I2-05 alle 22 Tüten (Plan 37). Der Bericht nennt «n von 22 Tüten».
+- Vorher die Referenzdatei `data/eval/tueten_referenz.csv` anlegen (nur Tim, CLAUDE.md Regel 7). Fehlt sie oder der Fotoordner, meldet das Skript «Referenzdatei fehlt: …» bzw. «Fotoordner fehlt: …» und bricht ohne Bericht ab.
 - Vorder- und Rückseite mit dem Honor fotografieren.
 - Die Fotos ablegen in `C:\dev\hydrovisor\data\eval\fotos\`. Namen:
   - `<zeile_id>-1.jpg` für die Vorderseite
@@ -46,7 +47,7 @@ In PowerShell im Ordner `C:\dev\hydrovisor`:
 $env:ANTHROPIC_API_KEY = '<Schlüssel aus dem Passwortmanager>'; npm run eval:tueten
 ```
 
-- Das Skript ruft je Tüte beide Modelle einmal auf, ohne Ausweichen. Bei drei Tüten kostet das wenige Rappen.
+- Das Skript ruft je Tüte beide Modelle einmal auf, ohne Ausweichen. Bei drei Tüten kostet das wenige Rappen, bei 22 Tüten unter 2 USD (Konzept 11.3: unter 0.05 USD je Tüte und Modell).
 - Den Bericht schreibt es nach `reports/ki-eval.md`.
 - Auf der Konsole erscheint nur die Zusammenfassung, nie der Schlüssel.
 - Danach dem Lead «Eval gelaufen» melden. Er postet den Bericht ins Issue #14 und legt den Entscheid zum Default-Modell an.

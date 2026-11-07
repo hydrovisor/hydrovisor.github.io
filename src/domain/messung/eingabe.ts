@@ -85,6 +85,17 @@ export function eingabeStart(felder: readonly Groesse[]): Messeingabe {
   return { felder, aktiv: felder[0] ?? 'ph', text: { ph: '', ec: '', temperatur: '' } };
 }
 
+/** Eingabe aus gespeicherten Werten in Hundertsteln (Rundgang «Jetzt korrigieren», Plan 113), Dezimalen nach FELDREGEL */
+export function eingabeAus(felder: readonly Groesse[], werte: Partial<Record<Groesse, number>>): Messeingabe {
+  const e = eingabeStart(felder);
+  const text = { ...e.text };
+  for (const g of felder) {
+    const h = werte[g];
+    if (h !== undefined) text[g] = (h / 100).toFixed(FELDREGEL[g].dezimalen);
+  }
+  return { ...e, text };
+}
+
 export function feldWaehlen(e: Messeingabe, feld: Groesse): Messeingabe {
   return e.felder.includes(feld) ? { ...ohne(e), aktiv: feld } : e;
 }

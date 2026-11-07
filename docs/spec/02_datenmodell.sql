@@ -86,7 +86,8 @@ create type public.quelle_klasse as enum ('peer_review', 'universitaet_beratung'
 create type public.system as enum ('dwc', 'kratky', 'nft', 'ebbe_flut', 'substrat_inert', 'keine');
 create type public.umgebung as enum ('indoor_led', 'gewaechshaus', 'andere');
 create type public.evidenzklasse as enum ('A', 'B1', 'B2', 'C');
-create type public.vermerk as enum ('keine', 'katalog', 'tuete', 'testbetrieb', 'leitkultur');
+create type public.vermerk as enum ('keine', 'katalog', 'tuete', 'testbetrieb', 'leitkultur', 'recherche');
+-- 'recherche' seit E8 (Plan 37, Migration 20261107120000): Werte der Hydroponik-Recherche aus UC4.
 create type public.klasse_saatmenge as enum ('A', 'B', 'C', 'D');
 create type public.systemeignung as enum ('dwc', 'kratky', 'beide');
 create type public.liter_status as enum ('belegt', 'testbetrieb_offen');
@@ -121,7 +122,8 @@ create type public.mischentscheid as enum ('keiner', 'leitkultur', 'andere_phase
 create type public.ansatz_schritt_typ as enum (
   'kalibrierung_pruefen', 'absaugen', 'frischwasser', 'frischwasser_messen', 'gerechnet_fuer',
   'micro', 'spuelen', 'grow', 'bloom', 'umruehren', 'timer', 'ph_einstellen', 'kontrollmessung',
-  'restdosis', 'endmessung');
+  'restdosis', 'endmessung', 'abbruch');
+-- 'abbruch' seit Plan 29 (Migration 20261108120000): «Wechsel abbrechen» mit der nächsten offenen nr.
 create type public.ereignis_typ as enum (
   'aussaat', 'deckel_geoeffnet', 'abdeckung_entfernt', 'keimung', 'phase_antwort', 'verschieben',
   'umsetzdatum_geaendert', 'umsetzen', 'tausch', 'neu_beschriften', 'ernte', 'kultur_entscheid',
@@ -1058,9 +1060,11 @@ create table public.ki_aufruf (
   status text not null check (status in ('gestartet', 'ok', 'ausweichmodell', 'fehler', 'zeitueberschreitung')),
   dauer_ms integer,
   erfasst_am timestamptz not null default now(),
-  app_version text not null
+  app_version text not null,
+  -- seit Plan 37 (nullable, additiv): tuete, recherche oder quellenpruefer
+  zweck text check (zweck in ('tuete', 'recherche', 'quellenpruefer'))
 );
-comment on table public.ki_aufruf is 'Jeder Aufruf von ki-tuete, geschrieben vor dem API-Request; Grundlage der Grenze 30 Aufrufe je Tag (11.1).';
+comment on table public.ki_aufruf is 'Jeder Aufruf von ki-tuete und ki-recherche, geschrieben vor dem API-Request; gemeinsame Grenze 30 Aufrufe je Tag (11.1, 11.3).';
 
 create table public.etikett_aufruf (
   id uuid primary key default gen_random_uuid(),
@@ -1225,6 +1229,12 @@ begin
   end if;
   return new;
 end $$;
+-- Seit Plan 29 (Migration 20261108120100, 8.1 Regel 2): ansatz_zustand_nachrechnen() rechnet status,
+-- abgeschlossen_am, timer_ende, dauer_s, kontrollmessung_id und endmessung_id eines Neuansatzes mit Schritten aus
+-- ansatz_schritt und messung (after insert or update of storniert_am; bei messung nur mit ansatz_id) und den Status
+-- einer pH-Korrektur aus der Messung nachmessen; ansatz_zustand_geschuetzt() (before update auf naehrloesungsansatz,
+-- pg_trigger_depth() < 2) lehnt jede direkte Änderung dieser Felder ab. Neuansätze ohne Schritte behalten die Werte
+-- des Inserts (Seed, Demo, Plan 29 A22). Vollständiger Text in der Migration.
 create trigger satz_cache_geschuetzt before update on public.satz
   for each row execute function public.cache_geschuetzt();
 create trigger reservierung_cache_geschuetzt before update on public.reservierung
@@ -1318,6 +1328,9 @@ comment on function public.ec_gesamt(numeric, public.ec_basis, numeric) is
   'Basis zuwachs addiert ECWasser; unbekannt rechnet als gesamt, die App zeigt «EC-Basis unklar».';
 
 -- Wissenszeilen aus der App (UC4, 8.1 Regel 6), nur für Tim.
+-- Seit Plan 37 (Migration 20261107120100) zusätzlich: recherche_wert (profilwert Ebene art, Vermerk recherche,
+-- Evidenz B1 bis C, nie überschreibend, sonst null), recherche_saatempfehlung (Klasse B oder C, bestaetigt_am
+-- gesetzt; Ebene art, sonst sorte, sonst null) und bei sorte_neu mit katalog_link die Quelle katalog-<sorte_key>.
 create or replace function public.wissen_app_schreiben(aktion text, daten jsonb)
 returns uuid language plpgsql security definer set search_path = '' as $$
 declare
@@ -1783,6 +1796,8 @@ select s.id as satz_id,
  where s.storniert_am is null;
 comment on view public.v_folgesatz is 'Folgesatz = früherer Satz derselben Sorte mit demselben Zielgefäss (Glossar); vorsatz_id null = kein Folgesatz.';
 
+-- Seit Plan 29 (Migration 20261108120100, A23): pH nachher = coalesce(ph_nachher, pH der jüngsten gültigen Messung
+-- nachmessen mit dieser ansatz_id); die pH-Korrektur braucht kein Update von ph_nachher.
 create view public.v_ph_wirkung with (security_invoker = true) as
 select avg(w) as wirkung_ml_je_l_je_0_1
   from (select pos.ist_ml / (a.volumen_l * (a.ph_vorher - a.ph_nachher) / 0.1) as w

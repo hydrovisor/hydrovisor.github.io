@@ -5,6 +5,7 @@ import { Info } from './masken/Info.tsx';
 import { Muster } from './masken/Muster.tsx';
 import { Schreibprobe } from './masken/Schreibprobe.tsx';
 import { Messen } from './masken/Messen.tsx';
+import { Ansatz } from './masken/Ansatz.tsx';
 import { Kalibrieren } from './masken/Kalibrieren.tsx';
 import { Push } from './masken/Push.tsx';
 import { Anlage } from './masken/Anlage.tsx';
@@ -23,7 +24,12 @@ import { Pflanze } from './masken/Pflanze.tsx';
 import { Umsetzen } from './masken/Umsetzen.tsx';
 import { Verschieben } from './masken/Verschieben.tsx';
 import { Einstellungen } from './masken/Einstellungen.tsx';
+import { Sorte } from './masken/Sorte.tsx';
+import { SorteNeu } from './masken/SorteNeu.tsx';
+import { Sorten } from './masken/Sorten.tsx';
 import { Notfallblatt } from './masken/Notfallblatt.tsx';
+import { Rundgang } from './masken/Rundgang.tsx';
+import { Stromausfall } from './masken/Stromausfall.tsx';
 import { BuendelAnbieter } from './buendel.tsx';
 import { maskeFuer, useRoute } from './router.ts';
 import { SitzungAnbieter, useSitzung } from './sitzung.tsx';
@@ -42,7 +48,13 @@ function Masken() {
       ) : maske.name === 'muster' ? (
         <Muster />
       ) : maske.name === 'messen' ? (
-        <Messen code={maske.code} />
+        <Messen
+          code={maske.code}
+          {...(maske.zeile ? { zeile: maske.zeile } : {})}
+          {...(maske.nachmessen ? { nachmessen: maske.nachmessen } : {})}
+        />
+      ) : maske.name === 'ansatz' ? (
+        <Ansatz code={maske.code} />
       ) : maske.name === 'kalibrieren' ? (
         <Kalibrieren {...(maske.datenart ? { datenart: maske.datenart } : {})} />
       ) : maske.name === 'gefaess-aendern' ? (
@@ -87,8 +99,18 @@ function Masken() {
         <Vorlagen />
       ) : maske.name === 'einstellungen' ? (
         <Einstellungen />
+      ) : maske.name === 'sorten' ? (
+        <Sorten />
+      ) : maske.name === 'sorte-neu' ? (
+        <SorteNeu />
+      ) : maske.name === 'sorte' ? (
+        <Sorte sorte={maske.sorte} />
       ) : maske.name === 'notfallblatt' ? (
         <Notfallblatt {...(maske.kuerzel ? { kuerzel: maske.kuerzel } : {})} />
+      ) : maske.name === 'rundgang' ? (
+        <Rundgang kuerzel={maske.kuerzel} />
+      ) : maske.name === 'stromausfall' ? (
+        <Stromausfall />
       ) : maske.name === 'push' ? (
         <Push />
       ) : maske.name === 'schreibprobe' ? (

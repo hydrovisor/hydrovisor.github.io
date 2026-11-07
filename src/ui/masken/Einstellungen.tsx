@@ -103,6 +103,17 @@ function Abschnitt({
   );
 }
 
+function Kopf() {
+  return (
+    <header className="hv-seite-kopf">
+      <h1 className="hv-seite-titel">Einstellungen</h1>
+      <a className="hv-btn hv-btn-ghost hv-btn-compact" href={hashZu({ name: 'heute' })}>
+        Zu Heute
+      </a>
+    </header>
+  );
+}
+
 export function Einstellungen() {
   const { buendel, liest } = useBuendel();
   const teile = buendel?.teile;
@@ -110,12 +121,23 @@ export function Einstellungen() {
   const geraet = (teile?.['messgeraet']?.[0] ?? undefined) as Zeile | undefined;
 
   if (!e) {
+    // #126: Ohne Zeile einstellung (Produktion vor dem scharfen Seed) bleiben der Weg zurück und die Push-Seite
+    // erreichbar, weil Push keine Zeile einstellung braucht.
     return (
       <main className="hv-seite">
-        <header className="hv-seite-kopf">
-          <h1 className="hv-seite-titel">Einstellungen</h1>
-        </header>
-        <p>{liest ? 'Daten werden geladen' : 'Keine Einstellungen gefunden'}</p>
+        <Kopf />
+        {liest ? (
+          <p>Daten werden geladen</p>
+        ) : (
+          <>
+            <Notice title="Keine Einstellungen gefunden">
+              Die Einstellungen entstehen beim ersten Laden des Wissens (Seed).
+            </Notice>
+            <a className="hv-btn hv-btn-secondary" href={hashZu({ name: 'push' })}>
+              Push einrichten und Test-Push senden
+            </a>
+          </>
+        )}
       </main>
     );
   }
@@ -266,12 +288,7 @@ function Formulare({ e, geraet }: { e: Zeile; geraet: Zeile | undefined }) {
 
   return (
     <main className="hv-seite">
-      <header className="hv-seite-kopf">
-        <h1 className="hv-seite-titel">Einstellungen</h1>
-        <a className="hv-btn hv-btn-ghost hv-btn-compact" href={hashZu({ name: 'heute' })}>
-          Zu Heute
-        </a>
-      </header>
+      <Kopf />
 
       <Abschnitt
         titel="Erinnerung"
@@ -296,6 +313,22 @@ function Formulare({ e, geraet }: { e: Zeile; geraet: Zeile | undefined }) {
         <a className="hv-btn hv-btn-secondary" href={hashZu({ name: 'push' })}>
           Push einrichten und Test-Push senden
         </a>
+        {/* E-Mail-Rückfall (R5.5, R13; Plan 31 A14): nur ohne gültiges Push-Abo, Standard Aus */}
+        <div className="hv-field">
+          <span className="hv-field-label" aria-hidden="true">
+            E-Mail, wenn Push fehlt
+          </span>
+          <Choice
+            label="E-Mail, wenn Push fehlt"
+            zeile
+            optionen={[
+              { wert: 'aus', titel: 'Aus' },
+              { wert: 'ein', titel: 'Ein' },
+            ]}
+            gewaehlt={[e['email_rueckfall'] === true ? 'ein' : 'aus']}
+            onWahl={(w) => void aendern('erinnerung', 'einstellung', id, { email_rueckfall: w === 'ein' })}
+          />
+        </div>
       </Abschnitt>
 
       <Abschnitt titel="Kanne" onSpeichern={kanneSpeichern} rueckmeldung={rueck['kanne']} sperre={sendet}>
@@ -467,6 +500,9 @@ function Formulare({ e, geraet }: { e: Zeile; geraet: Zeile | undefined }) {
       <nav className="hv-einstellungen-einstiege" aria-label="Einstiege">
         <a className="hv-btn hv-btn-secondary" href={hashZu({ name: 'anlage' })}>
           Anlagen verwalten
+        </a>
+        <a className="hv-btn hv-btn-secondary" href={hashZu({ name: 'sorten' })}>
+          Sorten verwalten
         </a>
         <a className="hv-btn hv-btn-secondary" href={hashZu({ name: 'etiketten' })}>
           Etiketten
