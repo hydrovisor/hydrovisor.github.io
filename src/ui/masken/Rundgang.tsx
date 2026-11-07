@@ -42,6 +42,7 @@ import { NumPad, type Taste } from '../bausteine/NumPad.tsx';
 import { useBuendel } from '../buendel.tsx';
 import { hashZu, oeffnen } from '../router.ts';
 import { Messmaske, type RundgangMessung } from './Messen.tsx';
+import type { Groesse } from '../../domain/messung/eingabe.ts';
 import '../rundgang.css';
 
 const uhrJetzt = () => new Date(Date.now());
@@ -89,6 +90,14 @@ export function Rundgang({ kuerzel }: { kuerzel: string }) {
   const [stand, setStand] = useState<RundgangStand>();
   const [fehler, setFehler] = useState<string>();
   const [sendet, setSendet] = useState(false);
+  // «Jetzt korrigieren» mit pH-Vorschlag: Messmaske im Modus Korrektur, der Rundgang steht schon beim nächsten Schritt
+  // (Plan 113 A8; der Zustand lebt nur in der Maske)
+  const [korrektur, setKorrektur] = useState<{
+    code: string;
+    messungId: string;
+    giltAb: string;
+    werte: Partial<Record<Groesse, number>>;
+  }>();
   const sperre = useRef(false);
   const anlageId = anlage?.id;
 
@@ -169,6 +178,25 @@ export function Rundgang({ kuerzel }: { kuerzel: string }) {
         <p>{liest || (teile && anlage) ? 'Daten werden geladen' : `Anlage ${kuerzel} nicht bekannt`}</p>
       </Rahmen>
     );
+
+  if (korrektur) {
+    const ort = ortAufloesen(korrektur.code, teile);
+    if (ort)
+      return (
+        <Messmaske
+          key={`korrektur|${korrektur.messungId}`}
+          ort={ort}
+          modus={{
+            korrektur: {
+              messungId: korrektur.messungId,
+              giltAb: korrektur.giltAb,
+              werte: korrektur.werte,
+              onWeiter: () => setKorrektur(undefined),
+            },
+          }}
+        />
+      );
+  }
 
   const s = stand.schritt;
   const { fertig, von } = fortschritt(stand);
@@ -377,12 +405,24 @@ export function Rundgang({ kuerzel }: { kuerzel: string }) {
             variant="secondary"
             block
             onClick={() => {
+              // beim Halt nach nachMessung() ist letzteAktionAm das gilt_ab der Messung; nach nachNachfuellen() die Zeit
+              // des Nachfüllens (Abweichung um Minuten, nur für die Anzeige «Gespeichert hh:mm», Prüfer Runde 2 R1)
+              const giltAb = stand.letzteAktionAm;
               weiter(amEnde(stand, uhrJetzt()));
-              oeffnen(
-                korrigieren?.knopf.route === 'messen'
-                  ? { name: 'messen', code: rOrt.code }
-                  : { name: 'gefaess', code: rOrt.code },
-              );
+              // pH über dem Ziel: direkt ins Angebot «pH-Minus gegeben» ohne neue Messung (Plan 113, Rundgang-AK3)
+              if (korrigieren?.knopf.route === 'messen' && ergebnis?.messungId && ergebnis.werte)
+                setKorrektur({
+                  code: rOrt.code,
+                  messungId: ergebnis.messungId,
+                  giltAb,
+                  werte: ergebnis.werte,
+                });
+              else
+                oeffnen(
+                  korrigieren?.knopf.route === 'messen'
+                    ? { name: 'messen', code: rOrt.code }
+                    : { name: 'gefaess', code: rOrt.code },
+                );
             }}
           >
             Jetzt korrigieren

@@ -251,3 +251,8 @@ tests/unit/buendel-kuerzen.test.ts
 tests/unit/einstellungen-email.test.ts
 tests/seed/push-protokoll.test.ts
 supabase/tests/database/18_push_timer.test.sql
+# I1b-08 (#113)
+tests/unit/aufgaben-verteilung.test.ts
+tests/e2e/verteilung-gefaess.spec.ts
+tests/e2e/rundgang-korrektur.spec.ts
+tests/unit/eingabe-aus.test.ts

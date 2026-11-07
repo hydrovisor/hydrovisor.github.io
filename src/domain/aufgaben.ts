@@ -73,6 +73,10 @@ export interface Rohaufgabe {
   morgenBis?: string;
   /** Messen bei Kratky ohne Pumpe: kein festes Intervall im Sinn von R5.3 */
   ohneUeberspringen?: boolean;
+  /** R5.6: darf 1 bis 2 Tage vorgezogen werden (Wechsel nach Intervall, Ansatz für Umsetzen; Plan 113) */
+  vorziehbar?: true;
+  /** R5.6: frühester Tag beim Vorziehen (Wechsel mit «mit 1. echte Blätter»: Stationstag; Plan 113 Nachtrag 10) */
+  fruehestens?: string;
 }
 
 export interface Aufgabe {
@@ -98,8 +102,12 @@ export interface Aufgabe {
   /** Knopf «Pegel ok» anbieten (nur messen_nachfuellen ohne Pegel ok heute) */
   pegelOk: boolean;
   erledigtKnopf: boolean;
-  /** «zuerst umrühren», «Umsetzen überfällig», «mitmarkiert», «mit 1. echte Blätter» */
+  /** «zuerst umrühren», «Umsetzen überfällig», «mitmarkiert», «mit 1. echte Blätter», «vorgezogen» (R5.6) */
   hinweis?: string;
+  /** R5.6: darf 1 bis 2 Tage vorgezogen werden (Plan 113) */
+  vorziehbar?: true;
+  /** R5.6: frühester Tag beim Vorziehen (Plan 113 Nachtrag 10) */
+  fruehestens?: string;
 }
 
 export interface AufgabenEinstellungen {
