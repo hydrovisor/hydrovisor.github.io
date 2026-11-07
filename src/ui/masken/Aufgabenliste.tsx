@@ -9,7 +9,6 @@ import { neueClientId, schreiben } from '../../daten/schreiben.ts';
 import type { Vorgang } from '../../domain/datenpfad/erfassung.ts';
 import {
   einstellungenAus,
-  faelligeAufgaben,
   fehlendeTeile,
   naechsteAufgabe,
   type Aufgabe,
@@ -60,7 +59,7 @@ function ziel(a: Aufgabe): { route: Route; text: string } | undefined {
   return { route: { name: 'gefaess', code }, text: 'Öffnen' };
 }
 
-export function Aufgabenliste({ jetzt }: { jetzt: Date }) {
+export function Aufgabenliste({ jetzt, faellig }: { jetzt: Date; faellig: readonly Aufgabe[] }) {
   const { buendel } = useBuendel();
   const [weg, setWeg] = useState<ReadonlySet<string>>(new Set());
   // «Pegel ok» bis zum neuen Bündel nur einmal je Schlüssel (Prüfer Sicherheit Runde 1, Hinweis 3)
@@ -71,13 +70,16 @@ export function Aufgabenliste({ jetzt }: { jetzt: Date }) {
   const teile = buendel?.teile;
   if (!teile) return null;
   const einstellungen = einstellungenAus(teile);
-  const alle = aufgabenSicher(() => faelligeAufgaben(teile, einstellungen, jetzt, ZEITZONE), []).filter(
-    (a) => !weg.has(a.schluessel),
-  );
+  // einmal je Render in Heute gerechnet (Prüfer Runde 1 Befund 10)
+  const alle = faellig.filter((a) => !weg.has(a.schluessel));
   const liste = alle.filter((a) => !ANDERSWO.has(a.typ));
   const karten = heuteKarten(teile, liste);
   const ohneOrt = liste.filter((a) => !a.ort);
-  const ausserhalb = ausserhalbOrte(karten);
+  // auch Aufgaben an der Anlage mit Gewicht ausserhalb (Stromausfall, Prüfer Runde 1 Befund 9)
+  const ausserhalb = [
+    ...ohneOrt.filter((a) => a.gewicht === 'ausserhalb').map((a) => a.titel),
+    ...ausserhalbOrte(karten),
+  ];
   const fehlt = fehlendeTeile(teile);
   startzeitMerken();
 

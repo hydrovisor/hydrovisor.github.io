@@ -7,7 +7,7 @@ import { alsText, type Bewertung } from '../bewertung/bewertung.ts';
 import { hinweise, type Hinweis, type Messart } from '../bewertung/hinweise.ts';
 import { bewertungsband, type Sollband } from '../bewertung/sollband.ts';
 import type { Groesse } from '../messung/eingabe.ts';
-import { ZEITZONE } from '../zeit.ts';
+import { ZEITZONE, type Zeitzone } from '../zeit.ts';
 import type { OrtErgebnis, RundgangStand } from './ablauf.ts';
 
 export interface AbschlussZeile {
@@ -18,7 +18,10 @@ export interface AbschlussZeile {
   text: string;
   bewertung?: 'knapp' | 'ausserhalb';
   massnahme?: string;
-  knopf: { text: 'pH korrigieren' | 'Gefäss öffnen'; route: 'messen' | 'gefaess' };
+  knopf: {
+    text: 'pH korrigieren' | 'Gefäss öffnen' | 'Anlage öffnen';
+    route: 'messen' | 'gefaess' | 'anlage';
+  };
 }
 
 const GROESSEN: readonly Groesse[] = ['ph', 'ec', 'temperatur'];
@@ -53,6 +56,9 @@ const KURZ_ABWEICHUNG: Readonly<Record<string, { text: string; massnahme: string
   },
   wurzeln: { text: 'Wurzeln nicht weiss', massnahme: 'Wurzeln und Geruch prüfen' },
   wuerfel_feucht: { text: 'Würfel nicht feucht', massnahme: 'Würfel befeuchten' },
+  // am Bereich (Sammel-Tipp, Prüfer Runde 1 Befund 2; Massnahmen A)
+  licht: { text: 'Licht aus', massnahme: 'AC10-Zeitplan und Stromzufuhr des Lichts prüfen' },
+  luefter: { text: 'Lüfter steht', massnahme: 'Lüfter und Stromzufuhr prüfen' },
 };
 
 const kennung = (code: string) => code.slice(code.indexOf('-') + 1);
@@ -72,6 +78,7 @@ function massnahmeFuer(
   b: Bewertung,
   sollband: Sollband | undefined,
   jetzt: Date,
+  zeitzone: Zeitzone,
 ): string | undefined {
   const wert = o.werte?.[g];
   if (wert === undefined) return undefined;
@@ -85,17 +92,48 @@ function massnahmeFuer(
       ansaetze: [],
     },
     jetzt,
-    ZEITZONE,
+    zeitzone,
   ).hinweise.find((x) => ZU_GROESSE[x.ausloeser] === g);
   return h?.massnahme;
 }
 
-export function abschlussliste(stand: RundgangStand, kontext: { teile: Teile }): AbschlussZeile[] {
+export function abschlussliste(
+  stand: RundgangStand,
+  kontext: { teile: Teile; zeitzone?: Zeitzone },
+): AbschlussZeile[] {
+  const zeitzone = kontext.zeitzone ?? ZEITZONE;
   const jetzt = new Date(stand.letzteAktionAm);
   const codes = new Map(stand.plan.ebenen.flatMap((e) => e.orte.map((o) => [o.platzId, o.code] as const)));
   for (const e of stand.plan.ebenen) for (const z of e.kurzpruefung) codes.set(z.platzId, z.code);
+  const ergebnisse = new Map(stand.orte.map((o) => [o.platzId, o]));
   const zeilen: AbschlussZeile[] = [];
-  for (const o of stand.orte) {
+  // Reihenfolge wie der Rundgang: je Ebene zuerst Licht und Lüfter, dann die Orte
+  const folge = stand.plan.ebenen.flatMap((e) => [
+    { bereich: e },
+    ...e.orte.flatMap((o) => {
+      const r = ergebnisse.get(o.platzId);
+      return r ? [{ ort: r }] : [];
+    }),
+  ]);
+  for (const f of folge) {
+    if ('bereich' in f) {
+      const e = f.bereich;
+      for (const k of stand.kurzpruefung.filter(
+        (x) => x.platzId === null && x.bereichId === e.bereichId && e.bereichId !== null && !x.ok,
+      )) {
+        const a = KURZ_ABWEICHUNG[k.punkt] ?? { text: `${k.punkt} nicht ok`, massnahme: 'Anlage prüfen' };
+        zeilen.push({
+          platzId: e.bereichId as string,
+          code: e.name,
+          art: 'kurzpruefung',
+          text: `${e.name} ${a.text}`,
+          massnahme: a.massnahme,
+          knopf: { text: 'Anlage öffnen', route: 'anlage' },
+        });
+      }
+      continue;
+    }
+    const o = f.ort;
     const code = codes.get(o.platzId) ?? o.platzId;
     for (const k of stand.kurzpruefung.filter((x) => x.platzId === o.platzId && !x.ok)) {
       const a = KURZ_ABWEICHUNG[k.punkt] ?? { text: `${k.punkt} nicht ok`, massnahme: 'Gefäss prüfen' };
@@ -113,7 +151,7 @@ export function abschlussliste(stand: RundgangStand, kontext: { teile: Teile }):
       const b = o.bewertungen?.[g];
       const wert = o.werte?.[g];
       if ((b !== 'knapp' && b !== 'ausserhalb') || wert === undefined) continue;
-      const massnahme = massnahmeFuer(kontext.teile, o, g, b, sollband, jetzt);
+      const massnahme = massnahmeFuer(kontext.teile, o, g, b, sollband, jetzt, zeitzone);
       const ueberZiel = g === 'ph' && sollband !== undefined && wert > sollband.ph.max;
       zeilen.push({
         platzId: o.platzId,

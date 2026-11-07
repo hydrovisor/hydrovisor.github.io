@@ -10,7 +10,16 @@ import { bewertungsband } from '../bewertung/sollband.ts';
 import type { Schritt, Vorgang } from '../datenpfad/erfassung.ts';
 import type { Aufgabe } from '../aufgaben.ts';
 import { KOMPONENTEN } from '../einstellungen/einstellungen.ts';
-import { dosisSumme, HERSTELLERDOSIS, neuansatz, type Dosis } from '../rechner.ts';
+import {
+  dosisSumme,
+  gerundet,
+  HERSTELLERDOSIS,
+  mengenRoh,
+  messmittelJe,
+  neuansatz,
+  type Dosis,
+} from '../rechner.ts';
+import { bruch } from '../rechner-zahlen.ts';
 import {
   kratkyNachfuellen,
   messungFuerRechner,
@@ -85,12 +94,13 @@ export function kratkySchritt(
   teile: Teile,
   platzId: string,
   messung: MessungZeile,
+  zeitzone: Zeitzone = ZEITZONE,
 ): ReturnType<typeof kratkyNachfuellen> {
   const g = gefaessAm(teile, platzId);
   const modell = g ? gefaessmodell(teile, g.gefaessmodell_id) : undefined;
   const band = bewertungsband(teile, platzId, new Date(messung.gilt_ab))?.ec;
   const fuellstand: Fuellstand = messung.fuellstand === 'unter_drittel' ? 'unter_drittel' : 'ueber_drittel';
-  const { dAnsatz } = dosisVon(teile, platzId, new Date(messung.gilt_ab), ZEITZONE);
+  const { dAnsatz } = dosisVon(teile, platzId, new Date(messung.gilt_ab), zeitzone);
   return kratkyNachfuellen({
     fuellstand,
     ecIst: hundertstel(messung.ec) ?? 0,
@@ -99,6 +109,31 @@ export function kratkySchritt(
     innenLMm: Number(modell?.innen_l_mm ?? 0),
     innenBMm: Number(modell?.innen_b_mm ?? 0),
   });
+}
+
+/**
+ * Kratky mit halber Konzentration (R4.10): Mengen für `liter` Nachfüllwasser aus d = D_Ansatz / 2 und der Dosis der
+ * Belegung, damit die Positionen den gegebenen Dünger tragen (Prüfer Runde 1 Befund 3); «nur Wasser» ohne Mengen.
+ */
+export function kratkyErgebnis(
+  teile: Teile,
+  platzId: string,
+  messung: MessungZeile,
+  liter: number,
+  zeitzone: Zeitzone = ZEITZONE,
+): NachfuellErgebnis | undefined {
+  const k = kratkySchritt(teile, platzId, messung, zeitzone);
+  if (k.art !== 'halbe_konzentration' || !(liter > 0)) return undefined;
+  const { dosis } = dosisVon(teile, platzId, new Date(messung.gilt_ab), zeitzone);
+  const mengen = gerundet(mengenRoh(bruch(k.dMlL), dosis, Math.round(liter * 100)));
+  return {
+    dMlL: k.dMlL,
+    mengen,
+    messmittel: messmittelJe(mengen),
+    nurWasser: false,
+    kontrolleFolgetag: false,
+    hinweise: [],
+  };
 }
 
 /**

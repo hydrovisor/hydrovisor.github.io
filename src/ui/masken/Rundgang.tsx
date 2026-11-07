@@ -24,6 +24,7 @@ import {
 import { kurzpruefungVorgang } from '../../domain/rundgang/kurzpruefung.ts';
 import {
   kannenWahl,
+  kratkyErgebnis,
   kratkySchritt,
   nachfuellSchritt,
   nachfuellVorgang,
@@ -304,7 +305,8 @@ export function Rundgang({ kuerzel }: { kuerzel: string }) {
   if (s.art === 'nachfuellen_kratky' && rOrt) {
     const g = gefaessAm(teile, rOrt.platzId);
     const volumenL = Number(g?.betriebsvolumen_l ?? 0);
-    const k = messung ? kratkySchritt(teile, rOrt.platzId, messung) : undefined;
+    const k = messung ? kratkySchritt(teile, rOrt.platzId, messung, ZEITZONE) : undefined;
+    const hoechstens = k && 'hoechstensLiter' in k ? k.hoechstensLiter / 10 : undefined;
     const text =
       k?.art === 'nur_wasser'
         ? `Nur Wasser, höchstens ${(k.hoechstensLiter / 10).toFixed(1)} l`
@@ -316,13 +318,24 @@ export function Rundgang({ kuerzel }: { kuerzel: string }) {
       <KratkyNachfuellen
         code={rOrt.code}
         text={text}
+        {...(hoechstens !== undefined ? { hoechstens } : {})}
         sendet={sendet}
         fehler={fehlerHinweis}
         onNachgefuellt={(liter) => {
           const jetzt = uhrJetzt();
+          // halbe Konzentration: Positionen mit dem gegebenen Dünger (Prüfer Runde 1 Befund 3)
+          const ergebnis = messung
+            ? kratkyErgebnis(teile, rOrt.platzId, messung, liter, ZEITZONE)
+            : undefined;
           void senden(
             nachfuellVorgang(
-              { platzId: rOrt.platzId, liter, ...(aufgabe ? { aufgabe } : {}), volumenL },
+              {
+                platzId: rOrt.platzId,
+                liter,
+                ...(ergebnis ? { ergebnis } : {}),
+                ...(aufgabe ? { aufgabe } : {}),
+                volumenL,
+              },
               neueClientId,
               jetzt,
             ),
@@ -334,7 +347,9 @@ export function Rundgang({ kuerzel }: { kuerzel: string }) {
   }
 
   if (s.art === 'halt' && rOrt) {
-    const zeilenOrt = abschlussliste(stand, { teile }).filter((z) => z.platzId === rOrt.platzId);
+    const zeilenOrt = abschlussliste(stand, { teile, zeitzone: ZEITZONE }).filter(
+      (z) => z.platzId === rOrt.platzId,
+    );
     const korrigieren = zeilenOrt.find((z) => z.knopf.route === 'messen') ?? zeilenOrt[0];
     return (
       <Rahmen titel={rOrt.code} beenden={beenden}>
@@ -377,7 +392,7 @@ export function Rundgang({ kuerzel }: { kuerzel: string }) {
   }
 
   // Abschluss
-  const liste = abschlussliste(stand, { teile });
+  const liste = abschlussliste(stand, { teile, zeitzone: ZEITZONE });
   return (
     <Rahmen titel="Rundgang fertig">
       <p className="hv-rundgang-kopf hv-num">{abschlussKopf(stand, liste)}</p>
@@ -442,10 +457,42 @@ function Kurzpruefung({
   onSpeichern: (abweichungen: ReadonlySet<string>) => void;
 }) {
   const [abw, setAbw] = useState<ReadonlySet<string>>(new Set());
+  const umschalten = (key: string) =>
+    setAbw((alt) => {
+      const neu = new Set(alt);
+      if (neu.has(key)) neu.delete(key);
+      else neu.add(key);
+      return neu;
+    });
   return (
     <Rahmen titel={titel} beenden={beenden}>
       {fehler}
       <h2 className="hv-rundgang-ebene">{`${ebene.name} · Pumpen laufen, Licht an, Lüfter läuft`}</h2>
+      {ebene.mitLichtLuefter && ebene.bereichId !== null ? (
+        <div className="hv-rundgang-kannen" role="group" aria-label="Licht und Lüfter">
+          {(
+            [
+              ['licht', 'Licht an'],
+              ['luefter', 'Lüfter läuft'],
+            ] as const
+          ).map(([punkt, text]) => {
+            const key = `${String(ebene.bereichId)}|${punkt}`;
+            const ab = abw.has(key);
+            return (
+              <Button
+                key={key}
+                variant="secondary"
+                className="hv-rundgang-punkt"
+                aria-pressed={ab}
+                onClick={() => umschalten(key)}
+              >
+                <span>{text}</span>
+                <span className="hv-rundgang-urteil">{ab ? '✗' : '✓'}</span>
+              </Button>
+            );
+          })}
+        </div>
+      ) : null}
       <ul className="hv-rundgang-liste" aria-label="Kurzprüfung">
         {ebene.kurzpruefung.map((z) => {
           const key = `${z.platzId}|${z.punkt}`;
@@ -457,14 +504,7 @@ function Kurzpruefung({
                 block
                 className="hv-rundgang-punkt"
                 aria-pressed={ab}
-                onClick={() =>
-                  setAbw((alt) => {
-                    const neu = new Set(alt);
-                    if (neu.has(key)) neu.delete(key);
-                    else neu.add(key);
-                    return neu;
-                  })
-                }
+                onClick={() => umschalten(key)}
               >
                 <span>{`${kennung(z.code)} ${z.text}`}</span>
                 <span className="hv-rundgang-urteil">
@@ -491,6 +531,15 @@ function Kurzpruefung({
   );
 }
 
+/** Liter über den Ziffernblock: höchstens eine Nachkommastelle, höchstens vier Zeichen */
+function literTippen(alt: string, t: Taste): string {
+  if (t === 'leeren') return '';
+  if (t === 'zurueck') return alt.slice(0, -1);
+  if (t === '.') return alt.includes('.') || alt === '' ? alt : `${alt}.`;
+  if (/^\d$/.test(t)) return /\.\d$/.test(alt) || alt.length >= 4 ? alt : `${alt}${t}`;
+  return alt;
+}
+
 /** Nachfüllen DWC, Konstantpegel, Station (R4.9): Kannen wählen, Dosis je Komponente, «Nachgefüllt» */
 function Nachfuellen({
   code,
@@ -513,7 +562,10 @@ function Nachfuellen({
   ) => void;
 }) {
   const [anzahl, setAnzahl] = useState<number>();
-  const liter = anzahl === undefined ? undefined : anzahl * kanne;
+  const [teil, setTeil] = useState<string>();
+  // Liter sind die Wahrheit (R4.9): ganze Kannen plus Teilkanne in Litern (Prüfer Runde 1 Befund 1)
+  const summe = (anzahl ?? 0) * kanne + Number(teil ?? 0);
+  const liter = summe > 0 ? Math.round(summe * 10) / 10 : undefined;
   const r = liter === undefined ? undefined : rechnen(liter);
   const ergebnis = r && 'mengen' in r ? r : undefined;
   return (
@@ -522,11 +574,30 @@ function Nachfuellen({
       <h2 className="hv-rundgang-ebene">Wie viele Kannen?</h2>
       <div className="hv-rundgang-kannen" role="group" aria-label="Kannen">
         {kannen.map((n) => (
-          <Button key={n} variant="secondary" aria-pressed={anzahl === n} onClick={() => setAnzahl(n)}>
+          <Button
+            key={n}
+            variant="secondary"
+            aria-pressed={anzahl === n}
+            onClick={() => setAnzahl((alt) => (alt === n ? undefined : n))}
+          >
             {String(n)}
           </Button>
         ))}
+        <Button
+          variant="secondary"
+          aria-pressed={teil !== undefined}
+          onClick={() => setTeil((alt) => (alt === undefined ? '' : undefined))}
+        >
+          Teilkanne
+        </Button>
       </div>
+      {teil !== undefined ? (
+        <NumPad
+          onTaste={(t) => setTeil((alt) => literTippen(alt ?? '', t))}
+          echo={teil === '' ? 'Teilkanne in Litern' : `+ ${teil} l`}
+          ohnePlusMinus
+        />
+      ) : null}
       {liter !== undefined ? (
         r && 'art' in r && r.art === 'neue_messung_noetig' ? (
           <Notice
@@ -571,37 +642,35 @@ function Nachfuellen({
 function KratkyNachfuellen({
   code,
   text,
+  hoechstens,
   sendet,
   fehler,
   onNachgefuellt,
 }: {
   code: string;
   text: string;
+  hoechstens?: number;
   sendet: boolean;
   fehler: React.ReactNode;
   onNachgefuellt: (liter: number) => void;
 }) {
   const [eingabe, setEingabe] = useState('');
   const liter = Number(eingabe);
-  function tippen(t: Taste) {
-    setEingabe((alt) => {
-      if (t === 'leeren') return '';
-      if (t === 'zurueck') return alt.slice(0, -1);
-      if (t === '.') return alt.includes('.') || alt === '' ? alt : `${alt}.`;
-      if (/^\d$/.test(t)) return /\.\d$/.test(alt) || alt.length >= 4 ? alt : `${alt}${t}`;
-      return alt;
-    });
-  }
+  const zuViel = hoechstens !== undefined && liter > hoechstens;
+  const tippen = (t: Taste) => setEingabe((alt) => literTippen(alt, t));
   return (
     <Rahmen titel={`${code} Nachfüllen Kratky`}>
       {fehler}
       <p className="hv-rundgang-ebene">{text}</p>
+      {zuViel ? (
+        <Notice kompakt tone="warn" title={`Höchstens ${String(hoechstens)} l, sonst fehlt die Luftzone`} />
+      ) : null}
       <NumPad
         onTaste={tippen}
         echo={eingabe === '' ? 'Liter' : `${eingabe} l`}
         ohnePlusMinus
         speichern={
-          <Button block disabled={sendet || !(liter > 0)} onClick={() => onNachgefuellt(liter)}>
+          <Button block disabled={sendet || !(liter > 0) || zuViel} onClick={() => onNachgefuellt(liter)}>
             Nachgefüllt
           </Button>
         }

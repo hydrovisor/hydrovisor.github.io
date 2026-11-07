@@ -143,7 +143,9 @@ export function stromausfallAufgaben(k: Regelkontext, orte: ReadonlyMap<string, 
         mitPumpe.every((l) =>
           kurz(
             l.platz.id,
-            l.gefaess?.betriebsart === 'kratky_belueftet' ? ['pumpe', 'luftzone'] : ['pumpe'],
+            l.gefaess?.betriebsart === 'kratky_belueftet'
+              ? ['pumpe', 'luftzone', 'loesung_topfboden']
+              : ['pumpe'],
             tag,
           ),
         ),
@@ -160,6 +162,7 @@ export function stromausfallAufgaben(k: Regelkontext, orte: ReadonlyMap<string, 
               e.bereich_id === b &&
               (e.platz_id ?? null) === null &&
               datenVon(e)['punkt'] === 'licht' &&
+              datenVon(e)['ok'] !== false &&
               danach(e.gilt_ab, tag),
           ),
         ),
