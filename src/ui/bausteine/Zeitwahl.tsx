@@ -28,7 +28,9 @@ function Rad({
   const zeilenhoehe = (el: HTMLElement) =>
     el.querySelector<HTMLElement>('[role="option"]')?.offsetHeight ?? 0;
 
-  // gewählten Wert in die Mitte drehen: beim ersten Zeichnen sofort, danach weich
+  // gewählten Wert in die Mitte drehen: beim ersten Zeichnen sofort, danach weich. Auch die Länge der Liste zählt: Fällt
+  // ein Wert ausserhalb des Rasters (07:03) nach der Wahl heraus, bleibt der Index gleich, die Zeile aber nicht (Prüfer
+  // Befund 1)
   useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return;
@@ -37,7 +39,7 @@ function Rad({
     erstes.current = false;
     if (Math.abs(el.scrollTop - ziel) < 1) return;
     el.scrollTo({ top: ziel, behavior: sofort ? 'instant' : 'smooth' });
-  }, [index]);
+  }, [index, werte.length]);
 
   // nach dem Einrasten: der Wert in der Mitte ist gewählt
   function eingerastet() {
