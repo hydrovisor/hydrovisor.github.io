@@ -200,11 +200,14 @@ const ids = (v: Vorgang, tabelle: string) =>
   v.filter((s): s is Neu => s.art === 'neu' && s.tabelle === tabelle).map((s) => s.felder.client_id);
 
 describe('UC5-AK6 Pflanzung, Satz und Reservierung in der Datenbank', () => {
-  it('UC5-AK6 jede Pflanzung speichert Satz und Pflanzvorgang, Rang und Einstufung leer, Gründe leer bis I2-4', async () => {
+  // I2-04 (#36): Rang, Einstufung und Gründe kommen seit der Passung aus saatVorgang() (R3.4) – mit Zieltöpfen gesetzt,
+  // beim Satz «Ziel später» leer; die Datenbank speichert genau die geschriebenen Werte (Enum einstufung, text[] gruende)
+  it('UC5-AK6 jede Pflanzung speichert Satz und Pflanzvorgang, Rang, Einstufung und Gründe wie geschrieben (R3.4 seit I2-04)', async () => {
     await inTransaktion(async (tx) => {
       const { vorgang } = await gesaet(tx);
       const zeilen = await tx<
         {
+          client_id: string;
           satz_id: string | null;
           pflanzvorgang_id: string | null;
           rang: number | null;
@@ -212,16 +215,22 @@ describe('UC5-AK6 Pflanzung, Satz und Reservierung in der Datenbank', () => {
           gruende: string[];
         }[]
       >`
-        select pf.satz_id, pf.pflanzvorgang_id, pf.rang, pf.einstufung::text as einstufung, pf.gruende
+        select pf.client_id, pf.satz_id, pf.pflanzvorgang_id, pf.rang, pf.einstufung::text as einstufung, pf.gruende
           from public.pflanzung pf where pf.client_id = any(${ids(vorgang, 'pflanzung')}::uuid[])`;
       expect(zeilen.length).toBe(ids(vorgang, 'pflanzung').length);
       const [vorgangId] = ids(vorgang, 'pflanzvorgang');
+      // mindestens eine Pflanzung mit Einstufung (Satz mit Zieltöpfen) und eine ohne (Satz «Ziel später»)
+      expect(zeilen.some((z) => z.einstufung !== null)).toBe(true);
+      expect(zeilen.some((z) => z.einstufung === null && z.gruende.length === 0)).toBe(true);
       for (const z of zeilen) {
         expect(ids(vorgang, 'satz')).toContain(z.satz_id);
         expect(z.pflanzvorgang_id).toBe(vorgangId);
-        expect(z.rang).toBeNull();
-        expect(z.einstufung).toBeNull();
-        expect(z.gruende).toEqual([]);
+        const geschrieben = vorgang.find(
+          (s): s is Neu => s.art === 'neu' && s.tabelle === 'pflanzung' && s.felder.client_id === z.client_id,
+        )?.felder;
+        expect(z.rang).toBe(geschrieben?.['rang'] ?? null);
+        expect(z.einstufung).toBe(geschrieben?.['einstufung'] ?? null);
+        expect(z.gruende).toEqual(geschrieben?.['gruende'] ?? []);
       }
     });
   });
