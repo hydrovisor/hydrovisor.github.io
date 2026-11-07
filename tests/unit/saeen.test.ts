@@ -439,7 +439,7 @@ describe('UC5 Säen', () => {
     expect(ziele.map((z) => z.kennung)).toEqual(['1.1', '1.2', '2.1', '2.2', '2.3', '3.1', '3.2', '3.3']);
     expect(ziele.filter((z) => z.direktsaat).map((z) => z.kennung)).toEqual(['3.1', '3.2', '3.3']);
     const z21 = ziele.find((z) => z.kennung === '2.1');
-    expect(z21).toMatchObject({ platzId: platzId('2.1'), code: 'R-2.1', reihen: [3, 3] });
+    expect(z21).toMatchObject({ platzId: platzId('2.1'), code: 'R-2.1', reihen: [2, 2, 2] });
     expect(z21?.hinweis).toBeUndefined();
     // ruht und in Prüfung: mit Hinweis, trotzdem wählbar
     expect(ziele.find((z) => z.kennung === '1.2')?.hinweis).toBeTruthy();
