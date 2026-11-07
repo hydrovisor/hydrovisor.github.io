@@ -20,7 +20,7 @@ const pruefen = (page: Page, o: { ohneScrollen?: boolean; druckseite?: boolean }
 const regeln = (befunde: Befund[], art: Befund['art']) =>
   befunde.filter((b) => b.art === art).map((b) => b.regel);
 
-test('SIM-AK1 Tasten: in Regal-Masken ist jede Taste unter 68 dp ein Mangel, Löcher der Deckelgrafik ab 48 dp; am Schreibtisch unter 48 dp', async ({
+test('SIM-AK1 Tasten: in Regal-Masken ist jede Taste unter 68 dp ein Mangel, Löcher der Deckelgrafik ab 48 dp; am Schreibtisch unter 48 dp, ausser compact ab 40 dp (Hinweis)', async ({
   page,
 }) => {
   await seite(
@@ -42,6 +42,19 @@ test('SIM-AK1 Tasten: in Regal-Masken ist jede Taste unter 68 dp ein Mangel, Lö
   const tisch = await pruefen(page);
   expect(regeln(tisch, 'Mangel')).toEqual(['Taste mindestens 48 dp']);
   expect(tisch[0]?.text).toContain('Klein');
+
+  // Variante «compact» am Schreibtisch: ab 40 dp Hinweis (Design System size-touch-compact), darunter Mangel
+  await seite(
+    page,
+    'standard',
+    `<button class="hv-btn hv-btn-compact" style="height:40px">Zur Anlage</button>
+     <button class="hv-btn hv-btn-compact" style="height:36px">Zu klein</button>`,
+  );
+  const kompakt = await pruefen(page);
+  expect(kompakt.filter((b) => b.art === 'Hinweis').map((b) => b.text)).toEqual([
+    '«Zur Anlage» ist 40 dp hoch',
+  ]);
+  expect(kompakt.filter((b) => b.art === 'Mangel').map((b) => b.text)).toEqual(['«Zu klein» ist 36 dp hoch']);
 });
 
 test('SIM-AK2 Seite breiter als der Bildschirm und Scrollen in der Messmaske sind Mängel, eine Druckseite ist nur ein Hinweis', async ({

@@ -38,10 +38,12 @@ export function regelnImBrowser(o: {
     const soll = loch ? 48 : mindest;
     if (h + 0.5 >= soll) continue;
     // CLAUDE.md «Oberfläche»: jede Taste einer Regal-Maske 68 dp, also Mangel; am Schreibtisch unter 48 dp ebenso,
-    // ausser der Variante «compact» des Design Systems (Navigation, 40 dp), die dort nur ein Hinweis ist (A)
+    // ausser der Variante «compact» des Design Systems (40 dp, in Listen und Fussleisten), die dort ab 40 dp nur ein
+    // Hinweis ist (A)
     const kompakt = el.classList.contains('hv-btn-compact');
     befunde.push({
-      art: !regal && kompakt ? 'Hinweis' : 'Mangel',
+      // compact laut Design System nie unter 40 dp (size-touch-compact)
+      art: !regal && kompakt && h + 0.5 >= 40 ? 'Hinweis' : 'Mangel',
       regel: `Taste mindestens ${soll} dp`,
       text: `«${name(el) || el.tagName.toLowerCase()}» ist ${h} dp hoch`,
     });
