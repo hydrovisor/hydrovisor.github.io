@@ -52,7 +52,13 @@ test('V01-AK2 «D1 übernehmen» füllt das Formular, «Speichern» schreibt gen
   await expect(
     page.getByRole('group', { name: 'Service-Öffnung' }).getByRole('radio', { name: 'ja' }),
   ).toBeChecked();
-  await expect(page.getByText(/Vorschlag D1 für 1\.1, 1\.2: Das Konzept nennt nur 4 Löcher/)).toBeVisible();
+  // Reihen von Tim bestätigt (#136): ohne Annahme-Hinweis
+  await expect(
+    page.getByText(
+      'Vorschlag D1 für 1.1, 1.2 aus dem Konzept. Vergleiche mit deinem Deckel, dann speichern.',
+    ),
+  ).toBeVisible();
+  await expect(page.getByText(/Vergleiche die Reihen mit deinem Deckel/)).toHaveCount(0);
   await expect(page.getByText('Name aus dem 3D-Modell, z. B. D1 für 1.1 und 1.2')).toBeVisible();
   expect(posts).toHaveLength(0);
 

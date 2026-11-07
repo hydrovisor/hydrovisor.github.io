@@ -2,11 +2,12 @@
 // bezeichnet das Lochbild, nicht den Platz: ein Typ gilt für mehrere Plätze und ist tauschbar. Rein, ohne Zeitbezug.
 //
 // Fest im Konzept: Name, Plätze, Lochzahl und Topfgrösse (5.3 Tabelle, 5.4), dazu die Reihen von D6 («2, 2, 2») und S5
-// («1, 2, 1, 2, 1, 2, 1, 2, 1»). Bei D1, D2, D3, D4 und S8 nennt das Konzept nur die Lochzahl; die Reihen sind eine
-// Annahme (A) nach den Demo-Deckeln, darum `reihenAngenommen` und der Hinweis im Formular. S8 «4 Löcher 8 cm in einer
-// Reihe»: Die Wanne Leni Flori 36 steht längs in der Regaltiefe und ist 13.5 cm breit (5.3); die Reihe läuft also von
-// vorne nach hinten, als «Löcher je Reihe» 1, 1, 1, 1 wie die Reihen von S5 (Prüfer #125 Befund 1). Service-Öffnung:
-// «Jedes Gefäss hat vorne eine Service-Öffnung» (5.4).
+// («1, 2, 1, 2, 1, 2, 1, 2, 1»). Die Reihen von D1 «2, 2», D2 «3, 3», D3 «4, 4», D4 «1, 1» und S8 «1, 1, 1, 1» stehen im
+// 3D-Modell V12.11 (Lochmitten der Deckel; das Konzept beruht auf V12.10); Tim hat sie am 7.11.2026 bestätigt (#136). Darum ist `reihenAngenommen` bei
+// allen Typen false, und das Formular zeigt keinen Annahme-Hinweis. S8 «4 Löcher 8 cm in einer Reihe»: Die Wanne Leni
+// Flori 36 steht längs in der Regaltiefe und ist 13.5 cm breit (5.3); die Reihe läuft also von vorne nach hinten, als
+// «Löcher je Reihe» 1, 1, 1, 1 wie die Reihen von S5 (Prüfer #125 Befund 1). Service-Öffnung: «Jedes Gefäss hat vorne
+// eine Service-Öffnung» (5.4).
 import type { DeckeltypEingabe } from './deckeltyp.ts';
 import { lochzahl } from './lochbild.ts';
 import { nameDoppelt } from './name.ts';
@@ -18,17 +19,17 @@ export interface DeckelVorschlag {
   topfCm: 5 | 8;
   /** Plätze, die den Typ nach dem Konzept nutzen */
   fuer: readonly string[];
-  /** Reihen nicht im Konzept, nur die Lochzahl (A) */
+  /** Reihen weder im Konzept noch bestätigt, nur die Lochzahl (A); zeigt im Formular den Hinweis zum Vergleichen */
   reihenAngenommen: boolean;
 }
 
 export const DECKEL_VORSCHLAEGE: readonly DeckelVorschlag[] = [
-  { name: 'D1', reihen: [2, 2], topfCm: 8, fuer: ['1.1', '1.2'], reihenAngenommen: true },
-  { name: 'D2', reihen: [3, 3], topfCm: 8, fuer: ['2.1', '2.3'], reihenAngenommen: true },
-  { name: 'D4', reihen: [1, 1], topfCm: 8, fuer: ['2.2'], reihenAngenommen: true },
-  { name: 'D3', reihen: [4, 4], topfCm: 5, fuer: ['3.1', '3.3'], reihenAngenommen: true },
+  { name: 'D1', reihen: [2, 2], topfCm: 8, fuer: ['1.1', '1.2'], reihenAngenommen: false },
+  { name: 'D2', reihen: [3, 3], topfCm: 8, fuer: ['2.1', '2.3'], reihenAngenommen: false },
+  { name: 'D4', reihen: [1, 1], topfCm: 8, fuer: ['2.2'], reihenAngenommen: false },
+  { name: 'D3', reihen: [4, 4], topfCm: 5, fuer: ['3.1', '3.3'], reihenAngenommen: false },
   { name: 'D6', reihen: [2, 2, 2], topfCm: 5, fuer: ['3.2', '4.1'], reihenAngenommen: false },
-  { name: 'S8', reihen: [1, 1, 1, 1], topfCm: 8, fuer: ['4.2', '4.3'], reihenAngenommen: true },
+  { name: 'S8', reihen: [1, 1, 1, 1], topfCm: 8, fuer: ['4.2', '4.3'], reihenAngenommen: false },
   {
     name: 'S5',
     reihen: [1, 2, 1, 2, 1, 2, 1, 2, 1],

@@ -23,8 +23,19 @@ describe('Deckel-Vorschläge (#125)', () => {
       S8: [4, 8, '4.2 4.3'],
       S5: [13, 5, '4.4 4.5'],
     });
-    // Reihen fest nur bei D6 und S5 (Konzept 5.4), sonst Annahme
-    expect(DECKEL_VORSCHLAEGE.filter((v) => !v.reihenAngenommen).map((v) => v.name)).toEqual(['D6', 'S5']);
+  });
+
+  it('V01-AK1 Reihen aller Typen fest: D6 und S5 nach Konzept 5.4, die übrigen nach dem 3D-Modell, von Tim bestätigt (#136)', () => {
+    expect(Object.fromEntries(DECKEL_VORSCHLAEGE.map((v) => [v.name, v.reihen.join(', ')]))).toEqual({
+      D1: '2, 2',
+      D2: '3, 3',
+      D4: '1, 1',
+      D3: '4, 4',
+      D6: '2, 2, 2',
+      S8: '1, 1, 1, 1',
+      S5: '1, 2, 1, 2, 1, 2, 1, 2, 1',
+    });
+    expect(DECKEL_VORSCHLAEGE.filter((v) => v.reihenAngenommen).map((v) => v.name)).toEqual([]);
   });
 
   it('V01-AK1 offen sind die Typen ohne gleichnamigen Deckel; «Demo D1» zählt nicht, Gross- und Kleinschreibung egal', () => {

@@ -1,6 +1,6 @@
-// Nachgebildete Anlage R (tests/fixtures/regal.ts) gegen die Deckel-Vorschläge aus dem Konzept 5.4 (#131): S8 mit
-// denselben Reihen wie Vorschlag und Demo S1; alle Typen mit derselben Lochzahl und Topfgrösse. Die Reihen von D1 bis D4
-// bleiben bis zu Tims Bestätigung am echten Deckel eine Annahme (A) der Testdaten. Routine: Test vom Lead.
+// Nachgebildete Anlage R (tests/fixtures/regal.ts) gegen die Deckel-Vorschläge aus dem Konzept 5.4: S8 mit denselben
+// Reihen wie Vorschlag und Demo S1 (#131); alle Typen mit derselben Lochzahl und Topfgrösse; seit Tims Bestätigung der
+// Reihen am 7.11.2026 (#136) alle Typen mit denselben Löchern je Reihe. Routine: Test vom Lead.
 import { describe, expect, it } from 'vitest';
 import { DECKEL_VORSCHLAEGE } from '../../src/domain/vorlagen/deckel-vorschlaege.ts';
 import { DECKELTYPEN } from '../fixtures/regal.ts';
@@ -23,5 +23,13 @@ describe('Anlage R: Deckeltypen', () => {
         summe(v.reihen),
       ]);
     }
+  });
+
+  it('RD-AK3 jeder Deckeltyp von R hat dieselben Löcher je Reihe und Topfgrösse wie DECKEL_VORSCHLAEGE (#136)', () => {
+    for (const v of DECKEL_VORSCHLAEGE)
+      expect(DECKELTYPEN[v.name], v.name).toEqual({
+        topfdurchmesser_mm: v.topfCm * 10,
+        loecher_je_reihe: [...v.reihen],
+      });
   });
 });
