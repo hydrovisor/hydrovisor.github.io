@@ -103,6 +103,17 @@ function Abschnitt({
   );
 }
 
+function Kopf() {
+  return (
+    <header className="hv-seite-kopf">
+      <h1 className="hv-seite-titel">Einstellungen</h1>
+      <a className="hv-btn hv-btn-ghost hv-btn-compact" href={hashZu({ name: 'heute' })}>
+        Zu Heute
+      </a>
+    </header>
+  );
+}
+
 export function Einstellungen() {
   const { buendel, liest } = useBuendel();
   const teile = buendel?.teile;
@@ -110,12 +121,23 @@ export function Einstellungen() {
   const geraet = (teile?.['messgeraet']?.[0] ?? undefined) as Zeile | undefined;
 
   if (!e) {
+    // #126: Ohne Zeile einstellung (Produktion vor dem scharfen Seed) bleiben der Weg zurück und die Push-Seite
+    // erreichbar, weil Push keine Zeile einstellung braucht.
     return (
       <main className="hv-seite">
-        <header className="hv-seite-kopf">
-          <h1 className="hv-seite-titel">Einstellungen</h1>
-        </header>
-        <p>{liest ? 'Daten werden geladen' : 'Keine Einstellungen gefunden'}</p>
+        <Kopf />
+        {liest ? (
+          <p>Daten werden geladen</p>
+        ) : (
+          <>
+            <Notice title="Keine Einstellungen gefunden">
+              Die Einstellungen entstehen beim ersten Laden des Wissens (Seed).
+            </Notice>
+            <a className="hv-btn hv-btn-secondary" href={hashZu({ name: 'push' })}>
+              Push einrichten und Test-Push senden
+            </a>
+          </>
+        )}
       </main>
     );
   }
@@ -266,12 +288,7 @@ function Formulare({ e, geraet }: { e: Zeile; geraet: Zeile | undefined }) {
 
   return (
     <main className="hv-seite">
-      <header className="hv-seite-kopf">
-        <h1 className="hv-seite-titel">Einstellungen</h1>
-        <a className="hv-btn hv-btn-ghost hv-btn-compact" href={hashZu({ name: 'heute' })}>
-          Zu Heute
-        </a>
-      </header>
+      <Kopf />
 
       <Abschnitt
         titel="Erinnerung"
