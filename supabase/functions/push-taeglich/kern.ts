@@ -1,16 +1,11 @@
-// Kern der Edge Function push-taeglich (Pläne 13 und 31; Konzept 11.1, 11.3, R5.1, R5.5, G2, G5; TP1 bis TP7, UC0-AK5,
-// UC8-AK7, UC8-AK11, EK5, T2). Laufzeitneutral: Uhr, Datenzugriff, Sender, Mailer und Signatur kommen als
+// Kern der Edge Function push-taeglich (Pläne 13, 31 und 118; Konzept 11.1, 11.3, R5.1, R5.5, G2, G5; TP1 bis TP7,
+// UC0-AK5, UC8-AK7, UC8-AK11, EK5, T2). Laufzeitneutral: Uhr, Datenzugriff, Sender, Mailer und Signatur kommen als
 // Abhängigkeiten; die Hülle index.ts verbindet sie mit supabase-js, web-push, Resend und den Secrets.
 // Aufträge: «sammel» (Cron alle 5 min: Sammel-Push mit Tagesliste und E-Mail-Rückfall, 20:00 «Kurzprüfung offen»),
 // «timer» (Cron jede Minute, ?nur=timer) und «test» (Test-Push aus den Einstellungen). Jede Zeile push_versand entsteht
 // vor dem Senden; die Unique-Indizes verhindern die zweite Sendung.
-import {
-  einstellungenAus,
-  faelligeAufgaben,
-  fehlendeTeile,
-  nurEcht,
-  type Aufgabe,
-} from '../../../src/domain/aufgaben.ts';
+import { einstellungenAus, fehlendeTeile, nurEcht, type Aufgabe } from '../../../src/domain/aufgaben.ts';
+import { verteilteAufgaben } from '../../../src/domain/aufgaben-verteilung.ts';
 import type { Datenart } from '../../../src/domain/kalibrierung/stand.ts';
 import {
   kurzpruefungInhalt,
@@ -313,7 +308,8 @@ async function sammelLauf(
   // gleiche Teile wie das Bündel; fehlt einer, rechnet die Push mit einer Lücke (Plan 31 Risiken, Befund 2)
   const fehlend = fehlendeTeile(teile);
   if (fehlend.length > 0) console.warn(`push-taeglich: Teile fehlen: ${fehlend.join(', ')}`);
-  const liste: Aufgabe[] = nurEcht(faelligeAufgaben(teile, einstellungenAus(teile), abh.jetzt, zeitzone));
+  // dieselbe Liste wie Heute: nach R5.6 verteilt, danach nur echt (R5.1, UC8-AK10, G5; Plan 118)
+  const liste: Aufgabe[] = nurEcht(verteilteAufgaben(teile, einstellungenAus(teile), abh.jetzt, zeitzone));
 
   if (sammel.faellig && (pushOffen.length > 0 || mailOffen || nurListe)) {
     const inhalt = sammelInhalt(liste);
