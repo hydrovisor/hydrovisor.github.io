@@ -15,6 +15,7 @@
 // Die Testzeilen werden über DB_URL (postgres) angelegt und committet, damit die API sie sieht; afterAll räumt mit
 // postgres auf (die Service-Rolle darf nicht löschen), damit spätere Seed-Tests und der Zähltest unverändert bleiben.
 // Die Einstellung bleibt unverändert (Push-Zeit aus der Datenbank); fehlt sie, legt der Test eine an und löscht sie.
+// Ebenso das Messgerät: fehlt es (Prüftor nach db reset ohne Seed), legt der Test eines mit fester ID an.
 // Vorausgesetzt (Plan 31): Migration 20261109120000_push_timer.sql mit der Sicht v_push_zustellung (Spalten datum_lokal,
 // soll, gesendet_am, verspaetung_min, aufgaben, am_faelligkeitstag); supabaseDaten(db) aus
 // supabase/functions/push-taeglich/daten.ts (dynamisch importiert, weil die Datei den Typ aus jsr: bezieht).
@@ -36,6 +37,7 @@ const MODELL = id(3);
 const DECKEL = id(4);
 const ABO = id(5);
 const EINSTELLUNG = id(6);
+const MESSGERAET = id(7);
 const PLATZ = { '1.1': id(11), '1.2': id(12), '1.3': id(13) } as const;
 const GEFAESS = { '1.1': id(21), '1.2': id(22), '1.3': id(23) } as const;
 const PLAETZE = Object.values(PLATZ);
@@ -98,11 +100,17 @@ async function aufraeumen(): Promise<void> {
   await sql`delete from public.deckeltyp where id = ${DECKEL}::uuid`;
   await sql`delete from public.anlage where id = ${ANLAGE}::uuid`;
   await sql`delete from public.einstellung where id = ${EINSTELLUNG}::uuid`;
+  await sql`delete from public.messgeraet where id = ${MESSGERAET}::uuid`;
 }
 
 async function anlegen(): Promise<void> {
-  const [geraet] = await sql<{ id: string }[]>`select id from public.messgeraet order by erfasst_am limit 1`;
-  if (!geraet) throw new Error('kein Messgerät in der lokalen Datenbank (Grundbestand fehlt)');
+  // Im Prüftor läuft der Test direkt nach supabase db reset ohne Seed: fehlt ein Messgerät, legt er ein eigenes an
+  let [geraet] = await sql<{ id: string }[]>`select id from public.messgeraet order by erfasst_am limit 1`;
+  if (!geraet) {
+    await sql`insert into public.messgeraet (id, modell, app_version)
+              values (${MESSGERAET}::uuid, 'Testmessgerät UC8-AK7', ${APP})`;
+    geraet = { id: MESSGERAET };
+  }
   const [einstellung] = await sql<{ id: string }[]>`select id from public.einstellung limit 1`;
   if (!einstellung)
     await sql`insert into public.einstellung (id, push_zeit, zeitzone, app_version)
