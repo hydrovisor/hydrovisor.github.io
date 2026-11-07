@@ -24,11 +24,11 @@ Zustand nur in Git und im Issue. Beim Aufruf zuerst den Stand bestimmen, dann am
    - Fachlogik: Subagent `planer`.
    - Kern: Subagent `planer_kern`. Vergleichspakete I0-03 und I0-04 (Konzept 12.7 a): `planer_kern` und `planer` schreiben je einen Plan in `docs/plaene/<issue>-plan-a.md` und `-plan-b.md` (Zuordnung ausgelost, nur im Issue-Kommentar «Zuordnung (erst nach der Bewertung öffnen)»); nach Tims verdeckter Bewertung wird der gewählte Plan als `docs/plaene/<issue>.md` freigegeben.
 3. Plan committen (`Plan: <issue> <kurz>`), pushen und als Kommentar ins Issue (`gh issue comment`).
-4. Planfreigabe durch Tim nur bei Kern-Paketen und bei Fehlern gegen eine Referenzdatei (Konzept 12.5): Label `plan-wartet` setzen, Statuskommentar schreiben und **anhalten**. Fachlogik mit Migration: Der Lead setzt `plan-frei` selbst und nennt im Statuskommentar die Migration und die Annahmen (Entscheid 0010). Sonst weiter ohne Halt.
+4. Planfreigabe durch Tim nur bei Kern-Paketen und bei Fehlern gegen eine Referenzdatei (Konzept 12.5): Label `plan-wartet` setzen, Statuskommentar schreiben, Tim im Chat um «Plan freigegeben» bitten und **anhalten**. Nach seinem Satz setzt der Lead `plan-frei` und zitiert ihn mit Commit im Issue (Entscheid 0014). Fachlogik mit Migration: Der Lead setzt `plan-frei` selbst und nennt im Statuskommentar die Migration und die Annahmen (Entscheid 0010). Sonst weiter ohne Halt.
 
 ## 2 Freigabe prüfen
 
-Beim Fortsetzen eines Kern-Pakets: `gh issue view` zeigt Label `plan-frei` und Tims Kommentar «Plan freigegeben» mit Commit-Kürzel. Ohne Label kein Code. Weicht der Plan inzwischen vom freigegebenen Kürzel ab, erneut Freigabe holen. Bei Fachlogik mit Migration genügt die Freigabe des Leads (Entscheid 0010).
+Beim Fortsetzen eines Kern-Pakets: `gh issue view` zeigt Label `plan-frei` und Tims Satz «Plan freigegeben» mit Commit-Kürzel (als Kommentar von Tim oder vom Lead zitiert, Entscheid 0014). Ohne Label kein Code. Weicht der Plan inzwischen vom freigegebenen Kürzel ab, erneut Freigabe holen. Bei Fachlogik mit Migration genügt die Freigabe des Leads (Entscheid 0010).
 
 ## 3 Tests, Migration, Code
 

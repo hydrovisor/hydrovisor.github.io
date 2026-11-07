@@ -86,7 +86,7 @@ Die Skripte stehen seit Paket I0-01 (Grundgerüst) in `package.json`; ihre Namen
 ## Paketablauf (Kurzfassung, vollständig im Skill)
 
 1. `/umsetzen <issue>` legt `paket/<issue>-<kurz>` an und schreibt den Plan nach `docs/plaene/vorlage.md` in `docs/plaene/<issue>.md`.
-2. Planfreigabe durch Tim nur bei Kern-Paketen und bei Fehlern gegen eine Referenzdatei (Label `plan-frei` von Tim; ohne Label kein Code). Fachlogik mit Migration gibt der Lead selbst frei, Routine braucht keine Freigabe (Entscheid 0010, Abweichung vom Konzept 12.2 und 12.3).
+2. Planfreigabe durch Tim nur bei Kern-Paketen und bei Fehlern gegen eine Referenzdatei: Tim schreibt im Chat «Plan freigegeben», der Lead setzt `plan-frei` und zitiert den Satz mit Commit im Issue ([Entscheid 0014](docs/entscheide/0014-planfreigabe-im-chat-und-pool.md)); ohne Label kein Code. Fachlogik mit Migration gibt der Lead selbst frei, Routine braucht keine Freigabe (Entscheid 0010, Abweichung vom Konzept 12.2 und 12.3).
 3. Testentwickler schreibt rote Tests im eigenen Commit (`Tests: …`); Lead programmiert, bis das Prüftor grün ist; Prüfer urteilt mit Plan-Code-Abgleich; höchstens zwei Runden (`runde-1`, `runde-2`), danach entscheidet der Lead über das weitere Vorgehen und hält es im Issue fest (Entscheid 0010).
 4. Pull Request mit Vorlage, Label `abnahme-wartet`; Abnahme 1 durch den Lead in der Vorschau ([Gerät]-AK bleiben offen bis Abnahme 2); Kurzzusammenfassung; Merge durch den Lead (Entscheid 0008); Abnahme 2 in der installierten App.
 5. Statuskommentar im Issue nach jedem Planschritt und am Sitzungsende; Entscheide als Datei in `docs/entscheide/`.
@@ -124,6 +124,7 @@ Vorschau: Cloudflare Pages `hydrovisor-vorschau` baut jeden Zweig (`<zweig>.hydr
 - [0011 Kern-Pakete bis 95 % Kontingent, fachliche Lücken mit (A)](docs/entscheide/0011-kontingent-95-prozent.md)
 - [0012 Referenzdatei Rechner und Push-Migration durch den Lead (Ausnahme)](docs/entscheide/0012-referenzdatei-und-push-migration.md)
 - [0013 Tütenfotos über die S3-Schnittstelle sichern](docs/entscheide/0013-tuetenfotos-ueber-s3-sichern.md)
+- [0014 Planfreigabe im Chat, Wechselblock vor M2](docs/entscheide/0014-planfreigabe-im-chat-und-pool.md)
 - Übrige Entscheide vom 1.11.2026: `docs/spec/00_rueckfragen.md` (R1 bis R13, W1 bis W14, Annahmen 1 bis 16)
 
 ## Arbeitsweise in der Sitzung
