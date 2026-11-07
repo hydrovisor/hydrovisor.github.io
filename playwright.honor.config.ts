@@ -17,7 +17,11 @@ export default defineConfig({
   retries: 0,
   timeout: 4 * 60_000,
   outputDir: 'reports/honor/ergebnisse',
-  reporter: [['list'], ['html', { outputFolder: 'reports/honor/bericht', open: 'never' }]],
+  reporter: [
+    ['list'],
+    ['html', { outputFolder: 'reports/honor/bericht', open: 'never' }],
+    ['json', { outputFile: 'reports/honor/ergebnis.json' }],
+  ],
   use: {
     // Honor Magic5 Pro in Chrome (A): 360 × 780 dp wie CLAUDE.md «Oberfläche», Pixeldichte 3.5, Touch, Android-Kennung
     viewport: { width: 360, height: 780 },
@@ -27,6 +31,9 @@ export default defineConfig({
     userAgent:
       'Mozilla/5.0 (Linux; Android 14; PGT-N19) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Mobile Safari/537.36',
     browserName: 'chromium',
+    // sichtbar mit dem installierten Google Chrome (der mitgelieferte Chromium startet auf Tims PC nicht, A);
+    // ohne Fenster wie die E2E mit dem Headless-Chromium von Playwright
+    ...(schnell ? {} : { channel: 'chrome' }),
     headless: schnell,
     baseURL: 'http://localhost:4173',
     locale: 'de-CH',
