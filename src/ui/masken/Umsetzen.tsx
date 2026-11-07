@@ -16,7 +16,6 @@ import {
 import type { Vorgang } from '../../domain/datenpfad/erfassung.ts';
 import { messbareOrte } from '../../domain/ort.ts';
 import { gefaessPassung } from '../../domain/passung/kontext.ts';
-import { EINSTUFUNG_NAME } from '../../domain/passung/passung.ts';
 import { saatRueckgaengig } from '../../domain/pflanzung/saeen.ts';
 import {
   deckelReihen,
@@ -32,7 +31,7 @@ import { ZEITZONE } from '../../domain/zeit.ts';
 import { Button } from '../bausteine/Button.tsx';
 import { Deckel } from '../bausteine/Deckel.tsx';
 import { Notice } from '../bausteine/Notice.tsx';
-import { StatusIcon } from '../bausteine/StatusIcon.tsx';
+import { Stufe } from '../bausteine/Stufe.tsx';
 import { useBuendel } from '../buendel.tsx';
 import { hashZu } from '../router.ts';
 import '../umsetzen.css';
@@ -369,12 +368,6 @@ function Maske({ satz, wie, jetzt }: { satz: string; wie: 'geplant' | undefined;
             const frei = umsetzZiele(teile, p.id, new Map()).filter((l) => !l.nichtWaehlbar).length;
             // Plan 36 (R6.2, A7): Einstufung je Gefäss, Reihenfolge nach Kennung, sperrt nichts
             const passung = gefaessPassung(teile ?? {}, a.satzId, p.id, jetzt, ZEITZONE);
-            const ton =
-              passung?.einstufung === 'empfohlen'
-                ? 'ok'
-                : passung?.einstufung === 'moeglich'
-                  ? 'warn'
-                  : 'danger';
             return (
               <Button
                 key={p.id}
@@ -388,10 +381,7 @@ function Maske({ satz, wie, jetzt }: { satz: string; wie: 'geplant' | undefined;
                 {passung ? (
                   <>
                     {' '}
-                    <span className={`hv-badge hv-badge-${ton}`}>
-                      <StatusIcon ton={ton} />
-                      {EINSTUFUNG_NAME[passung.einstufung]}
-                    </span>
+                    <Stufe einstufung={passung.einstufung} />
                     {passung.einstufung === 'empfohlen' ? '' : ` ${passung.texte.join(' · ')}`}
                   </>
                 ) : null}

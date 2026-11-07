@@ -214,7 +214,8 @@ const literJePflanze = (k: PassungKontext) => k.gefaess.betriebsvolumenL / k.gef
 function p11(k: PassungKontext): boolean | undefined {
   if (k.gefaess.betriebsart !== 'kratky_belueftet') return false;
   const bedarf = k.kandidat.wasserbedarfL;
-  return bedarf === undefined ? undefined : literJePflanze(k) < bedarf;
+  // ohne Deckel keine Lochzahl: nicht prüfbar (A2; Sicherheit Runde 1 Befund 4)
+  return bedarf === undefined || k.gefaess.lochzahl === 0 ? undefined : literJePflanze(k) < bedarf;
 }
 
 /** Tabelle R3.2 in Prüfreihenfolge; P1 bis P6 Nicht empfohlen, P7 bis P11 Möglich */
@@ -303,6 +304,7 @@ export function passung(k: PassungKontext): Passung {
     ...(k.kandidat.wuchsform === 'haengend' ? [HINWEIS_HAENGEND] : []),
     ...(k.gefaess.betriebsart !== 'kratky_belueftet' &&
     k.kandidat.wasserbedarfL !== undefined &&
+    k.gefaess.lochzahl > 0 &&
     literJePflanze(k) < k.kandidat.wasserbedarfL
       ? [HINWEIS_LITER_DWC]
       : []),

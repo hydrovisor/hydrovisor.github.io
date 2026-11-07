@@ -335,10 +335,12 @@ export function umsetzEingabePruefen(
   return v;
 }
 
-/** Rang des Zielgefässes beim Umsetzen: Position in der Kennungsreihenfolge der Anlage, 1-basiert (A7) */
-function gefaessRang(teile: Teile, platzId: string): number {
+/** Rang des Zielgefässes beim Umsetzen: Position in der Kennungsreihenfolge der Anlage, 1-basiert (A7); fehlt das
+ * Gefäss in der Liste, kein Rang (Sicherheit Runde 1 Befund 2) */
+function gefaessRang(teile: Teile, platzId: string): number | undefined {
   const anlageId = zeilen<PlatzZeile>(teile, 'platz').find((p) => p.id === platzId)?.anlage_id ?? '';
-  return zielgefaesse(teile, anlageId).findIndex((g) => g.platzId === platzId) + 1 || 1;
+  const i = zielgefaesse(teile, anlageId).findIndex((g) => g.platzId === platzId);
+  return i < 0 ? undefined : i + 1;
 }
 
 export function umsetzVorgang(
@@ -404,7 +406,9 @@ export function umsetzVorgang(
             ? {
                 passung: {
                   einstufung: p.einstufung,
-                  rang: gefaessRang(teile, ziel.platzId),
+                  ...(gefaessRang(teile, ziel.platzId) === undefined
+                    ? {}
+                    : { rang: gefaessRang(teile, ziel.platzId) }),
                   gruende: p.gruende,
                 },
               }

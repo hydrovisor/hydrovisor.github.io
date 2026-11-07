@@ -55,6 +55,21 @@ const ORTSWECHSEL = {
   nach_loch_nr: undefined,
 } as const;
 
+/** Plan 36 A7 (Sicherheit Runde 1 Befund 1): { einstufung, rang?, gruende } ohne fremde Schlüssel */
+function passungGueltig(w: unknown): boolean {
+  if (typeof w !== 'object' || w === null || Array.isArray(w)) return false;
+  const p = w as Record<string, unknown>;
+  const gruende = p['gruende'];
+  return (
+    Object.keys(p).every((k) => ['einstufung', 'rang', 'gruende'].includes(k)) &&
+    ['empfohlen', 'moeglich', 'nicht_empfohlen'].includes(String(p['einstufung'])) &&
+    (p['rang'] === undefined || (Number.isInteger(p['rang']) && Number(p['rang']) >= 1)) &&
+    Array.isArray(gruende) &&
+    gruende.length <= 2 &&
+    gruende.every((g) => typeof g === 'string' && /^P(?:[1-9]|1[01])$/.test(g))
+  );
+}
+
 const SCHEMA: Readonly<Record<EreignisTyp, Schema>> = {
   aussaat: { schluessel: { saatdatum: undefined } },
   deckel_geoeffnet: { schluessel: {} },
@@ -84,12 +99,7 @@ const SCHEMA: Readonly<Record<EreignisTyp, Schema>> = {
   umsetzen: {
     schluessel: {
       ...ORTSWECHSEL,
-      passung: (w) =>
-        typeof w === 'object' &&
-        w !== null &&
-        ['empfohlen', 'moeglich', 'nicht_empfohlen'].includes(
-          String((w as { einstufung?: unknown }).einstufung),
-        ),
+      passung: passungGueltig,
     },
   },
   tausch: { schluessel: { ...ORTSWECHSEL, vorgang_id: undefined } },

@@ -802,8 +802,9 @@ export function saatVorgang(
           satz_id: satzId,
           pflanzvorgang_id: pflanzvorgangId,
           gilt_ab: giltAb,
-          // R3.4: Einstufung, Rang und Gründe nur mit Zielgefäss
-          ...(s.passung && s.rang !== undefined
+          // R3.4: Einstufung, Rang und Gründe nur mit Zielgefäss und Zieltöpfen darin (Runde 1 Befund 1: ein Satz
+          // «Ziel später» kommt nicht in dieses Gefäss und zählt nicht als Wahl gegen die Empfehlung, EK4)
+          ...(s.passung && s.rang !== undefined && e.zieltopfIds.length > 0
             ? { einstufung: s.passung.einstufung, rang: s.rang, gruende: s.passung.gruende }
             : {}),
         }),

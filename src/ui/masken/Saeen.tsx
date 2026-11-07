@@ -374,7 +374,8 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
 
   if (schritt === 1) {
     const kopien = duplizierbareSaetze(teile, anlageId);
-    const reihenfolge = passungen ? nachStufe(passungen) : sorten;
+    // ohne Gefäss am Zielplatz liefert sortenPassung() nichts: dann alle Sorten ohne Stufe (Sicherheit Runde 1 Befund 6)
+    const reihenfolge = passungen?.length ? nachStufe(passungen) : sorten;
     const nichtEmpfohlen = passungen?.filter((p) => p.passung.einstufung === 'nicht_empfohlen') ?? [];
     // gewählte Nicht-empfohlen-Sorten bleiben sichtbar (UC5-AK13: kein zweiter Tipp nötig)
     const nichtSichtbar = nichtOffen || nichtEmpfohlen.some((p) => gewaehlt.includes(p.sorteId));
@@ -386,7 +387,7 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
         {kopf}
         {schrittText}
         {passungen && zielG ? (
-          <p className="hv-saeen-zeile">Für {zielG.kennung} · gerechnet am Umsetztag</p>
+          <p className="hv-saeen-zeile">Für {zielG.kennung} · gerechnet am Umsetztag der Sorte</p>
         ) : null}
         <div className="hv-choice" role="group" aria-label="Sorten">
           {sichtbar.map((s) => (
@@ -690,20 +691,10 @@ function umsetzenAbVon(teile: Teile, artId: string | undefined): number | undefi
   return d === null || d === undefined ? undefined : Number(d);
 }
 
-const STUFE_TON: Readonly<Record<Einstufung, 'ok' | 'warn' | 'danger'>> = {
-  empfohlen: 'ok',
-  moeglich: 'warn',
-  nicht_empfohlen: 'danger',
-};
 const NOTICE_TON: Readonly<Record<Einstufung, 'info' | 'warn' | 'danger'>> = {
   empfohlen: 'info',
   moeglich: 'warn',
   nicht_empfohlen: 'danger',
-};
-const STUFE_WORT: Readonly<Record<Einstufung, string>> = {
-  empfohlen: 'Empfohlen',
-  moeglich: 'Möglich',
-  nicht_empfohlen: 'Nicht empfohlen',
 };
 /** Zeilen ohne Stammwert (A2): «nicht geprüft: Höhe, Licht» */
 const GEPRUEFT_NAME: Readonly<Record<GrundCode, string>> = {
@@ -720,8 +711,8 @@ const GEPRUEFT_NAME: Readonly<Record<GrundCode, string>> = {
   P11: 'Liter',
 };
 
-function stufeVon(p: Passung | undefined): { stufe?: { ton: 'ok' | 'warn' | 'danger'; wort: string } } {
-  return p ? { stufe: { ton: STUFE_TON[p.einstufung], wort: STUFE_WORT[p.einstufung] } } : {};
+function stufeVon(p: Passung | undefined): { stufe?: Einstufung } {
+  return p ? { stufe: p.einstufung } : {};
 }
 
 function passungZusatz(p: Passung | undefined): string {

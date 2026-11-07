@@ -110,7 +110,11 @@ export function reservierteImGefaess(teile: Teile, platzId: string): ZaehlendePf
   const zustand = new Map(aktiveZustaende(teile).map((z) => [text(z['pflanzung_id']), z]));
   const saetze = satzKarte(teile);
   const gesehen = new Set<string>();
-  return teil(teile, 'v_reservierung_aktiv').flatMap((r) => {
+  // je Pflanzung die früheste Reservierung, damit einziehende() mit heute + 3 sie findet (Runde 1 Befund 9)
+  const reservierungen = [...teil(teile, 'v_reservierung_aktiv')].sort((a, b) =>
+    text(a['umsetzen_geplant_am']).localeCompare(text(b['umsetzen_geplant_am'])),
+  );
+  return reservierungen.flatMap((r) => {
     if (!offen(r)) return [];
     const topf = toepfe.get(text(r['netztopf_id']));
     if (topf?.['heim_platz_id'] !== platzId) return [];

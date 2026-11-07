@@ -1,14 +1,15 @@
 // Baustein Choice (design-system/components/Choice.md): Wahlliste mit aria-pressed und Häkchen, ohne Systemtastatur
 // (Säen, Plan 23); Stufe als Badge mit Symbol und Wort (Passung, Plan 36)
-import { StatusIcon } from './StatusIcon.tsx';
+import type { Einstufung } from '../../domain/passung/passung.ts';
+import { Stufe } from './Stufe.tsx';
 
 export interface Option {
   wert: string;
   titel: string;
   zusatz?: string;
   deaktiviert?: boolean;
-  /** Stufe nach dem Titel, Wort und Symbol (nie Farbe allein), z. B. «Empfohlen» */
-  stufe?: { ton: 'ok' | 'warn' | 'danger'; wort: string };
+  /** Einstufung der Passung nach dem Titel als Baustein Stufe (Wort und Symbol, nie Farbe allein) */
+  stufe?: Einstufung;
 }
 
 function Haken() {
@@ -52,10 +53,7 @@ export function Choice({
               <span className="hv-choice-titel">{o.titel}</span>{' '}
               {o.stufe ? (
                 <>
-                  <span className={`hv-badge hv-badge-${o.stufe.ton}`}>
-                    <StatusIcon ton={o.stufe.ton} />
-                    {o.stufe.wort}
-                  </span>{' '}
+                  <Stufe einstufung={o.stufe} />{' '}
                 </>
               ) : null}
               {o.zusatz ? <span className="hv-choice-zusatz">{o.zusatz}</span> : null}

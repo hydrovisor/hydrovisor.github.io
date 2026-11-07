@@ -27,6 +27,7 @@ import {
   saatEingabePruefen,
   saatRueckgaengig,
   saatVorgang,
+  saatVorschlag,
   sortenAuswahl,
   type SaatEingabe,
   type SatzEingabe,
@@ -161,19 +162,41 @@ describe('R3.4 Einstufung beim Säen speichern', () => {
     stammSetzen(t, 'art_kulturform', (z) => z['art_id'] === ART.salat && z['kulturform'] === 'kopf', {
       ernte_ab_d: 30,
     });
+    // Runde 1 Befund 1 (Prüfer Fachlogik): ohne Zieltopf wird nicht gespeichert; die Rechnung des Vorgangs mit dem
+    // erfassten Saatdatum steht im Vorschlag (saatVorschlag), aus dem saatVorgang() schreibt
     const satz = [{ sorteId: SORTE.lollo, kulturform: 'kopf', zieltopfIds: [] }];
     // gesät heute: Umsetzen 8.2., 2.3.1 bis 2.3.3 frei (Nachfolge), nur P2
-    const heute = saatVorgang(t, eingabe(satz, { zielPlatzId: P23 }), neueIds(), J, Z);
-    expect(pflanzungenVon(heute, SORTE.lollo)[0]?.['gruende']).toEqual(['P2']);
+    const heute = saatVorschlag(t, eingabe(satz, { zielPlatzId: P23 }), J, Z).saetze[0];
+    expect(heute?.passung?.gruende).toEqual(['P2']);
     // nacherfasst, gesät 1.1.: Umsetzen 22.1., kein freies Loch → P2 und P3
     const e = eingabe(satz, { zielPlatzId: P23, saatdatum: '2027-01-01' });
     expect(saatEingabePruefen(t, e, J, Z)).toEqual([]);
-    const nach = saatVorgang(t, e, neueIds(), J, Z);
+    const nach = saatVorschlag(t, e, J, Z).saetze[0];
     const soll = erwartet(t, SORTE.lollo, 'kopf', P23, '2027-01-01');
-    const p = pflanzungenVon(nach, SORTE.lollo)[0];
-    expect(p?.['gruende']).toEqual(['P2', 'P3']);
-    expect(p?.['gruende']).toEqual(soll.gruende);
-    expect(p?.['rang']).toBe(soll.rang);
+    expect(nach?.passung?.gruende).toEqual(['P2', 'P3']);
+    expect(nach?.passung?.gruende).toEqual(soll.gruende);
+    expect(nach?.rang).toBe(soll.rang);
+  });
+
+  it('R3.4 Satz ohne Zieltopf trägt bei Zielgefäss keine Einstufung (Runde 1 Befund 1, EK4)', () => {
+    const t = passungTeile();
+    const e = eingabe(
+      [
+        { sorteId: SORTE.lollo, kulturform: 'kopf', zieltopfIds: [netztopfId('2.1.1')] },
+        { sorteId: SORTE.ochsenherz, kulturform: 'dauerkultur_frucht', zieltopfIds: [], pflanzenOhneZiel: 1 },
+      ],
+      { zielPlatzId: P21 },
+    );
+    expect(saatEingabePruefen(t, e, J, Z)).toEqual([]);
+    const v = saatVorgang(t, e, neueIds(), J, Z);
+    for (const p of pflanzungenVon(v, SORTE.ochsenherz)) {
+      expect(p['einstufung']).toBeUndefined();
+      expect(p['rang']).toBeUndefined();
+      expect(p['gruende']).toBeUndefined();
+    }
+    expect(pflanzungenVon(v, SORTE.lollo)[0]?.['einstufung']).toBe(
+      erwartet(t, SORTE.lollo, 'kopf', P21).einstufung,
+    );
   });
 
   it('UC5 saatRueckgaengig storniert weiterhin alle Zeilen', () => {
@@ -253,6 +276,27 @@ describe('R6.2 Einstufung beim Umsetzen ohne Zieltopf', () => {
     ).toEqual([]);
     // an anderen Typen bleibt der Schlüssel unbekannt
     expect(ereignisDatenPruefen('verschieben', { passung: { einstufung: 'moeglich' } })).toHaveLength(1);
+    // Sicherheit Runde 1 Befund 1: Werte und Unterschlüssel werden geprüft
+    for (const falsch of [
+      { einstufung: 'falsch', gruende: [] },
+      { einstufung: 'moeglich', gruende: ['X'] },
+      { einstufung: 'moeglich', gruende: ['P1', 'P2', 'P3'] },
+      { einstufung: 'moeglich', rang: 0, gruende: [] },
+      { einstufung: 'moeglich', rang: 1.5, gruende: [] },
+      { einstufung: 'moeglich', gruende: [], fremd: 1 },
+      { einstufung: 'moeglich' },
+      ['moeglich'],
+      null,
+    ])
+      expect(ereignisDatenPruefen('umsetzen', { passung: falsch })).toHaveLength(1);
+    expect(ereignisDatenPruefen('umsetzen', { passung: { einstufung: 'empfohlen', gruende: [] } })).toEqual(
+      [],
+    );
+    expect(
+      ereignisDatenPruefen('umsetzen', {
+        passung: { einstufung: 'nicht_empfohlen', rang: 3, gruende: ['P10', 'P11'] },
+      }),
+    ).toEqual([]);
   });
 
   it('R6.2 umsetzZusammenfassung mit ansatz und wechselIn bleibt unverändert', () => {
