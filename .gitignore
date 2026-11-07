@@ -151,6 +151,7 @@ vite.config.ts.timestamp-*
 # Hydrovisor
 .claude/settings.local.json
 reports/
+reports-honor/
 supabase/.temp/
 supabase/.branches/
 seed-bericht.md
