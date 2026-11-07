@@ -14,6 +14,8 @@ import { keimdauerTyp, stationsVorschau, type GeplanterSatz } from '../anzucht/k
 import type { Schritt, Verstoss, Vorgang } from '../datenpfad/erfassung.ts';
 import { keimrate, keimrateArt, saatmenge, type Empfehlung, type Keimrate } from '../saatmenge/saatmenge.ts';
 import { kalendertag, tagPlus, tageZwischen, versatz, type Zeitzone } from '../zeit.ts';
+import { sortenPassung } from '../passung/kontext.ts';
+import type { Passung } from '../passung/passung.ts';
 import { topfPrognose } from './belegung.ts';
 
 export type Kulturform =
@@ -494,6 +496,9 @@ export interface SatzVorschlag {
   keimtemp: Spanne;
   /** Vorgabe für umsetzen_vorgabe_am; Direktsaat der Saattag */
   umsetzenAm?: string;
+  /** Einstufung im Zielgefäss am Umsetzdatum (R3.2, R3.4; Plan 36) und Rang in der Gesamtliste */
+  passung?: Passung;
+  rang?: number;
 }
 
 /** jüngste nicht stornierte Packung der Sorte (A6) */
@@ -531,7 +536,13 @@ const zielIstDirektsaat = (teile: Teile, e: SaatEingabe) =>
   DIREKTSAAT_BETRIEBSARTEN.has(gefaessAm(teile, e.zielPlatzId)?.betriebsart ?? '') &&
   !gefaessAm(teile, e.zielPlatzId)?.feste_dosis;
 
-function satzVorschlag(teile: Teile, e: SaatEingabe, s: SatzEingabe): SatzVorschlag | undefined {
+function satzVorschlag(
+  teile: Teile,
+  e: SaatEingabe,
+  s: SatzEingabe,
+  jetzt: Date,
+  zeitzone: Zeitzone,
+): SatzVorschlag | undefined {
   const sorte = sorteZeile(teile, s.sorteId);
   if (!sorte) return undefined;
   const wahl = sorteWahl(teile, sorte);
@@ -575,7 +586,26 @@ function satzVorschlag(teile: Teile, e: SaatEingabe, s: SatzEingabe): SatzVorsch
     keimdauer: wahl.keimdauer,
     keimtemp: wahl.keimtemp,
     ...(umsetzenAm ? { umsetzenAm } : {}),
+    ...passungVon(teile, e, s, jetzt, zeitzone),
   };
+}
+
+/** Einstufung der gewählten Sorte in ihrer Kulturform unter allen Sorten mit dem erfassten Saatdatum (R3.4, A8) */
+function passungVon(
+  teile: Teile,
+  e: SaatEingabe,
+  s: SatzEingabe,
+  jetzt: Date,
+  zeitzone: Zeitzone,
+): { passung?: Passung; rang?: number } {
+  if (!e.zielPlatzId || !/^\d{4}-\d{2}-\d{2}$/.test(e.saatdatum)) return {};
+  const sorten = sortenAuswahl(teile).map((w) =>
+    w.sorteId === s.sorteId ? { ...w, kulturform: s.kulturform as Kulturform } : w,
+  );
+  const x = sortenPassung(teile ?? {}, sorten, e.zielPlatzId, e.saatdatum, jetzt, zeitzone).find(
+    (w) => w.sorteId === s.sorteId,
+  );
+  return x ? { passung: x.passung, rang: x.rang } : {};
 }
 
 const stationsgrenze = (teile: Teile) =>
@@ -589,7 +619,7 @@ export function saatVorschlag(
   zeitzone: Zeitzone,
 ): { saetze: SatzVorschlag[]; vorschau: ReturnType<typeof stationsVorschau>; hinweise: string[] } {
   const saetze = eingabe.saetze
-    .map((s) => satzVorschlag(teile, eingabe, s))
+    .map((s) => satzVorschlag(teile, eingabe, s, jetzt, zeitzone))
     .filter((s): s is SatzVorschlag => !!s);
   const hinweise = new Set<string>();
   // R1.6, A15: Termine vor heute liegen auf heute
@@ -768,7 +798,16 @@ export function saatVorgang(
     const pflanzungen = Array.from({ length: s.schwaemme }, () => ids());
     for (const id of pflanzungen)
       schritte.push(
-        neu('pflanzung', id, { satz_id: satzId, pflanzvorgang_id: pflanzvorgangId, gilt_ab: giltAb }),
+        neu('pflanzung', id, {
+          satz_id: satzId,
+          pflanzvorgang_id: pflanzvorgangId,
+          gilt_ab: giltAb,
+          // R3.4: Einstufung, Rang und Gründe nur mit Zielgefäss und Zieltöpfen darin (Runde 1 Befund 1: ein Satz
+          // «Ziel später» kommt nicht in dieses Gefäss und zählt nicht als Wahl gegen die Empfehlung, EK4)
+          ...(s.passung && s.rang !== undefined && e.zieltopfIds.length > 0
+            ? { einstufung: s.passung.einstufung, rang: s.rang, gruende: s.passung.gruende }
+            : {}),
+        }),
       );
     e.zieltopfIds.forEach((topf, k) => {
       schritte.push(

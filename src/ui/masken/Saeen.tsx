@@ -27,6 +27,9 @@ import {
   type SatzVorschlag,
   type Zieltopf,
 } from '../../domain/pflanzung/saeen.ts';
+import { sortenPassung, type SortePassung } from '../../domain/passung/kontext.ts';
+import { passungText, type Einstufung, type GrundCode, type Passung } from '../../domain/passung/passung.ts';
+import type { Kulturform } from '../../domain/phasen/profil.ts';
 import { lochbild } from '../../domain/vorlagen/lochbild.ts';
 import { kalendertag, tagKurz, tagPlus, ZEITZONE } from '../../domain/zeit.ts';
 import { Button } from '../bausteine/Button.tsx';
@@ -77,6 +80,8 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
   const [boxen, setBoxen] = useState<Record<string, string>>({});
   const [sendet, setSendet] = useState(false);
   const [fehler, setFehler] = useState<string[]>([]);
+  // Plan 36: Gruppe «Nicht empfohlen» in Schritt 1 aufgeklappt
+  const [nichtOffen, setNichtOffen] = useState(false);
   // Teil des Vorgangs schon gespeichert: Eingabe fest, nur derselbe Vorgang erneut (Prüfer Runde 1, Befund 8)
   const [teilweise, setTeilweise] = useState(false);
   const [fertig, setFertig] = useState<{ vorgang: Vorgang; text: string; zurueck?: boolean }>();
@@ -108,6 +113,24 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
   const zielG = ziele.find((z) => z.platzId === zielPlatzId);
   const heute = kalendertag(jetzt(), ZEITZONE);
   const saatdatum = tagPlus(heute, -rueck);
+  // Plan 36 (R3.1, R3.2): Einstufung je Sorte im Zielgefäss am Umsetzdatum, gewählte Kulturform
+  const passungen = useMemo(
+    () =>
+      teile && zielPlatzId && !spaeter
+        ? sortenPassung(
+            teile,
+            sorten.map((s) => ({
+              ...s,
+              kulturform: (kulturform[s.sorteId] ?? s.wieLetztesMal ?? s.vorgabe) as Kulturform,
+            })),
+            zielPlatzId,
+            saatdatum,
+            jetzt(),
+            ZEITZONE,
+          )
+        : undefined,
+    [teile, sorten, kulturform, zielPlatzId, spaeter, saatdatum],
+  );
   const kopieAktiv = kopie && gewaehlt.includes(kopie.sorteId) ? kopie : undefined;
   const einstieg: SaatEingabe['einstieg'] = kopieAktiv
     ? 'duplizieren'
@@ -351,12 +374,23 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
 
   if (schritt === 1) {
     const kopien = duplizierbareSaetze(teile, anlageId);
+    // ohne Gefäss am Zielplatz liefert sortenPassung() nichts: dann alle Sorten ohne Stufe (Sicherheit Runde 1 Befund 6)
+    const reihenfolge = passungen?.length ? nachStufe(passungen) : sorten;
+    const nichtEmpfohlen = passungen?.filter((p) => p.passung.einstufung === 'nicht_empfohlen') ?? [];
+    // gewählte Nicht-empfohlen-Sorten bleiben sichtbar (UC5-AK13: kein zweiter Tipp nötig)
+    const nichtSichtbar = nichtOffen || nichtEmpfohlen.some((p) => gewaehlt.includes(p.sorteId));
+    const sichtbar = reihenfolge.filter(
+      (s) => nichtSichtbar || !nichtEmpfohlen.some((p) => p.sorteId === s.sorteId),
+    );
     return (
       <main className="hv-seite hv-saeen" data-density="regal">
         {kopf}
         {schrittText}
+        {passungen && zielG ? (
+          <p className="hv-saeen-zeile">Für {zielG.kennung} · gerechnet am Umsetztag der Sorte</p>
+        ) : null}
         <div className="hv-choice" role="group" aria-label="Sorten">
-          {sorten.map((s) => (
+          {sichtbar.map((s) => (
             <div key={s.sorteId} className="hv-saeen-sorte">
               <Choice
                 label={s.name}
@@ -364,7 +398,9 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
                   {
                     wert: s.sorteId,
                     titel: s.name,
+                    ...stufeVon(passungen?.find((p) => p.sorteId === s.sorteId)?.passung),
                     zusatz: [
+                      passungZusatz(passungen?.find((p) => p.sorteId === s.sorteId)?.passung),
                       s.wieLetztesMal ? `Wie letztes Mal: ${KULTURFORM_NAME[s.wieLetztesMal]}` : '',
                       s.keimart ? KEIMART[s.keimart] : '',
                     ]
@@ -387,6 +423,11 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
             </div>
           ))}
         </div>
+        {nichtEmpfohlen.length > 0 && !nichtSichtbar ? (
+          <Button variant="secondary" block onClick={() => setNichtOffen(true)}>
+            {`Nicht empfohlen (${String(nichtEmpfohlen.length)}) anzeigen`}
+          </Button>
+        ) : null}
         {/* Plan 25 A15: unter der Sortenliste, damit die Sortenwahl zuerst kommt */}
         {kopien.length > 0 ? (
           <section className="hv-saeen-satz" aria-label="Satz duplizieren">
@@ -496,6 +537,17 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
         {zielG ? (
           <>
             {zielG.hinweis ? <Notice kompakt tone="warn" title={zielG.hinweis} /> : null}
+            {gewaehlt.map((id) => {
+              const p = passungen?.find((x) => x.sorteId === id);
+              return p ? (
+                <Notice
+                  key={`passung-${id}`}
+                  kompakt
+                  tone={NOTICE_TON[p.passung.einstufung]}
+                  title={`${p.name}: ${passungText(p.passung)}`}
+                />
+              ) : null;
+            })}
             {hinweisUmsetzen.length > 0 ? (
               <Notice
                 kompakt
@@ -639,6 +691,47 @@ function umsetzenAbVon(teile: Teile, artId: string | undefined): number | undefi
   return d === null || d === undefined ? undefined : Number(d);
 }
 
+const NOTICE_TON: Readonly<Record<Einstufung, 'info' | 'warn' | 'danger'>> = {
+  empfohlen: 'info',
+  moeglich: 'warn',
+  nicht_empfohlen: 'danger',
+};
+/** Zeilen ohne Stammwert (A2): «nicht geprüft: Höhe, Licht» */
+const GEPRUEFT_NAME: Readonly<Record<GrundCode, string>> = {
+  P1: 'System',
+  P2: 'pH und EC',
+  P3: 'Loch',
+  P4: 'Licht',
+  P5: 'Höhe',
+  P6: 'Wärme',
+  P7: 'Pythium',
+  P8: 'Kulturdauer',
+  P9: 'Schatten',
+  P10: 'EC-Mitte',
+  P11: 'Liter',
+};
+
+function stufeVon(p: Passung | undefined): { stufe?: Einstufung } {
+  return p ? { stufe: p.einstufung } : {};
+}
+
+function passungZusatz(p: Passung | undefined): string {
+  if (!p) return '';
+  const offen = [...new Set(p.nichtGeprueft.map((c) => GEPRUEFT_NAME[c]))];
+  return [...p.texte, ...p.hinweise, offen.length > 0 ? `nicht geprüft: ${offen.join(', ')}` : '']
+    .filter(Boolean)
+    .join(' · ');
+}
+
+/** Reihenfolge der Passung; «Wie letztes Mal» bleibt in seiner Stufe zuoberst */
+function nachStufe(liste: readonly SortePassung[]): SortePassung[] {
+  const stufen: Einstufung[] = ['empfohlen', 'moeglich', 'nicht_empfohlen'];
+  return stufen.flatMap((st) => {
+    const gruppe = liste.filter((p) => p.passung.einstufung === st);
+    return [...gruppe.filter((p) => p.wieLetztesMal), ...gruppe.filter((p) => !p.wieLetztesMal)];
+  });
+}
+
 function umsetzenBekannt(teile: Teile, artId: string | undefined): boolean {
   const art = ((teile?.['art'] ?? []) as { art_id: string; umsetzen_ab_d: number | null }[]).find(
     (a) => a.art_id === artId,
@@ -746,6 +839,7 @@ function SatzKarte({
       {!s.direktsaat && s.umsetzenAm ? (
         <p className="hv-saeen-zeile">Umsetzen ab {tagKurz(s.umsetzenAm)}</p>
       ) : null}
+      {s.passung && !spaeter ? <p className="hv-saeen-zeile">{passungText(s.passung)}</p> : null}
     </section>
   );
 }

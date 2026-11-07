@@ -55,6 +55,21 @@ const ORTSWECHSEL = {
   nach_loch_nr: undefined,
 } as const;
 
+/** Plan 36 A7 (Sicherheit Runde 1 Befund 1): { einstufung, rang?, gruende } ohne fremde Schlüssel */
+function passungGueltig(w: unknown): boolean {
+  if (typeof w !== 'object' || w === null || Array.isArray(w)) return false;
+  const p = w as Record<string, unknown>;
+  const gruende = p['gruende'];
+  return (
+    Object.keys(p).every((k) => ['einstufung', 'rang', 'gruende'].includes(k)) &&
+    ['empfohlen', 'moeglich', 'nicht_empfohlen'].includes(String(p['einstufung'])) &&
+    (p['rang'] === undefined || (Number.isInteger(p['rang']) && Number(p['rang']) >= 1)) &&
+    Array.isArray(gruende) &&
+    gruende.length <= 2 &&
+    gruende.every((g) => typeof g === 'string' && /^P(?:[1-9]|1[01])$/.test(g))
+  );
+}
+
 const SCHEMA: Readonly<Record<EreignisTyp, Schema>> = {
   aussaat: { schluessel: { saatdatum: undefined } },
   deckel_geoeffnet: { schluessel: {} },
@@ -80,7 +95,13 @@ const SCHEMA: Readonly<Record<EreignisTyp, Schema>> = {
   umsetzdatum_geaendert: {
     schluessel: { von: undefined, nach: undefined, grund: ['morgen', 'in_station_lassen', 'ziel_spaeter'] },
   },
-  umsetzen: { schluessel: ORTSWECHSEL },
+  // Plan 36 A7: Einstufung bei frei gewähltem Zielgefäss { einstufung, rang, gruende }
+  umsetzen: {
+    schluessel: {
+      ...ORTSWECHSEL,
+      passung: passungGueltig,
+    },
+  },
   tausch: { schluessel: { ...ORTSWECHSEL, vorgang_id: undefined } },
   neu_beschriften: { schluessel: { von_kennung: undefined, nach_kennung: undefined } },
   ernte: { schluessel: { art: ['teil', 'ab'] } },

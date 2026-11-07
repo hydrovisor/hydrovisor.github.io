@@ -46,7 +46,7 @@ Stand 1.11.2026 · Auftrag 2 «Spezifikation». Bedeutungen stehen in Konzept v1
 | Pflanzung, Schwamm | `pflanzung` | `Pflanzung` |
 | Pflanzvorgang | `pflanzvorgang` | `Pflanzvorgang` |
 | Keimprüfung, Keimansicht, Keimeingabe | Ereignis `keimung` | `keimVorgang()`, `keimAnsicht()`, `KeimEingabe` |
-| Phasenfrage, Phasenstand, Phasenwechsel | Ereignis `phase_antwort` (`daten.phase`, `daten.antwort`) | `phasenStand()`, `phasenKarten()`, `antwortVorgang()`, `Fragekarte` |
+| Phasenfrage, Phasenstand, Phasenwechsel | Ereignis `phase_antwort` (`daten.phase`, `daten.antwort`) | `phasenStand()`, `phasenKarten()`, `antwortVorgang()`, `Fragekarte`; Prognose an einem Tag `phaseAm()` |
 | Phasen nachführen, Profilende, Phasenfolge | `v_sollwert` (`dauer`, `wechselmerkmal`, `anwendbar`) | `nachfuehrVorgang()`, `PROFILENDE`, `phasenfolge()`, `NachfuehrZeile` |
 | Datumskorrektur, Verlauf, Wissenskarte der Phase | `ersetzt_id`, `wissenseintrag` | `korrekturVorgang()`, `korrekturGrenze()`, `phasenVerlauf()`, `wissenFuer()` |
 | Erntestand, Ernte möglich, Teilernte, Abernten | Ereignis `ernte` (`daten.art`), `art_kulturform` | `ernteStand()`, `ernteVorgang()`, `ernteAufgaben()`, `ErnteStand` |
@@ -61,8 +61,8 @@ Stand 1.11.2026 · Auftrag 2 «Spezifikation». Bedeutungen stehen in Konzept v1
 | Reservierung, geplantes Umsetzdatum, Vorgabe | `reservierung`, `umsetzen_geplant_am`, `umsetzen_vorgabe_am` | `Reservierung`, `umsetzenGeplantAm`, `umsetzenVorgabeAm` |
 | Demo- oder Testdaten löschen | `datenart_loeschen()` | `datenartLoeschen` (nur Skript) |
 | Direktsaat | `satz.direktsaat_platz_id` | `istDirektsaat()` |
-| Passungs-Empfehlung, Einstufung | `pflanzung.einstufung`, `gruende` | `passung()`, `Einstufung` |
-| Zielbereich, Schnittmenge | `v_zielbereich`, Schnappschuss in `schnappschuss` | `zielbereich()` |
+| Passungs-Empfehlung, Einstufung | `pflanzung.einstufung`, `gruende` | `passung()`, `passungText()`, `Einstufung`, `GrundCode` (P1 bis P11), `LeitkulturBezug`, `passungKontext()`, `sortenPassung()`, `gefaessPassung()` (`src/domain/passung/`) |
+| Zielbereich, Schnittmenge | `v_zielbereich`, Schnappschuss in `schnappschuss` | `zaehlendePflanzungen()`, `schnittmenge()`, `reservierteImGefaess()`; Zweck Passung `zaehlendeFuerPassung()`, `zielbereichPassung()`, Band-Hilfen `bandSchnitt()`, `restbreite()`, `bandmitte()`, `mindestbreiteEc()` (`src/domain/zielbereich*.ts`) |
 | Mischentscheid | `mischentscheid` | `Mischentscheid` |
 | Messung, Messart | `messung`, `messart` | `Messung`, `Messart` |
 | Bewertung (grün, knapp, ausserhalb) | `bewertung` | `Bewertung` |

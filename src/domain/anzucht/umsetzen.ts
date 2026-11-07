@@ -3,8 +3,10 @@
 // Vorgang besteht nur aus Ereignissen (ernte, umsetzdatum_geaendert, umsetzen, abschluss) über schreiben().
 import { gefaessAm, gefaessStatus, zeilen, type PlatzZeile, type Teile } from '../anlage/teile.ts';
 import type { Schritt, Verstoss, Vorgang } from '../datenpfad/erfassung.ts';
+import { gefaessPassung } from '../passung/kontext.ts';
+import type { Passung } from '../passung/passung.ts';
 import { artDerSorte, umsetzenAbTage } from '../pflanzung/belegung.ts';
-import { KULTURFORM_NAME } from '../pflanzung/saeen.ts';
+import { KULTURFORM_NAME, zielgefaesse } from '../pflanzung/saeen.ts';
 import {
   deckelBelegung,
   istStation,
@@ -333,6 +335,14 @@ export function umsetzEingabePruefen(
   return v;
 }
 
+/** Rang des Zielgefässes beim Umsetzen: Position in der Kennungsreihenfolge der Anlage, 1-basiert (A7); fehlt das
+ * Gefäss in der Liste, kein Rang (Sicherheit Runde 1 Befund 2) */
+function gefaessRang(teile: Teile, platzId: string): number | undefined {
+  const anlageId = zeilen<PlatzZeile>(teile, 'platz').find((p) => p.id === platzId)?.anlage_id ?? '';
+  const i = zielgefaesse(teile, anlageId).findIndex((g) => g.platzId === platzId);
+  return i < 0 ? undefined : i + 1;
+}
+
 export function umsetzVorgang(
   teile: Teile,
   e: UmsetzEingabe,
@@ -369,10 +379,19 @@ export function umsetzVorgang(
       }),
     );
   }
+  const passungJeGefaess = new Map<string, Passung | undefined>();
   for (const z of e.zuweisung) {
     const s = saemling.get(z.pflanzungId);
     const ziel = zielOrt(teile, z.netztopfId);
     if (!s || !ziel) return [];
+    // R6.2, A7: Einstufung nur bei frei gewähltem Zielgefäss, nicht im eigenen reservierten Zieltopf
+    const frei = s.zieltopf?.netztopfId !== z.netztopfId;
+    if (frei && !passungJeGefaess.has(ziel.platzId))
+      passungJeGefaess.set(
+        ziel.platzId,
+        gefaessPassung(teile ?? {}, e.satzId, ziel.platzId, jetzt, zeitzone),
+      );
+    const p = frei ? passungJeGefaess.get(ziel.platzId) : undefined;
     v.push(
       zeile({
         typ: 'umsetzen',
@@ -383,6 +402,17 @@ export function umsetzVorgang(
           ...(s.ort.lochNr !== undefined ? { von_loch_nr: s.ort.lochNr } : {}),
           nach_platz_id: ziel.platzId,
           nach_loch_nr: ziel.lochNr,
+          ...(p
+            ? {
+                passung: {
+                  einstufung: p.einstufung,
+                  ...(gefaessRang(teile, ziel.platzId) === undefined
+                    ? {}
+                    : { rang: gefaessRang(teile, ziel.platzId) }),
+                  gruende: p.gruende,
+                },
+              }
+            : {}),
         },
       }),
     );

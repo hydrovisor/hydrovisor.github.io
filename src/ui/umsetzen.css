@@ -54,3 +54,17 @@
 .hv-umsetzen-fuss > .hv-btn {
   flex: 1;
 }
+
+/* Plan 36: Zielgefäss mit Stufe und Gründen bricht um, statt über 360 dp hinauszuragen (Abnahme 1) */
+.hv-umsetzen-gefaesse > .hv-btn {
+  min-width: 0;
+  max-width: 100%;
+  height: auto;
+  min-height: var(--size-touch-regal);
+  padding: var(--space-2) var(--space-3);
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: var(--space-1);
+  white-space: normal;
+  text-align: left;
+}

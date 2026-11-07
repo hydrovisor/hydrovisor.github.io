@@ -46,7 +46,7 @@ Module in `src/domain/`: `zeit`, `phasen` (R1), `zielbereich` (R2), `passung` (R
 | R3.1 | Bewertet wird zum geplanten Umsetzdatum `umsetzen_geplant_am` (Vorgabe Saat + `umsetzen_ab_d`, Direktsaat = Saattag): Sollbereich der Sorte in ihrer Phase an diesem Datum gegen den Zielbereich des Gefässes an diesem Datum (R2.2 Zweck Passung). Nur Richtung «Gefäss gewählt → Sorten geordnet»; «Nicht empfohlen» eingeklappt, mit einem Tipp wählbar, ohne Rückfrage; Einstufung, Rang und Gründe-Codes an der Pflanzung. Säen beginnt mit der Sorte; die Einstufung erscheint, sobald ein Zielgefäss gewählt ist (E-F4-2). | UC5-AK11, UC5-AK13 |
 | R3.2 | Entscheidungstabelle (alle Zeilen prüfen; Stufe = Stufe der ersten zutreffenden Zeile; Gründe = die ersten zwei zutreffenden Zeilen dieser Stufe). Mindestbreite pH 0.3, EC max(0.3, 2 · u_EC). In leeren Gefässen nur P1 bis P6. Sortierung je Stufe: Restbreite EC absteigend, dann Abstand der Bandmitten aufsteigend. Tabelle unten. | UC5-AK2, AK7, AK8, AK10, AK14 |
 | R3.3 | Nutzbare Höhe je Bereich in mm (Startwerte 450, 200, 150, 150), Wuchshöhe max. und Wuchsform je Sorte (sonst Art). Wuchsform «hängend» → Hinweis «an die gangseitige Längskante» (vorderste Reihe, 8.1 Regel 9). Mindestabstand 100 mm zur Leiste (A). | UC5-AK14 |
-| R3.4 | Für die erste Runde gilt die Passungsmatrix aus W0 (9.6); die App rechnet die Passung ab I2-4. | – |
+| R3.4 | Für die erste Runde gilt die Passungsmatrix aus W0 (9.6); die App rechnet die Passung seit I2-04 (Plan 36; Annahmen (A): Direktsaat mit Phase Wachstum, fehlender Stammwert «nicht geprüft» ohne Abwertung, im leeren Gefäss entfällt P2). | – |
 
 **Tabelle R3.2** (Code = gespeicherter Gründe-Code):
 
@@ -106,7 +106,7 @@ Bezeichnungen: V Volumen in l; D Herstellerdosis des Stadiums in ml/L (Summe); a
 | ID | Regel | AK |
 |---|---|---|
 | R6.1 | Anzuchtbox 25 Würfel. Je Satz höchstens Zieltöpfe + 1 Schwämme auf 5-cm-Plätze, genau Zieltöpfe auf 8-cm-Plätze; Rest bis 7 Tage Reserve in der Box, dann Abschluss «überzählig». Topfgrösse des Stationsplatzes: Tomate, Chili, Basilikum 80 mm, sonst 50 mm. «Säen» zeigt «Station am TT.MM. (Saat + typische Keimdauer): frei x von 32 (5 cm), y von 8 (8 cm)» und warnt ohne Sperre mit frühestem Saatdatum mit Platz. Sätze mit Saatdatum ≥ `stationsgrenze_ab` belegen je Satz höchstens die Hälfte (16 bzw. 4): «Satz belegt 18 von höchstens 16 Plätzen». Keimt ein Satz ohne freien Platz, bleibt er bis 4 Tage in der Box. Direktsaat belegt keinen Stationsplatz. | UC5-AK15 |
-| R6.2 | Umsetzen in der Phase Anzucht ab dem Wechselmerkmal: Aufgabe am `umsetzen_geplant_am` mit «Wie geplant umsetzen»; «Morgen» bis Saat + umsetzen_bis + 7, danach «Umsetzen überfällig». Ohne Zieltopf: Zielgefäss und Loch wählen (bis I2-4 nur Topfgrösse geprüft). Reservierter Zieltopf belegt → [Jetzt abernten] [Anderes Loch] [In der Station lassen bis «Umsetzen bis»]. Umsetzen erzeugt Ereignis und Platz; erster Ansatz «für Umsetzen» nach R2.2/R2.3. | UC5-AK3, AK7; Anzucht-AK1 |
+| R6.2 | Umsetzen in der Phase Anzucht ab dem Wechselmerkmal: Aufgabe am `umsetzen_geplant_am` mit «Wie geplant umsetzen»; «Morgen» bis Saat + umsetzen_bis + 7, danach «Umsetzen überfällig». Ohne Zieltopf: Zielgefäss und Loch wählen (seit I2-04 mit Einstufung je Gefäss, abgelegt im Ereignis `umsetzen`). Reservierter Zieltopf belegt → [Jetzt abernten] [Anderes Loch] [In der Station lassen bis «Umsetzen bis»]. Umsetzen erzeugt Ereignis und Platz; erster Ansatz «für Umsetzen» nach R2.2/R2.3. | UC5-AK3, AK7; Anzucht-AK1 |
 
 ## R7 Anbauort und Phasenwissen (`wissen`)
 

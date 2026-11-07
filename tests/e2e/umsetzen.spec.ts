@@ -261,6 +261,27 @@ test('UC5-AK7 Ein Satz ohne Zieltopf mit 5 Sämlingen wird beim Umsetzen in höc
   expect(m.geschrieben.filter(([t]) => t === 'reservierung')).toEqual([]);
 });
 
+// Runde 1 Befund 2 (Prüfer Fachlogik, Plan 36 Testliste): Zielgefäss trägt beim Umsetzen ohne Zieltopf die Einstufung
+test('UC5-AK7 Zielgefäss mit zu schmaler Schnittmenge trägt «Nicht empfohlen» mit Grund und bleibt wählbar', async ({
+  page,
+}) => {
+  const m = await mitDaten(page, umsetzTeile(), `/#/umsetzen/${SATZ.rucola}`);
+  await tipp(m, knopf(page, 'Ziel wählen'));
+  await expect(page.getByText('Schritt 1 von 3')).toBeVisible();
+  const ziel = gefaessWahl(page, '2.1');
+  await expect(ziel).toContainText('Nicht empfohlen');
+  await expect(ziel).toContainText('EC bleibt 1.0 bis 1.2, schmaler als 0.3');
+  await tipp(m, ziel);
+  await expect(page.getByText('Schritt 2 von 3')).toBeVisible();
+  await tipp(m, knopf(page, 'Alle freien wählen'));
+  await tipp(m, knopf(page, 'Weiter'));
+  await tipp(m, knopf(page, 'Umsetzen'));
+  await expect(page.getByText('Umgesetzt: 5 Sämlinge')).toBeVisible();
+  await expect.poll(() => ereignisse(m, 'umsetzen').length).toBe(5);
+  for (const z of ereignisse(m, 'umsetzen'))
+    expect(daten(z)['passung']).toMatchObject({ einstufung: 'nicht_empfohlen', gruende: ['P2'] });
+});
+
 test('UC5-AK7 nur freie 8-cm-Töpfe sind wählbar, reservierte, belegte und 5-cm-Löcher nicht', async ({
   page,
 }) => {
