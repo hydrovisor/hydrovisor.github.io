@@ -84,7 +84,8 @@ test('F121-AK1 Anlage anlegen: bei 360 dp ist die Seite höchstens 360 dp breit 
   page,
 }) => {
   await mitDaten(page, regalTeile(JETZT), '/#/anlage/neu');
-  await expect(page.getByLabel(/^Licht ab/)).toBeVisible({ timeout: 15_000 });
+  // seit der Zeitwahl (#142) heissen Gruppe und Räder «Licht ab», «Licht ab Stunde» und «Licht ab Minute»
+  await expect(page.getByRole('group', { name: 'Licht ab', exact: true })).toBeVisible({ timeout: 15_000 });
   await expect(page.getByLabel(/^Lichtstunden/).first()).toBeVisible();
   await passt(page);
 });

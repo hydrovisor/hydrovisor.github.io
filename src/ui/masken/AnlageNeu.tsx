@@ -15,6 +15,7 @@ import { ZEITZONE } from '../../domain/zeit.ts';
 import { Button } from '../bausteine/Button.tsx';
 import { Notice } from '../bausteine/Notice.tsx';
 import { TextField } from '../bausteine/TextField.tsx';
+import { Zeitwahl } from '../bausteine/Zeitwahl.tsx';
 import { useBuendel } from '../buendel.tsx';
 import { hashZu } from '../router.ts';
 
@@ -126,19 +127,13 @@ export function AnlageNeu() {
         </fieldset>
         <p className="hv-anlage-info">Datenart «echt»; Demo- und Testanlagen entstehen nur per Skript.</p>
         <div className="hv-anlage-zweispaltig">
-          <TextField
+          <Zeitwahl
             label="Licht ab"
-            value={e.lichtVon}
-            inputMode="numeric"
+            wert={e.lichtVon}
             error={fehlerZu('licht')}
-            onChange={(ev) => aendern({ lichtVon: ev.target.value })}
+            onWert={(neu) => aendern({ lichtVon: neu })}
           />
-          <TextField
-            label="Licht bis"
-            value={e.lichtBis}
-            inputMode="numeric"
-            onChange={(ev) => aendern({ lichtBis: ev.target.value })}
-          />
+          <Zeitwahl label="Licht bis" wert={e.lichtBis} onWert={(neu) => aendern({ lichtBis: neu })} />
         </div>
         <TextField
           label="Lüfter-Einstellung"

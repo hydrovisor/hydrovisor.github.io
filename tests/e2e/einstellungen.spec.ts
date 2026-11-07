@@ -65,17 +65,32 @@ async function mitDaten(page: Page, pfad: string, ohneEinstellung = false): Prom
 
 const abschnitt = (page: Page, name: string) => page.getByRole('form', { name });
 
-test('UC0-AK3 Push-Zeit nur 05:00 bis 22:00; Kanne ändern zeigt das Rechenbeispiel und speichert', async ({
+test('UC0-AK3 ZW-AK3 Push-Zeit mit der Zeitwahl nur 05:00 bis 22:00; Kanne ändern zeigt das Rechenbeispiel und speichert', async ({
   page,
 }) => {
   const m = await mitDaten(page, '/#/einstellungen');
   const erinnerung = abschnitt(page, 'Erinnerung');
-  await expect(erinnerung.getByLabel('Push-Zeit')).toHaveValue('07:00', { timeout: 15_000 });
-  await erinnerung.getByLabel('Push-Zeit').fill('23:00');
+  // Zeitwahl (#142): Drehregler Stunde 05 bis 22 und Minute im Schritt 5; gewählt ist die Option mit aria-selected
+  const stunde = erinnerung.getByRole('listbox', { name: 'Push-Zeit Stunde' });
+  const minute = erinnerung.getByRole('listbox', { name: 'Push-Zeit Minute' });
+  const gewaehlt = (rad: typeof stunde) => rad.getByRole('option', { selected: true });
+  await expect(gewaehlt(stunde)).toHaveText('07', { timeout: 15_000 });
+  await expect(gewaehlt(minute)).toHaveText('00');
+  await expect(stunde.getByRole('option')).toHaveText(
+    Array.from({ length: 18 }, (_, i) => String(i + 5).padStart(2, '0')),
+  );
+  await stunde.getByRole('option', { name: '22', exact: true }).click();
+  await minute.getByRole('option', { name: '30', exact: true }).click();
+  await expect(gewaehlt(stunde)).toHaveText('22');
+  await expect(gewaehlt(minute)).toHaveText('30');
   await erinnerung.getByRole('button', { name: 'Speichern' }).click();
   await expect(erinnerung).toContainText('Push-Zeit nur 05:00 bis 22:00');
   expect(m.geaendert).toHaveLength(0);
-  await erinnerung.getByLabel('Push-Zeit').fill('06:30');
+  // Tastatur: Pos1 springt auf 05, Pfeil ab auf 06
+  await stunde.focus();
+  await page.keyboard.press('Home');
+  await page.keyboard.press('ArrowDown');
+  await expect(gewaehlt(stunde)).toHaveText('06');
   await erinnerung.getByRole('button', { name: 'Speichern' }).click();
   await expect(erinnerung).toContainText('Gespeichert');
   expect(m.geaendert).toContainEqual(['einstellung', EINSTELLUNG, { push_zeit: '06:30', vorlauf_n: 2 }]);
