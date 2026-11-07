@@ -240,3 +240,14 @@ tests/unit/rundgang-heute.test.ts
 tests/unit/aufgaben-stromausfall.test.ts
 tests/fixtures/rundgang.ts
 tests/e2e/rundgang.spec.ts
+# I1b-06 Sammel-Push und Timer-Push produktiv (#31); geändert: push-taeglich/kern.test.ts, push-fixture.ts,
+# push-inhalt.test.ts, push-zeitpunkt.test.ts, push-sw.test.ts (stehen oben unter I0-08)
+supabase/functions/push-taeglich/sammel_test.ts
+supabase/functions/push-taeglich/timer_test.ts
+supabase/functions/push-taeglich/email_test.ts
+supabase/functions/push-taeglich/daten_test.ts
+tests/unit/push-speicher.ts
+tests/unit/buendel-kuerzen.test.ts
+tests/unit/einstellungen-email.test.ts
+tests/seed/push-protokoll.test.ts
+supabase/tests/database/18_push_timer.test.sql
