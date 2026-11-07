@@ -36,8 +36,9 @@ function daten(): Teile {
   return t;
 }
 
-async function mitDaten(page: Page, pfad: string): Promise<Mitschnitt> {
+async function mitDaten(page: Page, pfad: string, ohneEinstellung = false): Promise<Mitschnitt> {
   const d = daten();
+  if (ohneEinstellung) delete d['einstellung'];
   const m: Mitschnitt = { neu: [], geaendert: [] };
   await sitzungSpeichern(page);
   await authNachbilden(page);
@@ -142,4 +143,20 @@ test('Heute führt zu den Einstellungen, die Einstellungen zum Notfallblatt', as
   await expect(page.getByRole('heading', { name: 'Einstellungen' })).toBeVisible();
   await page.getByRole('link', { name: 'Notfallblatt drucken' }).click();
   await expect(page.getByRole('region', { name: 'Stand je Gefäss' })).toBeVisible();
+});
+
+test('F126-AK1 Ohne Zeile einstellung zeigt #/einstellungen «Zu Heute», den Hinweis und den Link zur Push-Seite', async ({
+  page,
+}) => {
+  await mitDaten(page, '/#/einstellungen', true);
+  await expect(page.getByText('Keine Einstellungen gefunden')).toBeVisible({ timeout: 15_000 });
+  await expect(
+    page.getByText('Die Einstellungen entstehen beim ersten Laden des Wissens (Seed).'),
+  ).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Zu Heute' })).toBeVisible();
+  await page.getByRole('link', { name: 'Push einrichten und Test-Push senden' }).click();
+  await expect(page).toHaveURL(/#\/push$/);
+  await page.goto('/#/einstellungen');
+  await page.getByRole('link', { name: 'Zu Heute' }).click();
+  await expect(page).toHaveURL(/#\/heute$/);
 });
