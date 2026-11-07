@@ -103,7 +103,10 @@ Stand 1.11.2026 · Auftrag 2 «Spezifikation». Bedeutungen stehen in Konzept v1
 | Messfälligkeit | – | `Messfaelligkeit`, `messFaelligkeit()` |
 | Messeingabe (Ziffernblock) | – | `Messeingabe`, `eingabeTippen()` |
 | Sammel-Push, Lauf der Function | `push_versand` | `pushLauf()`, `sammelFaellig()`, `wiederholungErlaubt()` |
-| Tagesliste der Push (Übergang bis I1b-06) | – | `tagesliste()`, `pushText()`, `TagesEintrag` |
+| Inhalt der Pushes (I1b-06) | – | `sammelInhalt()`, `kurzpruefungOffen()`, `kurzpruefungInhalt()`, `timerInhalt()`, `tageslisteZeilen()` |
+| Beschreibung und Kürzung der Bündelteile | – | `BUENDEL_TEILE`, `teileKuerzen()` |
+| Zustellung je Tag (UC8-AK8, EK5) | `v_push_zustellung` | `ZustellungTag`, `ek5Anteil()` |
+| E-Mail-Rückfall | `einstellung.email_rueckfall` | `Mailer`, «E-Mail, wenn Push fehlt» |
 | Push-Stand in Heute | `push_abo`, `push_versand` | `pushStand()`, `PushStand` |
 | Quittung der Push | `push_versand.angezeigt_am`, `geoeffnet_am` | `quittieren()`, `signaturText()` |
 | Tütenfelder (Schema der Saattüte) | `ki_feld` | `TuetenFelder`, `TUETEN_SCHEMA`, `antwortPruefen()`, `feldTexte()` |

@@ -64,3 +64,33 @@ describe('Service Worker Push', () => {
     expect(JSON.parse(String(init.body))).toMatchObject({ ereignis: 'geoeffnet' });
   });
 });
+
+// I1b-06 (Plan 31 Lösungsweg 8, Testliste «Vitest»; R5.5, A9, A10): Tags heute, test, kurzpruefung, timer (sonst
+// heute); renotify nur bei timer, damit ein zweiter Timer wieder klingelt; data.url nur, wenn sie mit #/ beginnt,
+// sonst #/heute (der Klick öffnet START_PFAD mit dieser url).
+describe('Service Worker Push (I1b-06)', () => {
+  it('R5.5 Tag kurzpruefung und timer bleiben, unbekannter Tag wird heute', () => {
+    expect(benachrichtigungAus({ ...NUTZLAST, tag: 'kurzpruefung' }).optionen.tag).toBe('kurzpruefung');
+    expect(benachrichtigungAus({ ...NUTZLAST, tag: 'timer' }).optionen.tag).toBe('timer');
+    expect(benachrichtigungAus({ ...NUTZLAST, tag: 'heute' }).optionen.tag).toBe('heute');
+    expect(benachrichtigungAus({ ...NUTZLAST, tag: 'test' }).optionen.tag).toBe('test');
+    expect(benachrichtigungAus({ ...NUTZLAST, tag: 'werbung' }).optionen.tag).toBe('heute');
+    expect(benachrichtigungAus({ ...NUTZLAST, tag: undefined }).optionen.tag).toBe('heute');
+  });
+
+  it('R5.5 renotify nur bei timer', () => {
+    for (const tag of ['heute', 'test', 'kurzpruefung', 'unbekannt'])
+      expect(benachrichtigungAus({ ...NUTZLAST, tag }).optionen.renotify, tag).toBe(false);
+    expect(benachrichtigungAus({ ...NUTZLAST, tag: 'timer' }).optionen.renotify).toBe(true);
+  });
+
+  it('R5.5 url nur mit #/, sonst #/heute', () => {
+    const url = (u: unknown) => benachrichtigungAus({ ...NUTZLAST, tag: 'timer', url: u }).optionen.data.url;
+    expect(url('#/ansatz/R-2.3')).toBe('#/ansatz/R-2.3');
+    expect(url('#/heute')).toBe('#/heute');
+    expect(url('https://example.invalid/#/heute')).toBe('#/heute');
+    expect(url('javascript:alert(1)')).toBe('#/heute');
+    expect(url('/ansatz')).toBe('#/heute');
+    expect(url(undefined)).toBe('#/heute');
+  });
+});
