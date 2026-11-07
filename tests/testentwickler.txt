@@ -261,3 +261,11 @@ tests/unit/verteilung-fixture.ts
 supabase/functions/push-taeglich/verteilung_test.ts
 tests/unit/push-verteilung.test.ts
 supabase/tests/database/19_termintreue.test.sql
+# I2-04 Passungs-Empfehlung (#36)
+tests/fixtures/passung.ts
+tests/unit/zielbereich-passung.test.ts
+tests/unit/phasen-prognose.test.ts
+tests/unit/passung.test.ts
+tests/unit/passung-kontext.test.ts
+tests/unit/saeen-passung.test.ts
+tests/e2e/saeen-passung.spec.ts
