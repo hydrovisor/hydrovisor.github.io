@@ -10,7 +10,7 @@
 // - Schritt 2: Zielgefässe als Buttons, deren Name mit der Kennung beginnt («2.3 …»); Sortenleiste mit Buttons, deren
 //   Name den Sortennamen enthält und nicht mit «Loch» beginnt; Deckel mit «Reihe n wählen» und «Loch n, …»;
 //   «Ziel später»; «Weiter». Die zuerst gewählte Sorte ist aktiv; Reihe n gibt der aktiven Sorte die freien
-//   Löcher der Reihe (D2 spaltenweise: Reihe 1 = Loch 1 und 4, Reihe 3 = Loch 3 und 6).
+//   Löcher der Reihe (D2 «3, 3» spaltenweise, #136: Reihe 1 = Loch 1, 3, 5, Reihe 2 = Loch 2, 4, 6).
 // - Schritt 3: «Säen speichern» (Button), Stationsvorschau «Station am TT.MM.: frei x von 32 (5 cm), y von 8 (8 cm)»,
 //   Warnung «Zu wenig Platz auf der Station am …» ohne Sperre.
 // - Nach dem Speichern: «Gespeichert: 2 Sätze, m Schwämme» bzw. «Gespeichert: 1 Satz, m Schwämme» und
@@ -72,7 +72,6 @@ const zielgefaess = (page: Page, kennung: string) =>
   page.getByRole('button', { name: new RegExp(`^${kennung.replace('.', '\\.')}(?![.\\d])`) }).first();
 const knopf = (page: Page, name: string) => page.getByRole('button', { name, exact: true });
 const reihe = (page: Page, n: number) => page.getByRole('button', { name: `Reihe ${n} wählen` });
-const loch = (page: Page, n: number) => page.getByRole('button', { name: new RegExp(`^Loch ${n},`) });
 
 async function ohneTastatur(page: Page): Promise<void> {
   await expect(page.locator('main[data-density="regal"]')).toBeVisible();
@@ -105,10 +104,8 @@ test('UC5-AK1 6 Zieltöpfe in 2.3 mit 2 Sorten, Anzucht in A1, in höchstens 14 
   await expect(page.getByRole('button', { name: /^Loch \d+,/ })).toHaveCount(6);
   await tipp(m, sortenleiste(page, 'Lollo Rossa'));
   await tipp(m, reihe(page, 1));
-  await tipp(m, loch(page, 2));
   await tipp(m, sortenleiste(page, 'Eichblatt'));
-  await tipp(m, reihe(page, 3));
-  await tipp(m, loch(page, 5));
+  await tipp(m, reihe(page, 2));
   // Zustand im Namen, nie nur Farbe
   await expect(page.getByRole('button', { name: /^Loch \d+, gewählt für / })).toHaveCount(6);
   await tipp(m, knopf(page, 'Weiter'));
@@ -131,7 +128,7 @@ test('UC5-AK1 6 Zieltöpfe in 2.3 mit 2 Sorten, Anzucht in A1, in höchstens 14 
   expect(pflanzungen.length).toBe(vorgaenge[0]?.['anzahl_pflanzungen']);
   expect(pflanzungen.length).toBe(saetze.reduce((n, s) => n + Number(s['anzahl_schwaemme']), 0));
 
-  // je Sorte drei Töpfe: Lollo Rossa 1, 4 (Reihe 1) und 2; Eichblatt 3, 6 (Reihe 3) und 5
+  // je Sorte drei Töpfe (D2 «3, 3», #136): Lollo Rossa 1, 3, 5 (Reihe 1); Eichblatt 2, 4, 6 (Reihe 2)
   const satzVon = (pflanzungId: unknown) => pflanzungen.find((p) => p['id'] === pflanzungId)?.['satz_id'];
   const sorteVon = (satzId: unknown) => saetze.find((s) => s['id'] === satzId)?.['sorte_id'];
   const toepfeVon = (sorte: string) =>
@@ -139,8 +136,8 @@ test('UC5-AK1 6 Zieltöpfe in 2.3 mit 2 Sorten, Anzucht in A1, in höchstens 14 
       .filter((r) => sorteVon(satzVon(r['pflanzung_id'])) === sorte)
       .map((r) => r['netztopf_id'])
       .sort();
-  expect(toepfeVon(SORTE.lollo)).toEqual(['2.3.1', '2.3.2', '2.3.4'].map((k) => netztopfId(k)).sort());
-  expect(toepfeVon(SORTE.eichblatt)).toEqual(['2.3.3', '2.3.5', '2.3.6'].map((k) => netztopfId(k)).sort());
+  expect(toepfeVon(SORTE.lollo)).toEqual(['2.3.1', '2.3.3', '2.3.5'].map((k) => netztopfId(k)).sort());
+  expect(toepfeVon(SORTE.eichblatt)).toEqual(['2.3.2', '2.3.4', '2.3.6'].map((k) => netztopfId(k)).sort());
 });
 
 test('R6.1 Stationsvorschau und Warnung ohne Sperre, Speichern bleibt möglich', async ({ page }) => {
@@ -166,7 +163,7 @@ test('R6.1 Stationsvorschau und Warnung ohne Sperre, Speichern bleibt möglich',
   await expect(knopf(page, 'Säen speichern')).toBeEnabled();
   await tipp(m, knopf(page, 'Säen speichern'));
   await expect(page.getByText(/Gespeichert: 1 Satz/)).toBeVisible();
-  await expect.poll(() => zeilenVon(m, 'reservierung').length).toBe(2);
+  await expect.poll(() => zeilenVon(m, 'reservierung').length).toBe(3); // Reihe 1 von D2 «3, 3» (#136)
   expect(zeilenVon(m, 'pflanzvorgang')).toHaveLength(1);
 });
 
@@ -194,7 +191,7 @@ test('UC5 Rückgängig sendet Storno für alle Zeilen', async ({ page }) => {
   await tipp(m, knopf(page, 'Weiter'));
   await tipp(m, knopf(page, 'Säen speichern'));
   await expect(page.getByText(/Gespeichert: 1 Satz/)).toBeVisible();
-  await expect.poll(() => zeilenVon(m, 'reservierung').length).toBe(2);
+  await expect.poll(() => zeilenVon(m, 'reservierung').length).toBe(3); // Reihe 1 von D2 «3, 3» (#136)
   const geschrieben = m.geschrieben.map(([t, z]) => `${t}:${String(z['client_id'])}`).sort();
   await tipp(m, knopf(page, 'Rückgängig machen'));
   await expect.poll(() => m.storniert.length).toBe(geschrieben.length);
@@ -264,7 +261,7 @@ test('TO8 Säen ohne Netz: «nicht gespeichert», Schritt 3 mit Eingaben bleibt,
   ohneNetz = false;
   await tipp(m, knopf(page, 'Säen speichern'));
   await expect(page.getByText(/Gespeichert: 1 Satz/)).toBeVisible();
-  await expect.poll(() => zeilenVon(m, 'reservierung').length).toBe(2);
+  await expect.poll(() => zeilenVon(m, 'reservierung').length).toBe(3); // Reihe 1 von D2 «3, 3» (#136)
   expect(zeilenVon(m, 'pflanzvorgang')).toHaveLength(1);
   expect(zeilenVon(m, 'satz')).toHaveLength(1);
   const ids = m.geschrieben.map(([t, z]) => `${t}:${String(z['client_id'])}`);
