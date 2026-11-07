@@ -3,7 +3,7 @@
 //
 // Fest im Konzept: Name, Plätze, Lochzahl und Topfgrösse (5.3 Tabelle, 5.4), dazu die Reihen von D6 («2, 2, 2») und S5
 // («1, 2, 1, 2, 1, 2, 1, 2, 1»). Die Reihen von D1 «2, 2», D2 «3, 3», D3 «4, 4», D4 «1, 1» und S8 «1, 1, 1, 1» stehen im
-// 3D-Modell V12.11 (Lochmitten der Deckel); Tim hat sie am 7.11.2026 bestätigt (#136). Darum ist `reihenAngenommen` bei
+// 3D-Modell V12.11 (Lochmitten der Deckel; das Konzept beruht auf V12.10); Tim hat sie am 7.11.2026 bestätigt (#136). Darum ist `reihenAngenommen` bei
 // allen Typen false, und das Formular zeigt keinen Annahme-Hinweis. S8 «4 Löcher 8 cm in einer Reihe»: Die Wanne Leni
 // Flori 36 steht längs in der Regaltiefe und ist 13.5 cm breit (5.3); die Reihe läuft also von vorne nach hinten, als
 // «Löcher je Reihe» 1, 1, 1, 1 wie die Reihen von S5 (Prüfer #125 Befund 1). Service-Öffnung: «Jedes Gefäss hat vorne

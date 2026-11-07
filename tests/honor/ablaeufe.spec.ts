@@ -79,10 +79,12 @@ test('03 Säen mit zwei Sorten im Malmodus (wie saeen.spec.ts)', async ({ page, 
   await sim.tippe(page.getByRole('button', { name: /^2\.3(?![.\d])/ }).first(), 'Zielgefäss 2.3');
   await sim.zeige('Malmodus: Sorte in der Leiste wählen, dann Reihen oder Löcher antippen');
   await sim.tippe(page.getByRole('button', { name: /^(?!Loch ).*Lollo Rossa/ }).first(), 'Lollo Rossa malen');
-  // D2 «3, 3» spaltenweise (#136): Reihe 1 = Loch 1, 3, 5; Reihe 2 = Loch 2, 4, 6
+  // D2 «3, 3» spaltenweise (#136): Reihe 1 = Loch 1, 3, 5 für Lollo Rossa, Eichblatt einzeln in Loch 2, 4, 6
   await sim.tippe(page.getByRole('button', { name: 'Reihe 1 wählen' }), 'Reihe 1');
   await sim.tippe(page.getByRole('button', { name: /^(?!Loch ).*Eichblatt/ }).first(), 'Eichblatt malen');
-  await sim.tippe(page.getByRole('button', { name: 'Reihe 2 wählen' }), 'Reihe 2');
+  await sim.tippe(loch(page, 2), 'Loch 2');
+  await sim.tippe(loch(page, 4), 'Loch 4');
+  await sim.tippe(loch(page, 6), 'Loch 6');
   await sim.regeln('Säen Schritt 2 (Deckel)');
   await sim.tippe(knopf(page, 'Weiter'), 'Weiter');
   await expect(page.getByText('Schritt 3 von 3')).toBeVisible();
