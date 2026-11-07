@@ -1814,6 +1814,14 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"v_push_zustellung": {
+                  Row: {
+                    "am_faelligkeitstag": number | null,"angezeigt_am": string | null,"aufgaben": number | null,"datum_lokal": string | null,"email_gesendet_am": string | null,"gesendet_am": string | null,"soll": string | null,"verspaetung_min": number | null
+                  }
+                  ComputedFields: never
+                  Relationships: [
+                    
+                  ]
                 },"v_rechnerguete": {
                   Row: {
                     "ansaetze": number | null,"k_vorschlaege": number | null,"mittel_abweichung": number | null,"skaliert": boolean | null,"stadium": Database["public"]['Enums']["stadium"] | null
@@ -2013,6 +2021,9 @@ isOneToOne: false
                            },
 "push_cron_pruefen":
 { Args: { "geheimnis": string }; Returns: boolean
+                           },
+"push_timer_ausloesen":
+{ Args: Record<PropertyKey, never>; Returns: number
                            },
 "topf_neu_beschriften":
 { Args: { "a": string,"b": string }; Returns: undefined

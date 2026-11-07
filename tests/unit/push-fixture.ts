@@ -3,6 +3,8 @@
 // Darum reines TypeScript ohne vitest-, node:- oder Deno-Abhängigkeit. Zeilen in der Form von PostgREST
 // (snake_case), wie sie das Bündel und PushDaten.teile() liefern. Keine Personendaten (CLAUDE.md Regel 6).
 // Anlage R ist echt, Anlage D ist demo; feste Kalibriertermine leer, damit nur «letzte + 30 Tage» gilt.
+// I1b-06 (Plan 31 Testliste): Die Push rechnet mit faelligeAufgaben(); darum liefert teileFuer() jeden Teil aus
+// AUFGABEN_TEILE (fehlende als leere Liste), sonst meldet fehlendeTeile() Lücken. Die übrigen Zeilen bleiben unverändert.
 
 export const ZONE = 'Europe/Zurich';
 export const MESSGERAET_ID = '00000000-0000-4000-8000-00000000a001';
@@ -110,6 +112,22 @@ export function teileFuer(vorgabe: TeileVorgabe): Record<string, unknown[]> {
     messgeraet: vorgabe.ohneMessgeraet ? [] : [{ id: MESSGERAET_ID, u_ec: '0.100', u_ph: '0.10' }],
     kalibrierung,
     ereignis: [],
+    // I1b-06: übrige Teile aus AUFGABEN_TEILE, leer (Plan 31 «Anpassung geschützter Tests»)
+    anzuchtort: [],
+    netztopf: [],
+    v_nachfuellsumme: [],
+    sorte: [],
+    art: [],
+    v_sollwert: [],
+    satz: [],
+    pflanzung: [],
+    v_pflanzung_zustand: [],
+    v_reservierung_aktiv: [],
+    reservierung: [],
+    ereignis_pflanzung: [],
+    naehrloesungsansatz: [],
+    aufschub: [],
+    ereignis_platz: [],
     einstellung: [
       {
         id: '00000000-0000-4000-8000-00000000f001',
@@ -124,6 +142,9 @@ export function teileFuer(vorgabe: TeileVorgabe): Record<string, unknown[]> {
 /**
  * Stichtag 20.1.2027 (Mittwoch, Winterzeit): Kalibrierung vor 30 Tagen (fällig), R-2.3 und R-3.1 fällig,
  * R-4.1 nicht fällig, R-5.1 leer, R-W Messstelle; dazu Demo-Anlage D mit fälligem D-2.3.
+ * Mit faelligeAufgaben() (I1b-06) ergibt das 7 echte Aufgaben, alle Routine: Messgerät kalibrieren, pH-Kontrolle
+ * (Kalibrierung + 7 Tage), Messen und nachfüllen R-2.3 und R-3.1, Kurzprüfung R-2.3, R-3.1 und R-4.1 (der Name
+ * TEILE_DREI_ROUTINE bleibt für die bestehenden Importe).
  */
 export const STICHTAG = new Date('2027-01-20T06:00:00.000Z');
 export const TEILE_DREI_ROUTINE = teileFuer({

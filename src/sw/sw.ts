@@ -53,7 +53,10 @@ self.addEventListener('push', (ereignis) => {
 
 self.addEventListener('notificationclick', (ereignis) => {
   ereignis.notification.close();
-  const daten = ereignis.notification.data as { versand_id: string; signatur: string } | undefined;
+  const daten = ereignis.notification.data as
+    { versand_id: string; signatur: string; url?: string } | undefined;
+  // Ziel aus der Nutzlast (benachrichtigungAus lässt nur #/… zu), sonst Heute (Plan 31 Schritt 8)
+  const ziel = `${START_PFAD.replace(/#.*$/, '')}${daten?.url?.startsWith('#/') ? daten.url : '#/heute'}`;
   ereignis.waitUntil(
     (async () => {
       await (daten ? quittieren(daten, 'geoeffnet') : Promise.resolve());
@@ -61,9 +64,9 @@ self.addEventListener('notificationclick', (ereignis) => {
       const offen = fenster.find((f) => new URL(f.url).origin === self.location.origin);
       if (offen) {
         await offen.focus();
-        await offen.navigate(new URL(START_PFAD, self.location.origin).href).catch(() => undefined);
+        await offen.navigate(new URL(ziel, self.location.origin).href).catch(() => undefined);
       } else {
-        await self.clients.openWindow(START_PFAD);
+        await self.clients.openWindow(ziel);
       }
     })(),
   );
