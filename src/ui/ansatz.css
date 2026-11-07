@@ -27,7 +27,7 @@
   gap: var(--space-2);
 }
 
-/* Zeile 4 gesperrt: was oben fehlt und «Nach oben» (#123) */
+/* Zeile 4 gesperrt: was oben fehlt und «Nach oben springen» (#123) */
 .hv-ansatz-sperre {
   display: flex;
   flex-wrap: wrap;

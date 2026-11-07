@@ -825,7 +825,7 @@ function Abhakliste({ ort, teile: teileBuendel }: { ort: Ort; teile: Teile }) {
           size="compact"
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
         >
-          Nach oben
+          Nach oben springen
         </Button>
       </span>
     ) : doppelt?.hinweis === true ? (
