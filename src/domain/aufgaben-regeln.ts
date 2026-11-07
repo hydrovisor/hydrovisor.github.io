@@ -157,7 +157,7 @@ function neu(
   wo: { anlageId: string; datenart: Rohaufgabe['datenart']; ort?: AufgabenOrt },
   titel: string,
   extra: Partial<
-    Pick<Rohaufgabe, 'gewicht' | 'hinweis' | 'morgenBis' | 'ohneUeberspringen' | 'vorziehbar' | 'ohneMorgen'>
+    Pick<Rohaufgabe, 'gewicht' | 'hinweis' | 'morgenBis' | 'ohneUeberspringen' | 'vorziehbar'>
   > = {},
 ): Rohaufgabe {
   const gewicht: Gewicht = extra.gewicht ?? 'routine';
@@ -484,9 +484,18 @@ export function ortAufgaben(k: Regelkontext, lage: OrtLage): Rohaufgabe[] {
   if (!station || !wechsel) return liste;
   const abstand = tageZwischen(station.faelligAm, wechsel.faelligAm);
   if (abstand < 0 || abstand > 3) return liste;
+  // vorgezogen nie vor den Stationstag (R5.6, R4.3; Plan 113 Nachtrag 10)
   return liste
     .filter((a) => a !== station)
-    .map((a) => (a === wechsel ? { ...a, hinweis: 'mit 1. echte Blätter' } : a));
+    .map((a) =>
+      a === wechsel
+        ? {
+            ...a,
+            hinweis: 'mit 1. echte Blätter',
+            ...(a.vorziehbar ? { fruehestens: station.faelligAm } : {}),
+          }
+        : a,
+    );
 }
 
 // ---------------------------------------------------------------- Satz- und Geräteregeln
@@ -566,7 +575,7 @@ export function geraeteregeln(k: Regelkontext): Rohaufgabe[] {
     const stand = kalibrierStand(daten, { messgeraetId: g.id, datenart: 'echt' }, k.stichtag, k.zeitzone);
     aufgaben.push(
       stand.art === 'erstkalibrierung'
-        ? neu('kalibrieren', g.id, 'messgeraet', k.heute, wo, 'Erstkalibrierung', { ohneMorgen: true })
+        ? neu('kalibrieren', g.id, 'messgeraet', k.heute, wo, 'Erstkalibrierung')
         : neu('kalibrieren', g.id, 'messgeraet', stand.faelligAm, wo, 'Messgerät kalibrieren'),
     );
     const kontrollen = zeilen<MessungZeile>(k.teile, 'messung')

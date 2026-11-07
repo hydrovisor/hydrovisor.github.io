@@ -8,8 +8,15 @@ import { plaetzeAus, anlagenAus, ms, zeilen, type Teile } from './anlage/teile.t
 import { alleAufgaben, type Aufgabe, type AufgabenArt, type AufgabenEinstellungen } from './aufgaben.ts';
 import { kalendertag, tageZwischen, tagPlus, type Zeitzone } from './zeit.ts';
 
-/** Ansatz-Aufgaben im Sinn von R5.6: Wechsel, Erstansätze und Direktsaat-Ansätze */
-export const ANSATZ_TYPEN: ReadonlySet<AufgabenArt> = new Set<AufgabenArt>(['loesung_wechseln', 'ansatz']);
+/**
+ * Ansatz-Aufgaben im Sinn von R5.6: Wechsel, Erstansätze und Direktsaat-Ansätze sowie «Station auf 1. echte Blätter»,
+ * die ein Neuansatz erledigt (Konzept R5.2, R4.3; nicht vorziehbar, Plan 113 Nachtrag 11)
+ */
+export const ANSATZ_TYPEN: ReadonlySet<AufgabenArt> = new Set<AufgabenArt>([
+  'loesung_wechseln',
+  'ansatz',
+  'station_echte_blaetter',
+]);
 export const MAX_ANSAETZE_JE_TAG = 3;
 
 /** Rang beim Vorziehen: zuerst planmässige Wechsel, dann Ansätze für Umsetzen (R5.6) */
@@ -84,7 +91,7 @@ export function verteilen(
       for (const e of kandidaten) {
         if (last(d) <= MAX_ANSAETZE_JE_TAG) break;
         const ziel = [tagPlus(d, -1), tagPlus(d, -2)].find(
-          (t) => t >= heute && last(t) < MAX_ANSAETZE_JE_TAG,
+          (t) => t >= heute && t >= (e.a.fruehestens ?? heute) && last(t) < MAX_ANSAETZE_JE_TAG,
         );
         if (ziel !== undefined) e.tag = ziel;
       }

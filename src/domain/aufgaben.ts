@@ -75,8 +75,8 @@ export interface Rohaufgabe {
   ohneUeberspringen?: boolean;
   /** R5.6: darf 1 bis 2 Tage vorgezogen werden (Wechsel nach Intervall, Ansatz für Umsetzen; Plan 113) */
   vorziehbar?: true;
-  /** kein «Morgen» (Erstkalibrierung mit täglich neuem Schlüssel, Befund 12 aus #27; Plan 113) */
-  ohneMorgen?: true;
+  /** R5.6: frühester Tag beim Vorziehen (Wechsel mit «mit 1. echte Blätter»: Stationstag; Plan 113 Nachtrag 10) */
+  fruehestens?: string;
 }
 
 export interface Aufgabe {
@@ -106,6 +106,8 @@ export interface Aufgabe {
   hinweis?: string;
   /** R5.6: darf 1 bis 2 Tage vorgezogen werden (Plan 113) */
   vorziehbar?: true;
+  /** R5.6: frühester Tag beim Vorziehen (Plan 113 Nachtrag 10) */
+  fruehestens?: string;
 }
 
 export interface AufgabenEinstellungen {
@@ -166,7 +168,7 @@ function anzahlText(n: number, was: string): string {
 }
 
 function mitAufschub(roh: Rohaufgabe, aufschuebe: readonly AufschubZeile[], heute: string): Aufgabe {
-  const { morgenBis, ohneUeberspringen, ohneMorgen, ...rest } = roh;
+  const { morgenBis, ohneUeberspringen, ...rest } = roh;
   const anzahl = verschoben(roh, aufschuebe);
   const ueber = Math.max(0, tageZwischen(roh.faelligAm, heute));
   const grund =
@@ -183,7 +185,7 @@ function mitAufschub(roh: Rohaufgabe, aufschuebe: readonly AufschubZeile[], heut
     tageUeberfaellig: ueber,
     grund,
     morgen: {
-      erlaubt: ohneMorgen !== true && morgenErlaubt(roh, morgenBis, aufschuebe, heute),
+      erlaubt: morgenErlaubt(roh, morgenBis, aufschuebe, heute),
       verschoben: anzahl,
       ...(anzahl >= 2 ? { hinweis: 'intervall_anpassen' as const } : {}),
     },

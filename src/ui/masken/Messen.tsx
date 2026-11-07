@@ -115,6 +115,8 @@ export interface Ablaufmodus {
    */
   korrektur?: {
     messungId: string;
+    /** gilt_ab der Rundgang-Messung für «Gespeichert hh:mm» und «unsicher» (Prüfer Runde 1 Befund 6) */
+    giltAb: string;
     /** Hundertstel (G3) */
     werte: Partial<Record<Groesse, number>>;
     onWeiter: () => void;
@@ -492,9 +494,15 @@ export function Messmaske({ ort, modus }: { ort: Ort; modus: Ablaufmodus }) {
     if (modus.korrektur && !gespeichert) {
       const schlecht = schlechteste(auswertung?.bewertungen ?? {});
       setGespeichert({
-        zeit: uhrzeit(t, ZEITZONE),
+        zeit: uhrzeit(new Date(modus.korrektur.giltAb), ZEITZONE),
         clientId: modus.korrektur.messungId,
-        unsicher,
+        unsicher: geraet
+          ? istUnsicher(
+              { messgeraetId: geraet.id, datenart: ort.datenart, giltAb: new Date(modus.korrektur.giltAb) },
+              daten,
+              ZEITZONE,
+            )
+          : true,
         ...(schlecht ? { bewertung: schlecht } : {}),
       });
     }

@@ -95,6 +95,7 @@ export function Rundgang({ kuerzel }: { kuerzel: string }) {
   const [korrektur, setKorrektur] = useState<{
     code: string;
     messungId: string;
+    giltAb: string;
     werte: Partial<Record<Groesse, number>>;
   }>();
   const sperre = useRef(false);
@@ -188,6 +189,7 @@ export function Rundgang({ kuerzel }: { kuerzel: string }) {
           modus={{
             korrektur: {
               messungId: korrektur.messungId,
+              giltAb: korrektur.giltAb,
               werte: korrektur.werte,
               onWeiter: () => setKorrektur(undefined),
             },
@@ -403,10 +405,17 @@ export function Rundgang({ kuerzel }: { kuerzel: string }) {
             variant="secondary"
             block
             onClick={() => {
+              // beim Halt ist letzteAktionAm das gilt_ab der Messung (nachMessung)
+              const giltAb = stand.letzteAktionAm;
               weiter(amEnde(stand, uhrJetzt()));
               // pH über dem Ziel: direkt ins Angebot «pH-Minus gegeben» ohne neue Messung (Plan 113, Rundgang-AK3)
               if (korrigieren?.knopf.route === 'messen' && ergebnis?.messungId && ergebnis.werte)
-                setKorrektur({ code: rOrt.code, messungId: ergebnis.messungId, werte: ergebnis.werte });
+                setKorrektur({
+                  code: rOrt.code,
+                  messungId: ergebnis.messungId,
+                  giltAb,
+                  werte: ergebnis.werte,
+                });
               else
                 oeffnen(
                   korrigieren?.knopf.route === 'messen'
