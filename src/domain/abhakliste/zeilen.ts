@@ -213,3 +213,14 @@ export function zeilenAus(
     },
   ];
 }
+
+/**
+ * Warum Zeile 4 «Gerechnet für» gesperrt ist (#123): Im Gleichstand wählt Tim zuerst die Leitkultur (R2.3), ohne
+ * Zielbereich gibt er Ziel-EC und Stadium von Hand ein (RF7). Beide Karten stehen über der Liste; die Zeile nennt deshalb,
+ * was oben fehlt. undefined, wenn Zeile 4 abgehakt werden darf.
+ */
+export function zeile4Sperre(leitkulturArt: string, hatRechnung: boolean): string | undefined {
+  if (leitkulturArt === 'wahl_noetig') return 'Zuerst oben die Leitkultur wählen';
+  if (!hatRechnung) return 'Zuerst oben Ziel-EC eingeben';
+  return undefined;
+}

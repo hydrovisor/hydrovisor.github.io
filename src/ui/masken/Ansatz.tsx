@@ -4,7 +4,7 @@
 // bleibt in `ausstehend` und geht beim nächsten Tipp, beim Öffnen und beim Sichtbarwerden mit derselben client_id
 // erneut hinaus (TO2, Prüferbefunde 1 und 2). Gesendet wird immer nur ein Paket zugleich; danach fällt genau dieses
 // Paket aus `ausstehend`, später angehängte Vorgänge bleiben und gehen gleich hinterher.
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { ablaufLesen, ablaufLoeschen, ablaufSchreiben, type AblaufEintrag } from '../../ablauf/speicher.ts';
 import { timerSignal, useWachhalten } from '../../ablauf/wachhalten.ts';
 import { neueClientId, schreiben } from '../../daten/schreiben.ts';
@@ -36,7 +36,7 @@ import {
   leitkulturGewaehltVorgang,
   schrittVorgang,
 } from '../../domain/abhakliste/vorgaenge.ts';
-import { zeilenAus, ZUGABEN } from '../../domain/abhakliste/zeilen.ts';
+import { zeile4Sperre, zeilenAus, ZUGABEN } from '../../domain/abhakliste/zeilen.ts';
 import type { AnsatzZeile } from '../../domain/bewertung/verlauf.ts';
 import type { Schritt } from '../../domain/datenpfad/erfassung.ts';
 import { pruefschritt4Vorgang, volumenVorschlag } from '../../domain/etikett/pruefung.ts';
@@ -813,10 +813,26 @@ function Abhakliste({ ort, teile: teileBuendel }: { ort: Ort; teile: Teile }) {
       ) : undefined;
     // R4.8 in Zeile 15: «möglicherweise doppelt dosiert» und das Angebot Teilwechsel
     const doppelt = d.nr === 15 ? folgeKontrolle?.doppelt : undefined;
-    const hinweis =
-      doppelt?.hinweis === true
-        ? `Möglicherweise doppelt dosiert${doppelt.angebot?.art === 'absaugen' ? `: ${doppelt.angebot.text}` : ''}`
-        : d.hinweis;
+    // Zeile 4 gesperrt: sagen, was oben fehlt, weil die Liste zur aktiven Zeile scrollt und die Karten über ihr am
+    // Honor nicht zu sehen sind (#123)
+    const sperre4 =
+      istAktiv && d.nr === 4 ? zeile4Sperre(eingaben.leitkultur.art, rechnung !== undefined) : undefined;
+    const hinweis: ReactNode = sperre4 ? (
+      <span className="hv-ansatz-sperre">
+        {sperre4}
+        <Button
+          variant="secondary"
+          size="compact"
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        >
+          Nach oben
+        </Button>
+      </span>
+    ) : doppelt?.hinweis === true ? (
+      `Möglicherweise doppelt dosiert${doppelt.angebot?.art === 'absaugen' ? `: ${doppelt.angebot.text}` : ''}`
+    ) : (
+      d.hinweis
+    );
     const menge = z?.istMl !== undefined && z.istMl !== d.sollMl ? `Ist ${mlText(z.istMl)}` : undefined;
     return {
       nr: d.nr,
@@ -828,9 +844,8 @@ function Abhakliste({ ort, teile: teileBuendel }: { ort: Ort; teile: Teile }) {
       ...(hinweis ? { hinweis } : {}),
       ...(zustand === 'erledigt' ? { abwaehlbar: abwaehlbar(aktuell, d.nr) } : {}),
       ...(istAktiv && messzeile && !z?.messungId ? { gesperrt: true } : {}),
-      ...(istAktiv && d.nr === 4 && !rechnung ? { gesperrt: true } : {}),
-      // R2.3: im Gleichstand wählt Tim die Leitkultur vor dem Kopf (Runde 1 Befund 7)
-      ...(istAktiv && d.nr === 4 && eingaben.leitkultur.art === 'wahl_noetig' ? { gesperrt: true } : {}),
+      // R2.3 Gleichstand (Runde 1 Befund 7) und RF7 ohne Rechnung: Zeile 4 gesperrt, der Hinweis nennt den Grund
+      ...(sperre4 ? { gesperrt: true } : {}),
     };
   });
   const hinweise = [...wasserHinweise, ...(rechnung?.hinweise ?? [])].map((h) => h.text);

@@ -27,6 +27,14 @@
   gap: var(--space-2);
 }
 
+/* Zeile 4 gesperrt: was oben fehlt und «Nach oben» (#123) */
+.hv-ansatz-sperre {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
 /* Heute: laufende Abläufe oben (Plan 29) */
 .hv-ablaeufe {
   list-style: none;
