@@ -12,6 +12,7 @@ function tag(datum: string, teil: Partial<ZustellungTag> = {}): ZustellungTag {
     email_gesendet_am: null,
     aufgaben: 4,
     am_faelligkeitstag: 3,
+    vor_faelligkeitstag: 0,
     ...teil,
   };
 }
@@ -20,6 +21,33 @@ describe('Zustellung (EK5)', () => {
   it('EK5 Anteil zählt am_faelligkeitstag nur an Tagen mit angezeigter Push, Nenner alle Aufgaben', () => {
     const tage = [tag('2027-01-08'), tag('2027-01-09', { angezeigt_am: null }), tag('2027-01-10')];
     expect(ek5Anteil(tage)).toEqual({ anteil: 6 / 12, zaehler: 6, nenner: 12 });
+  });
+
+  it('R5.6-AK11 EK5 zählt vorgezogene Zeilen als rechtzeitig, nur mit angezeigter Push (Plan 118 A4)', () => {
+    // 4 Aufgaben, 3 am Fälligkeitstag, 1 nach R5.6 vorgezogen: 100 %, nicht 75 %
+    const angezeigt = tag('2027-01-13', { aufgaben: 4, am_faelligkeitstag: 3, vor_faelligkeitstag: 1 });
+    expect(ek5Anteil([angezeigt])).toEqual({ anteil: 1, zaehler: 4, nenner: 4 });
+    const nicht = tag('2027-01-14', {
+      aufgaben: 4,
+      am_faelligkeitstag: 3,
+      vor_faelligkeitstag: 1,
+      angezeigt_am: null,
+    });
+    expect(ek5Anteil([angezeigt, nicht])).toEqual({ anteil: 4 / 8, zaehler: 4, nenner: 8 });
+    // überfällige Zeile (weder am noch vor dem Fälligkeitstag) bleibt im Nenner ohne Zähler
+    expect(
+      ek5Anteil([tag('2027-01-15', { aufgaben: 3, am_faelligkeitstag: 1, vor_faelligkeitstag: 1 })]),
+    ).toEqual({
+      anteil: 2 / 3,
+      zaehler: 2,
+      nenner: 3,
+    });
+    // ältere Antwort ohne Spalte (null) zählt wie 0
+    expect(ek5Anteil([tag('2027-01-16', { vor_faelligkeitstag: null })])).toEqual({
+      anteil: 3 / 4,
+      zaehler: 3,
+      nenner: 4,
+    });
   });
 
   it('EK5 ohne Aufgaben kein Anteil', () => {
