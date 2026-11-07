@@ -10,17 +10,18 @@ if (!existsSync('dist/index.html')) throw new Error('dist fehlt: zuerst npm run 
 const schnell = process.env['SIM_SCHNELL'] === '1';
 
 export default defineConfig({
+  // Ausgabe ausserhalb von reports/: die AK-Abdeckung liest reports/ und darf die Simulation nie als Beleg zählen
   testDir: 'tests/honor',
   workers: 1,
   fullyParallel: false,
   forbidOnly: true,
   retries: 0,
   timeout: 4 * 60_000,
-  outputDir: 'reports/honor/ergebnisse',
+  outputDir: 'reports-honor/ergebnisse',
   reporter: [
     ['list'],
-    ['html', { outputFolder: 'reports/honor/bericht', open: 'never' }],
-    ['json', { outputFile: 'reports/honor/ergebnis.json' }],
+    ['html', { outputFolder: 'reports-honor/bericht', open: 'never' }],
+    ['json', { outputFile: 'reports-honor/ergebnis.json' }],
   ],
   use: {
     // Honor Magic5 Pro in Chrome (A): 360 × 780 dp wie CLAUDE.md «Oberfläche», Pixeldichte 3.5, Touch, Android-Kennung

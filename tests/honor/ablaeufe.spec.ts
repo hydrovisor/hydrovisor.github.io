@@ -34,7 +34,7 @@ const knopfMit = (ort: Page | Locator, name: RegExp) =>
 const loch = (page: Page, n: number) => page.getByRole('button', { name: new RegExp(`^Loch ${n},`) });
 const ueberschrift = (page: Page, name: string | RegExp) => page.getByRole('heading', { name, level: 1 });
 
-test('01 Heute nach dem Öffnen (UC8, Startzeit wie #112)', async ({ page, sim }) => {
+test('01 Heute nach dem Öffnen (Startzeit, Vorprobe zu Issue 112)', async ({ page, sim }) => {
   await sim.start(rundgangTeile({ orte: ['1.1', '2.1'] }), '/#/heute', RUNDGANG_JETZT);
   await expect(ueberschrift(page, 'Heute')).toBeVisible({ timeout: 15_000 });
   await sim.zeige('Heute: Aufgaben des Tages als Ortskarten');
@@ -49,7 +49,7 @@ test('01 Heute nach dem Öffnen (UC8, Startzeit wie #112)', async ({ page, sim }
   );
 });
 
-test('02 Gefäss öffnen (UC1-AK3, höchstens 1 s)', async ({ page, sim }) => {
+test('02 Gefäss öffnen in höchstens 1 s (Vorprobe)', async ({ page, sim }) => {
   await sim.start(rundgangTeile({ orte: ['1.1', '2.1'] }), '/#/heute', RUNDGANG_JETZT);
   await expect(ueberschrift(page, 'Heute')).toBeVisible({ timeout: 15_000 });
   await sim.zeige('Von Heute zum Gefäss 1.1 (wie nach einem Scan)');
@@ -66,7 +66,7 @@ test('02 Gefäss öffnen (UC1-AK3, höchstens 1 s)', async ({ page, sim }) => {
   await sim.regeln('Gefäss 1.1');
 });
 
-test('03 Säen mit zwei Sorten im Malmodus (UC5-AK1, saeen.spec.ts)', async ({ page, sim }) => {
+test('03 Säen mit zwei Sorten im Malmodus (wie saeen.spec.ts)', async ({ page, sim }) => {
   const jetzt = new Date('2027-01-07T08:00:00Z');
   await sim.start(saatTeile(jetzt, { ohneSatzIn23: true }), '/#/saeen?box=R-A1', jetzt);
   await expect(ueberschrift(page, 'Säen')).toBeVisible();
@@ -121,7 +121,7 @@ function duplizierRegal(): Teile {
   return t;
 }
 
-test('04 Satz duplizieren in drei Berührungen (UC5, saeen-duplizieren.spec.ts)', async ({ page, sim }) => {
+test('04 Satz duplizieren in drei Berührungen (wie saeen-duplizieren.spec.ts)', async ({ page, sim }) => {
   await sim.start(duplizierRegal(), '/#/saeen', JETZT_W4);
   await expect(page.getByText('Schritt 1 von 3')).toBeVisible();
   await sim.zeige('Schritt 1: Abschnitt «Satz duplizieren» unter den Sorten');
@@ -134,7 +134,7 @@ test('04 Satz duplizieren in drei Berührungen (UC5, saeen-duplizieren.spec.ts)'
   await sim.foto('Duplizieren gespeichert');
 });
 
-test('05 Keimung prüfen von Heute aus (UC6, keimung.spec.ts)', async ({ page, sim }) => {
+test('05 Keimung prüfen von Heute aus (wie keimung.spec.ts)', async ({ page, sim }) => {
   await sim.start(keimTeile(), '/#/heute', KEIM_JETZT, {
     nachrechnen: (t) => pflanzSichtenNachrechnen(sichtenNachrechnen(t)),
   });
@@ -159,10 +159,7 @@ test('05 Keimung prüfen von Heute aus (UC6, keimung.spec.ts)', async ({ page, s
   await sim.foto('Keimung gespeichert');
 });
 
-test('06 Messmaske 2.3 mit Ergebniszone und Rückfrage (UC9-AK1, messen-maske.spec.ts)', async ({
-  page,
-  sim,
-}) => {
+test('06 Messmaske 2.3 mit Ergebniszone und Rückfrage (wie messen-maske.spec.ts)', async ({ page, sim }) => {
   await sim.start(messTeile(), '/#/messen/R-2.3', MESS_JETZT);
   await expect(page.getByRole('button', { name: /^EC( |$)/ })).toBeVisible({ timeout: 15_000 });
   await sim.zeige('Messmaske: pH, EC und °C über den Ziffernblock, ohne Komma');
@@ -183,7 +180,10 @@ test('06 Messmaske 2.3 mit Ergebniszone und Rückfrage (UC9-AK1, messen-maske.sp
   await sim.foto('Messung gespeichert');
 });
 
-test('07 Messmaske bei Systemschrift 130 % (Vorprobe #94)', async ({ page, sim }) => {
+test('07 Messmaske bei Systemschrift 130 % auf 780 und 640 dp (Vorprobe zu Issue 94)', async ({
+  page,
+  sim,
+}) => {
   await sim.start(messTeile(), '/#/messen/R-2.3', MESS_JETZT);
   await expect(page.getByRole('button', { name: /^EC( |$)/ })).toBeVisible({ timeout: 15_000 });
   await sim.schrift(1.3);
@@ -193,12 +193,13 @@ test('07 Messmaske bei Systemschrift 130 % (Vorprobe #94)', async ({ page, sim }
   await sim.ziffern('205', '°C 20.5');
   await expect(page.locator('.hv-ergebniszone')).toBeVisible();
   await sim.regeln('Messmaske 130 % Ergebnis', { ohneScrollen: true });
+  // kleinster Viewport der E2E (360 × 640) mit derselben Schrift
+  await page.setViewportSize({ width: 360, height: 640 });
+  await sim.zeige('Dasselbe auf 360 × 640 dp');
+  await sim.regeln('Messmaske 130 % auf 640 dp (Vorprobe)', { ohneScrollen: true, vorprobe: true });
 });
 
-test('08 Abhakliste Lösungswechsel: Zeilen abhaken (Loesungswechsel-AK1, abhakliste.spec.ts)', async ({
-  page,
-  sim,
-}) => {
+test('08 Abhakliste Lösungswechsel: Zeilen abhaken (wie abhakliste.spec.ts)', async ({ page, sim }) => {
   await sim.start(ansatzTeile(), '/#/ansatz/R-2.3', um('18:30'));
   await expect(page.locator('ol.hv-checklist li.hv-check-row')).toHaveCount(18, { timeout: 15_000 });
   await sim.zeige('Abhakliste 2.3: nur die nächste offene Zeile ist abhakbar');
@@ -217,7 +218,10 @@ test('08 Abhakliste Lösungswechsel: Zeilen abhaken (Loesungswechsel-AK1, abhakl
   await sim.foto('Abhakliste nach Zeile 2');
 });
 
-test('09 Abhakliste mit laufendem Timer (Loesungswechsel-AK2 bleibt am Honor)', async ({ page, sim }) => {
+test('09 Abhakliste mit laufendem Timer (Bildschirm an, Ton und Vibration bleiben am Honor)', async ({
+  page,
+  sim,
+}) => {
   await sim.start(laufenderWechsel(ansatzTeile(), 10), '/#/ansatz/R-2.3', um('18:48'));
   await expect(page.getByRole('timer').first()).toBeVisible({ timeout: 15_000 });
   await sim.zeige('Zeile 11 «15 min warten»: Restzeit, Haken bis zum Ablauf gesperrt');
@@ -225,7 +229,7 @@ test('09 Abhakliste mit laufendem Timer (Loesungswechsel-AK2 bleibt am Honor)', 
   await sim.zeige('Am Honor prüfen: Bildschirm bleibt an, Ton und Vibration am Ende (nicht simulierbar)');
 });
 
-test('10 Wie geplant umsetzen von Heute aus (umsetzen.spec.ts)', async ({ page, sim }) => {
+test('10 Wie geplant umsetzen von Heute aus (wie umsetzen.spec.ts)', async ({ page, sim }) => {
   await sim.start(umsetzTeile({ jetzt: UMSETZ_FAELLIG, reserve: false }), '/#/heute', UMSETZ_FAELLIG, {
     nachrechnen: (t) => umsetzSichtenNachrechnen(sichtenNachrechnen(t)),
   });
@@ -242,7 +246,7 @@ test('10 Wie geplant umsetzen von Heute aus (umsetzen.spec.ts)', async ({ page, 
   await sim.foto('Umgesetzt');
 });
 
-test('11 Topf verschieben im Deckel (UC6-AK3, verschieben.spec.ts)', async ({ page, sim }) => {
+test('11 Topf verschieben im Deckel (wie verschieben.spec.ts)', async ({ page, sim }) => {
   await sim.start(verschiebTeile(UMSETZ_JETZT), '/#/gefaess/R-2.3', UMSETZ_JETZT, {
     nachrechnen: (t) => umsetzSichtenNachrechnen(sichtenNachrechnen(t)),
   });
@@ -258,7 +262,7 @@ test('11 Topf verschieben im Deckel (UC6-AK3, verschieben.spec.ts)', async ({ pa
   await sim.foto('Getauscht');
 });
 
-test('12 Phasenkarte auf Heute und Pflanzenansicht (UC6-AK6, phasen.spec.ts)', async ({ page, sim }) => {
+test('12 Phasenkarte auf Heute und Pflanzenansicht (wie phasen.spec.ts)', async ({ page, sim }) => {
   const jetzt = new Date('2027-01-23T08:00:00Z');
   await sim.start(buendelTeile(jetzt, { ohneSpaete: true }), '/#/heute', jetzt, {
     nachrechnen: phasenNachrechnen,
@@ -286,10 +290,7 @@ test('12 Phasenkarte auf Heute und Pflanzenansicht (UC6-AK6, phasen.spec.ts)', a
   await sim.regeln('Pflanze');
 });
 
-test('13 Rundgang über zwei Orte bis zur Abschlussliste (Rundgang-AK1a, rundgang.spec.ts)', async ({
-  page,
-  sim,
-}) => {
+test('13 Rundgang über zwei Orte bis zur Abschlussliste (wie rundgang.spec.ts)', async ({ page, sim }) => {
   await sim.start(rundgangTeile({ orte: ['1.1', '2.1'] }), '/#/heute', RUNDGANG_JETZT);
   await expect(ueberschrift(page, 'Heute')).toBeVisible({ timeout: 15_000 });
   await sim.tippe(knopfMit(page, /^Rundgang starten \(2 Orte\)/), 'Rundgang starten (2 Orte)');
@@ -315,7 +316,7 @@ test('13 Rundgang über zwei Orte bis zur Abschlussliste (Rundgang-AK1a, rundgan
   await sim.regeln('Rundgang Abschluss');
 });
 
-test('14 Etiketten für 2.3 und Druckansicht (UC14, etikett-druck.spec.ts)', async ({ page, sim }) => {
+test('14 Etiketten für 2.3 und Druckansicht (wie etikett-druck.spec.ts)', async ({ page, sim }) => {
   const jetzt = new Date('2026-12-14T08:00:00Z');
   await sim.start(regalTeile(jetzt), '/#/etiketten?a=R', jetzt, { ohneDruckdialog: true });
   await expect(ueberschrift(page, 'Etiketten')).toBeVisible({ timeout: 15_000 });
@@ -332,7 +333,7 @@ test('14 Etiketten für 2.3 und Druckansicht (UC14, etikett-druck.spec.ts)', asy
   await sim.foto('Druckansicht');
 });
 
-test('15 Gefäss erfassen in vier Schritten (UC3-AK1, gefaess.spec.ts)', async ({ page, sim }) => {
+test('15 Gefäss erfassen in vier Schritten (wie gefaess.spec.ts)', async ({ page, sim }) => {
   await sim.start(leeresRegal(), '/#/gefaess-neu?a=R', new Date('2026-12-01T08:00:00Z'));
   await expect(ueberschrift(page, 'Gefäss erfassen')).toBeVisible({ timeout: 15_000 });
   const gruppe = (name: string) => page.getByRole('group', { name, exact: true });
@@ -353,7 +354,7 @@ test('15 Gefäss erfassen in vier Schritten (UC3-AK1, gefaess.spec.ts)', async (
   await sim.foto('Gefäss gespeichert');
 });
 
-test('16 Einstellungen und Notfallblatt (UC0, einstellungen.spec.ts)', async ({ page, sim }) => {
+test('16 Einstellungen und Notfallblatt (wie einstellungen.spec.ts)', async ({ page, sim }) => {
   const jetzt = new Date('2026-12-10T08:00:00Z');
   const t = regalTeile(jetzt);
   t['messgeraet'] = [{ id: uid('23', 1), modell: 'Aquamaster P160 Pro2', u_ec: 0.1, u_ph: 0.1 }];
@@ -382,7 +383,7 @@ test('16 Einstellungen und Notfallblatt (UC0, einstellungen.spec.ts)', async ({ 
   await sim.regeln('Notfallblatt', { druckseite: true });
 });
 
-test('17 Info und Push-Seite (Abnahme 2: Commit, Push einrichten)', async ({ page, sim }) => {
+test('17 Info und Push-Seite (Commit, Push einrichten)', async ({ page, sim }) => {
   await sim.start({}, '/#/info', new Date('2026-12-10T08:00:00Z'));
   await expect(ueberschrift(page, 'Info')).toBeVisible({ timeout: 15_000 });
   await sim.zeige('Info: Version, Commit, Installiert, Start bis Heute');

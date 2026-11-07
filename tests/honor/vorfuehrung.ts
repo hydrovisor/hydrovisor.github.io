@@ -6,15 +6,12 @@ import type { Teile } from '../fixtures/regal.ts';
 import { sichtenNachrechnen, stornoAufnehmen, zeileAufnehmen } from '../fixtures/sichten.ts';
 import { authNachbilden, sitzungSpeichern } from '../e2e/hilfen.ts';
 import { restNachbilden } from '../e2e/rest.ts';
+import { regelnImBrowser, schriftImBrowser, type Befund } from './regeln.ts';
+
+export type { Befund };
 
 const SCHNELL = process.env['SIM_SCHNELL'] === '1';
 const TEMPO = SCHNELL ? 0 : Number(process.env['SIM_TEMPO'] ?? 900);
-
-export interface Befund {
-  art: 'Mangel' | 'Hinweis';
-  regel: string;
-  text: string;
-}
 
 export interface Mitschnitt {
   daten: Teile;
@@ -45,7 +42,10 @@ export interface Sim {
   foto(name: string): Promise<void>;
   /** Bedienregeln prüfen; Mängel lassen den Ablauf rot werden, Hinweise nicht */
   /** druckseite: A4-Seite zum Drucken, Breite nur als Hinweis */
-  regeln(maske: string, o?: { ohneScrollen?: boolean; druckseite?: boolean }): Promise<Befund[]>;
+  regeln(
+    maske: string,
+    o?: { ohneScrollen?: boolean; druckseite?: boolean; vorprobe?: boolean },
+  ): Promise<Befund[]>;
   /** Systemschrift annähern: alle Schriftgrössen des Design Systems × faktor (A) */
   schrift(faktor: number): Promise<void>;
   /** Zeit von der Aktion bis zur sichtbaren Erwartung, mit gedrosselter CPU (A: Faktor 4) */
@@ -140,121 +140,6 @@ function anzeigeEinbauen(): void {
   else bauen();
 }
 
-/** Bedienregeln im Seitenkontext (A): Regal 68 dp, Schreibtisch 48 dp, Löcher der Deckelgrafik 48 dp (UC2-AK3) */
-function regelnImBrowser(o: { ohneScrollen: boolean; druckseite: boolean }): Befund[] {
-  const befunde: Befund[] = [];
-  const main = document.querySelector('main');
-  const regal = main?.getAttribute('data-density') === 'regal';
-  const mindest = regal ? 68 : 48;
-  const sichtbar = (el: Element) => {
-    const r = el.getBoundingClientRect();
-    const s = getComputedStyle(el);
-    return r.width > 0 && r.height > 0 && s.visibility !== 'hidden' && s.display !== 'none';
-  };
-  const name = (el: Element) =>
-    (el.getAttribute('aria-label') ?? (el as HTMLElement).innerText ?? '')
-      .replace(/\s+/g, ' ')
-      .trim()
-      .slice(0, 40);
-  const hoehe = window.innerHeight;
-  const knoepfe = [...document.querySelectorAll('main button, main a.hv-btn, main [role="button"]')].filter(
-    sichtbar,
-  );
-  for (const el of knoepfe) {
-    const h = Math.round(el.getBoundingClientRect().height);
-    const loch = /^Loch \d/.test(name(el));
-    const soll = loch ? 48 : mindest;
-    if (h + 0.5 >= soll) continue;
-    const haupt = el.classList.contains('hv-btn') && !el.classList.contains('hv-btn-compact');
-    befunde.push({
-      art: haupt ? 'Mangel' : 'Hinweis',
-      regel: `Taste mindestens ${soll} dp`,
-      text: `«${name(el) || el.tagName.toLowerCase()}» ist ${h} dp hoch`,
-    });
-  }
-  // Hauptknopf (A): erster sichtbarer Primärknopf in einer Fussleiste (Klasse …-fuss oder …-aktionen), sonst der erste
-  const primaer = [...document.querySelectorAll('main .hv-btn-primary')].filter(sichtbar);
-  const imFuss = primaer.filter((el) => el.closest('[class*="-fuss"], [class*="-aktionen"], footer'));
-  const haupt = imFuss[0] ?? primaer[0];
-  if (haupt) {
-    const r = haupt.getBoundingClientRect();
-    if (r.bottom > hoehe + 0.5)
-      befunde.push({
-        // Mangel nur in Masken, die ohne Scrollen auskommen müssen (Messmaske); sonst Hinweis (A)
-        art: o.ohneScrollen ? 'Mangel' : 'Hinweis',
-        regel: 'Hauptknopf ohne Scrollen sichtbar',
-        text: `«${name(haupt)}» erst nach Scrollen (unten bei ${Math.round(r.bottom)} von ${hoehe} dp)`,
-      });
-    else if (regal && r.top + r.height / 2 < hoehe * 0.45)
-      befunde.push({
-        art: 'Hinweis',
-        regel: 'Hauptknopf im Daumenbereich (untere Hälfte)',
-        text: `«${name(haupt)}» liegt oben (Mitte bei ${Math.round(r.top + r.height / 2)} von ${hoehe} dp)`,
-      });
-  }
-  const seite = document.scrollingElement ?? document.documentElement;
-  // am Handy verbreitert Chrome die Seite, statt waagrecht zu scrollen: Bezug ist die Bildschirmbreite (360 dp).
-  // Gemessen wird der rechte Rand des Inhalts von main (ohne die Anzeige der Simulation), nicht die Fensterbreite,
-  // die nach einem Übergang breit bleiben kann (A).
-  const ueberstehend = [...document.querySelectorAll('main *')].filter(
-    (el) => el.getBoundingClientRect().right > screen.width + 1,
-  );
-  const breite = Math.round(Math.max(0, ...ueberstehend.map((el) => el.getBoundingClientRect().right)));
-  if (ueberstehend.length > 0) {
-    const zuBreit = ueberstehend
-      .map((el) => (el.textContent ?? '').replace(/\s+/g, ' ').trim().slice(0, 30))
-      .find((t) => t.length > 0);
-    befunde.push({
-      art: o.druckseite ? 'Hinweis' : 'Mangel',
-      regel: 'Seite nicht breiter als der Bildschirm',
-      text: `Seite ${breite} statt ${screen.width} dp breit${zuBreit ? ` (zu breit: «${zuBreit}»)` : ''}; Chrome verkleinert die Ansicht`,
-    });
-  }
-  if (o.ohneScrollen && seite.scrollHeight > hoehe + 1)
-    befunde.push({
-      art: 'Mangel',
-      regel: 'Maske ohne Scrollen',
-      text: `Seite ${seite.scrollHeight} dp hoch bei ${hoehe} dp Bildschirm`,
-    });
-  if (regal) {
-    const felder = [
-      ...document.querySelectorAll(
-        'main input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="button"]), main textarea, main select, main [contenteditable="true"]',
-      ),
-    ].filter(sichtbar);
-    if (felder.length > 0)
-      befunde.push({
-        art: 'Mangel',
-        regel: 'keine Systemtastatur in Regal-Masken',
-        text: `${felder.length} Eingabefeld(er)`,
-      });
-  }
-  return befunde;
-}
-
-function schriftImBrowser(faktor: number): number {
-  let gesetzt = 0;
-  for (const blatt of [...document.styleSheets]) {
-    let regeln: CSSRuleList;
-    try {
-      regeln = blatt.cssRules;
-    } catch {
-      continue;
-    }
-    for (const regel of [...regeln]) {
-      if (!(regel instanceof CSSStyleRule) || !regel.selectorText.startsWith(':root')) continue;
-      for (const name of [...regel.style]) {
-        if (!/^--text-.*-(size|line)$/.test(name)) continue;
-        const wert = regel.style.getPropertyValue(name).trim();
-        if (!wert.endsWith('px')) continue;
-        document.documentElement.style.setProperty(name, `${parseFloat(wert) * faktor}px`);
-        gesetzt += 1;
-      }
-    }
-  }
-  return gesetzt;
-}
-
 async function pause(page: Page, ms = TEMPO): Promise<void> {
   if (ms > 0) await page.waitForTimeout(ms);
 }
@@ -330,11 +215,12 @@ function simFuer(page: Page, info: TestInfo): Sim {
         try {
           await ziel.click({ timeout: 5_000 });
         } catch {
-          // z. B. Seite breiter als der Bildschirm: Tipp über das Element selbst, Hinweis im Bericht
+          // z. B. Seite breiter als der Bildschirm: am Gerät ein Mangel; der Ablauf geht über das Element weiter
           info.annotations.push({
-            type: 'Hinweis · Tippen',
+            type: 'Mangel · Tippen',
             description: `«${text}» nicht direkt antippbar`,
           });
+          expect.soft(false, `«${text}» nicht direkt antippbar`).toBe(true);
           await ziel.evaluate((el) => (el as HTMLElement).click());
         }
         await pause(page, TEMPO / 2);
@@ -384,6 +270,7 @@ function simFuer(page: Page, info: TestInfo): Sim {
         const befunde = await page.evaluate(regelnImBrowser, {
           ohneScrollen: o.ohneScrollen ?? false,
           druckseite: o.druckseite ?? false,
+          vorprobe: o.vorprobe ?? false,
         });
         const maengel = befunde.filter((b) => b.art === 'Mangel');
         const hinweise = befunde.filter((b) => b.art === 'Hinweis');
@@ -422,12 +309,16 @@ function simFuer(page: Page, info: TestInfo): Sim {
       return basis.step(`Zeit messen: ${was}`, async () => {
         const cdp = await page.context().newCDPSession(page);
         await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
-        const t0 = Date.now();
-        await aktion();
-        await expect(erwartung).toBeVisible({ timeout: 15_000 });
-        const ms = Date.now() - t0;
-        await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
-        await cdp.detach();
+        let ms: number;
+        try {
+          const t0 = Date.now();
+          await aktion();
+          await expect(erwartung).toBeVisible({ timeout: 15_000 });
+          ms = Date.now() - t0;
+        } finally {
+          await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
+          await cdp.detach();
+        }
         info.annotations.push({
           type: ms <= grenzeMs ? `Zeit ok · ${was}` : `Hinweis Zeit · ${was}`,
           description: `${ms} ms bei CPU ÷ 4 (Grenze ${grenzeMs} ms, Schätzung)`,
