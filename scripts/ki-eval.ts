@@ -4,14 +4,14 @@
 // aus ANTHROPIC_API_KEY in seiner Shell. --trocken nutzt aufgezeichnete Antworten ohne Schlüssel und ohne Netz.
 // Bericht nach reports/ki-eval.md und .json; auf der Konsole nur die Zusammenfassung. Schreibt nie in eine Datenbank.
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { AUSWEICHMODELL, HAUPTMODELL } from '../src/domain/ki/modelle.ts';
 import type { Preise } from '../src/domain/ki/eval.ts';
 import { ZEITZONE } from '../src/domain/zeit.ts';
 import type { ModellRufer } from '../supabase/functions/ki-tuete/kern.ts';
 import { anthropicRufer } from '../supabase/functions/ki-tuete/modell.ts';
-import { evalAblauf } from './ki-eval/ablauf.ts';
+import { evalAblauf, evalVoraussetzungen } from './ki-eval/ablauf.ts';
 import { bildwandlerStarten } from './ki-eval/bild.ts';
 
 // USD je Million Token, Stand 4.11.2026 (API-Referenz; Haiku bis 100K Eingabe-Token)
@@ -57,8 +57,17 @@ function trockenRufer(ordner: string, reihenfolge: string[]): ModellRufer {
 }
 
 async function hauptprogramm(): Promise<void> {
-  if (!existsSync(referenzDatei)) throw new Error(`Referenz fehlt: ${referenzDatei}`);
-  if (!existsSync(fotoOrdner)) throw new Error(`Fotoordner fehlt: ${fotoOrdner}`);
+  const bereit = evalVoraussetzungen({
+    referenzPfad: relative(repository, referenzDatei).split(sep).join('/'),
+    referenzVorhanden: existsSync(referenzDatei),
+    fotoPfad: relative(repository, fotoOrdner).split(sep).join('/'),
+    fotos: existsSync(fotoOrdner) ? readdirSync(fotoOrdner) : undefined,
+  });
+  if (!bereit.ok) {
+    console.error(bereit.meldung);
+    process.exitCode = 1;
+    return;
+  }
   const fotos = readdirSync(fotoOrdner)
     .filter((n) => /-[12]\.(jpe?g|png)$/i.test(n))
     .map((name) => ({ name, bytes: new Uint8Array(readFileSync(join(fotoOrdner, name))) }));

@@ -93,6 +93,13 @@ a:hover { color: var(--brand-strong); }
 .hv-field-input { flex: 1; min-width: 0; border: 0; background: transparent; padding: var(--space-3) 0; font-size: 16px; line-height: 24px; font-variant-numeric: tabular-nums; outline: none; }
 .hv-field-input:focus-visible { box-shadow: none; }
 .hv-field-input::placeholder { color: var(--ink-muted); }
+.hv-field-textarea { min-height: calc(4 * 24px + 2 * var(--space-3)); resize: vertical; font-variant-numeric: normal; font-family: inherit; }
+/* PhotoField (components/PhotoField.md) */
+.hv-photo { display: flex; flex-direction: column; gap: var(--space-2); }
+.hv-photo-zeile { display: flex; gap: var(--space-3); align-items: center; }
+.hv-photo-input { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.hv-photo-preview { width: 64px; height: 64px; object-fit: cover; border-radius: var(--radius-md); border: 1px solid var(--line); }
+.hv-photo-input:focus-visible + .hv-btn { outline: 2px solid var(--focus); outline-offset: 2px; }
 .hv-field-unit { font-size: 14px; line-height: 20px; font-weight: 500; color: var(--ink-muted); }
 .hv-field-msg { margin: 0; display: flex; gap: var(--space-1); align-items: center; font-size: 14px; line-height: 20px; color: var(--ink-muted); }
 .hv-field-error .hv-field-box { border-color: var(--status-danger); border-width: 2px; padding: 0 calc(var(--space-4) - 1px); }
@@ -224,6 +231,10 @@ button.hv-tile { cursor: pointer; touch-action: manipulation; }
 .hv-check-erledigt .hv-check-haken { background: var(--brand); border-color: var(--brand); }
 .hv-check-erledigt .hv-check-titel { text-decoration: line-through; text-decoration-thickness: 2px; color: var(--ink-muted); }
 .hv-check-aktion { margin-top: var(--space-2); }
+/* Plan 29: Hinweis unter dem Titel (Notice-Ton) und fester Haken einer erledigten Zeile, die nicht mehr abwählbar ist */
+.hv-check-hinweis { margin-top: var(--space-1); font-size: var(--text-small-size); line-height: var(--text-small-line); color: var(--ink); }
+.hv-check-fest { display: inline-flex; align-items: center; justify-content: center; cursor: default; }
+.hv-check-erledigt .hv-check-fest { background: var(--brand); border-color: var(--brand); }
 /* Variante «selbst» (Einrichtung UC0): Zeilen haken sich durch die Erfassung selbst ab; Status statt Haken-Knopf */
 .hv-check-status { width: var(--size-touch-regal); height: var(--size-touch-regal); border-radius: 50%; border: 2px solid var(--line-control); background: var(--surface-raised); color: var(--on-brand);
   display: inline-flex; align-items: center; justify-content: center; }
@@ -327,3 +338,15 @@ button.hv-tile { cursor: pointer; touch-action: manipulation; }
 
 /* nur für Vorlesehilfen sichtbar (zugänglicher Name ohne Platz, Tile «veraltet») */
 .hv-visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+/* Button zweizeilig (Plan 30): Verb oben, Unterzeile darunter; im Regal 72 dp, damit beide Zeilen Platz haben */
+.hv-btn-zweizeilig { flex-direction: column; gap: 0; white-space: normal; line-height: 20px;
+  min-height: calc(var(--size-touch-regal) + var(--space-1)); }
+.hv-btn-zweizeilig small { font-size: var(--text-caption-size); line-height: 16px; font-weight: 500; }
+
+/* Kennung bildschirmfüllend (Plan 30, Rundgang): 1 s zwischen zwei Orten, ohne Tipp */
+.hv-kennung { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-4);
+  min-height: 70vh; text-align: center; }
+.hv-kennung-code { font-size: calc(var(--text-value-xl-size) * 2); line-height: 1; font-weight: 700;
+  font-variant-numeric: tabular-nums; letter-spacing: var(--text-display-tracking); }
+.hv-kennung-zeile { font-size: var(--text-text-regal-size); line-height: 28px; color: var(--ink-muted); }

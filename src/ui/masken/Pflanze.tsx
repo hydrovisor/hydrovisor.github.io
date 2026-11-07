@@ -76,6 +76,8 @@ export function Pflanze({ pflanzung }: { pflanzung: string }) {
   const [hinweis, setHinweis] = useState<string>();
   const [ergebnis, setErgebnis] = useState<Ergebnis>();
   const [wissenPhase, setWissenPhase] = useState<Phase>();
+  // UC12-AK3: «Schliessen» blendet die Karte bis zum nächsten Öffnen oder zur nächsten Bestätigung aus (Plan 40 A3)
+  const [wissenZu, setWissenZu] = useState(false);
   // alle seit dem Öffnen gespeicherten Vorgänge; teileNach() ist je client_id idempotent (Plan 38 A1)
   const [gespeichert, setGespeichert] = useState<Vorgang>([]);
   // Phasenknöpfe bis zum neuen Bündel gesperrt, sonst baute ein zweiter Tipp auf dem alten Stand (Plan 35 Runde 2 Befund 3)
@@ -200,11 +202,14 @@ export function Pflanze({ pflanzung }: { pflanzung: string }) {
         setMerkmal(undefined);
         // Wissenskarte nach Ja (neue Phase) und nach Problem, nicht nach «Noch nicht» (Plan 35 Runde 2 Befund 10)
         setWissenPhase(antwort === 'ja' ? n?.phase : antwort === 'problem' ? stand?.phase : undefined);
+        // «Noch nicht» lässt eine geschlossene Karte zu (Runde 1 Befund 6)
+        if (antwort === 'ja' || antwort === 'problem') setWissenZu(false);
       },
     );
   const grenze = gesperrt || !aktiv ? undefined : korrekturGrenze(eff, a.satzId, jetzt, ZEITZONE);
   const neuerTag = grenze ? tagPlus(grenze.tag, versatz) : (stand?.beginn ?? heute);
-  const wissenFuerPhase = wissenPhase ?? (stand?.pruefen || stand?.problemAm ? stand.phase : undefined);
+  // UC12-AK2: die Karte der aktuellen Phase steht immer da, nach «Ja» die der neuen Phase (Plan 40 A3)
+  const wissenFuerPhase = wissenPhase ?? stand?.phase;
   const wissen = wissenFuerPhase ? wissenFuer(eff, a.sorteId, wissenFuerPhase) : undefined;
 
   function zuruecknehmen() {
@@ -310,8 +315,17 @@ export function Pflanze({ pflanzung }: { pflanzung: string }) {
           {`Gefäss ${weiter.kennung} ohne Pflanzen`}
         </Notice>
       ) : null}
-      {wissen && aktiv ? (
-        <Notice kompakt tone="info">
+      {wissen && aktiv && wissenFuerPhase && !wissenZu ? (
+        <Notice
+          kompakt
+          tone="info"
+          title={`Wissen: ${PHASE_NAME[wissenFuerPhase]}`}
+          action={
+            <Button variant="secondary" size="compact" onClick={() => setWissenZu(true)}>
+              Schliessen
+            </Button>
+          }
+        >
           {wissen}
         </Notice>
       ) : null}

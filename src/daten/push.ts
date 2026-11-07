@@ -114,3 +114,13 @@ export async function testPushSenden(): Promise<'gesendet' | 'kein_abo' | 'fehle
     return 'fehler';
   }
 }
+
+/** Zustellung der letzten 14 Tage online aus v_push_zustellung (Plan 31 A11); ohne Netz leer */
+export async function zustellungLaden(): Promise<import('../domain/push/zustellung.ts').ZustellungTag[]> {
+  const { data, error } = await supabase
+    .from('v_push_zustellung')
+    .select('*')
+    .order('datum_lokal', { ascending: false })
+    .limit(14);
+  return error || !data ? [] : data;
+}

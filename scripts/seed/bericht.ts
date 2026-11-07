@@ -20,6 +20,8 @@ export interface SeedBericht {
     pruefauftraege?: number;
     vollstaendig?: boolean;
   }[];
+  /** Art und Phase der Startbelegung ohne Wissenskarte (UC12-AK1, R7.2; Plan 40) */
+  wissenLuecken?: { artId: string; phase: string }[];
 }
 
 export function alsBericht(wert: unknown): SeedBericht {
@@ -63,6 +65,15 @@ export function berichtMarkdown(
         `| ${v.sorte} | ${v.fehlendeGroessen} | ${v.pruefauftraege} | ${v.vollstaendig ? 'ja' : 'nein'} |`,
       );
     z.push('');
+  }
+  const luecken = b.wissenLuecken ?? [];
+  if (luecken.length > 0) {
+    z.push(
+      `**Wissenskarten fehlen** (${luecken.length}; die Gesamtfreigabe bricht ab, R7.2):`,
+      '',
+      ...luecken.map((l) => `- ${l.artId} / ${l.phase}`),
+      '',
+    );
   }
   return z.join('\n');
 }

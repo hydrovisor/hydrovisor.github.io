@@ -14,6 +14,7 @@ import {
   type UmsetzEingabe,
 } from '../../domain/anzucht/umsetzen.ts';
 import type { Vorgang } from '../../domain/datenpfad/erfassung.ts';
+import { messbareOrte } from '../../domain/ort.ts';
 import { saatRueckgaengig } from '../../domain/pflanzung/saeen.ts';
 import {
   deckelReihen,
@@ -252,6 +253,11 @@ function Maske({ satz, wie, jetzt }: { satz: string; wie: 'geplant' | undefined;
             zuweisung: zuordnen(a.saemlinge, schritt.fuer, gewaehlt),
           };
     const z = umsetzZusammenfassung(teile, eingabe, jetzt, ZEITZONE);
+    // ein Knopf je Zielgefäss mit Vorschlag (Runde 1 Befund 8)
+    const wechselOrte = (z.wechselIn ?? []).flatMap((p) => {
+      const o = messbareOrte(teile ?? {}).find((x) => x.platzId === p);
+      return o ? [o] : [];
+    });
     return (
       <main className="hv-seite hv-umsetzen" data-density="regal">
         {kopf}
@@ -267,7 +273,30 @@ function Maske({ satz, wie, jetzt }: { satz: string; wie: 'geplant' | undefined;
             {h}
           </Notice>
         ))}
-        {z.ansatz ? <p className="hv-umsetzen-ansatz">{z.ansatz}</p> : null}
+        {z.ansatz ? (
+          // R2.2 letzte Zeile (Plan 34 A12): Lösung ab 7 Tagen am Umsetztag wechseln
+          <Notice
+            kompakt
+            tone={z.wechselIn ? 'warn' : 'info'}
+            action={
+              wechselOrte.length > 0 ? (
+                <>
+                  {wechselOrte.map((o) => (
+                    <a
+                      key={o.platzId}
+                      className="hv-btn hv-btn-secondary hv-btn-compact"
+                      href={hashZu({ name: 'ansatz', code: o.code })}
+                    >
+                      {wechselOrte.length > 1 ? `Lösung wechseln in ${o.kennung}` : 'Lösung wechseln'}
+                    </a>
+                  ))}
+                </>
+              ) : undefined
+            }
+          >
+            {z.ansatz}
+          </Notice>
+        ) : null}
         {schritt.art === 'bestaetigen' && eingabe.inStationLassen.length > 0 && a.inStationLassenBis ? (
           // R6.2 / A11: Datum zwischen morgen und Saat + «Umsetzen bis» wählbar (Runde 2 Befund 3)
           <Stepper

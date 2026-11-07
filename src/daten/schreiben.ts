@@ -390,6 +390,11 @@ export function beiErfolg(hoerer: () => void): () => void {
   return () => nachErfolgHoerer.delete(hoerer);
 }
 
+/** meldet ein Schreiben ausserhalb von schreiben() (RPC wissen_app_schreiben, Recherche), damit das Bündel nachlädt */
+export function erfolgMelden(): void {
+  nachErfolgHoerer.forEach((h) => h());
+}
+
 export const schreiben = erstelleSchreiben(supabaseAdapter, {
   appVersion: APP_VERSION,
   nachErfolg: () => nachErfolgHoerer.forEach((h) => h()),

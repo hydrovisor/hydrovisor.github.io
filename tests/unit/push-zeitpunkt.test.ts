@@ -3,7 +3,13 @@
 // Feste Uhr als UTC-ISO, Zeitzone als Parameter.
 // Vorausgesetzt: die Push-Zeit kommt als 'HH:MM' oder 'HH:MM:SS' (time aus PostgREST); beide gleichwertig.
 import { describe, expect, it } from 'vitest';
-import { sammelFaellig, wiederholungErlaubt } from '../../src/domain/push/zeitpunkt.ts';
+import {
+  KURZPRUEFUNG_ZEIT,
+  kurzpruefungFaellig,
+  sammelFaellig,
+  timerFaellig,
+  wiederholungErlaubt,
+} from '../../src/domain/push/zeitpunkt.ts';
 import { ZONE } from './push-fixture.ts';
 
 const z = (iso: string) => new Date(iso);
@@ -56,5 +62,46 @@ describe('wiederholungErlaubt', () => {
   it('R5.5 wiederholungErlaubt in der Sommerzeit nach Ortszeit: 28.3.2027 08:55Z ja, 09:05Z nein', () => {
     expect(wiederholungErlaubt(z('2027-03-28T08:55:00.000Z'), ZONE, '07:00')).toBe(true);
     expect(wiederholungErlaubt(z('2027-03-28T09:05:00.000Z'), ZONE, '07:00')).toBe(false);
+  });
+});
+
+// I1b-06 (Plan 31 Schnittstellen `zeitpunkt.ts`, Testliste «Vitest»; R5.5, G2, Annahmen 4 und 5):
+// kurzpruefungFaellig ⇔ 20:00 ≤ Ortszeit ≤ 21:59; timerFaellig ⇔ timer_ende ≤ jetzt und jetzt − timer_ende < 15 min.
+describe('kurzpruefungFaellig und timerFaellig (I1b-06)', () => {
+  it('TP7 KURZPRUEFUNG_ZEIT ist 20:00', () => {
+    expect(KURZPRUEFUNG_ZEIT).toBe('20:00');
+  });
+
+  it('TP7 kurzpruefungFaellig 19:59 nein, 20:00 ja, 21:59 ja, 22:00 nein', () => {
+    expect(kurzpruefungFaellig(z('2027-01-20T18:59:00.000Z'), ZONE)).toEqual({
+      faellig: false,
+      datumLokal: '2027-01-20',
+    });
+    expect(kurzpruefungFaellig(z('2027-01-20T19:00:00.000Z'), ZONE)).toEqual({
+      faellig: true,
+      datumLokal: '2027-01-20',
+    });
+    expect(kurzpruefungFaellig(z('2027-01-20T20:59:00.000Z'), ZONE).faellig).toBe(true);
+    expect(kurzpruefungFaellig(z('2027-01-20T21:00:00.000Z'), ZONE).faellig).toBe(false);
+  });
+
+  it('TP7 kurzpruefungFaellig in der Sommerzeit: 28.3.2027 18:00Z ja, 17:59Z nein', () => {
+    expect(kurzpruefungFaellig(z('2027-03-28T18:00:00.000Z'), ZONE)).toEqual({
+      faellig: true,
+      datumLokal: '2027-03-28',
+    });
+    expect(kurzpruefungFaellig(z('2027-03-28T17:59:00.000Z'), ZONE).faellig).toBe(false);
+  });
+
+  it('TP5 timerFaellig Grenze genau timer_ende und 15 min', () => {
+    const ende = z('2027-01-20T10:00:00.000Z');
+    expect(timerFaellig(ende, z('2027-01-20T09:59:59.000Z'))).toBe(false);
+    expect(timerFaellig(ende, ende)).toBe(true);
+    expect(timerFaellig(ende, z('2027-01-20T10:14:59.000Z'))).toBe(true);
+    expect(timerFaellig(ende, z('2027-01-20T10:15:00.000Z'))).toBe(false);
+  });
+
+  it('TP4 timerFaellig über die Umstellung: 01:59:30 MEZ, Lauf 03:00 MESZ ist 30 s später', () => {
+    expect(timerFaellig(z('2027-03-28T00:59:30.000Z'), z('2027-03-28T01:00:00.000Z'))).toBe(true);
   });
 });

@@ -78,8 +78,13 @@ Stand 1.11.2026 · Auftrag 2 «Spezifikation». Bedeutungen stehen in Konzept v1
 | Säurebedarf, pH-Wirkung | `v_saeurebedarf`, `v_ph_wirkung` | `saeurebedarf()`, `phWirkung()` |
 | Nachfüllsumme | `v_nachfuellsumme` | `nachfuellsumme` |
 | Ereignis | `ereignis`, `ereignis_typ` | `Ereignis` |
-| Aufgabe, Aufgabenschlüssel | – (berechnet), `aufgabe_schluessel` | `Aufgabe`, `faelligeAufgaben()`, `aufgabenSchluessel()` |
-| Aufschub (Morgen, Überspringen, Pegel ok) | `aufschub` | `Aufschub` |
+| Aufgabe, Aufgabenschlüssel (Plan 27) | – (berechnet), `aufgabe_schluessel` | `Aufgabe`, `Rohaufgabe`, `AufgabenTyp` (Tabelle R5.2 Stufe 1), `AufgabenArt` (mit Stromausfall), `Gewicht`, `faelligeAufgaben()`, `alleAufgaben()`, `naechsteAufgabe()`, `nurEcht()`, `titelNachGewicht()`, `aufgabenSchluessel()`, `schluesselLesen()`, `AUFGABEN_TEILE`, `fehlendeTeile()`, `einstellungenAus()` |
+| Rundgang (Plan 30) | `ereignis` (`kurzpruefung`), `messung` (`messart` `rundgang`), `naehrloesungsansatz` (`nachfuellen`) | `RundgangPlan`, `RundgangEbene`, `RundgangOrt`, `RundgangStand`, `RundgangSchritt`, `rundgangPlan()`, `ortsfolge()`, `laufwegRang()`, `rundgangStart()`, `nachKurzpruefung()`, `nachMessung()`, `nachNachfuellen()`, `amEnde()`, `rundgangBeenden()`, `kurzpruefungPunkte()`, `kurzpruefungVorgang()`, `nachfuellSchritt()`, `kratkySchritt()`, `nachfuellVorgang()`, `abschlussliste()`, `abschlussKopf()` |
+| Heute-Karte (Plan 30) | – (berechnet) | `Ortskarte`, `heuteKarten()`, `ausserhalbOrte()`, `startzeitMedian()` |
+| Verteilung der Ansätze, vorziehbar (R5.6, Plan 113) | – (berechnet) | `vorziehbar`, `ANSATZ_TYPEN`, `MAX_ANSAETZE_JE_TAG`, `ansaetzeHeute()`, `verteilen()`, `Verteilt`, `verteilteAufgaben()`, `fruehestens`; Messmaske im Modus Korrektur: `Ablaufmodus.korrektur`, `eingabeAus()` |
+| Nach Stromausfall (Plan 30) | `ereignis` (`stromausfall {beginn, ende}`, `anlage_id`) | `StromTyp`, `STROM_TYPEN`, `MORGEN_STROM`, `STROM_GRENZE_STUNDEN`, `stromausfallAufgaben()`, `stromausfallVorgang()` |
+| Aufschub (Morgen, Überspringen, Pegel ok) | `aufschub` | `AufschubZeile`, `MORGEN`, `UEBERSPRINGEN`, `ERLEDIGT_KNOPF`, `aufschubVorgang()`, `erledigtVorgang()`, `deckelVorgang()` |
+| Keimtermine eines Satzes (Plan 27) | – (berechnet) | `KeimTermin`, `keimTermine()` |
 | Tagesliste | `aufgabe_tagesliste` | – (nur Edge Function) |
 | Kurzprüfung | Ereignis `kurzpruefung` | `Kurzpruefung` |
 | Rundgang | – | `Rundgang` (Ablauf) |
@@ -98,7 +103,10 @@ Stand 1.11.2026 · Auftrag 2 «Spezifikation». Bedeutungen stehen in Konzept v1
 | Messfälligkeit | – | `Messfaelligkeit`, `messFaelligkeit()` |
 | Messeingabe (Ziffernblock) | – | `Messeingabe`, `eingabeTippen()` |
 | Sammel-Push, Lauf der Function | `push_versand` | `pushLauf()`, `sammelFaellig()`, `wiederholungErlaubt()` |
-| Tagesliste der Push (Übergang bis I1b-06) | – | `tagesliste()`, `pushText()`, `TagesEintrag` |
+| Inhalt der Pushes (I1b-06) | – | `sammelInhalt()`, `kurzpruefungOffen()`, `kurzpruefungInhalt()`, `timerInhalt()`, `tageslisteZeilen()` |
+| Beschreibung und Kürzung der Bündelteile | – | `BUENDEL_TEILE`, `teileKuerzen()` |
+| Zustellung je Tag (UC8-AK8, EK5) | `v_push_zustellung` | `ZustellungTag`, `ek5Anteil()` |
+| E-Mail-Rückfall | `einstellung.email_rueckfall` | `Mailer`, «E-Mail, wenn Push fehlt» |
 | Push-Stand in Heute | `push_abo`, `push_versand` | `pushStand()`, `PushStand` |
 | Quittung der Push | `push_versand.angezeigt_am`, `geoeffnet_am` | `quittieren()`, `signaturText()` |
 | Tütenfelder (Schema der Saattüte) | `ki_feld` | `TuetenFelder`, `TUETEN_SCHEMA`, `antwortPruefen()`, `feldTexte()` |
@@ -112,3 +120,5 @@ Stand 1.11.2026 · Auftrag 2 «Spezifikation». Bedeutungen stehen in Konzept v1
 | Verschieben, Tausch, Wurzelregel (Plan 33) | Ereignisse `verschieben`, `tausch` (`vorgang_id`) | `verschiebenPruefen()`, `verschiebZiele()`, `verschiebAnsicht()`, `verschiebVorgang()`, `umgesetztAm()`, `HINWEIS_WURZELN` |
 | Topf und Deckel (Plan 33) | `v_netztopf_platz`, `netztopf` | `topfOrt()`, `pflanzungenImTopf()`, `lochGroesse()`, `topfPasst()`, `deckelBelegung()`, `DeckelLoch` |
 | Deckel-Hilfen und Typen (Plan 33) | – | `lochText()`, `lochArt()`, `lochName()`, `deckelReihen()`, `istStation()`, `UmsetzEingabe`, `Saemling` |
+| Hydroponik-Recherche (Plan 37, E8) | `ki_aufruf.zweck`, Vermerk `recherche`, `wissen_app_schreiben('recherche_wert' \| 'recherche_saatempfehlung')` | `rechercheLuecken()`, `wertPruefen()`, `saatPruefen()`, `recherchieren()`, `RechercheErgebnis` |
+| Sortenerfassung (Plan 37) | `sorte`, `saatgut`, `ki_feldprotokoll`, `v_vollstaendigkeit` | `SortenFormular`, `formularNachKi()`, `erfassungBauen()`, `sortenListe()`, `sortenDetail()` |

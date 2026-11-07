@@ -215,9 +215,12 @@ const prozent = (anteil: number) => `${Math.round(anteil * 100)} %`;
 const sekunden = (ms: number) => `${(ms / 1000).toFixed(1)} s`;
 
 /** Bericht für den Issue-Kommentar; ohne Schlüssel, Bilddaten oder volle Antworten */
+/** Zahl der Tüten im Eval mit 22 Startsorten (Konzept 12.6, UC4-AK3) */
+export const TUETEN_SOLL = 22;
+
 export function berichtMarkdown(a: Auswertung, stand: Date, zeitzone: Zeitzone): string {
   const zeilen = [
-    `UC4-AK3 [Eval] KI-Eval an ${a.tueten.length} Tüten, Stand ${datum(stand, zeitzone)}`,
+    `UC4-AK3 [Eval] KI-Eval an ${a.tueten.length} von ${TUETEN_SOLL} Tüten, Stand ${datum(stand, zeitzone)}`,
     '',
     '| Modell | richtig | Quote | M0 (Name, Art, Keimart) | Median | Max | Kosten je Tüte |',
     '|---|---|---|---|---|---|---|',

@@ -1,6 +1,7 @@
 // Offline-Bündel laden und lesen (04_architektur.md 4.2, Konzept 11.1, Plan 11): erst ist_tim(), dann alle Teile
 // seitenweise; nur wenn alles vollständig ist, ersetzt ein einziges put den Eintrag «aktuell» (sonst bleibt der alte).
-import { buendelPruefen, fensterBeginn, letzterJeOrt, type Buendel } from '../domain/datenpfad/buendel.ts';
+import { buendelPruefen, fensterBeginn, teileKuerzen, type Buendel } from '../domain/datenpfad/buendel.ts';
+import { BUENDEL_TEILE, SEITE, type Buendelteil } from '../domain/datenpfad/buendel-teile.ts';
 import type { Zeitkontext } from '../domain/datenpfad/erfassung.ts';
 import { fehlerEinordnen, type RohFehler, type Schreibfehler } from '../domain/datenpfad/fehler.ts';
 import { gespeicherteNutzerId, SITZUNG_SCHLUESSEL } from '../anmeldung/sitzung.ts';
@@ -9,154 +10,7 @@ import { lokalOeffnen, SPEICHER_BUENDEL } from './lokal.ts';
 import { mitStatus, ZEITLIMIT_MS, type Antwort } from './schreiben.ts';
 import { supabase } from './supabase.ts';
 
-export interface Buendelteil {
-  /** Tabelle oder Sicht, zugleich Schlüssel in `teile` */
-  name: string;
-  /** abweichende Tabelle, wenn zwei Teile dieselbe Tabelle lesen (Plan 21 A13) */
-  tabelle?: string;
-  spalten: string;
-  /** stabile Sortierung für die Seiten */
-  ordnung: readonly string[];
-  /** Betriebszeilen ohne Storno */
-  ohneStorno?: boolean;
-  /** Wissen: nur die gültige Fassung */
-  gueltig?: boolean;
-  /** nur Zeilen mit gilt_ab ab fensterBeginn(jetzt, tage) */
-  fensterTage?: number;
-  /** nur diese Werte der Spalte typ (Ereignisse) */
-  typen?: readonly string[];
-}
-
-const tabelle = (
-  name: string,
-  extra: Omit<Buendelteil, 'name' | 'spalten' | 'ordnung'> = {},
-): Buendelteil => ({
-  name,
-  spalten: '*',
-  ordnung: ['id'],
-  ...extra,
-});
-const sicht = (name: string, ordnung: readonly string[]): Buendelteil => ({ name, spalten: '*', ordnung });
-
-/** Teile nach 04 4.2; spätere Pakete ergänzen hier, ohne Aufrufer zu ändern */
-export const BUENDEL_TEILE: readonly Buendelteil[] = [
-  // Anlage
-  ...[
-    'anlage',
-    'bereich',
-    'platz',
-    'etikett',
-    'gefaess',
-    'gefaessmodell',
-    'deckeltyp',
-    'anzuchtort',
-    'netztopf',
-  ].map((n) => tabelle(n, { ohneStorno: true })),
-  sicht('v_gefaess_status', ['gefaess_id']),
-  sicht('v_fuellzustand', ['platz_id']),
-  // Leitungswasser-EC je Anlage für Punkt 4 der Einrichtung, unabhängig vom 14-Tage-Fenster (Plan 18)
-  sicht('v_ec_wasser', ['anlage_id']),
-  sicht('v_zielbereich', ['platz_id']),
-  // Wissen (gültige Fassung)
-  ...['sorte', 'art', 'art_kulturform', 'saatempfehlung', 'duengerschema', 'wissenseintrag'].map((n) =>
-    tabelle(n, { gueltig: true }),
-  ),
-  tabelle('kulturgruppe'),
-  tabelle('produkt'),
-  // k je Komponente für die Einstellungen (Plan 32); gültig ist je Produkt die jüngste Zeile
-  tabelle('k_faktor', { ohneStorno: true }),
-  sicht('v_sollwert', ['sorte_id', 'phase', 'groesse']),
-  // Betrieb
-  tabelle('satz', { ohneStorno: true }),
-  tabelle('pflanzung', { ohneStorno: true }),
-  sicht('v_pflanzung_zustand', ['pflanzung_id']),
-  tabelle('v_reservierung_aktiv', { ohneStorno: true }),
-  // Keimung prüfen (Plan 24): frühere Reservierungen (auch beendete) für Schwammfolge und Wiederherstellen
-  tabelle('reservierung', { ohneStorno: true }),
-  // Ereignisse an den Pflanzungen für Keimprüfung, «keimt nicht» und Wiederherstellen
-  {
-    name: 'ereignis_pflanzung',
-    tabelle: 'ereignis',
-    spalten: '*',
-    ordnung: ['id'],
-    ohneStorno: true,
-    // Plan 33: Umsetzen, Verschieben, Tausch, Umsetzdatum und Ernte für Sämlinge, Deckel und Verlauf
-    typen: [
-      'keimung',
-      'abschluss',
-      'wiederherstellen',
-      'verschieben',
-      'umsetzen',
-      'tausch',
-      'umsetzdatum_geaendert',
-      'ernte',
-      // Plan 38: Schossen an der Pflanzung, Kulturentscheid am Satz (ereignis_satz bleibt phase_antwort)
-      'schossen_handlung',
-      'beobachtung',
-      'kultur_entscheid',
-    ],
-  },
-  // Säen (Plan 23): Packungen, Keimrate je Packung (nur echt, G5), aktueller Platz je Topf
-  tabelle('saatgut', { ohneStorno: true }),
-  sicht('v_keimrate', ['saatgut_id']),
-  sicht('v_netztopf_platz', ['netztopf_id']),
-  tabelle('messung', { ohneStorno: true, fensterTage: 14 }),
-  sicht('v_messung_unsicher', ['messung_id']),
-  tabelle('naehrloesungsansatz', { ohneStorno: true }),
-  // Dosis je Komponente in der Maske «Gefäss»; nach dem Laden auf die letzten Ansätze gekürzt (Plan 20)
-  tabelle('ansatz_position', { ohneStorno: true }),
-  tabelle('kalibrierung', { ohneStorno: true }),
-  sicht('v_kalibrierung_faellig', ['messgeraet_id', 'datenart']),
-  tabelle('messgeraet'),
-  // Plan 35: Phasenantworten am Satz für Phasenstand, Phasenfragen und Verlauf
-  {
-    name: 'ereignis_satz',
-    tabelle: 'ereignis',
-    spalten: '*',
-    ordnung: ['id'],
-    ohneStorno: true,
-    typen: ['phase_antwort'],
-  },
-  tabelle('aufschub', { ohneStorno: true }),
-  // Geräte-Ereignisse für Kalibrierstand und «unsicher» ohne Netz (R10.3, R5.2; Plan 12)
-  tabelle('ereignis', { ohneStorno: true, typen: ['sonde_gereinigt', 'als_unsicher_markiert'] }),
-  // Ereignisse am Platz für Prüfstatus, Prüfprotokoll, «entfernt am» und Wiederherstellen (Plan 21 A13)
-  {
-    name: 'ereignis_platz',
-    tabelle: 'ereignis',
-    spalten: '*',
-    ordnung: ['id'],
-    ohneStorno: true,
-    typen: [
-      'gefaess_erfasst',
-      'gefaesspruefung',
-      'box_deckel_tausch',
-      'entfernt',
-      'geleert',
-      'ruhe',
-      // Plan 33 (R8.4): Abweichung der Kurzprüfung sperrt das Verschieben in ein anderes Gefäss
-      'kurzpruefung',
-    ],
-  },
-  // Push (Plan 13): Abos ohne Schlüssel, Versände für «Letzte Erinnerung» und #/push
-  {
-    name: 'push_abo',
-    spalten: 'id,geraet,endpoint,datenart,aktiv,letzter_fehler,erfasst_am',
-    ordnung: ['id'],
-  },
-  tabelle('push_versand'),
-  // ohne telefon_vertretung und email_rueckfall: keine Personendaten im Gerätespeicher, die keine Maske braucht (Ü3)
-  {
-    name: 'einstellung',
-    spalten:
-      'id,push_zeit,vorlauf_n,kannengroesse_l,messmittel_ml,messbecher,thema,pflegebudget_min_werktag,' +
-      'pflegebudget_h_woche,zeitzone,min_client_version,feste_kalibriertermine,stationsgrenze_ab',
-    ordnung: ['id'],
-  },
-];
-
-/** max_rows in supabase/config.toml */
-export const SEITE = 1000;
+export { BUENDEL_TEILE, SEITE, type Buendelteil } from '../domain/datenpfad/buendel-teile.ts';
 
 export interface Buendeladapter {
   istTim(signal: AbortSignal): Promise<Antwort>;
@@ -228,36 +82,8 @@ export function erstelleBuendelLaden(
           return [teil.name, zeilen] as const;
         }),
       );
-      const teile: Record<string, readonly unknown[]> = Object.fromEntries(geladen);
-      // letzter Ansatz je Ort (04 4.2, A7)
-      const ansaetze = teile['naehrloesungsansatz'] as
-        { platz_id: string | null; begonnen_am: string; typ?: string; status?: string }[] | undefined;
-      // dazu der letzte nicht abgebrochene Neuansatz oder Teilwechsel je Ort für Zielbereich und Dosis (Plan 20,
-      // Runde 1, Befund 4)
-      if (ansaetze)
-        teile['naehrloesungsansatz'] = [
-          ...new Set([
-            ...letzterJeOrt(ansaetze),
-            ...letzterJeOrt(
-              ansaetze.filter(
-                (a) => (a.typ === 'neuansatz' || a.typ === 'teilwechsel') && a.status !== 'abgebrochen',
-              ),
-            ),
-            // und der letzte Neuansatz je Ort: «Lösung wechseln» rechnet ab dem letzten Neuansatz (Konzept 5.x
-            // Auslöser-Tabelle; Plan 32 Runde 2 Befund 5)
-            ...letzterJeOrt(ansaetze.filter((a) => a.typ === 'neuansatz' && a.status !== 'abgebrochen')),
-          ]),
-        ];
-      // Positionen nur der letzten Ansätze je Ort (Plan 20)
-      const letzte = new Set(
-        (teile['naehrloesungsansatz'] as { id: string }[] | undefined)?.map((a) => a.id),
-      );
-      const positionen = teile['ansatz_position'] as { ansatz_id: string }[] | undefined;
-      if (positionen) teile['ansatz_position'] = positionen.filter((p) => letzte.has(p.ansatz_id));
-      // v_messung_unsicher hat kein gilt_ab: auf die Messungen im Fenster beschränken (Runde 1, Befund 9)
-      const imFenster = new Set((teile['messung'] as { id: string }[] | undefined)?.map((m) => m.id));
-      const unsicher = teile['v_messung_unsicher'] as { messung_id: string }[] | undefined;
-      if (unsicher) teile['v_messung_unsicher'] = unsicher.filter((u) => imFenster.has(u.messung_id));
+      // Kürzung nach dem Laden, gleich in push-taeglich (Plan 31 Lösungsweg 1)
+      const teile = teileKuerzen(Object.fromEntries(geladen));
       const buendel: Buendel = {
         id: 'aktuell',
         format: 1,

@@ -1,0 +1,42 @@
+{
+  "id": "msg_recherche_04",
+  "type": "message",
+  "role": "assistant",
+  "model": "claude-sonnet-5-5",
+  "content": [
+    {
+      "type": "text",
+      "text": "Ich suche weiter."
+    },
+    {
+      "type": "server_tool_use",
+      "id": "srvtoolu_fixture_04",
+      "name": "web_search",
+      "input": {
+        "query": "Blattsalat DWC EC pH"
+      }
+    },
+    {
+      "type": "web_search_tool_result",
+      "tool_use_id": "srvtoolu_fixture_04",
+      "content": [
+        {
+          "type": "web_search_result",
+          "url": "https://forschung.example.invalid/blattsalat-dwc",
+          "title": "Blattsalat im DWC-Versuch",
+          "encrypted_content": "fixture",
+          "page_age": null
+        }
+      ]
+    }
+  ],
+  "stop_reason": "pause_turn",
+  "stop_sequence": null,
+  "usage": {
+    "input_tokens": 3100,
+    "output_tokens": 120,
+    "server_tool_use": {
+      "web_search_requests": 2
+    }
+  }
+}

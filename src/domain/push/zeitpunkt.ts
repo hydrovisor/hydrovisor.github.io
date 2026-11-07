@@ -21,6 +21,29 @@ export function sammelFaellig(
   };
 }
 
+/** «Kurzprüfung offen» um 20:00 Zürich (R5.5), bis 21:59 (A4) */
+export const KURZPRUEFUNG_ZEIT = '20:00';
+const KURZPRUEFUNG_BIS = '21:59';
+
+export function kurzpruefungFaellig(
+  jetzt: Date,
+  zeitzone: Zeitzone,
+): { faellig: boolean; datumLokal: string } {
+  const m = minuten(uhrzeit(jetzt, zeitzone));
+  return {
+    faellig: m >= minuten(KURZPRUEFUNG_ZEIT) && m <= minuten(KURZPRUEFUNG_BIS),
+    datumLokal: kalendertag(jetzt, zeitzone),
+  };
+}
+
+/** Timer-Push nur für timer_ende in den letzten 15 min (A5); ältere Timer gelten als verpasst */
+export const TIMER_FENSTER_MS = 15 * 60 * 1000;
+
+export function timerFaellig(timerEnde: Date, jetzt: Date): boolean {
+  const seit = jetzt.getTime() - timerEnde.getTime();
+  return seit >= 0 && seit < TIMER_FENSTER_MS;
+}
+
 export function wiederholungErlaubt(jetzt: Date, zeitzone: Zeitzone, pushZeit: string): boolean {
   const jetztMin = minuten(uhrzeit(jetzt, zeitzone));
   const ab = minuten(pushZeit);

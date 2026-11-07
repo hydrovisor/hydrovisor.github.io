@@ -1,7 +1,10 @@
 # Auslieferung (Konzept 11.1, 12.6; docs/spec/04_architektur.md Abschnitt 9). Nur main.
 # Migration, Seed und Edge Functions, wenn sich seit dem Tag letzte-migration etwas unter supabase/,
-# data/ oder scripts/seed* geändert hat, und nur nach Tims Freigabe in der Umgebung production
-# (Deployment-Branches der Umgebung auf main beschränkt, Tims Handgriff). Pages erst, wenn die App existiert.
+# data/, scripts/seed*, src/domain/ oder src/adressen.ts geändert hat (push-taeglich bündelt src/domain, damit Push
+# und Heute dieselbe Regel rechnen, Plan 31 A15), nach Freigabe in der Umgebung production (Deployment-Branches der
+# Umgebung auf main beschränkt). Freigabe: mit ausstehender Migration nur Tim (Regel 2; Ausnahme Entscheid 0012), ohne
+# Migration der Lead (Entscheid 0010). Der Job vorhanden nennt die ausstehenden Migrationen in der Zusammenfassung
+# (Ausgabe mig), und «db push» läuft nur, wenn eine aussteht (Prüfer #31 Befund 1). Pages erst, wenn die App existiert.
 # Aktionen per Commit angeheftet (Version im Kommentar).
 name: deploy
 
@@ -33,6 +36,7 @@ jobs:
     outputs:
       app: ${{ steps.f.outputs.app }}
       db: ${{ steps.f.outputs.db }}
+      mig: ${{ steps.f.outputs.mig }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -41,11 +45,23 @@ jobs:
       - id: f
         run: |
           [ -f package.json ] && echo app=true >> "$GITHUB_OUTPUT" || echo app=false >> "$GITHUB_OUTPUT"
-          if [ ! -f supabase/config.toml ]; then echo db=false >> "$GITHUB_OUTPUT"; exit 0; fi
+          if [ ! -f supabase/config.toml ]; then echo db=false >> "$GITHUB_OUTPUT"; echo mig=false >> "$GITHUB_OUTPUT"; exit 0; fi
           # ausstehend ist alles seit der letzten erfolgreichen Migration, nicht nur der letzte Push
-          if ! git rev-parse -q --verify refs/tags/letzte-migration > /dev/null; then echo db=true >> "$GITHUB_OUTPUT"; exit 0; fi
-          if git diff --name-only refs/tags/letzte-migration "$GITHUB_SHA" | grep -E '^(supabase/|data/|scripts/seed|src/domain/w0/)' > /dev/null; then
+          if ! git rev-parse -q --verify refs/tags/letzte-migration > /dev/null; then
+            echo db=true >> "$GITHUB_OUTPUT"; echo mig=true >> "$GITHUB_OUTPUT"
+            echo "### Ausstehende Migrationen: alle (Tag letzte-migration fehlt) – Freigabe nur durch Tim" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          if git diff --name-only refs/tags/letzte-migration "$GITHUB_SHA" | grep -E '^(supabase/|data/|scripts/seed|src/domain/|src/adressen\.ts)' > /dev/null; then
             echo db=true >> "$GITHUB_OUTPUT"; else echo db=false >> "$GITHUB_OUTPUT"; fi
+          offen=$(git diff --name-only --diff-filter=AMR refs/tags/letzte-migration "$GITHUB_SHA" -- supabase/migrations)
+          if [ -n "$offen" ]; then
+            echo mig=true >> "$GITHUB_OUTPUT"
+            { echo "### Ausstehende Migrationen – Freigabe von production nur durch Tim (Regel 2)"; echo; echo "$offen" | sed 's/^/- /'; } >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo mig=false >> "$GITHUB_OUTPUT"
+            echo "### Keine ausstehende Migration – Functions und Seed-Trockenlauf, Freigabe durch den Lead (Entscheid 0010)" >> "$GITHUB_STEP_SUMMARY"
+          fi
       - name: Rückfall-Probe nur, wenn letzter-guter-stand der laufende Stand ist (sonst ein echter Rückfall)
         if: inputs.rueckfall_probe
         run: |
@@ -67,7 +83,8 @@ jobs:
         with: { version: 3.0.0 } # fest wie lokal (I0-03, Typen-Abgleich)
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with: { node-version: 22, cache: npm }
-      - name: Migration
+      - name: Migration (nur mit ausstehender Datei unter supabase/migrations)
+        if: needs.vorhanden.outputs.mig == 'true'
         env:
           DB_URL: ${{ secrets.SUPABASE_DB_URL_POOLER }}
         # --yes: CLI 3.0.0 fragt ohne Terminal nach und bricht sonst ohne Änderung ab (Lauf 41645672298)

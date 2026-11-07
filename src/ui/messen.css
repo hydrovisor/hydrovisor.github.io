@@ -68,3 +68,9 @@
   padding-left: var(--space-3);
   padding-right: var(--space-3);
 }
+
+/* Plan 29: «pH-Minus gegeben» im pH-Hinweis der Ergebniszone, ohne die Zone zu vergrössern */
+.hv-ergebnis-aktion {
+  display: flex;
+  justify-content: flex-end;
+}

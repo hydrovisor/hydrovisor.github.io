@@ -10,6 +10,11 @@
 // - pushLauf antwortet: 401 ohne gültiges Cron-Geheimnis bzw. ohne istTim, 204 vor der Push-Zeit, 200 nach
 //   einem Lauf zur Push-Zeit; ein abgelehnter elfter Test-Push mit einem Status ≥ 400 ohne Versand.
 // - Unique gilt wie der Index nur für art sammel; Test-Pushes dürfen mehrfach am Tag (A7: höchstens 10).
+// Anpassung I1b-06 (Plan 31 «Anpassung geschützter Tests»): Der Speicher implementiert die neuen Methoden von PushDaten
+// (versandHeute, tageslisteSchreiben, laufendeTimer, einstellung mit email_rueckfall, versandAnlegen mit kanal);
+// TP1, TP4 und R5.5 zählen nur Sendungen mit tag heute, weil um 20:00 «Kurzprüfung offen» dazukommen kann; TP3 und
+// «11.3 Nutzlast» erwarten Titel und erste Zeile nach sammelInhalt(nurEcht(faelligeAufgaben())). Die Prüfinhalte von
+// TP1, TP2, TP4, UC0-AK5, T2 und 11.3 bleiben.
 import { pushLauf, type Abo, type Auftrag, type PushDaten, type Sender } from './kern.ts';
 import { pruefen, signieren } from '../_shared/hmac.ts';
 import { signaturText } from '../../../src/domain/push/signatur.ts';
@@ -19,13 +24,18 @@ const SCHLUESSEL = 'test-schluessel-nur-lokal';
 const SAMMEL: Auftrag = { art: 'sammel', geheimnisOk: true };
 
 type Status = 'geplant' | 'gesendet' | 'fehler' | 'abgemeldet';
+type Kanal = 'push' | 'email';
+type Art = 'sammel' | 'kurzpruefung_20' | 'timer' | 'test';
 interface VersandZeile {
   id: string;
-  abo_id: string;
-  art: 'sammel' | 'test';
+  kanal: Kanal;
+  abo_id: string | null;
+  art: Art;
   datum_lokal: string;
   titel: string;
   anzahl_aufgaben: number;
+  bezug_id?: string;
+  timer_ende?: string;
   status: Status;
   gesendet_am?: string;
 }
@@ -81,7 +91,7 @@ class Speicher implements PushDaten {
   }
 
   async einstellung() {
-    return { push_zeit: this.pushZeit, zeitzone: ZONE };
+    return { push_zeit: this.pushZeit, zeitzone: ZONE, email_rueckfall: false };
   }
 
   async aktiveAbos() {
@@ -97,17 +107,36 @@ class Speicher implements PushDaten {
     return this.teileWert;
   }
 
+  async versandHeute(datum_lokal: string) {
+    return this.versande
+      .filter((v) => v.datum_lokal === datum_lokal)
+      .map((v) => ({ abo_id: v.abo_id, kanal: v.kanal, art: v.art, status: v.status }));
+  }
+
+  // Unique wie push_versand_einmal_push, _email und _timer
   async versandAnlegen(z: {
-    abo_id: string;
-    art: 'sammel' | 'test';
+    kanal: Kanal;
+    abo_id: string | null;
+    art: Art;
     datum_lokal: string;
     titel: string;
     anzahl_aufgaben: number;
+    bezug_id?: string;
+    timer_ende?: string | Date;
   }): Promise<{ id: string } | 'besteht'> {
+    const timerEnde = z.timer_ende === undefined ? undefined : new Date(z.timer_ende).toISOString();
     if (
-      z.art === 'sammel' &&
-      this.versande.some(
-        (v) => v.art === 'sammel' && v.abo_id === z.abo_id && v.datum_lokal === z.datum_lokal,
+      this.versande.some((v) =>
+        z.art === 'timer'
+          ? v.art === 'timer' &&
+            v.abo_id === z.abo_id &&
+            v.bezug_id === z.bezug_id &&
+            v.timer_ende === timerEnde
+          : (z.art === 'sammel' || z.art === 'kurzpruefung_20') &&
+            v.art === z.art &&
+            v.kanal === z.kanal &&
+            v.datum_lokal === z.datum_lokal &&
+            (z.kanal === 'email' || v.abo_id === z.abo_id),
       )
     ) {
       this.protokoll.push('besteht');
@@ -115,15 +144,31 @@ class Speicher implements PushDaten {
     }
     this.zaehler += 1;
     const id = `00000000-0000-4000-8000-${String(this.zaehler).padStart(12, '0')}`;
-    this.versande.push({ id, ...z, status: 'geplant' });
+    const zeile: VersandZeile = {
+      id,
+      kanal: z.kanal,
+      abo_id: z.abo_id,
+      art: z.art,
+      datum_lokal: z.datum_lokal,
+      titel: z.titel,
+      anzahl_aufgaben: z.anzahl_aufgaben,
+      status: 'geplant',
+    };
+    if (z.bezug_id !== undefined) zeile.bezug_id = z.bezug_id;
+    if (timerEnde !== undefined) zeile.timer_ende = timerEnde;
+    this.versande.push(zeile);
     this.protokoll.push(`anlegen ${id}`);
     return { id };
   }
 
-  async fehlerVersandUebernehmen(abo_id: string, datum_lokal: string) {
+  async fehlerVersandUebernehmen(abo_id: string | null, datum_lokal: string, art: Art, kanal: Kanal) {
     const v = this.versande.find(
       (x) =>
-        x.art === 'sammel' && x.abo_id === abo_id && x.datum_lokal === datum_lokal && x.status === 'fehler',
+        x.art === art &&
+        x.kanal === kanal &&
+        x.abo_id === abo_id &&
+        x.datum_lokal === datum_lokal &&
+        x.status === 'fehler',
     );
     if (!v) return undefined;
     v.status = 'geplant';
@@ -150,8 +195,23 @@ class Speicher implements PushDaten {
     return this.versande.filter((v) => v.art === 'test' && v.datum_lokal === datum_lokal).length;
   }
 
+  tagesliste: { tag: string; aufgabe_schluessel: string }[] = [];
+  async tageslisteSchreiben(tag: string, zeilen: readonly { aufgabe_schluessel: string }[]) {
+    let neu = 0;
+    for (const z of zeilen) {
+      if (this.tagesliste.some((t) => t.aufgabe_schluessel === z.aufgabe_schluessel)) continue;
+      this.tagesliste.push({ tag, aufgabe_schluessel: z.aufgabe_schluessel });
+      neu += 1;
+    }
+    return neu;
+  }
+
+  async laufendeTimer() {
+    return [];
+  }
+
   sammel(): VersandZeile[] {
-    return this.versande.filter((v) => v.art === 'sammel');
+    return this.versande.filter((v) => v.art === 'sammel' && v.kanal === 'push');
   }
 }
 
@@ -187,6 +247,10 @@ const nutzlastVon = (sender: FakeSender, i = 0) => {
   return JSON.parse(aufruf.nutzlast) as Record<string, unknown>;
 };
 
+/** nur Sammel-Pushes (tag heute); um 20:00 kann «Kurzprüfung offen» dazukommen (I1b-06) */
+const heute = (sender: FakeSender) =>
+  sender.aufrufe.filter((a) => (JSON.parse(a.nutzlast) as Record<string, unknown>)['tag'] === 'heute');
+
 // ---------------------------------------------------------------------------------------------------------
 // TP1 Einmal je Tag
 // ---------------------------------------------------------------------------------------------------------
@@ -200,7 +264,7 @@ Deno.test('TP1 Läufe 07:00 und 07:05 am selben Tag: genau ein Sammel-Versand', 
   gleich(erster.versandt, 1, 'versandt erster Lauf');
   gleich(zweiter.versandt, 0, 'versandt zweiter Lauf');
   gleich(zweiter.uebersprungen, 1, 'uebersprungen zweiter Lauf');
-  gleich(sender.aufrufe.length, 1, 'Sendungen');
+  gleich(heute(sender).length, 1, 'Sendungen');
   gleich(
     daten.sammel().map((v) => [v.datum_lokal, v.status]),
     [['2027-01-20', 'gesendet']],
@@ -215,7 +279,7 @@ Deno.test('TP1 zwei parallele Läufe 07:00: genau ein Versand', async () => {
     lauf(SAMMEL, '2027-01-20T06:00:00.000Z', daten, sender),
     lauf(SAMMEL, '2027-01-20T06:00:00.000Z', daten, sender),
   ]);
-  gleich(sender.aufrufe.length, 1, 'Sendungen');
+  gleich(heute(sender).length, 1, 'Sendungen');
   gleich(daten.sammel().length, 1, 'Sammel-Versände');
   gleich(a.versandt + b.versandt, 1, 'versandt zusammen');
   gleich(a.uebersprungen + b.uebersprungen, 1, 'uebersprungen zusammen');
@@ -255,7 +319,7 @@ Deno.test('UC0-AK5 Antwort 404: Abo inaktiv, Versand abgemeldet', async () => {
   // kein weiterer Versand an dieses Abo am Folgetag
   const folgetag = await lauf(SAMMEL, '2027-01-21T06:00:00.000Z', daten, sender);
   gleich(folgetag.versandt, 0, 'versandt am Folgetag');
-  gleich(sender.aufrufe.length, 1, 'Sendungen insgesamt');
+  gleich(heute(sender).length, 1, 'Sendungen insgesamt');
 });
 
 Deno.test('UC0-AK5 inaktives Abo erhält keine Sammel-Push', async () => {
@@ -279,6 +343,7 @@ Deno.test('UC0-AK5 inaktives Abo erhält keine Sammel-Push', async () => {
 // TP3 Nur echt
 // ---------------------------------------------------------------------------------------------------------
 
+// I1b-06: echt bleiben pH-Kontrolle (Kalibrierung 10.1. + 7), Messen und nachfüllen R-2.3, Kurzprüfung R-2.3
 Deno.test('TP3 Demo-Gefäss mit fälliger Messung nicht im Titel gezählt', async () => {
   const teile = teileFuer({
     echtKalibriert: '2027-01-10T10:00:00.000Z',
@@ -293,11 +358,11 @@ Deno.test('TP3 Demo-Gefäss mit fälliger Messung nicht im Titel gezählt', asyn
   await lauf(SAMMEL, '2027-01-20T06:00:00.000Z', daten, sender);
   gleich(
     daten.sammel().map((v) => [v.titel, v.anzahl_aufgaben]),
-    [['Hydrovisor heute: 1 Routine', 1]],
+    [['Hydrovisor heute: 3 Routine', 3]],
     'Titel und Anzahl im Versand',
   );
   const nutzlast = nutzlastVon(sender);
-  gleich(nutzlast['titel'], 'Hydrovisor heute: 1 Routine', 'Titel der Nutzlast');
+  gleich(nutzlast['titel'], 'Hydrovisor heute: 3 Routine', 'Titel der Nutzlast');
   wahr(!String(nutzlast['text']).includes('D-'), 'kein Demo-Ort im Text');
 });
 
@@ -306,7 +371,7 @@ Deno.test('TP3 Demo-Abo erhält keine Sammel-Push', async () => {
   const sender = new FakeSender();
   const ergebnis = await lauf(SAMMEL, '2027-01-20T06:00:00.000Z', daten, sender);
   gleich(ergebnis.versandt, 0, 'versandt');
-  gleich(sender.aufrufe.length, 0, 'Sendungen');
+  gleich(heute(sender).length, 0, 'Sendungen');
   gleich(daten.versande.length, 0, 'Versände');
 });
 
@@ -327,9 +392,9 @@ Deno.test(
       const beginn = Date.parse('2027-03-26T23:00:00.000Z');
       const ende = Date.parse('2027-03-29T21:55:00.000Z');
       for (let t = beginn; t <= ende; t += 5 * 60_000) {
-        const vorSendungen = sender.aufrufe.length;
+        const vorSendungen = heute(sender).length;
         await lauf(SAMMEL, new Date(t).toISOString(), daten, sender);
-        if (sender.aufrufe.length > vorSendungen) zeiten.push(new Date(t).toISOString());
+        if (heute(sender).length > vorSendungen) zeiten.push(new Date(t).toISOString());
       }
       gleich(
         zeiten,
@@ -358,7 +423,7 @@ Deno.test('R5.5 Lauf 06:55 vor der Push-Zeit: kein Versand', async () => {
   const ergebnis = await lauf(SAMMEL, '2027-01-20T05:55:00.000Z', daten, sender);
   gleich(ergebnis.http, 204, 'HTTP');
   gleich(ergebnis.versandt, 0, 'versandt');
-  gleich(sender.aufrufe.length, 0, 'Sendungen');
+  gleich(heute(sender).length, 0, 'Sendungen');
   gleich(daten.versande.length, 0, 'Versände');
 });
 
@@ -367,9 +432,9 @@ Deno.test('R5.5 Push-Zeit 05:00 am 28.3.2027 (Sommerzeit): Versand um 05:00 Orts
   daten.pushZeit = '05:00:00';
   const sender = new FakeSender();
   await lauf(SAMMEL, '2027-03-28T02:55:00.000Z', daten, sender);
-  gleich(sender.aufrufe.length, 0, 'Sendungen um 04:55 Ortszeit');
+  gleich(heute(sender).length, 0, 'Sendungen um 04:55 Ortszeit');
   await lauf(SAMMEL, '2027-03-28T03:00:00.000Z', daten, sender);
-  gleich(sender.aufrufe.length, 1, 'Sendungen um 05:00 Ortszeit');
+  gleich(heute(sender).length, 1, 'Sendungen um 05:00 Ortszeit');
   gleich(
     daten.sammel().map((v) => v.datum_lokal),
     ['2027-03-28'],
@@ -392,14 +457,14 @@ Deno.test(
     gleich(daten.abos[0]?.aktiv, true, 'Abo bleibt aktiv nach 500');
     const zweiter = await lauf(SAMMEL, '2027-01-20T06:05:00.000Z', daten, sender);
     gleich(zweiter.versandt, 1, 'versandt im zweiten Lauf');
-    gleich(sender.aufrufe.length, 2, 'Sendungen nach dem zweiten Lauf');
+    gleich(heute(sender).length, 2, 'Sendungen nach dem zweiten Lauf');
     gleich(
       daten.sammel().map((v) => v.status),
       ['gesendet'],
       'eine Zeile, Status gesendet',
     );
     await lauf(SAMMEL, '2027-01-20T06:10:00.000Z', daten, sender);
-    gleich(sender.aufrufe.length, 2, 'kein dritter Versand nach gesendet');
+    gleich(heute(sender).length, 2, 'kein dritter Versand nach gesendet');
 
     // nach Push-Zeit + 4 h (11:05 Zürich): keine Wiederholung mehr
     const spaet = new Speicher([abo(1)]);
@@ -407,7 +472,7 @@ Deno.test(
     await lauf(SAMMEL, '2027-01-20T06:00:00.000Z', spaet, spaetSender);
     const ergebnis = await lauf(SAMMEL, '2027-01-20T10:05:00.000Z', spaet, spaetSender);
     gleich(ergebnis.versandt, 0, 'versandt nach 11:00');
-    gleich(spaetSender.aufrufe.length, 1, 'Sendungen nach 11:00');
+    gleich(heute(spaetSender).length, 1, 'Sendungen nach 11:00');
     gleich(
       spaet.sammel().map((v) => v.status),
       ['fehler'],
@@ -452,10 +517,15 @@ Deno.test('11.3 Nutzlast: TTL 14400, urgency high, tag heute, versand_id und gü
   gleich(nutzlast['versand_id'], versand.id, 'versand_id');
   gleich(nutzlast['tag'], 'heute', 'tag');
   gleich(nutzlast['url'], '#/heute', 'url');
-  gleich(nutzlast['titel'], 'Hydrovisor heute: 3 Routine', 'titel');
-  gleich(String(nutzlast['text']).split('\n')[0], 'Kalibrieren · Messen R-2.3, R-3.1', 'text');
-  gleich(versand.titel, 'Hydrovisor heute: 3 Routine', 'titel im Versand');
-  gleich(versand.anzahl_aufgaben, 3, 'anzahl_aufgaben im Versand');
+  // I1b-06: sammelInhalt(nurEcht(faelligeAufgaben())) aus TEILE_DREI_ROUTINE (7 echte Aufgaben, alle Routine)
+  gleich(nutzlast['titel'], 'Hydrovisor heute: 7 Routine', 'titel');
+  gleich(
+    String(nutzlast['text']).split('\n')[0],
+    'Messgerät kalibrieren · pH-Kontrolle · Messen und nachfüllen R-2.3, R-3.1 · Kurzprüfung R-2.3, R-3.1, R-4.1',
+    'text',
+  );
+  gleich(versand.titel, 'Hydrovisor heute: 7 Routine', 'titel im Versand');
+  gleich(versand.anzahl_aufgaben, 7, 'anzahl_aufgaben im Versand');
   gleich(versand.status, 'gesendet', 'Status');
   gleich(versand.gesendet_am, '2027-01-20T06:00:00.000Z', 'gesendet_am');
   wahr(
@@ -487,19 +557,18 @@ Deno.test('11.3 ohne gültiges Cron-Geheimnis: 401, kein Versand', async () => {
   );
   gleich(ergebnis.http, 401, 'HTTP');
   gleich(ergebnis.versandt, 0, 'versandt');
-  gleich(sender.aufrufe.length, 0, 'Sendungen');
+  gleich(heute(sender).length, 0, 'Sendungen');
   gleich(daten.versande.length, 0, 'Versände');
 });
 
 Deno.test('11.3 Sammel-Push auch bei 0 Aufgaben: «Hydrovisor heute: nichts fällig» (A4)', async () => {
-  const teile = teileFuer({
-    echtKalibriert: '2027-01-10T10:00:00.000Z',
-    orte: [{ anlage: 'R', kennung: '2.3', letzteMessung: '2027-01-19T08:00:00.000Z' }],
-  });
+  // I1b-06: ohne Gefäss und mit frischer Kalibrierung (pH-Kontrolle erst 26.1.) ist nichts fällig; ein Gefäss mit
+  // Lösung hätte jetzt die tägliche Kurzprüfung
+  const teile = teileFuer({ echtKalibriert: '2027-01-19T10:00:00.000Z', orte: [] });
   const daten = new Speicher([abo(1)], teile);
   const sender = new FakeSender();
   await lauf(SAMMEL, '2027-01-20T06:00:00.000Z', daten, sender);
-  gleich(sender.aufrufe.length, 1, 'Sendungen');
+  gleich(heute(sender).length, 1, 'Sendungen');
   gleich(nutzlastVon(sender)['titel'], 'Hydrovisor heute: nichts fällig', 'titel');
   gleich(daten.versande[0]?.anzahl_aufgaben, 0, 'anzahl_aufgaben');
 });

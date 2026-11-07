@@ -431,3 +431,7 @@ verify_jwt = false
 # Edge Function ki-tuete prüft Token und ist_tim() selbst (Plan 14, A9)
 [functions.ki-tuete]
 verify_jwt = false
+
+# Edge Function ki-recherche prüft Token und ist_tim() selbst (Plan 37, wie ki-tuete)
+[functions.ki-recherche]
+verify_jwt = false
