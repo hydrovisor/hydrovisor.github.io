@@ -35,6 +35,7 @@ import { Card } from '../bausteine/Card.tsx';
 import { Choice } from '../bausteine/Choice.tsx';
 import { Notice } from '../bausteine/Notice.tsx';
 import { TextField } from '../bausteine/TextField.tsx';
+import { Zeitwahl } from '../bausteine/Zeitwahl.tsx';
 import { useBuendel } from '../buendel.tsx';
 import { hashZu } from '../router.ts';
 import '../einstellungen.css';
@@ -296,12 +297,13 @@ function Formulare({ e, geraet }: { e: Zeile; geraet: Zeile | undefined }) {
         rueckmeldung={rueck['erinnerung']}
         sperre={sendet}
       >
-        <TextField
+        <Zeitwahl
           label="Push-Zeit"
           hint="05:00 bis 22:00"
-          inputMode="numeric"
-          value={pushZeit}
-          onChange={(ev) => setPushZeit(ev.target.value)}
+          min={5}
+          max={22}
+          wert={pushZeit}
+          onWert={setPushZeit}
         />
         <TextField
           label="Vorlauf"
