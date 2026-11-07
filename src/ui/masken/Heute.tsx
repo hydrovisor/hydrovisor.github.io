@@ -175,7 +175,7 @@ function Uebersicht({ jetzt, faellig }: { jetzt: Date; faellig: readonly Aufgabe
   const teile = buendel?.teile;
   const orte = buendel ? messbareOrte(buendel.teile) : [];
   const messungen = messungenIm(buendel);
-  // «Morgen» für die fällige Kalibrierung (R5.2: Morgen ja), nicht für die Erstkalibrierung (Plan 113, UC8-AK6)
+  // «Morgen» für die fällige Kalibrierung und die Erstkalibrierung (R5.2: Morgen ja; Plan 113 Nachtrag 12, UC8-AK6)
   const kalibrieren = faellig.find(
     (a) => a.typ === 'kalibrieren' && a.bezug === geraet?.id && a.morgen.erlaubt,
   );

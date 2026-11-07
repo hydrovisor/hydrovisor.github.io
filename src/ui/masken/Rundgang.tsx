@@ -405,7 +405,8 @@ export function Rundgang({ kuerzel }: { kuerzel: string }) {
             variant="secondary"
             block
             onClick={() => {
-              // beim Halt ist letzteAktionAm das gilt_ab der Messung (nachMessung)
+              // beim Halt nach nachMessung() ist letzteAktionAm das gilt_ab der Messung; nach nachNachfuellen() die Zeit
+              // des Nachfüllens (Abweichung um Minuten, nur für die Anzeige «Gespeichert hh:mm», Prüfer Runde 2 R1)
               const giltAb = stand.letzteAktionAm;
               weiter(amEnde(stand, uhrJetzt()));
               // pH über dem Ziel: direkt ins Angebot «pH-Minus gegeben» ohne neue Messung (Plan 113, Rundgang-AK3)
