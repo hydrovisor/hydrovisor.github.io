@@ -275,6 +275,7 @@ export function Rundgang({ kuerzel }: { kuerzel: string }) {
         code={rOrt.code}
         kannen={kannenWahl(volumenL, kanne)}
         kanne={kanne}
+        volumenL={volumenL}
         rechnen={(liter) =>
           messung ? nachfuellSchritt(teile, rOrt.platzId, messung, liter, uhrJetzt(), ZEITZONE) : undefined
         }
@@ -417,7 +418,9 @@ export function Rundgang({ kuerzel }: { kuerzel: string }) {
                 href={hashZu(
                   z.knopf.route === 'messen'
                     ? { name: 'messen', code: z.code }
-                    : { name: 'gefaess', code: z.code },
+                    : z.knopf.route === 'anlage'
+                      ? { name: 'anlage', kuerzel }
+                      : { name: 'gefaess', code: z.code },
                 )}
               >
                 {z.knopf.text}
@@ -545,6 +548,7 @@ function Nachfuellen({
   code,
   kannen,
   kanne,
+  volumenL,
   rechnen,
   sendet,
   fehler,
@@ -553,6 +557,7 @@ function Nachfuellen({
   code: string;
   kannen: number[];
   kanne: number;
+  volumenL: number;
   rechnen: (liter: number) => ReturnType<typeof nachfuellSchritt> | undefined;
   sendet: boolean;
   fehler: React.ReactNode;
@@ -566,6 +571,13 @@ function Nachfuellen({
   // Liter sind die Wahrheit (R4.9): ganze Kannen plus Teilkanne in Litern (Prüfer Runde 1 Befund 1)
   const summe = (anzahl ?? 0) * kanne + Number(teil ?? 0);
   const liter = summe > 0 ? Math.round(summe * 10) / 10 : undefined;
+  // Teilkanne kleiner als eine Kanne, Nachfüllwasser höchstens das Betriebsvolumen (Prüfer Runde 2 N3)
+  const zuViel =
+    Number(teil ?? 0) >= kanne
+      ? `Teilkanne kleiner als ${String(kanne)} l eingeben`
+      : volumenL > 0 && summe > volumenL
+        ? `Höchstens ${String(volumenL)} l, das Betriebsvolumen`
+        : undefined;
   const r = liter === undefined ? undefined : rechnen(liter);
   const ergebnis = r && 'mengen' in r ? r : undefined;
   return (
@@ -625,10 +637,11 @@ function Nachfuellen({
           </div>
         ) : null
       ) : null}
+      {zuViel ? <Notice kompakt tone="warn" title={zuViel} /> : null}
       <div className="hv-rundgang-fuss">
         <Button
           block
-          disabled={sendet || liter === undefined}
+          disabled={sendet || liter === undefined || zuViel !== undefined}
           onClick={() => liter !== undefined && onNachgefuellt(liter, ergebnis)}
         >
           Nachgefüllt

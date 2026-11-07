@@ -4,7 +4,7 @@
 import { describe, expect, it } from 'vitest';
 import { stromausfallVorgang } from '../../src/domain/aufgaben-stromausfall.ts';
 import { alleAufgaben, einstellungenAus, faelligeAufgaben, type Aufgabe } from '../../src/domain/aufgaben.ts';
-import { abschlussliste } from '../../src/domain/rundgang/abschluss.ts';
+import { abschlussKopf, abschlussliste } from '../../src/domain/rundgang/abschluss.ts';
 import { nachKurzpruefung, rundgangBeenden, rundgangStart } from '../../src/domain/rundgang/ablauf.ts';
 import { kurzpruefungVorgang } from '../../src/domain/rundgang/kurzpruefung.ts';
 import {
@@ -141,6 +141,8 @@ describe('Licht und Lüfter im Rundgang (Runde 1)', () => {
       text: 'Ebene 1 Licht aus',
       knopf: { text: 'Anlage öffnen', route: 'anlage' },
     });
+    // Runde 2 N2: die Zeile am Bereich zählt zu «korrigieren»
+    expect(abschlussKopf(stand, z)).toBe('Fertig: 0 von 1 · 0 im grünen Bereich · 1 korrigieren');
   });
 
   it('R5.2 kurzpruefungVorgang mit «bereich|licht» schreibt Licht mit ok false, Lüfter ok', () => {

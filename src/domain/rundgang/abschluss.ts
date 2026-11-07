@@ -172,7 +172,11 @@ export function abschlussliste(
 export function abschlussKopf(stand: RundgangStand, zeilen: readonly AbschlussZeile[]): string {
   const mitZeile = new Set(zeilen.map((z) => z.platzId));
   const besucht = stand.orte.filter((o) => o.fertig || o.messungId !== undefined);
-  const korrigieren = besucht.filter((o) => mitZeile.has(o.platzId)).length;
+  const orte = besucht.filter((o) => mitZeile.has(o.platzId)).length;
+  // Licht und Lüfter am Bereich zählen je Ebene einmal zu «korrigieren» (Prüfer Runde 2 N2)
+  const ortIds = new Set(stand.orte.map((o) => o.platzId));
+  const bereiche = new Set(zeilen.filter((z) => !ortIds.has(z.platzId)).map((z) => z.platzId)).size;
+  const korrigieren = orte + bereiche;
   const fertig = stand.orte.filter((o) => o.fertig).length;
-  return `Fertig: ${fertig} von ${stand.orte.length} · ${besucht.length - korrigieren} im grünen Bereich · ${korrigieren} korrigieren`;
+  return `Fertig: ${fertig} von ${stand.orte.length} · ${besucht.length - orte} im grünen Bereich · ${korrigieren} korrigieren`;
 }
