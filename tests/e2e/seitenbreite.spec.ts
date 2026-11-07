@@ -29,13 +29,26 @@ async function mitDaten(page: Page, start: Teile, pfad: string): Promise<void> {
 /** Breite des Dokuments in CSS-Pixeln (dp); grösser als der Viewport heisst waagrechter Überlauf */
 const seitenbreite = (page: Page) => page.evaluate(() => document.documentElement.scrollWidth);
 
+/** Knöpfe und Eingabefelder, deren Inhalt breiter ist als das Element selbst (Text ragt über den Rahmen) */
+const ueberlaufend = (page: Page) =>
+  page.evaluate(() =>
+    [...document.querySelectorAll<HTMLElement>('main .hv-btn, main input')]
+      .filter((el) => el.scrollWidth > el.clientWidth + 1)
+      .map((el) => el.textContent?.trim() || el.getAttribute('aria-label') || el.id),
+  );
+
+async function passt(page: Page): Promise<void> {
+  expect(page.viewportSize()?.width).toBe(360);
+  expect(await seitenbreite(page)).toBeLessThanOrEqual(360);
+  expect(await ueberlaufend(page)).toEqual([]);
+}
+
 test('F121-AK1 Etiketten: bei 360 dp ist die Seite höchstens 360 dp breit (Startfeld und Druckversatz X nebeneinander)', async ({
   page,
 }) => {
   await mitDaten(page, regalTeile(JETZT), '/#/etiketten?a=R');
   await expect(page.getByLabel(/^Druckversatz X/)).toBeVisible({ timeout: 15_000 });
-  expect(page.viewportSize()?.width).toBe(360);
-  expect(await seitenbreite(page)).toBeLessThanOrEqual(360);
+  await passt(page);
 });
 
 test('F121-AK1 Gefäss erfassen Schritt 4: bei 360 dp ist die Seite höchstens 360 dp breit (Messen, Nachfüllen, Wechseln)', async ({
@@ -56,5 +69,30 @@ test('F121-AK1 Gefäss erfassen Schritt 4: bei 360 dp ist die Seite höchstens 3
   await weiter.click();
   await expect(page.getByText('Schritt 4 von 4')).toBeVisible();
   await expect(page.getByLabel(/^Wechseln alle/)).toBeVisible();
-  expect(await seitenbreite(page)).toBeLessThanOrEqual(360);
+  await passt(page);
+});
+
+test('F121-AK1 Anlage: bei 360 dp ist die Seite höchstens 360 dp breit, «Gefäss erfassen» und «Etiketten drucken» ohne überstehenden Text', async ({
+  page,
+}) => {
+  await mitDaten(page, regalTeile(JETZT), '/#/anlage?a=R');
+  await expect(page.getByRole('link', { name: 'Etiketten drucken' })).toBeVisible({ timeout: 15_000 });
+  await passt(page);
+});
+
+test('F121-AK1 Anlage anlegen: bei 360 dp ist die Seite höchstens 360 dp breit (Licht ab und bis, Lichtleisten und Lichtstunden)', async ({
+  page,
+}) => {
+  await mitDaten(page, regalTeile(JETZT), '/#/anlage/neu');
+  await expect(page.getByLabel(/^Licht ab/)).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByLabel(/^Lichtstunden/).first()).toBeVisible();
+  await passt(page);
+});
+
+test('F121-AK1 Gefäss ändern: bei 360 dp ist die Seite höchstens 360 dp breit (Messen, Nachfüllen, Wechseln)', async ({
+  page,
+}) => {
+  await mitDaten(page, regalTeile(JETZT), '/#/gefaess/R-2.3/aendern');
+  await expect(page.getByLabel(/^Wechseln alle/)).toBeVisible({ timeout: 15_000 });
+  await passt(page);
 });
