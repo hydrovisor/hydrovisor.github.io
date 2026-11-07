@@ -96,7 +96,7 @@ I2 liegt rund 2 PT unter der Konzept-Verteilung, weil das Datenmodell aus I0 all
 
 - **Einfrieren 1.4.2027:** C4-AK2 [Gerät] (CSV der Auswertungssichten in Excel geöffnet) prüft Tim beim Einfrieren der Auswertung; eigener Posten ohne Paket, weil kein Paket bis dahin offen bleibt.
 - **I3 Prüflauf (1.2. bis 31.3.):** Verbesserungspakete aus den PDSA-Zyklen P2 bis P4, in P5 nur Fehlerbehebungen; höchstens 4 PT, höchstens 0.5 PT je Paket, Klasse R oder F; keine Migration nach dem 1.3. ausser `create or replace view` bis 17.3. (Konzept 13.4, 14.6). Pakete entstehen als Issues aus den Zyklusnotizen.
-- **Pool (2.0 PT, gedeckelt, Tauschregel):** Wechselblock mit bis zu 3 Abhaklisten (0.5), Passung «Sorte → Gefässe» und «Passt hierhin» (0.5, K mit Planfreigabe), Warteschlange bei gutem WLAN (0.5; bei schwachem WLAN I2-07), eigene wiederkehrende Aufgaben (0.5).
+- **Pool (2.0 PT, gedeckelt, Tauschregel):** Wechselblock mit bis zu 3 Abhaklisten (0.5), Passung «Sorte → Gefässe» und «Passt hierhin» (0.5, K mit Planfreigabe), Warteschlange bei gutem WLAN (0.5; bei schwachem WLAN I2-07), eigene wiederkehrende Aufgaben (0.5). **Entscheid 0014 (7.11.2026):** Wechselblock (#139) vor M2 im Tausch gegen I2-07, falls das WLAN am Regal gut ist; die übrigen Posten nach M2.
 
 ## Reihenfolge, Abhängigkeiten, Parallelität
 
