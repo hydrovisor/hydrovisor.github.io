@@ -11,7 +11,7 @@ import {
   faelligeAufgaben,
   naechsteAufgabe,
   type Aufgabe,
-  type AufgabenTyp,
+  type AufgabenArt,
 } from '../../domain/aufgaben.ts';
 import { aufschubVorgang, deckelVorgang, erledigtVorgang } from '../../domain/aufgaben-aufschub.ts';
 import { ZEITZONE } from '../../domain/zeit.ts';
@@ -21,7 +21,7 @@ import { useBuendel } from '../buendel.tsx';
 import { hashZu, type Route } from '../router.ts';
 
 /** in eigener Anzeige: Umsetzen (Plan 33, «Wie geplant umsetzen»), Kalibrieren (Kopf «Messgerät») */
-const ANDERSWO: ReadonlySet<AufgabenTyp> = new Set<AufgabenTyp>(['umsetzen', 'kalibrieren']);
+const ANDERSWO: ReadonlySet<AufgabenArt> = new Set<AufgabenArt>(['umsetzen', 'kalibrieren']);
 const WOCHENTAG = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'] as const;
 const uhrJetzt = () => new Date(Date.now());
 

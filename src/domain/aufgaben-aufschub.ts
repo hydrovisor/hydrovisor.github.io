@@ -4,10 +4,11 @@
 import type { Datenart } from './kalibrierung/stand.ts';
 import type { Schritt, Vorgang } from './datenpfad/erfassung.ts';
 import { kalendertag, tagPlus, type Zeitzone } from './zeit.ts';
-import type { Aufgabe, AufgabenTyp, Rohaufgabe } from './aufgaben.ts';
+import type { Aufgabe, AufgabenArt, AufgabenTyp, Rohaufgabe } from './aufgaben.ts';
+import { MORGEN_STROM, STROM_LISTE, STROM_TYPEN, type StromTyp } from './aufgaben-stromausfall.ts';
 
 /** Typen in der Reihenfolge der Tabelle R5.2 (Sortierung am selben Ort) */
-export const TYPEN: readonly AufgabenTyp[] = [
+export const TYPEN: readonly AufgabenArt[] = [
   'gefaess_pruefen',
   'messen_nachfuellen',
   'messen',
@@ -29,6 +30,8 @@ export const TYPEN: readonly AufgabenTyp[] = [
   'station_echte_blaetter',
   'reservierung_pruefen',
   'reinigen',
+  // Stufe 2 «Nach Stromausfall» (Plan 30)
+  ...STROM_LISTE,
 ];
 
 export interface AufschubZeile {
@@ -70,29 +73,29 @@ export const MORGEN: Record<AufgabenTyp, MorgenRegel> = {
 };
 
 /** «Überspringen» nur bei festem Intervall (R5.3): Messen Kratky belüftet, Wurzeln prüfen, pH-Kontrolle */
-export const UEBERSPRINGEN: ReadonlySet<AufgabenTyp> = new Set<AufgabenTyp>([
+export const UEBERSPRINGEN: ReadonlySet<AufgabenArt> = new Set<AufgabenArt>([
   'messen',
   'wurzeln_pruefen',
   'ph_kontrolle',
 ]);
 
 /** Knopf «Erledigt» nur ohne eigene Erfassung (8.1 Regel 2: ein eigener Ereignistyp geht vor) */
-export const ERLEDIGT_KNOPF: ReadonlySet<AufgabenTyp> = new Set<AufgabenTyp>(['wuerfel_feucht', 'reinigen']);
+export const ERLEDIGT_KNOPF: ReadonlySet<AufgabenArt> = new Set<AufgabenArt>(['wuerfel_feucht', 'reinigen']);
 
 const TAG = /^\d{4}-\d{2}-\d{2}$/;
 
-export function aufgabenSchluessel(typ: AufgabenTyp, bezug: string, faelligAm: string): string {
+export function aufgabenSchluessel(typ: AufgabenArt, bezug: string, faelligAm: string): string {
   return `${typ}|${bezug}|${faelligAm}`;
 }
 
 export function schluesselLesen(
   s: string,
-): { typ: AufgabenTyp; bezug: string; faelligAm: string } | undefined {
+): { typ: AufgabenArt; bezug: string; faelligAm: string } | undefined {
   const teile = s.split('|');
   if (teile.length !== 3) return undefined;
   const [typ, bezug, faelligAm] = teile as [string, string, string];
   if (!(TYPEN as readonly string[]).includes(typ) || !TAG.test(faelligAm)) return undefined;
-  return { typ: typ as AufgabenTyp, bezug, faelligAm };
+  return { typ: typ as AufgabenArt, bezug, faelligAm };
 }
 
 const vonArt = (aufschuebe: readonly AufschubZeile[], art: AufschubZeile['art'], schluessel: string) =>
@@ -136,7 +139,9 @@ export function morgenErlaubt(
   aufschuebe: readonly AufschubZeile[],
   heute: string,
 ): boolean {
-  const regel = MORGEN[roh.typ];
+  const regel: MorgenRegel = STROM_TYPEN.has(roh.typ as StromTyp)
+    ? MORGEN_STROM[roh.typ as StromTyp]
+    : MORGEN[roh.typ as AufgabenTyp];
   const anzahl = verschoben(roh, aufschuebe);
   const morgen = tagPlus(heute, 1);
   if (regel === 'ja') return true;
@@ -153,7 +158,7 @@ export function morgenErlaubt(
  * Intervallregeln, damit die nächste Fälligkeit nach dem Überspringen heute + Intervall ist.
  */
 export function erfassungOderUebersprungen(
-  typ: AufgabenTyp,
+  typ: AufgabenArt,
   bezug: string,
   letzte: string | undefined,
   aufschuebe: readonly AufschubZeile[],
@@ -222,9 +227,12 @@ export function aufschubVorgang(
   ];
 }
 
-/** Vorgang für «Erledigt»: Ereignis aufgabe_erledigt mit Schlüssel und ursprünglicher Fälligkeit (Termintreue) */
+/**
+ * Vorgang für «Erledigt»: Ereignis aufgabe_erledigt mit Schlüssel und ursprünglicher Fälligkeit (Termintreue); bei den
+ * Aufgaben «Nach Stromausfall» an der Anlage mit anlage_id statt platz_id (Plan 30)
+ */
 export function erledigtVorgang(aufgabe: Aufgabe, id: string, jetzt: Date): Vorgang {
-  if (!ERLEDIGT_KNOPF.has(aufgabe.typ)) return [];
+  if (!ERLEDIGT_KNOPF.has(aufgabe.typ) && !STROM_TYPEN.has(aufgabe.typ as StromTyp)) return [];
   return [
     {
       art: 'neu',
@@ -233,7 +241,7 @@ export function erledigtVorgang(aufgabe: Aufgabe, id: string, jetzt: Date): Vorg
         id,
         client_id: id,
         typ: 'aufgabe_erledigt',
-        platz_id: aufgabe.bezug,
+        ...(aufgabe.bezugArt === 'anlage' ? { anlage_id: aufgabe.bezug } : { platz_id: aufgabe.bezug }),
         daten: { aufgabe_schluessel: aufgabe.schluessel },
         war_faellig_am: aufgabe.faelligAm,
         aufgabe_schluessel: aufgabe.schluessel,
