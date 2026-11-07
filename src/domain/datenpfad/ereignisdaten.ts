@@ -80,7 +80,18 @@ const SCHEMA: Readonly<Record<EreignisTyp, Schema>> = {
   umsetzdatum_geaendert: {
     schluessel: { von: undefined, nach: undefined, grund: ['morgen', 'in_station_lassen', 'ziel_spaeter'] },
   },
-  umsetzen: { schluessel: ORTSWECHSEL },
+  // Plan 36 A7: Einstufung bei frei gewähltem Zielgefäss { einstufung, rang, gruende }
+  umsetzen: {
+    schluessel: {
+      ...ORTSWECHSEL,
+      passung: (w) =>
+        typeof w === 'object' &&
+        w !== null &&
+        ['empfohlen', 'moeglich', 'nicht_empfohlen'].includes(
+          String((w as { einstufung?: unknown }).einstufung),
+        ),
+    },
+  },
   tausch: { schluessel: { ...ORTSWECHSEL, vorgang_id: undefined } },
   neu_beschriften: { schluessel: { von_kennung: undefined, nach_kennung: undefined } },
   ernte: { schluessel: { art: ['teil', 'ab'] } },

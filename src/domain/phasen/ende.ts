@@ -3,7 +3,7 @@
 // Bündelteilen ereignis_pflanzung und ereignis_satz; die Domäne filtert Typ und Storno selbst.
 //
 // zielbereichZeile() ist ein Spiegel der Sicht v_zielbereich (Zweck «Bewertung»), damit der Zielbereich nach dem
-// Speichern ohne neues Bündel stimmt (A1); wird in `zielbereich` überführt (I2-02, I2-04).
+// Speichern ohne neues Bündel stimmt (A1); bleibt Spiegel der Sicht; `zielbereich*.ts` rechnet die Zwecke in Hundertsteln (Plan 36).
 import { wiederherstellbar } from '../anlage/entfernen.ts';
 import { kuerzelVon, ms, zeilen, type Teile } from '../anlage/teile.ts';
 import type { Schritt, Vorgang } from '../datenpfad/erfassung.ts';
