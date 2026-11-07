@@ -296,6 +296,17 @@ function Formulare({ e, geraet }: { e: Zeile; geraet: Zeile | undefined }) {
         <a className="hv-btn hv-btn-secondary" href={hashZu({ name: 'push' })}>
           Push einrichten und Test-Push senden
         </a>
+        {/* E-Mail-Rückfall (R5.5, R13; Plan 31 A14): nur ohne gültiges Push-Abo, Standard Aus */}
+        <Choice
+          label="E-Mail, wenn Push fehlt"
+          zeile
+          optionen={[
+            { wert: 'aus', titel: 'Aus' },
+            { wert: 'ein', titel: 'Ein' },
+          ]}
+          gewaehlt={[e['email_rueckfall'] === true ? 'ein' : 'aus']}
+          onWahl={(w) => void aendern('erinnerung', 'einstellung', id, { email_rueckfall: w === 'ein' })}
+        />
       </Abschnitt>
 
       <Abschnitt titel="Kanne" onSpeichern={kanneSpeichern} rueckmeldung={rueck['kanne']} sperre={sendet}>

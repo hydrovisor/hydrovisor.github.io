@@ -1,6 +1,7 @@
 # Auslieferung (Konzept 11.1, 12.6; docs/spec/04_architektur.md Abschnitt 9). Nur main.
 # Migration, Seed und Edge Functions, wenn sich seit dem Tag letzte-migration etwas unter supabase/,
-# data/ oder scripts/seed* geändert hat, und nur nach Tims Freigabe in der Umgebung production
+# data/, scripts/seed*, src/domain/ oder src/adressen.ts geändert hat (push-taeglich bündelt src/domain, damit Push
+# und Heute dieselbe Regel rechnen, Plan 31 A15), und nur nach Tims Freigabe in der Umgebung production
 # (Deployment-Branches der Umgebung auf main beschränkt, Tims Handgriff). Pages erst, wenn die App existiert.
 # Aktionen per Commit angeheftet (Version im Kommentar).
 name: deploy
@@ -44,7 +45,7 @@ jobs:
           if [ ! -f supabase/config.toml ]; then echo db=false >> "$GITHUB_OUTPUT"; exit 0; fi
           # ausstehend ist alles seit der letzten erfolgreichen Migration, nicht nur der letzte Push
           if ! git rev-parse -q --verify refs/tags/letzte-migration > /dev/null; then echo db=true >> "$GITHUB_OUTPUT"; exit 0; fi
-          if git diff --name-only refs/tags/letzte-migration "$GITHUB_SHA" | grep -E '^(supabase/|data/|scripts/seed|src/domain/w0/)' > /dev/null; then
+          if git diff --name-only refs/tags/letzte-migration "$GITHUB_SHA" | grep -E '^(supabase/|data/|scripts/seed|src/domain/|src/adressen\.ts)' > /dev/null; then
             echo db=true >> "$GITHUB_OUTPUT"; else echo db=false >> "$GITHUB_OUTPUT"; fi
       - name: Rückfall-Probe nur, wenn letzter-guter-stand der laufende Stand ist (sonst ein echter Rückfall)
         if: inputs.rueckfall_probe
