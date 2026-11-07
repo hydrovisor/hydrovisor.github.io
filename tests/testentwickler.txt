@@ -240,3 +240,7 @@ tests/unit/rundgang-heute.test.ts
 tests/unit/aufgaben-stromausfall.test.ts
 tests/fixtures/rundgang.ts
 tests/e2e/rundgang.spec.ts
+# I1b-08 (#113)
+tests/unit/aufgaben-verteilung.test.ts
+tests/e2e/verteilung-gefaess.spec.ts
+tests/e2e/rundgang-korrektur.spec.ts
