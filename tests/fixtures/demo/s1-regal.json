@@ -14,7 +14,7 @@
     {"tabelle":"deckeltyp","ref":"demo-deckel-D3","einmal":"name","felder":{"name":"Demo D3","topfdurchmesser_mm":50,"loecher_je_reihe":[4,4]}},
     {"tabelle":"deckeltyp","ref":"demo-deckel-D4","einmal":"name","felder":{"name":"Demo D4","topfdurchmesser_mm":80,"loecher_je_reihe":[1,1]}},
     {"tabelle":"deckeltyp","ref":"demo-deckel-D6","einmal":"name","felder":{"name":"Demo D6","topfdurchmesser_mm":50,"loecher_je_reihe":[2,2,2]}},
-    {"tabelle":"deckeltyp","ref":"demo-deckel-S8","einmal":"name","felder":{"name":"Demo S8","topfdurchmesser_mm":80,"loecher_je_reihe":[4]}},
+    {"tabelle":"deckeltyp","ref":"demo-deckel-S8","einmal":"name","felder":{"name":"Demo S8","topfdurchmesser_mm":80,"loecher_je_reihe":[1,1,1,1]}},
     {"tabelle":"deckeltyp","ref":"demo-deckel-S5","einmal":"name","felder":{"name":"Demo S5","topfdurchmesser_mm":50,"loecher_je_reihe":[1,2,1,2,1,2,1,2,1]}},
     {"tabelle":"platz","ref":"X-1.1","felder":{"anlage_id":"@X","bereich_id":"@X-b1","kennung":"1.1","rolle":"gefaess","position":1,"erfasst_am":"jetzt-60d 10:00"}},
     {"tabelle":"gefaess","ref":"X-g1.1","felder":{"platz_id":"@X-1.1","gefaessmodell_id":"@demo-modell-rako","deckeltyp_id":"@demo-deckel-D1","betriebsart":"dwc","feste_dosis":false,"luftpumpe":"P1","betriebsvolumen_l":30,"intervall_messen_d":2,"intervall_wechseln_d":14,"gueltig_von":"jetzt-60d 10:00"}},
