@@ -117,8 +117,10 @@ export const modellId = (modell: Ortdef['modell']) => MODELLE[modell]['id'] as s
 
 /**
  * Deckel und Platten nach Konzept 5.3 und 5.4: Löcher je Reihe von vorne nach hinten und Topfdurchmesser.
- * D6 und S5 stehen so im Konzept; die Aufteilung in Reihen von D1, D2, D3, D4 und S8 ist angenommen (A),
- * Lochzahl und Grösse folgen Konzept 5.3 (D1 4 × 8, D2 6 × 8, D3 8 × 5, D4 2 × 8, S8 4 × 8 in einer Reihe).
+ * D6 und S5 stehen so im Konzept. S8 hat 4 Löcher in einer Reihe längs in der Regaltiefe, als Löcher je Reihe von vorne
+ * nach hinten «1, 1, 1, 1» wie `DECKEL_VORSCHLAEGE` und Demo S1 (#131). Die Reihen von D1 bis D4 sind angenommen (A) und
+ * weichen bei D2, D3, D4 von den Vorschlägen ab, weil die E2E-Abläufe zum Säen daran hängen; Abgleich erst nach Tims
+ * Bestätigung am echten Deckel. Lochzahl und Grösse folgen Konzept 5.3 (D1 4 × 8, D2 6 × 8, D3 8 × 5, D4 2 × 8).
  */
 export const DECKELTYPEN: Record<string, { topfdurchmesser_mm: 50 | 80; loecher_je_reihe: number[] }> = {
   D1: { topfdurchmesser_mm: 80, loecher_je_reihe: [2, 2] },
@@ -126,7 +128,7 @@ export const DECKELTYPEN: Record<string, { topfdurchmesser_mm: 50 | 80; loecher_
   D3: { topfdurchmesser_mm: 50, loecher_je_reihe: [2, 2, 2, 2] },
   D4: { topfdurchmesser_mm: 80, loecher_je_reihe: [2] },
   D6: { topfdurchmesser_mm: 50, loecher_je_reihe: [2, 2, 2] },
-  S8: { topfdurchmesser_mm: 80, loecher_je_reihe: [4] },
+  S8: { topfdurchmesser_mm: 80, loecher_je_reihe: [1, 1, 1, 1] },
   S5: { topfdurchmesser_mm: 50, loecher_je_reihe: [1, 2, 1, 2, 1, 2, 1, 2, 1] },
 };
 const DECKEL = ['D1', 'D2', 'D3', 'D4', 'D6', 'S8', 'S5'];
