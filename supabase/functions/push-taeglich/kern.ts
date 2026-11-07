@@ -4,7 +4,13 @@
 // Aufträge: «sammel» (Cron alle 5 min: Sammel-Push mit Tagesliste und E-Mail-Rückfall, 20:00 «Kurzprüfung offen»),
 // «timer» (Cron jede Minute, ?nur=timer) und «test» (Test-Push aus den Einstellungen). Jede Zeile push_versand entsteht
 // vor dem Senden; die Unique-Indizes verhindern die zweite Sendung.
-import { einstellungenAus, faelligeAufgaben, nurEcht, type Aufgabe } from '../../../src/domain/aufgaben.ts';
+import {
+  einstellungenAus,
+  faelligeAufgaben,
+  fehlendeTeile,
+  nurEcht,
+  type Aufgabe,
+} from '../../../src/domain/aufgaben.ts';
 import type { Datenart } from '../../../src/domain/kalibrierung/stand.ts';
 import {
   kurzpruefungInhalt,
@@ -83,6 +89,8 @@ export interface PushDaten {
   testsHeute(datum_lokal: string): Promise<number>;
   /** schreibt nur Schlüssel, die noch in keiner früheren Zeile stehen (A7); Anzahl neuer Zeilen */
   tageslisteSchreiben(tag: string, zeilen: readonly TageslisteZeile[]): Promise<number>;
+  /** steht für den Tag schon eine Zeile in aufgabe_tagesliste? Optional: fehlt die Methode, gilt «nein» */
+  tageslisteVorhanden?(tag: string): Promise<boolean>;
   /** laufende, nicht stornierte Ansätze mit von < timer_ende ≤ bis */
   laufendeTimer(von: Date, bis: Date): Promise<LaufenderTimer[]>;
 }
@@ -291,11 +299,20 @@ async function sammelLauf(
   const mailOffen =
     sammel.faellig && mailMoeglich && abos.length === 0 && offen('sammel', 'email', null, wieder);
   // ohne jeden Kanal: Tagesliste trotzdem schreiben, im Fenster bis Push-Zeit + 4 h (A7, unabhängig vom Kanal)
-  const nurListe = sammel.faellig && abos.length === 0 && !mailMoeglich && wieder;
+  // (Lastschutz, Prüfer #31 Befund 3: nur bis die Tagesliste des Tages steht)
+  const nurListe =
+    sammel.faellig &&
+    abos.length === 0 &&
+    !mailMoeglich &&
+    wieder &&
+    (await abh.daten.tageslisteVorhanden?.(datum)) !== true;
   const kurzOffen = kurz.faellig ? abos.filter((a) => offen('kurzpruefung_20', 'push', a.id, true)) : [];
   if (pushOffen.length === 0 && !mailOffen && !nurListe && kurzOffen.length === 0) return ergebnis;
 
   const teile = await abh.daten.teile(abh.jetzt);
+  // gleiche Teile wie das Bündel; fehlt einer, rechnet die Push mit einer Lücke (Plan 31 Risiken, Befund 2)
+  const fehlend = fehlendeTeile(teile);
+  if (fehlend.length > 0) console.warn(`push-taeglich: Teile fehlen: ${fehlend.join(', ')}`);
   const liste: Aufgabe[] = nurEcht(faelligeAufgaben(teile, einstellungenAus(teile), abh.jetzt, zeitzone));
 
   if (sammel.faellig && (pushOffen.length > 0 || mailOffen || nurListe)) {
@@ -329,6 +346,10 @@ async function sammelLauf(
       if (z === 'gesendet') ergebnis.versandt += 1;
       if (z === 'abgemeldet') aktivNachher -= 1;
     }
+    if (einstellung.email_rueckfall && !abh.mailer && aktivNachher === 0)
+      console.warn(
+        'push-taeglich: E-Mail-Rückfall ist an, aber nicht eingerichtet (RESEND_API_KEY, EMAIL_EMPFAENGER)',
+      );
     // E-Mail nur, wenn nach dem Push-Teil kein aktives echtes Abo bleibt (R5.5, R13; nicht bei 5xx)
     if (mailMoeglich && aktivNachher === 0 && (abos.length > 0 || mailOffen))
       await mailSenden(abh, datum, inhalt, wieder, ergebnis);

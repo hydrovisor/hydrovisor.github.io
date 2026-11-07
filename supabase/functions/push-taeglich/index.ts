@@ -18,10 +18,8 @@ const ABSENDER_STANDARD = 'Hydrovisor <onboarding@resend.dev>';
 function resendMailer(): Mailer | undefined {
   const schluessel = Deno.env.get('RESEND_API_KEY');
   const empfaenger = Deno.env.get('EMAIL_EMPFAENGER');
-  if (!schluessel || !empfaenger) {
-    console.log('E-Mail nicht eingerichtet');
-    return undefined;
-  }
+  // ohne Secrets kein Mailer; der Kern meldet das nur, wenn eine E-Mail fällig wäre (Prüfer #31 Befund 4)
+  if (!schluessel || !empfaenger) return undefined;
   const absender = Deno.env.get('EMAIL_ABSENDER') || ABSENDER_STANDARD;
   return {
     async senden({ betreff, text, idempotenz }) {

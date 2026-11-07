@@ -162,6 +162,14 @@ export function supabaseDaten(db: SupabaseClient): PushDaten {
         .select('id');
       return (pruefen(r, 'aufgabe_tagesliste schreiben') as unknown[]).length;
     },
+    async tageslisteVorhanden(tag) {
+      const r = await db
+        .from('aufgabe_tagesliste')
+        .select('id', { count: 'exact', head: true })
+        .eq('tag', tag);
+      if (r.error) throw new Error(`aufgabe_tagesliste zählen: ${r.error.message}`);
+      return (r.count ?? 0) > 0;
+    },
     async laufendeTimer(von, bis) {
       const r = await db
         .from('naehrloesungsansatz')
