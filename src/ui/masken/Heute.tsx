@@ -1,5 +1,6 @@
-// Heute (Kontext Regal, docs/spec/05_masken.md 3.1): Kopf, Hinweise, Einrichtungs-Checkliste (Plan 18), Liste
-// «Aufgaben» aus der Aufgaben-Rechnung (Plan 27); Karten folgen mit I1b-05.
+// Heute (Kontext Regal, docs/spec/05_masken.md 3.1): Kopf, Hinweise, Einrichtungs-Checkliste (Plan 18), Ortskarten aus
+// der Aufgaben-Rechnung (Plan 27, Plan 30), unten im Daumenbereich «Rundgang starten (n Orte)» und «Stromausfall
+// erfassen» (Plan 30).
 import { useState } from 'react';
 import { useAblaufOffen } from '../../ablauf/offen.ts';
 import { standAnzeige } from '../../domain/datenpfad/buendel.ts';
@@ -7,6 +8,7 @@ import { kalibrierStand, kalibrierText } from '../../domain/kalibrierung/stand.t
 import { messFaelligkeit, type Messfaelligkeit } from '../../domain/messung/faelligkeit.ts';
 import { heuteGruppiert, nachAnlage } from '../../domain/anlage/gruppen.ts';
 import { einstellungenAus, faelligeAufgaben } from '../../domain/aufgaben.ts';
+import { rundgangAnlage, rundgangPlan } from '../../domain/rundgang/plan.ts';
 import { Aufgabenliste, aufgabenSicher } from './Aufgabenliste.tsx';
 import { Ablaeufe } from './Ablaeufe.tsx';
 import { Phasenkarten } from './Phasenkarten.tsx';
@@ -99,7 +101,42 @@ export function Heute() {
       {buendel && !keinZugang ? <Umsetzaufgaben jetzt={new Date(jetzt)} /> : null}
       {buendel && !keinZugang ? <Erntekarten jetzt={new Date(jetzt)} /> : null}
       {buendel ? <Uebersicht jetzt={new Date(jetzt)} /> : null}
+      {buendel && !keinZugang ? <RundgangFuss jetzt={new Date(jetzt)} /> : null}
     </main>
+  );
+}
+
+/** Fuss im Daumenbereich (Plan 30): Rundgang der echten Anlage, ohne echte der ersten (A1), und Stromausfall */
+function RundgangFuss({ jetzt }: { jetzt: Date }) {
+  const { buendel } = useBuendel();
+  const teile = buendel?.teile;
+  const anlage = rundgangAnlage(teile);
+  if (!teile || !anlage) return null;
+  const n = aufgabenSicher(
+    () =>
+      rundgangPlan(
+        teile,
+        faelligeAufgaben(teile, einstellungenAus(teile), jetzt, ZEITZONE),
+        anlage.id,
+        jetzt,
+        ZEITZONE,
+      ).orteZahl,
+    0,
+  );
+  return (
+    <nav className="hv-heute-fuss" aria-label="Rundgang">
+      {n > 0 ? (
+        <a
+          className="hv-btn hv-btn-primary hv-btn-block"
+          href={hashZu({ name: 'rundgang', kuerzel: anlage.kuerzel })}
+        >
+          {`Rundgang starten (${String(n)} ${n === 1 ? 'Ort' : 'Orte'})`}
+        </a>
+      ) : null}
+      <a className="hv-btn hv-btn-secondary hv-btn-block" href={hashZu({ name: 'stromausfall' })}>
+        Stromausfall erfassen
+      </a>
+    </nav>
   );
 }
 

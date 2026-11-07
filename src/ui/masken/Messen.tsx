@@ -84,13 +84,40 @@ function Kopf({
   );
 }
 
-/** Messung im Ablauf (Plan 29): Zeile 3, 14 oder 17 der Abhakliste bzw. Nachmessen einer pH-Korrektur */
-interface Ablaufmodus {
-  zeile?: 3 | 14 | 17;
-  nachmessen?: string;
+/** gespeicherte Messung im Rundgang (Plan 30): Werte in Hundertsteln, Rückmeldung an den Ablauf */
+export interface RundgangMessung {
+  messungId: string;
+  giltAb: string;
+  werte: Partial<Record<Groesse, number>>;
+  bewertungen: Partial<Record<Groesse, Bewertung>>;
+  fuellstand?: 'ueber_drittel' | 'unter_drittel';
+  nachfuellen: boolean;
 }
 
-export function Messen({ code, zeile, nachmessen }: { code: string } & Ablaufmodus) {
+/**
+ * Messung im Ablauf (Plan 29): Zeile 3, 14 oder 17 der Abhakliste bzw. Nachmessen einer pH-Korrektur; im Rundgang
+ * (Plan 30) mit Messart rundgang, Schlüssel der fälligen Aufgabe und bei «Messen und nachfüllen» dem Knopfpaar
+ */
+export interface Ablaufmodus {
+  zeile?: 3 | 14 | 17;
+  nachmessen?: string;
+  rundgang?: {
+    nachfuellenAngebot: boolean;
+    warFaelligAm?: string;
+    aufgabeSchluessel?: string;
+    onGespeichert: (m: RundgangMessung) => void;
+  };
+}
+
+export function Messen({
+  code,
+  zeile,
+  nachmessen,
+}: {
+  code: string;
+  zeile?: 3 | 14 | 17;
+  nachmessen?: string;
+}) {
   const { buendel, liest } = useBuendel();
   const ort = buendel ? ortAufloesen(code, buendel.teile) : undefined;
   if (!ort) {
@@ -135,7 +162,7 @@ function schlechteste(b: Partial<Record<Groesse, Bewertung>>): Bewertung | undef
 
 const PH_ARTEN: readonly string[] = ['dwc', 'konstantpegel', 'kratky', 'kratky_belueftet', 'station'];
 
-function Messmaske({ ort, modus }: { ort: Ort; modus: Ablaufmodus }) {
+export function Messmaske({ ort, modus }: { ort: Ort; modus: Ablaufmodus }) {
   const { buendel } = useBuendel();
   const geraet = messgeraet(buendel);
   const felder: Groesse[] =
@@ -184,6 +211,8 @@ function Messmaske({ ort, modus }: { ort: Ort; modus: Ablaufmodus }) {
   // der Vorgang einer Eingabe bleibt bei jeder Wiederholung gleich, auch Dauer und Fälligkeit (TO2, Runde 1 Befund 1)
   const vorgangFuer = useRef<{ schluessel: string; schritt: Schritt } | undefined>(undefined);
   const ersterTipp = useRef<number | undefined>(undefined);
+  // Rundgang: «Speichern» (Pegel auf der Marke) oder «Nachfüllen» (nach dem Speichern), auch über die Rückfrage
+  const nachfuellenGewaehlt = useRef(false);
 
   const daten = kalibrierdaten(buendel);
   const [geoeffnet] = useState(() => Date.now());
@@ -237,7 +266,8 @@ function Messmaske({ ort, modus }: { ort: Ort; modus: Ablaufmodus }) {
     setZone('eingabe');
   }
 
-  function speichernTippen() {
+  function speichernTippen(nachfuellen = false) {
+    nachfuellenGewaehlt.current = nachfuellen;
     // Rückfrage erst beim Speichern (A22)
     if (auswertung?.sprung && !bestaetigt) {
       setZone('rueckfrage');
@@ -295,21 +325,30 @@ function Messmaske({ ort, modus }: { ort: Ort; modus: Ablaufmodus }) {
               messgeraetId: geraet.id,
               messart: messstelle
                 ? 'w'
-                : modus.zeile === 14
-                  ? 'kontrolle_ansatz'
-                  : modus.zeile === 17
-                    ? 'end_ansatz'
-                    : modus.nachmessen
-                      ? 'nachmessen'
-                      : 'aufgabe',
+                : modus.rundgang
+                  ? 'rundgang'
+                  : modus.zeile === 14
+                    ? 'kontrolle_ansatz'
+                    : modus.zeile === 17
+                      ? 'end_ansatz'
+                      : modus.nachmessen
+                        ? 'nachmessen'
+                        : 'aufgabe',
               ...(ansatzId ? { ansatzId } : {}),
               ...(ort.betriebsart ? { betriebsart: ort.betriebsart } : {}),
               ...(fuellstand ? { fuellstand } : {}),
               uEc: geraet.u_ec,
               uPh: geraet.u_ph,
-              ...(faelligkeit.art === 'offen' && faelligkeit.faellig
-                ? { warFaelligAm: faelligkeit.faelligAm }
-                : {}),
+              ...(modus.rundgang
+                ? {
+                    ...(modus.rundgang.warFaelligAm ? { warFaelligAm: modus.rundgang.warFaelligAm } : {}),
+                    ...(modus.rundgang.aufgabeSchluessel
+                      ? { aufgabeSchluessel: modus.rundgang.aufgabeSchluessel }
+                      : {}),
+                  }
+                : faelligkeit.art === 'offen' && faelligkeit.faellig
+                  ? { warFaelligAm: faelligkeit.faelligAm }
+                  : {}),
               ...(ersterTipp.current !== undefined
                 ? { erfassungsdauerS: Math.round((jetztSenden.getTime() - ersterTipp.current) / 1000) }
                 : {}),
@@ -334,6 +373,17 @@ function Messmaske({ ort, modus }: { ort: Ort; modus: Ablaufmodus }) {
       await zurAbhakliste(bindung.current.clientId, bindung.current.giltAb);
       return true;
     }
+    if (antwort.status === 'gespeichert' && modus.rundgang) {
+      modus.rundgang.onGespeichert({
+        messungId: bindung.current.clientId,
+        giltAb: bindung.current.giltAb,
+        werte: messwerteHundertstel(eingabe),
+        bewertungen,
+        ...(fuellstand ? { fuellstand } : {}),
+        nachfuellen: modus.rundgang.nachfuellenAngebot && nachfuellenGewaehlt.current,
+      });
+      return true;
+    }
     if (antwort.status === 'gespeichert' && modus.nachmessen)
       await ablaufLoeschen(`nachmessen:${ort.platzId}`).catch(() => undefined);
     if (antwort.status === 'gespeichert') {
@@ -355,7 +405,8 @@ function Messmaske({ ort, modus }: { ort: Ort; modus: Ablaufmodus }) {
 
   // Vorschlag pH-Minus in der Ergebniszone, nur ausserhalb eines Ablaufs (R4.14, UC9 Ablauf 6, A2)
   const phVorschlag = (() => {
-    if (messstelle || modus.zeile || modus.nachmessen || !teile || !auswertung) return undefined;
+    if (messstelle || modus.zeile || modus.nachmessen || modus.rundgang || !teile || !auswertung)
+      return undefined;
     if (!phKorrekturAngebot(auswertung.hinweise) || werteH.ph === undefined) return undefined;
     const g = (teile['gefaess'] ?? []).find(
       (x) =>
@@ -497,7 +548,12 @@ function Messmaske({ ort, modus }: { ort: Ort; modus: Ablaufmodus }) {
         tone="danger"
         action={
           fehler.wiederholbar ? (
-            <Button variant="secondary" size="compact" disabled={sendet} onClick={speichernTippen}>
+            <Button
+              variant="secondary"
+              size="compact"
+              disabled={sendet}
+              onClick={() => speichernTippen(nachfuellenGewaehlt.current)}
+            >
               Erneut senden
             </Button>
           ) : undefined
@@ -567,9 +623,35 @@ function Messmaske({ ort, modus }: { ort: Ort; modus: Ablaufmodus }) {
           </Button>
         </>
       ) : null}
-      <Button className="hv-messen-speichern-knopf" disabled={!bereit || sendet} onClick={speichernTippen}>
-        Speichern
-      </Button>
+      {modus.rundgang?.nachfuellenAngebot ? (
+        <>
+          <Button
+            className="hv-messen-speichern-knopf hv-btn-zweizeilig"
+            disabled={!bereit || sendet}
+            onClick={() => speichernTippen(false)}
+          >
+            Speichern
+            <small>Pegel auf der Marke</small>
+          </Button>
+          <Button
+            variant="secondary"
+            className="hv-messen-speichern-knopf hv-btn-zweizeilig"
+            disabled={!bereit || sendet}
+            onClick={() => speichernTippen(true)}
+          >
+            Nachfüllen
+            <small>nach dem Speichern</small>
+          </Button>
+        </>
+      ) : (
+        <Button
+          className="hv-messen-speichern-knopf"
+          disabled={!bereit || sendet}
+          onClick={() => speichernTippen(false)}
+        >
+          Speichern
+        </Button>
+      )}
     </div>
   );
 
@@ -589,7 +671,7 @@ function Messmaske({ ort, modus }: { ort: Ort; modus: Ablaufmodus }) {
         titel={ort.code}
         zeilen={kopfzeilen}
         badge={fehler ? badgeUnsicher : undefined}
-        zuHeute={banner === null}
+        zuHeute={banner === null && !modus.rundgang}
       />
       {banner}
       <div

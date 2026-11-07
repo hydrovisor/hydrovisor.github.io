@@ -57,6 +57,15 @@ export function tagesbeginn(tag: string, zeitzone: Zeitzone): Date {
   return new Date(ergebnis);
 }
 
+/** Zeitpunkt der Ortszeit hh:mm am Kalendertag 'JJJJ-MM-TT' in der Zeitzone (Stromausfall erfassen, Plan 30) */
+export function ortszeit(tag: string, stunde: number, minute: number, zeitzone: Zeitzone): Date {
+  const [j, m, d] = tag.split('-').map(Number) as [number, number, number];
+  const alsUtc = Date.UTC(j, m - 1, d, stunde, minute);
+  let ergebnis = alsUtc - versatz(new Date(alsUtc), zeitzone);
+  ergebnis = alsUtc - versatz(new Date(ergebnis), zeitzone);
+  return new Date(ergebnis);
+}
+
 /** Kalendertag 'JJJJ-MM-TT' plus n Tage, auf Datumsteilen gerechnet (sommerzeitfest, G2) */
 export function tagPlus(tag: string, tage: number): string {
   const [j, m, d] = tag.split('-').map(Number) as [number, number, number];

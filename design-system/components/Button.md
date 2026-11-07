@@ -6,3 +6,4 @@ Löst eine Aktion aus; `primary` höchstens einmal pro Screen, für das, wofür 
 - Beschriftung beginnt mit dem Verb: «Messwert speichern». Keine Ausrufezeichen.
 - `danger` nur für Aktionen, die etwas entfernen; vorher bestätigen lassen.
 - Am Handy steht der Hauptbutton unten im Daumenbereich, mit `block`.
+- Zweizeilig (`hv-btn-zweizeilig`, Plan 30): Verb oben, Unterzeile in `<small>` («Speichern» · «Pegel auf der Marke»); im Regal 72 dp hoch. Zwei solche Buttons nebeneinander ersetzen den einen Speicherknopf.
