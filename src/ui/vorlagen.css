@@ -101,5 +101,5 @@
   margin: 0;
   font-size: var(--text-body-strong-size);
   line-height: var(--text-body-strong-line);
-  font-weight: 700;
+  font-weight: var(--text-body-strong-weight);
 }
