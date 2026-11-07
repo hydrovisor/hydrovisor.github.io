@@ -10,7 +10,8 @@
 // - Schritt 2: Zielgefässe als Buttons, deren Name mit der Kennung beginnt («2.3 …»); Sortenleiste mit Buttons, deren
 //   Name den Sortennamen enthält und nicht mit «Loch» beginnt; Deckel mit «Reihe n wählen» und «Loch n, …»;
 //   «Ziel später»; «Weiter». Die zuerst gewählte Sorte ist aktiv; Reihe n gibt der aktiven Sorte die freien
-//   Löcher der Reihe (D2 «3, 3» spaltenweise, #136: Reihe 1 = Loch 1, 3, 5, Reihe 2 = Loch 2, 4, 6).
+//   Löcher der Reihe (D2 «3, 3» spaltenweise, #136: Reihe 1 = Loch 1, 3, 5, Reihe 2 = Loch 2, 4, 6;
+//   UC5-AK1: Lollo Rossa mit Reihe 1, Eichblatt mit Loch 2, 4, 6 einzeln).
 // - Schritt 3: «Säen speichern» (Button), Stationsvorschau «Station am TT.MM.: frei x von 32 (5 cm), y von 8 (8 cm)»,
 //   Warnung «Zu wenig Platz auf der Station am …» ohne Sperre.
 // - Nach dem Speichern: «Gespeichert: 2 Sätze, m Schwämme» bzw. «Gespeichert: 1 Satz, m Schwämme» und
@@ -72,6 +73,7 @@ const zielgefaess = (page: Page, kennung: string) =>
   page.getByRole('button', { name: new RegExp(`^${kennung.replace('.', '\\.')}(?![.\\d])`) }).first();
 const knopf = (page: Page, name: string) => page.getByRole('button', { name, exact: true });
 const reihe = (page: Page, n: number) => page.getByRole('button', { name: `Reihe ${n} wählen` });
+const loch = (page: Page, n: number) => page.getByRole('button', { name: new RegExp(`^Loch ${n},`) });
 
 async function ohneTastatur(page: Page): Promise<void> {
   await expect(page.locator('main[data-density="regal"]')).toBeVisible();
@@ -105,7 +107,9 @@ test('UC5-AK1 6 Zieltöpfe in 2.3 mit 2 Sorten, Anzucht in A1, in höchstens 14 
   await tipp(m, sortenleiste(page, 'Lollo Rossa'));
   await tipp(m, reihe(page, 1));
   await tipp(m, sortenleiste(page, 'Eichblatt'));
-  await tipp(m, reihe(page, 2));
+  await tipp(m, loch(page, 2));
+  await tipp(m, loch(page, 4));
+  await tipp(m, loch(page, 6));
   // Zustand im Namen, nie nur Farbe
   await expect(page.getByRole('button', { name: /^Loch \d+, gewählt für / })).toHaveCount(6);
   await tipp(m, knopf(page, 'Weiter'));
@@ -128,7 +132,7 @@ test('UC5-AK1 6 Zieltöpfe in 2.3 mit 2 Sorten, Anzucht in A1, in höchstens 14 
   expect(pflanzungen.length).toBe(vorgaenge[0]?.['anzahl_pflanzungen']);
   expect(pflanzungen.length).toBe(saetze.reduce((n, s) => n + Number(s['anzahl_schwaemme']), 0));
 
-  // je Sorte drei Töpfe (D2 «3, 3», #136): Lollo Rossa 1, 3, 5 (Reihe 1); Eichblatt 2, 4, 6 (Reihe 2)
+  // je Sorte drei Töpfe (D2 «3, 3», #136): Lollo Rossa 1, 3, 5 (Reihe 1); Eichblatt 2, 4, 6 (Einzellöcher)
   const satzVon = (pflanzungId: unknown) => pflanzungen.find((p) => p['id'] === pflanzungId)?.['satz_id'];
   const sorteVon = (satzId: unknown) => saetze.find((s) => s['id'] === satzId)?.['sorte_id'];
   const toepfeVon = (sorte: string) =>

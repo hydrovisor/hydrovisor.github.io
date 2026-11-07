@@ -3,7 +3,7 @@
 // nach. Regal R aus tests/fixtures/saeen.ts ohne den Satz in 2.3 (alle sechs Töpfe frei).
 //
 // Ablauf mit fester Uhr je Schritt (Zählung ab den Masken wie Plan 23 und 24, Umsetzen ab der Heute-Karte):
-// 1. 7.1. Säen ab #/saeen?box=R-A1 wie UC5-AK1: Lollo Rossa Reihe 1 (Loch 1, 3, 5) und Eichblatt Reihe 2 (Loch 2, 4, 6)
+// 1. 7.1. Säen ab #/saeen?box=R-A1 wie UC5-AK1: Lollo Rossa Reihe 1 (Loch 1, 3, 5) und Eichblatt Loch 2, 4, 6 einzeln
 //    in 2.3 (D2 «3, 3», #136). Die Saatmenge ergibt je Satz Zieltöpfe + 1 = 4 Schwämme
 //    (Lollo Rossa 1 Samen bei p 0.9, Eichblatt 2 Samen bei p 0.7).
 // 2. 11.1. Keimung prüfen ab #/keimung/<satz>: Lollo Rossa mit Schwamm 1 (Zieltopf 2.3.1) ohne Keimling, Eichblatt alle
@@ -52,6 +52,7 @@ const sortenleiste = (page: Page, name: string) =>
 const zielgefaess = (page: Page, kennung: string) =>
   page.getByRole('button', { name: new RegExp(`^${kennung.replace('.', '\\.')}(?![.\\d])`) }).first();
 const reihe = (page: Page, n: number) => page.getByRole('button', { name: `Reihe ${n} wählen` });
+const loch = (page: Page, n: number) => page.getByRole('button', { name: new RegExp(`^Loch ${n},`) });
 const weniger = (page: Page, nr: number) =>
   page.getByRole('button', { name: new RegExp(`^Schwamm ${nr}(?!\\d).* weniger$`) });
 const zeilenVon = (m: Mitschnitt, tabelle: string) =>
@@ -107,7 +108,9 @@ test('Anzucht-AK1 6 Zieltöpfe, 2 Sorten, 1 Schwamm ohne Keimling, 5 umgesetzt: 
   await tipp(m, sortenleiste(page, 'Lollo Rossa'));
   await tipp(m, reihe(page, 1));
   await tipp(m, sortenleiste(page, 'Eichblatt'));
-  await tipp(m, reihe(page, 2));
+  await tipp(m, loch(page, 2));
+  await tipp(m, loch(page, 4));
+  await tipp(m, loch(page, 6));
   await tipp(m, knopf(page, 'Weiter'));
   await tipp(m, knopf(page, 'Säen speichern'));
   await expect(page.getByText(/Gespeichert: 2 Sätze, \d+ Schwämme/)).toBeVisible();
