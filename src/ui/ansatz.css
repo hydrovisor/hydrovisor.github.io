@@ -103,6 +103,15 @@
   display: flex;
   width: 100%;
   white-space: normal;
+  /* bleibt beim Abhaken sichtbar, wenn die Liste zur aktiven Zeile rollt (Abnahme 1) */
+  position: sticky;
+  top: var(--space-2);
+  z-index: 1;
+  box-shadow: var(--shadow-lg);
+}
+
+.hv-ansatz li[data-zustand] {
+  scroll-margin-top: calc(var(--size-touch-regal) + var(--space-4));
 }
 
 /* Ziffernblock für Menge und Ziel-EC (R4.6) */
