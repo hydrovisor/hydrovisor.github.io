@@ -10,10 +10,10 @@ Stand 8.11.2026 · Lead · Grundlage Konzept v1.5 Kapitel 13.5 (sechs Bedingunge
 | 2 | I0 zu mindestens zwei Dritteln zusammengeführt (rund 5.5 von 8 PT), Durchsatz hochgerechnet mindestens 3.6 PT je Woche netto | erfüllt: I0 und DS-01 (9.25 PT) bis 4.11. zusammengeführt; bis 8.11. alle Pakete bis M2 (rund 37.75 PT, siehe unten) | gemergte Pull Requests #42 bis #149 | nichts |
 | 3 | Kontingent in den Kalenderwochen 47 und 48 höchstens 80 % ohne Ausweichen auf Sonnet | offen; Woche bis 10.11. bei 94 % (RR2 eingetreten) | `get_usage` | Verbrauch in den Fenstern ab 17.11. und 24.11. messen und hier eintragen |
 | 4 | Tims Ist-Zeit im November höchstens 115 % des Plans (48 h, 13.3) | offen | Tims Zeiterfassung | Tim meldet seine Novemberstunden am 30.11. |
-| 5 | im Mittel höchstens 1.5 Nachbesserungsrunden je Paket | erfüllt: 35 Runden auf 53 Pakete = 0.66 (A) | Labels `runde-1` (24) und `runde-2` (11) auf Issues der Klassen `routine` (22), `fachlogik` (26), `kern` (5) | Zählung am 30.11. wiederholen |
+| 5 | im Mittel höchstens 1.5 Nachbesserungsrunden je Paket | erfüllt: 37 Runden auf 52 umgesetzte Pakete = 0.71 (A) | Labels `runde-1` (24) und `runde-2` (11, davon #11 und #36 ohne `runde-1`) auf Issues der Klassen `routine` (22), `fachlogik` (26, ohne I2-07 #39), `kern` (5) | Zählung am 30.11. wiederholen |
 | 6 | Referenzdatei Düngerrechner und `tueten_referenz.csv` liegen vor | teilweise: `tests/golden/duengerrechner_referenz.csv` liegt vor (Hash `REFERENZ_HASH_RECHNER` gesetzt); `data/eval/tueten_referenz.csv` fehlt im Repository | `git ls-files`, Repository-Variablen | Tim legt `data/eval/tueten_referenz.csv` an und setzt `REFERENZ_HASH_TUETEN` (CLAUDE.md Regel 7) |
 
-(A) Zählweise Bedingung 5: Issues mit `runde-1` plus Issues mit `runde-2`, also eine obere Schätzung; Pull Requests mit denselben Labels sind nicht zusätzlich gezählt.
+(A) Zählweise Bedingung 5: `runde-1` zählt eine Runde, `runde-2` zwei; fehlt bei einem Issue mit `runde-2` das Label `runde-1` (#11, #36), zählt es trotzdem zwei Runden. Pull Requests mit denselben Labels sind nicht zusätzlich gezählt; I2-07 (#39) ist geschlossen und nicht umgesetzt.
 
 ## Durchsatz (Bedingung 2)
 
