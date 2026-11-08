@@ -155,7 +155,11 @@ test('UC1-AK5 zweite echte Anlage T anlegen: R unverändert, Heute gruppiert ers
   await expect(page.getByText('Kürzel R ist schon vergeben.')).toBeVisible();
   expect(geschrieben).toHaveLength(0);
   await page.getByLabel('Kürzel', { exact: true }).fill('t');
-  await page.getByLabel('Anzahl Ebenen').fill('2');
+  // Anzahl Ebenen per Drehrad (#147)
+  await page
+    .getByRole('listbox', { name: 'Anzahl Ebenen' })
+    .getByRole('option', { name: '2', exact: true })
+    .click();
   await page.getByRole('button', { name: 'Anlage speichern' }).click();
   await expect(page).toHaveURL(/#\/anlage\?a=T$/);
   await expect(page.getByRole('heading', { name: 'Anlage T', level: 1 })).toBeVisible();
