@@ -14,6 +14,7 @@ import type { Schritt } from '../../domain/datenpfad/erfassung.ts';
 import { ZEITZONE } from '../../domain/zeit.ts';
 import { Button } from '../bausteine/Button.tsx';
 import { Notice } from '../bausteine/Notice.tsx';
+import { Drehrad } from '../bausteine/Drehrad.tsx';
 import { TextField } from '../bausteine/TextField.tsx';
 import { Zeitwahl } from '../bausteine/Zeitwahl.tsx';
 import { useBuendel } from '../buendel.tsx';
@@ -36,12 +37,9 @@ const START: AnlageEingabe = {
   bereiche: [1, 2, 3, 4].map(standardBereich),
 };
 
-const zahl = (text: string) => (text.trim() === '' ? NaN : Number(text.replace(',', '.')));
-
 export function AnlageNeu() {
   const { buendel } = useBuendel();
   const [e, setE] = useState<AnlageEingabe>(START);
-  const [kh, setKh] = useState('');
   const [fehler, setFehler] = useState<Fehler[]>([]);
   const [vorgang, setVorgang] = useState<{ eingabe: string; schritte: Schritt[] }>();
   const [ergebnis, setErgebnis] = useState<Schreibergebnis>();
@@ -54,7 +52,8 @@ export function AnlageNeu() {
   };
 
   async function speichern() {
-    const eingabe: AnlageEingabe = { ...e, ...(kh.trim() === '' ? {} : { karbonathaerte: zahl(kh) }) };
+    // Karbonathärte erfasst Tim nicht (Plan 147); die Spalte bleibt leer
+    const eingabe: AnlageEingabe = e;
     const schluessel = JSON.stringify(eingabe);
     // bei der Wiederholung zählt die eigene, vielleicht schon geschriebene Anlage nicht als vergeben (Runde 1, Befund 1)
     const wiederholung = vorgang && vorgang.eingabe === schluessel ? vorgang : undefined;
@@ -133,7 +132,12 @@ export function AnlageNeu() {
             error={fehlerZu('licht')}
             onWert={(neu) => aendern({ lichtVon: neu })}
           />
-          <Zeitwahl label="Licht bis" wert={e.lichtBis} onWert={(neu) => aendern({ lichtBis: neu })} />
+          <Zeitwahl
+            label="Licht bis"
+            max={24}
+            wert={e.lichtBis}
+            onWert={(neu) => aendern({ lichtBis: neu })}
+          />
         </div>
         <TextField
           label="Lüfter-Einstellung"
@@ -141,27 +145,18 @@ export function AnlageNeu() {
           hint="Zeitplan der Lüfter, als Text"
           onChange={(ev) => aendern({ luefter: ev.target.value })}
         />
-        <TextField
-          label="Karbonathärte"
-          unit="°dH"
-          value={kh}
-          inputMode="decimal"
-          hint="optional"
-          error={fehlerZu('karbonathaerte')}
-          onChange={(ev) => setKh(ev.target.value)}
-        />
-        <TextField
+        <Drehrad
           label="Anzahl Ebenen"
-          value={String(e.bereiche.length)}
-          inputMode="numeric"
+          wert={e.bereiche.length}
+          min={1}
+          max={6}
           hint="1 bis 6; neue Ebenen mit Standardwerten"
           error={fehlerZu('bereiche')}
-          onChange={(ev) => {
-            const n = Math.max(0, Math.min(6, Math.trunc(zahl(ev.target.value)) || 0));
+          onWert={(n) =>
             aendern({
               bereiche: Array.from({ length: n }, (_, i) => e.bereiche[i] ?? standardBereich(i + 1)),
-            });
-          }}
+            })
+          }
         />
         {e.bereiche.map((b, i) => {
           const setzen = (teil: Partial<typeof b>) =>
@@ -184,27 +179,31 @@ export function AnlageNeu() {
                 </select>
               </label>
               <div className="hv-anlage-zweispaltig">
-                <TextField
+                <Drehrad
                   label="Lichtleisten"
-                  value={String(b.lichtleisten)}
-                  inputMode="numeric"
-                  onChange={(ev) => setzen({ lichtleisten: zahl(ev.target.value) })}
+                  wert={b.lichtleisten}
+                  min={0}
+                  max={20}
+                  onWert={(n) => setzen({ lichtleisten: n })}
                 />
-                <TextField
+                <Drehrad
                   label="Lichtstunden"
-                  unit="h"
-                  value={String(b.lichtstunden)}
-                  inputMode="decimal"
-                  onChange={(ev) => setzen({ lichtstunden: zahl(ev.target.value) })}
+                  einheit="h"
+                  wert={b.lichtstunden}
+                  min={0}
+                  max={24}
+                  schritt={0.5}
+                  onWert={(n) => setzen({ lichtstunden: n })}
                 />
               </div>
-              <TextField
+              <Drehrad
                 label="Nutzbare Höhe über dem Deckel"
-                unit="cm"
-                value={String(b.hoeheCm)}
-                inputMode="numeric"
+                einheit="cm"
+                wert={b.hoeheCm}
+                min={1}
+                max={300}
                 error={fehlerZu(`bereich-${i + 1}`)}
-                onChange={(ev) => setzen({ hoeheCm: zahl(ev.target.value) })}
+                onWert={(n) => setzen({ hoeheCm: n })}
               />
             </fieldset>
           );

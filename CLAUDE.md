@@ -125,6 +125,7 @@ Vorschau: Cloudflare Pages `hydrovisor-vorschau` baut jeden Zweig (`<zweig>.hydr
 - [0012 Referenzdatei Rechner und Push-Migration durch den Lead (Ausnahme)](docs/entscheide/0012-referenzdatei-und-push-migration.md)
 - [0013 Tütenfotos über die S3-Schnittstelle sichern](docs/entscheide/0013-tuetenfotos-ueber-s3-sichern.md)
 - [0014 Planfreigabe im Chat, Wechselblock vor M2](docs/entscheide/0014-planfreigabe-im-chat-und-pool.md)
+- [0015 Karbonathärte wird nicht erfasst](docs/entscheide/0015-karbonathaerte-nicht-erfasst.md)
 - Übrige Entscheide vom 1.11.2026: `docs/spec/00_rueckfragen.md` (R1 bis R13, W1 bis W14, Annahmen 1 bis 16)
 
 ## Arbeitsweise in der Sitzung

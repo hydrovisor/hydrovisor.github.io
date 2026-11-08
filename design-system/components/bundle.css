@@ -351,19 +351,23 @@ button.hv-tile { cursor: pointer; touch-action: manipulation; }
   font-variant-numeric: tabular-nums; letter-spacing: var(--text-display-tracking); }
 .hv-kennung-zeile { font-size: var(--text-text-regal-size); line-height: 28px; color: var(--ink-muted); }
 
-/* Zeitwahl (components/Zeitwahl.md, Plan 142): zwei senkrechte Drehregler mit Einrasten; drei Zeilen sichtbar,
-   die mittlere ist gewählt (Linien oben und unten, fette Schrift; nie nur Farbe). Nur Schreibtisch-Masken. */
-.hv-zeitwahl { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
-.hv-zeitwahl-raeder { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center;
+/* Drehrad und Zeitwahl (components/Drehrad.md, Zeitwahl.md; Pläne 142, 147): senkrechte Räder mit Einrasten, die
+   durchdrehen; drei Zeilen sichtbar, die mittlere ist gewählt (Linien oben und unten, Fläche, fette Schrift; nie nur
+   Farbe). Höchstens 160 dp breit, damit daneben Platz zum Scrollen der Seite bleibt. Nur Schreibtisch-Masken. */
+.hv-drehrad, .hv-zeitwahl { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
+.hv-drehrad-rahmen { position: relative; display: grid; align-items: center; box-sizing: border-box; width: 100%; max-width: calc(3 * var(--size-touch) + var(--space-4));
   background: var(--surface-raised); border: 1px solid var(--line-control); border-radius: var(--radius-md); }
-.hv-zeitwahl-raeder::before { content: ""; position: absolute; left: var(--space-1); right: var(--space-1); top: var(--size-touch); height: var(--size-touch);
+.hv-drehrad-rahmen::before { content: ""; position: absolute; left: var(--space-1); right: var(--space-1); top: var(--size-touch); height: var(--size-touch);
   box-sizing: border-box; border-block: 2px solid var(--line-control); border-radius: var(--radius-sm); background: var(--surface-sunken); pointer-events: none; }
-.hv-zeitwahl-rad { position: relative; box-sizing: border-box; height: calc(3 * var(--size-touch)); padding-block: var(--size-touch); overflow-y: auto;
+.hv-drehrad-einzeln { grid-template-columns: minmax(0, 1fr) auto; }
+.hv-zeitwahl-raeder { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); }
+.hv-drehrad-rad { position: relative; box-sizing: border-box; height: calc(3 * var(--size-touch)); padding-block: var(--size-touch); overflow-y: auto;
   scroll-snap-type: y mandatory; overscroll-behavior: contain; scrollbar-width: none; touch-action: pan-y; border-radius: var(--radius-md); outline: none; }
-.hv-zeitwahl-rad::-webkit-scrollbar { display: none; }
-.hv-zeitwahl-rad:focus-visible { box-shadow: var(--focus-ring); }
-.hv-zeitwahl-wert { display: flex; align-items: center; justify-content: center; height: var(--size-touch); scroll-snap-align: center;
+.hv-drehrad-rad::-webkit-scrollbar { display: none; }
+.hv-drehrad-rad:focus-visible { box-shadow: var(--focus-ring); }
+.hv-drehrad-wert { display: flex; align-items: center; justify-content: center; height: var(--size-touch); scroll-snap-align: center;
   font-size: var(--text-value-size); line-height: var(--text-value-line); font-variant-numeric: tabular-nums; color: var(--ink-muted); cursor: pointer; user-select: none; }
-.hv-zeitwahl-wert[aria-selected="true"] { color: var(--ink); font-weight: 700; }
-.hv-zeitwahl-trenner { position: relative; font-size: var(--text-value-size); line-height: var(--text-value-line); font-weight: 700; }
-.hv-zeitwahl-error .hv-zeitwahl-raeder { border-color: var(--status-danger); border-width: 2px; }
+.hv-drehrad-wert[aria-selected="true"], .hv-drehrad-wert[data-gewaehlt] { color: var(--ink); font-weight: 700; }
+.hv-zeitwahl-trenner, .hv-drehrad-einheit { position: relative; font-size: var(--text-value-size); line-height: var(--text-value-line); font-weight: 700; }
+.hv-drehrad-einheit { padding-right: var(--space-3); font-size: var(--text-unit-size); line-height: var(--text-unit-line); font-weight: var(--text-unit-weight); color: var(--ink-muted); }
+.hv-drehrad-error .hv-drehrad-rahmen { border-color: var(--status-danger); border-width: 2px; }

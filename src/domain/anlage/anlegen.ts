@@ -64,7 +64,8 @@ export function anlagePruefen(e: AnlageEingabe, teile: Teile, eigeneId?: string)
     )
   )
     f.push({ feld: 'kuerzel', text: `Kürzel ${e.kuerzel} ist schon vergeben.` });
-  if (!UHRZEIT.test(e.lichtVon) || !UHRZEIT.test(e.lichtBis))
+  // Licht bis darf 24:00 sein (Ende des Tages, Plan 147); Postgres `time` speichert 24:00:00
+  if (!UHRZEIT.test(e.lichtVon) || !(UHRZEIT.test(e.lichtBis) || e.lichtBis === '24:00'))
     f.push({ feld: 'licht', text: 'Lichtzeit als hh:mm, z. B. 06:00 bis 21:00.' });
   if (e.karbonathaerte !== undefined && !(e.karbonathaerte >= 0 && e.karbonathaerte < 100))
     f.push({ feld: 'karbonathaerte', text: 'Karbonathärte zwischen 0 und 99.9 °dH.' });
