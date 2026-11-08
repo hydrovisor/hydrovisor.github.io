@@ -4,7 +4,13 @@
 // Zeilen im Abschnitt «Wechselblock» mit «Nächster Schritt» oben; laufende behalten ihre Zeile «Wechsel läuft» (A9).
 import { useEffect, useState } from 'react';
 import { ablaufLoeschen, offeneAblaeufe, type AblaufEintrag } from '../../ablauf/speicher.ts';
-import { blockText, naechsterText, wechselblock, type Wechselblock } from '../../domain/abhakliste/block.ts';
+import {
+  blockText,
+  buendelZeile,
+  naechsterText,
+  wechselblock,
+  type Wechselblock,
+} from '../../domain/abhakliste/block.ts';
 import { laufendeAnsaetze, offeneNachmessungen } from '../../domain/abhakliste/folgen.ts';
 import { aktiveZeile, timerEnde, type AblaufStand } from '../../domain/abhakliste/stand.ts';
 import type { Aufgabe } from '../../domain/aufgaben.ts';
@@ -18,7 +24,6 @@ import { hashZu } from '../router.ts';
 import '../ansatz.css';
 
 const TAG_MS = 24 * 60 * 60 * 1000;
-const TIMER_ZEILEN = new Set([11, 13, 16]);
 
 interface Eintrag {
   schluessel: string;
@@ -98,10 +103,11 @@ export function Ablaeufe({ jetzt, faellig = [] }: { jetzt: Date; faellig?: reado
     if (wechselOrte.has(l.platzId)) continue;
     const ort = codeVon(l.platzId);
     if (!ort) continue;
-    const naechste = Math.min(17, Math.max(...l.schritte.map((x) => x.nr)) + 1);
-    const ende = ansaetze.find((a) => a.id === l.ansatzId)?.timer_ende;
-    const weiter =
-      TIMER_ZEILEN.has(naechste) && ende ? ` · weiter ab ${uhrzeit(new Date(ende), ZEITZONE)}` : '';
+    const { zeile: naechste, timerEnde: ende } = buendelZeile(
+      l.schritte,
+      ansaetze.find((a) => a.id === l.ansatzId)?.timer_ende,
+    );
+    const weiter = ende ? ` · weiter ab ${uhrzeit(new Date(ende), ZEITZONE)}` : '';
     eintraege.push({
       schluessel: `buendel:${l.ansatzId}`,
       text: `${ort.kennung} Wechsel läuft · Zeile ${String(naechste)}${weiter}`,

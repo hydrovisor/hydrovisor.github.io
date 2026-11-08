@@ -118,6 +118,23 @@ export function gliedAusStand(
   };
 }
 
+/** aktive Zeile eines laufenden Neuansatzes aus dem Bündel und Timerende, nur bei aktiver Timerzeile (Gerätewechsel) */
+export function buendelZeile(
+  schritte: readonly SchrittZeile[],
+  timerEndeKopf: string | null | undefined,
+): { zeile: number; timerEnde?: string } {
+  const erledigt = schritte.filter((x) => !x.storniert_am && x.erledigt_am).map((x) => x.nr);
+  const zeile = erledigt.length === 0 ? 0 : Math.min(17, Math.max(...erledigt) + 1);
+  if (!TIMER_ZEILEN.has(zeile)) return { zeile };
+  const vor = schritte.find((x) => x.nr === zeile - 1 && !x.storniert_am && x.erledigt_am);
+  const ende = timerEndeKopf
+    ? new Date(timerEndeKopf).toISOString()
+    : vor?.erledigt_am
+      ? new Date(Date.parse(vor.erledigt_am) + TIMER_MIN * 60_000).toISOString()
+      : undefined;
+  return ende === undefined ? { zeile } : { zeile, timerEnde: ende };
+}
+
 const vergleichCode = (a: { code: string }, b: { code: string }) => a.code.localeCompare(b.code);
 
 /** Regel (a) abgelaufener Timer, früheste Endzeit zuerst; (b) kleinste Zeile; (c) Code */
@@ -170,8 +187,9 @@ export function wechselblock(
 
   for (const s of e.lokal) {
     if (s.art !== 'abhakliste') continue;
-    if (jetzt.getTime() - Date.parse(s.letzteAktionAm) > ALT_MS) continue;
+    // auch ein alter Stand belegt den Platz: er bleibt in Heute mit «Abbrechen» und wird kein Glied (A4)
     belegt.add(s.platzId);
+    if (jetzt.getTime() - Date.parse(s.letzteAktionAm) > ALT_MS) continue;
     const ort = orte.get(s.platzId);
     if (!ort) continue;
     const g = gliedAusStand(s, ort);
@@ -185,18 +203,10 @@ export function wechselblock(
     const ort = orte.get(l.platzId);
     if (!ort) continue;
     belegt.add(l.platzId);
-    const erledigt = l.schritte.filter((x) => x.erledigt_am).map((x) => x.nr);
-    const zeile = erledigt.length === 0 ? 0 : Math.min(17, Math.max(...erledigt) + 1);
-    const kopf = ansaetze.find((a) => a.id === l.ansatzId);
-    let ende: string | undefined;
-    if (TIMER_ZEILEN.has(zeile)) {
-      const vor = l.schritte.find((x) => x.nr === zeile - 1 && x.erledigt_am);
-      ende = kopf?.timer_ende
-        ? new Date(kopf.timer_ende).toISOString()
-        : vor?.erledigt_am
-          ? new Date(Date.parse(vor.erledigt_am) + TIMER_MIN * 60_000).toISOString()
-          : undefined;
-    }
+    const { zeile, timerEnde: ende } = buendelZeile(
+      l.schritte,
+      ansaetze.find((a) => a.id === l.ansatzId)?.timer_ende,
+    );
     const text = textZeile(zeile);
     laufend.push({
       anlageId: ort.anlageId,
