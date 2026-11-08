@@ -101,7 +101,7 @@ export function Heute() {
         </Notice>
       ) : null}
       {keinZugang ? <Notice tone="warn" title="Kein Zugang für dieses Konto" /> : null}
-      {buendel && !keinZugang ? <Ablaeufe jetzt={new Date(jetzt)} /> : null}
+      {buendel && !keinZugang ? <Ablaeufe jetzt={new Date(jetzt)} faellig={faellig} /> : null}
       {!keinZugang && anzeige.hinweis ? <Notice title={anzeige.hinweis} /> : null}
       {buendel && !keinZugang ? <Einrichtung /> : null}
       {zeigen ? <NeueVersionHinweis /> : null}

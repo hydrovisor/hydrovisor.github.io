@@ -62,6 +62,49 @@
   font-weight: 700;
 }
 
+/* Wechselblock in Heute und Block-Leiste in der Maske Ansatz (R5.6, Plan 139) */
+.hv-block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.hv-block .hv-ablauf-zeile {
+  flex-wrap: nowrap;
+  padding: var(--space-1) var(--space-2);
+}
+
+.hv-block .hv-ablauf-text {
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-line);
+}
+
+.hv-block-naechster {
+  background: var(--brand-soft);
+}
+
+/* Glieder nebeneinander als zweizeilige Knöpfe, damit der Block auf 360 × 640 ohne Scrollen Platz hat */
+.hv-block-glieder {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: var(--space-2);
+}
+
+.hv-block-glieder .hv-btn {
+  height: 100%;
+  padding: var(--space-2);
+}
+
+.hv-block-leiste {
+  display: flex;
+  width: 100%;
+  white-space: normal;
+}
+
 /* Ziffernblock für Menge und Ziel-EC (R4.6) */
 .hv-ansatz-zahl {
   display: flex;

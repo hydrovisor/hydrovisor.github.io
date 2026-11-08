@@ -7,6 +7,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { ablaufLesen, ablaufLoeschen, ablaufSchreiben, type AblaufEintrag } from '../../ablauf/speicher.ts';
 import { timerSignal, useWachhalten } from '../../ablauf/wachhalten.ts';
+import { BlockLeiste } from './BlockLeiste.tsx';
 import { neueClientId, schreiben } from '../../daten/schreiben.ts';
 import { laufendeAnsaetze } from '../../domain/abhakliste/folgen.ts';
 import { erstAnsatzAm, rechnen, rechnungEingaben } from '../../domain/abhakliste/rechnung.ts';
@@ -854,6 +855,7 @@ function Abhakliste({ ort, teile: teileBuendel }: { ort: Ort; teile: Teile }) {
   return (
     <main className="hv-seite hv-ansatz" data-density="regal">
       {kopf}
+      <BlockLeiste teile={teile} platzId={ort.platzId} stand={aktuell} jetzt={jetzt} />
       {fehler ? (
         <Notice
           kompakt
