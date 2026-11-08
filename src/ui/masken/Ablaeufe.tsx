@@ -1,9 +1,19 @@
 // Laufende Abläufe oben in Heute (Plan 29; Loesungswechsel-AK3, Rundgang-AK3, A17): je offenem Wechsel und je offener
 // Nachmessung eine Zeile mit «Fortsetzen» bzw. «Messen». Quelle: Speicher «ablaeufe» und das Bündel (Gerätewechsel).
+// Wechselblock (R5.6, Plan 139): bilden 2 oder 3 laufende oder fällige Ansätze einer Anlage einen Block, stehen ihre
+// Zeilen im Abschnitt «Wechselblock» mit «Nächster Schritt» oben; laufende behalten ihre Zeile «Wechsel läuft» (A9).
 import { useEffect, useState } from 'react';
 import { ablaufLoeschen, offeneAblaeufe, type AblaufEintrag } from '../../ablauf/speicher.ts';
+import {
+  blockText,
+  buendelZeile,
+  naechsterText,
+  wechselblock,
+  type Wechselblock,
+} from '../../domain/abhakliste/block.ts';
 import { laufendeAnsaetze, offeneNachmessungen } from '../../domain/abhakliste/folgen.ts';
 import { aktiveZeile, timerEnde, type AblaufStand } from '../../domain/abhakliste/stand.ts';
+import type { Aufgabe } from '../../domain/aufgaben.ts';
 import type { AnsatzZeile } from '../../domain/bewertung/verlauf.ts';
 import { messbareOrte } from '../../domain/ort.ts';
 import { fortschritt, standGueltig, type RundgangStand } from '../../domain/rundgang/ablauf.ts';
@@ -19,9 +29,11 @@ interface Eintrag {
   schluessel: string;
   text: string;
   ziel: string;
-  knopf: 'Fortsetzen' | 'Messen';
+  knopf: 'Fortsetzen' | 'Messen' | 'Beginnen';
   lokalId?: string;
   alt: boolean;
+  /** Platz eines Wechsels, für die Zuordnung zum Block */
+  platzId?: string;
 }
 
 /** «Zeile 7 Grow», «Zeile 11 · weiter ab 19:02», «Zeile 14 · messen ab 19:12» (Use Case Lösungswechsel) */
@@ -35,7 +47,7 @@ function wasAktiv(s: AblaufStand, nr: number | undefined): string {
   return z?.zugabe ? `Zeile ${String(nr)} ${z.zugabe}` : `Zeile ${String(nr)}`;
 }
 
-export function Ablaeufe({ jetzt }: { jetzt: Date }) {
+export function Ablaeufe({ jetzt, faellig = [] }: { jetzt: Date; faellig?: readonly Aufgabe[] }) {
   const { buendel } = useBuendel();
   const [lokal, setLokal] = useState<AblaufEintrag[]>([]);
   const [stand, setStand] = useState(0);
@@ -82,6 +94,7 @@ export function Ablaeufe({ jetzt }: { jetzt: Date }) {
       knopf: 'Fortsetzen',
       lokalId: e.id,
       alt: jetzt.getTime() - Date.parse(s.letzteAktionAm) > TAG_MS,
+      platzId: s.platzId,
     });
   }
   const ansaetze = (teile['naehrloesungsansatz'] ?? []) as (AnsatzZeile & { timer_ende?: string | null })[];
@@ -90,13 +103,18 @@ export function Ablaeufe({ jetzt }: { jetzt: Date }) {
     if (wechselOrte.has(l.platzId)) continue;
     const ort = codeVon(l.platzId);
     if (!ort) continue;
-    const naechste = Math.min(17, Math.max(...l.schritte.map((x) => x.nr)) + 1);
+    const { zeile: naechste, timerEnde: ende } = buendelZeile(
+      l.schritte,
+      ansaetze.find((a) => a.id === l.ansatzId)?.timer_ende,
+    );
+    const weiter = ende ? ` · weiter ab ${uhrzeit(new Date(ende), ZEITZONE)}` : '';
     eintraege.push({
       schluessel: `buendel:${l.ansatzId}`,
-      text: `${ort.kennung} Wechsel läuft · Zeile ${String(naechste)}`,
+      text: `${ort.kennung} Wechsel läuft · Zeile ${String(naechste)}${weiter}`,
       ziel: hashZu({ name: 'ansatz', code: ort.code }),
       knopf: 'Fortsetzen',
       alt: false,
+      platzId: l.platzId,
     });
   }
   // Rundgang (Plan 30): offener Stand von heute mit «Fortsetzen»; ein Stand von gestern gilt nicht mehr (A6)
@@ -146,28 +164,89 @@ export function Ablaeufe({ jetzt }: { jetzt: Date }) {
       alt: jetzt.getTime() - Date.parse(n.faelligAb) > TAG_MS,
     });
   }
-  if (eintraege.length === 0) return null;
-  return (
-    <ul className="hv-ablaeufe" aria-label="Laufende Abläufe">
-      {eintraege.map((e) => (
-        <li key={e.schluessel} className="hv-ablauf-zeile">
-          <span className="hv-ablauf-text hv-num">{e.text}</span>
-          <a className="hv-btn hv-btn-primary hv-btn-compact" href={e.ziel}>
-            {e.knopf}
-          </a>
-          {e.alt && e.lokalId ? (
-            <Button
-              variant="ghost"
-              size="compact"
-              onClick={() => {
-                void ablaufLoeschen(e.lokalId as string).then(() => setStand((x) => x + 1));
-              }}
-            >
-              Abbrechen
-            </Button>
-          ) : null}
-        </li>
-      ))}
-    </ul>
+  const bloecke = wechselblock(
+    {
+      teile,
+      aufgaben: faellig,
+      lokal: lokal.filter((e) => e.art === 'abhakliste' && e.platzId) as unknown as AblaufStand[],
+    },
+    jetzt,
+    ZEITZONE,
   );
+  const imBlock = new Set(bloecke.flatMap((b) => b.glieder.map((g) => g.platzId)));
+  const uebrige = eintraege.filter((e) => !e.platzId || !imBlock.has(e.platzId));
+  const blockZeilen = (b: Wechselblock): Eintrag[] =>
+    b.glieder.map(
+      (g) =>
+        eintraege.find((e) => e.platzId === g.platzId) ?? {
+          schluessel: `block:${g.platzId}`,
+          text: blockText(g, ZEITZONE),
+          ziel: hashZu({ name: 'ansatz', code: g.code }),
+          knopf: 'Beginnen',
+          alt: false,
+          platzId: g.platzId,
+        },
+    );
+  if (uebrige.length === 0 && bloecke.length === 0) return null;
+  return (
+    <>
+      {bloecke.map((b) => {
+        const kopf = naechsterText(b.naechster, ZEITZONE);
+        return (
+          <section key={b.anlageId} className="hv-block" aria-label="Wechselblock">
+            {kopf ? (
+              <div className="hv-ablauf-zeile hv-block-naechster">
+                <span className="hv-ablauf-text hv-num">{kopf}</span>
+                {b.naechster.art === 'schritt' ? (
+                  <a
+                    className="hv-btn hv-btn-primary"
+                    href={hashZu({ name: 'ansatz', code: b.naechster.code })}
+                  >
+                    Weiter
+                  </a>
+                ) : null}
+              </div>
+            ) : null}
+            <ul className="hv-block-glieder">
+              {blockZeilen(b).map((e) => (
+                <li key={e.schluessel}>
+                  <a className="hv-btn hv-btn-secondary hv-btn-zweizeilig hv-btn-block" href={e.ziel}>
+                    {e.knopf}
+                    <small className="hv-num">{e.text}</small>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </section>
+        );
+      })}
+      {uebrige.length > 0 ? (
+        <ul className="hv-ablaeufe" aria-label="Laufende Abläufe">
+          {uebrige.map(zeile)}
+        </ul>
+      ) : null}
+    </>
+  );
+
+  function zeile(e: Eintrag) {
+    return (
+      <li key={e.schluessel} className="hv-ablauf-zeile">
+        <span className="hv-ablauf-text hv-num">{e.text}</span>
+        <a className="hv-btn hv-btn-primary hv-btn-compact" href={e.ziel}>
+          {e.knopf}
+        </a>
+        {e.alt && e.lokalId ? (
+          <Button
+            variant="ghost"
+            size="compact"
+            onClick={() => {
+              void ablaufLoeschen(e.lokalId as string).then(() => setStand((x) => x + 1));
+            }}
+          >
+            Abbrechen
+          </Button>
+        ) : null}
+      </li>
+    );
+  }
 }

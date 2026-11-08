@@ -29,7 +29,7 @@ Die neuen Bausteine entstehen im Design-System-Paket vor I1a in `design-system/`
 
 ### 3.1 Heute (UC8, UC0)
 
-- **Kopf:** Logo klein, Datum, «Letzte Erinnerung: heute 07:00 zugestellt» oder Warnung (48 h), laufende Abläufe mit Countdown («1.1 Wechsel läuft · messen ab 19:12»).
+- **Kopf:** Logo klein, Datum, «Letzte Erinnerung: heute 07:00 zugestellt» oder Warnung (48 h), laufende Abläufe mit Countdown («1.1 Wechsel läuft · messen ab 19:12»). Bilden 2 oder 3 Ansätze einen Wechselblock (R5.6), stehen sie im Abschnitt «Wechselblock»: oben «Nächster Schritt: 1.2 · Zeile 1 absaugen» [Weiter] (alle Timer laufen: «Alle Timer laufen · weiter ab 19:02»), darunter je Glied ein zweizeiliger Knopf nebeneinander ([Beginnen] «2.1 · noch nicht begonnen», [Fortsetzen] «2.3 Wechsel läuft · Zeile 11 · weiter ab 19:02»); auf 360 × 640 ohne Scrollen. **AK:** WB-AK4, WB-AK5.
 - **Bereiche von oben:** Einrichtungs-Checkliste (UC0, neun Punkte, verschwindet nach Abschluss); Hinweise (neue Version, Backup älter als 8 Tage, Warteschlange älter als 24 h, Push nicht eingerichtet, «4 Ansätze heute»); Karte «Phasen nachführen (n Sätze)»; gebündelte Phasenfragen; Ortskarten in Laufweg-Reihenfolge (Anzuchtorte zuerst), «Ausserhalb» hervorgehoben ohne Umsortieren; je Aufgabe Grund («Messen und nachfüllen alle 2 Tage · zuletzt vor 3 Tagen»), Knöpfe «Erfassen», «Morgen» oder «Überspringen» nur wo erlaubt (R5.2, R5.3).
 - **Hauptaktion:** «Rundgang starten (n Orte)», unten im Daumenbereich. Daneben sekundär «Stromausfall erfasst».
 - **Leer:** «Heute nichts zu tun · nächste: Mi, Messen und nachfüllen 1.1».
@@ -74,6 +74,7 @@ Bei Kratky ersetzt der Füllstand das Banner, wenn beide anstehen; das Banner wa
 - Rechnung: Stadium (Vorschlag, übersteuerbar), Zielbereich, Ziel-EC, Teil-Dosis-Stand («75 % bis zum Becherversuch»), Mengen je Komponente mit Messmittel («10.5 ml, 20-ml-Spritze») und Rundungsabweichung; bei Mischentscheid die drei Optionen als gleichwertige Knöpfe (R2.4).
 - Abhakliste (Checklist) Zeilen 0 bis 17 nach R4.6; jede Zeile ein Tipp; Aufzüge einzeln abhakbar; Timer-Zeilen mit Countdown; Kontroll- und Endmessung öffnen die Messmaske im Ablauf.
 - Nachfüllen: «Wie viele Kannen?» als grosse Zahlknöpfe [1] … [n] plus Teilkanne in Litern über den NumPad; Dosis je Kanne.
+- Block-Leiste unter dem Kopf, wenn das Gefäss Glied eines Wechselblocks ist und der nächste Schritt in einem anderen Gefäss liegt: [Weiter im Block: 2.1 · Zeile 0 …]; läuft dort ein Timer ab, gibt die Maske einmal das Timersignal (R5.6, WB-AK5).
 - Bildschirm bleibt an; Rückfrage nach 2 Minuten Pause mit Zeitstempel. **AK:** UC7-AK1 bis AK15, Lösungswechsel-AK1 bis AK6.
 
 ### 3.6 Säen (UC5)
