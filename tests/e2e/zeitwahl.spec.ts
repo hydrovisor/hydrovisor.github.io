@@ -220,8 +220,13 @@ test('ZR-AK4 Anlage anlegen bei 360 dp: jedes Rad höchstens 160 dp breit, daneb
   // Licht ab, Licht bis, Anzahl Ebenen und je Ebene 3 Räder (4 Ebenen)
   expect(breiten).toHaveLength(3 + 4 * 3);
   for (const b of breiten) expect(b).toBeLessThanOrEqual(160);
-  // einzelne Räder (Anzahl Ebenen, Höhe) lassen rechts mindestens 100 dp frei
-  const ebenen = await page.locator('.hv-drehrad-einzeln').first().boundingBox();
-  expect(360 - ((ebenen?.x ?? 0) + (ebenen?.width ?? 360))).toBeGreaterThanOrEqual(100);
+  // einzelne Räder (Anzahl Ebenen und die Höhe jeder Ebene) lassen rechts mindestens 100 dp frei (Prüfer Befund 2)
+  const rechterRand = await page
+    .locator('.hv-drehrad-einzeln')
+    .evaluateAll((els) =>
+      els.filter((el) => !el.closest('.hv-anlage-zweispaltig')).map((el) => el.getBoundingClientRect().right),
+    );
+  expect(rechterRand).toHaveLength(1 + 4);
+  for (const rechts of rechterRand) expect(360 - rechts).toBeGreaterThanOrEqual(100);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(360);
 });

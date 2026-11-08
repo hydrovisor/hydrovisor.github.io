@@ -37,11 +37,14 @@ export function Rad({
   const kopien = kopienZahl(n);
   const mitte = Math.floor(kopien / 2);
   const index = Math.max(0, werte.indexOf(wert));
-  // gültiger Index nach dem letzten Zeichnen, für das Zurückdrehen nach einer nicht übernommenen Wahl
-  const indexRef = useRef(index);
+  // gültiger Stand nach dem letzten Zeichnen, für das Zurückdrehen nach einer nicht übernommenen Wahl
+  const stand = useRef({ index, wert, n });
+  const zurueck = useRef<ReturnType<typeof setTimeout>>(undefined);
   useLayoutEffect(() => {
-    indexRef.current = index;
+    stand.current = { index, wert, n };
   });
+  // eine neue Berührung oder das Mausrad bricht ein ausstehendes Zurückdrehen ab (Plan 147, Prüfer Befund 1)
+  const abbrechen = () => clearTimeout(zurueck.current);
 
   const zeilenhoehe = (el: HTMLElement) =>
     el.querySelector<HTMLElement>('.hv-drehrad-wert')?.offsetHeight ?? 0;
@@ -74,11 +77,14 @@ export function Rad({
     if (Math.abs(el.scrollTop - mittig) >= 1) el.scrollTo({ top: mittig, behavior: 'instant' });
     if (neu === undefined || neu === wert) return;
     onWahl(neu);
-    // übernimmt die Maske die Wahl nicht (z. B. Minute 30 bei Stunde 24), dreht das Rad auf den gültigen Wert zurück
-    setTimeout(() => {
+    // übernimmt die Maske die Wahl nicht (z. B. Minute 30 bei Stunde 24), dreht das Rad auf den gültigen Wert zurück;
+    // eine übernommene Wahl lässt das Rad in Ruhe, damit ein neuer Wurf nicht abgebrochen wird
+    abbrechen();
+    zurueck.current = setTimeout(() => {
       const r = ref.current;
-      if (!r || h === 0) return;
-      const soll = zielZeile(indexRef.current, n, kopien, r.scrollTop / h) * h;
+      const jetzt = stand.current;
+      if (!r || h === 0 || jetzt.wert === neu) return;
+      const soll = zielZeile(jetzt.index, jetzt.n, kopienZahl(jetzt.n), r.scrollTop / h) * h;
       if (Math.abs(r.scrollTop - soll) >= 1) r.scrollTo({ top: soll, behavior: 'smooth' });
     }, ZURUECK_MS);
   }
@@ -111,6 +117,8 @@ export function Rad({
       tabIndex={0}
       aria-activedescendant={`${id}-${index}`}
       onKeyDown={taste}
+      onPointerDown={abbrechen}
+      onWheel={abbrechen}
       {...(HAT_SCROLLEND
         ? { onScrollEnd: eingerastet }
         : {
