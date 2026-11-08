@@ -269,3 +269,7 @@ tests/unit/passung.test.ts
 tests/unit/passung-kontext.test.ts
 tests/unit/saeen-passung.test.ts
 tests/e2e/saeen-passung.spec.ts
+# P-01 Wechselblock (#139)
+tests/unit/wechselblock.test.ts
+tests/fixtures/wechselblock.ts
+tests/e2e/wechselblock.spec.ts
