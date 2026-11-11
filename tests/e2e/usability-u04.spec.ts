@@ -62,6 +62,7 @@ test('U04-AK1 Einrichtung mit 6 erledigten Punkten: eine Zeile «Punkte 1 bis 6 
   await expect(page.getByRole('heading', { name: 'Einrichtung · 6 von 9 erledigt' })).toBeVisible();
   const zeile = liste.getByRole('button', { name: /^Punkte 1 bis 6 erledigt/ });
   await expect(zeile).toHaveAttribute('aria-expanded', 'false');
+  await expect(zeile).toHaveAccessibleName('Punkte 1 bis 6 erledigt anzeigen');
   expect(await hoehe(zeile)).toBeGreaterThanOrEqual(68);
   // eingeklappt: keine erledigte Karte, aktiver Punkt 7 und die offenen 8 und 9
   await expect(liste.getByRole('img', { name: 'erledigt' })).toHaveCount(0);
@@ -70,6 +71,7 @@ test('U04-AK1 Einrichtung mit 6 erledigten Punkten: eine Zeile «Punkte 1 bis 6 
   const eingeklappt = await hoehe(liste);
   await zeile.click();
   await expect(zeile).toHaveAttribute('aria-expanded', 'true');
+  await expect(zeile).toHaveAccessibleName('Punkte 1 bis 6 erledigt einklappen');
   await expect(liste.getByRole('img', { name: 'erledigt' })).toHaveCount(6);
   const aufgeklappt = await hoehe(liste);
   expect(aufgeklappt - eingeklappt, 'eingespart').toBeGreaterThanOrEqual(300);
@@ -86,7 +88,9 @@ test('U04-AK1 ein erledigter Punkt steht als «Punkt 1 erledigt», die übrigen 
   await expect(liste.locator('li[data-zustand]')).toHaveCount(8);
 });
 
-test('U04-AK2 Einzelauswahl (Thema) mit rundem Punkt als gleich breite Segmente', async ({ page }) => {
+test('U04-AK2 Einzelauswahl (E-Mail-Rückfall, Thema) mit rundem Punkt, kurze Optionen als gleich breite Segmente, kein Wort getrennt', async ({
+  page,
+}) => {
   const jetzt = new Date('2026-12-10T08:00:00Z');
   const t = regalTeile(jetzt);
   t['einstellung'] = [
@@ -105,22 +109,28 @@ test('U04-AK2 Einzelauswahl (Thema) mit rundem Punkt als gleich breite Segmente'
     },
   ];
   await oeffnen(page, t, '/#/einstellungen', jetzt);
-  const thema = page.getByRole('group', { name: 'Thema' });
-  const optionen = thema.getByRole('button');
-  await expect(optionen.first()).toBeVisible({ timeout: 15_000 });
-  const n = await optionen.count();
-  expect(n).toBeGreaterThanOrEqual(2);
-  const breiten: number[] = [];
-  for (const o of await optionen.all()) {
-    const b = await o.boundingBox();
-    breiten.push(b?.width ?? 0);
-    const rund = await o.locator('.hv-choice-check').evaluate((e) => getComputedStyle(e).borderRadius);
-    expect(rund, 'runder Punkt').toBe('50%');
-    // kein Häkchen-Symbol in der Einzelauswahl
-    await expect(o.locator('.hv-choice-check svg')).toHaveCount(0);
+  for (const name of ['E-Mail, wenn Push fehlt', 'Thema']) {
+    const gruppe = page.getByRole('group', { name });
+    const optionen = gruppe.getByRole('button');
+    await expect(optionen.first()).toBeVisible({ timeout: 15_000 });
+    const breiten: number[] = [];
+    for (const o of await optionen.all()) {
+      breiten.push((await o.boundingBox())?.width ?? 0);
+      const rund = await o.locator('.hv-choice-check').evaluate((e) => getComputedStyle(e).borderRadius);
+      expect(rund, `${name}: runder Punkt`).toBe('50%');
+      // kein Häkchen-Symbol in der Einzelauswahl
+      await expect(o.locator('.hv-choice-check svg')).toHaveCount(0);
+      // nie ein Wort getrennt: der Titel steht in einer Zeile (Prüfer Runde 1)
+      const zeilen = await o
+        .locator('.hv-choice-titel')
+        .evaluate((e) => new Set([...e.getClientRects()].map((r) => Math.round(r.top))).size);
+      expect(zeilen, `${name}: Titel in einer Zeile`).toBe(1);
+    }
+    await expect(gruppe.getByRole('button', { pressed: true })).toHaveCount(1);
+    // zwei kurze Optionen stehen als gleich breite Segmente in einer Zeile
+    if (name === 'E-Mail, wenn Push fehlt')
+      expect(Math.max(...breiten) - Math.min(...breiten), 'gleich breit').toBeLessThanOrEqual(1);
   }
-  expect(Math.max(...breiten) - Math.min(...breiten), 'gleich breit').toBeLessThanOrEqual(1);
-  await expect(thema.getByRole('button', { pressed: true })).toHaveCount(1);
 });
 
 test('U04-AK2 Mehrfachauswahl (Sorten in Säen) behält das eckige Häkchen', async ({ page }) => {

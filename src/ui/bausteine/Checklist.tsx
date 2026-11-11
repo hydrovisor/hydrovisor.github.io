@@ -71,16 +71,19 @@ export function Checklist({
             aria-expanded={aufgeklappt}
             onClick={() => setAufgeklappt((a) => !a)}
           >
+            {/* Name «Punkte 1 bis 6 erledigt anzeigen»: Gegenstand und Verb wie «Rundgang starten» (Prüfer Runde 1) */}
             <span className="hv-check-zusammen-text">
-              {fertig === 1
-                ? `Punkt ${String(bis)} erledigt`
-                : `Punkte ${String(zeilen[0]?.nr)} bis ${String(bis)} erledigt`}
+              <span>
+                {fertig === 1
+                  ? `Punkt ${String(bis)} erledigt`
+                  : `Punkte ${String(zeilen[0]?.nr)} bis ${String(bis)} erledigt`}
+              </span>{' '}
+              <span className="hv-check-zusammen-aktion">{aufgeklappt ? 'einklappen' : 'anzeigen'}</span>
             </span>
-            <span className="hv-check-zusammen-aktion">{aufgeklappt ? 'Einklappen' : 'Anzeigen'}</span>
+            <span className="hv-check-status" aria-hidden="true">
+              <Haken />
+            </span>
           </button>
-          <span className="hv-check-status" aria-hidden="true">
-            <Haken />
-          </span>
         </li>
       ) : null}
       {sichtbar.map((z) => {

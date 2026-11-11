@@ -260,8 +260,9 @@ button.hv-tile { cursor: pointer; touch-action: manipulation; }
 .hv-check-offen .hv-check-status { border-style: dashed; background: var(--surface-sunken); }
 .hv-check-erledigt .hv-check-status { background: var(--brand); border-color: var(--brand); }
 /* U-04 (B6): erledigte Zeilen am Anfang als eine Zeile «Punkte 1 bis n erledigt»; die ganze Zeile ist die Taste (68 dp), Tipp klappt auf und zu */
-.hv-check-zusammen { grid-template-columns: 1fr var(--size-touch-regal); }
-.hv-check-zusammen-knopf { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--space-1) var(--space-3); min-height: var(--size-touch-regal); padding: 0; border: 0; background: none; color: var(--ink-muted); font: inherit; font-weight: 600; text-align: left; cursor: pointer; touch-action: manipulation; }
+.hv-check-zusammen { display: block; }
+.hv-check-zusammen-knopf { display: grid; grid-template-columns: 1fr var(--size-touch-regal); align-items: center; gap: var(--space-3); width: 100%; min-height: var(--size-touch-regal); padding: 0; border: 0; background: none; color: var(--ink-muted); font: inherit; font-weight: 600; text-align: left; cursor: pointer; touch-action: manipulation; }
+.hv-check-zusammen-text { display: flex; flex-wrap: wrap; column-gap: var(--space-3); }
 .hv-check-zusammen-aktion { color: var(--brand); text-decoration: underline; text-underline-offset: 3px; }
 
 /* Deckelgrafik: Löcher als Tippflächen, Loch 1 vorne links, spaltenweise von vorne nach hinten (vorne = unten) */
@@ -316,12 +317,10 @@ button.hv-tile { cursor: pointer; touch-action: manipulation; }
 .hv-choice-text { display: flex; flex-direction: column; }
 .hv-choice-titel { font-weight: 600; }
 .hv-choice-zusatz { font-size: var(--text-caption-size); color: var(--ink-muted); }
-/* U-04 (B7): Einzelauswahl wie ein Radioknopf: runder Rahmen, gewählt mit vollem Punkt in der Mitte; bis drei Optionen in einer Zeile stehen als gleich breite Segmente (hv-choice-segmente), Text bricht in der Taste um */
+/* U-04 (B7): Einzelauswahl wie ein Radioknopf: runder Rahmen, gewählt mit vollem Punkt in der Mitte; bis drei Optionen in einer Zeile stehen als gleich breite Segmente (hv-choice-segmente), solange jede ganz Platz hat; sonst bricht die Zeile um, nie ein Wort (Prüfer Runde 1) */
 .hv-choice-einzeln .hv-choice-check { border-radius: 50%; }
 .hv-choice-einzeln .hv-choice-item[aria-pressed="true"] .hv-choice-check { background: var(--surface-raised); box-shadow: inset 0 0 0 5px var(--surface-raised), inset 0 0 0 12px var(--brand); }
-.hv-choice-segmente { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
-.hv-choice-segmente > .hv-choice-item { min-width: 0; justify-content: center; gap: var(--space-2); padding-inline: var(--space-2); }
-.hv-choice-segmente .hv-choice-text { min-width: 0; overflow-wrap: anywhere; hyphens: auto; }
+.hv-choice-segmente > .hv-choice-item { flex: 1 1 0; min-width: min(100%, max-content); justify-content: center; }
 
 /* Stepper: − Wert + ohne Systemtastatur, Grenzen deaktivieren den Knopf (Plan 23) */
 .hv-stepper { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: var(--space-2); }
