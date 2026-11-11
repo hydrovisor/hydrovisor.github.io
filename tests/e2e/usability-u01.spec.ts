@@ -241,3 +241,20 @@ test('U01-AK5 Gefäss 1.1: Nebentasten gleich breit und mindestens 68 dp hoch', 
   }
   for (const n of await neben.all()) await textPasst(n);
 });
+
+test('U01-AK7 Einrichtung: die Taste im aktiven Punkt bleibt in der Textspalte und überlappt den Statuskreis nicht', async ({
+  page,
+}) => {
+  await oeffnen(page, rundgangTeile(), '/#/heute', RUNDGANG_JETZT);
+  const punkt = page.locator('li.hv-check-row[data-zustand="aktiv"]').first();
+  await expect(punkt).toBeVisible({ timeout: 15_000 });
+  const taste = punkt.locator('.hv-check-aktion .hv-btn');
+  const kreis = punkt.locator('.hv-check-status');
+  const t = await box(taste);
+  const k = await box(kreis);
+  const ueberlappt =
+    t.x < k.x + k.width && k.x < t.x + t.width && t.y < k.y + k.height && k.y < t.y + t.height;
+  expect(ueberlappt, 'Taste überlappt den Statuskreis').toBe(false);
+  await textPasst(taste);
+  expect(t.height).toBeGreaterThanOrEqual(68);
+});

@@ -13,6 +13,7 @@ Stand 11.11.2026 · Lead · Methode: heuristische Evaluation (Nielsen, 10 Heuris
 | B7 | Abhakliste (Stadium), Keimung (Ja/Nein) | Einzelauswahl sieht aus wie Mehrfachauswahl (eckige Häkchen); Breiten nach Textlänge, ungleich | Konsistenz, Standards | 2 | Einzelauswahl als Segmente gleicher Breite mit rundem Punkt | Vorschlag an Tim (Design-System-Baustein) |
 | B8 | Rundgang, Kurzprüfung | «Licht an ✓», «Lüfter läuft ✓», «1.1 Pumpe sprudelt ✓ ok»: kleines ✓ und grosse Schrift; unklar, ob das ein Zustand ist oder eine Taste, die eine Abweichung meldet | Übereinstimmung mit der realen Welt | 2 | Beschriftung als Frage mit Zustand («Licht an? ja», Tipp meldet «nein»), Symbol 32 dp | Vorschlag an Tim |
 | B9 | Gefäss | Nebentasten («Lösung wechseln», «Ändern», «Leeren») ungleich breit, Zeilen ausgefranst | Ästhetik | 1 | gleich breite Raster-Tasten | #153 |
+| B10 | Heute, Einrichtung (aktiver Punkt) | Die Taste «Leitungswasser messen» ragt aus der Textspalte und überlappt den Statuskreis (`white-space: nowrap`) | Ästhetik, Fehlervermeidung | 3 | Taste bleibt in der Spalte und bricht um | #153 |
 
 ## Nicht geprüft (bleibt am Honor, U3)
 

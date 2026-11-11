@@ -242,6 +242,8 @@ button.hv-tile { cursor: pointer; touch-action: manipulation; }
 .hv-check-erledigt .hv-check-haken { background: var(--brand); border-color: var(--brand); }
 .hv-check-erledigt .hv-check-titel { text-decoration: line-through; text-decoration-thickness: 2px; color: var(--ink-muted); }
 .hv-check-aktion { margin-top: var(--space-2); }
+/* U-01 (B10): die Taste bleibt in der Textspalte und bricht um, statt in den Statuskreis zu ragen */
+.hv-check-aktion .hv-btn { max-width: 100%; white-space: normal; text-align: center; }
 /* Plan 29: Hinweis unter dem Titel (Notice-Ton) und fester Haken einer erledigten Zeile, die nicht mehr abwählbar ist */
 .hv-check-hinweis { margin-top: var(--space-1); font-size: var(--text-small-size); line-height: var(--text-small-line); color: var(--ink); }
 .hv-check-fest { display: inline-flex; align-items: center; justify-content: center; cursor: default; }
