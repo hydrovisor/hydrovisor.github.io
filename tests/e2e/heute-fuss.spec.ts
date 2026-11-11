@@ -103,6 +103,9 @@ test('HF-AK2 am Seitenende verdeckt der Fuss kein bedienbares Element; der Tipp 
   page,
 }) => {
   await heute(page, rundgangTeile(), JETZT);
+  // erst wenn die Übersicht geladen ist, steht das Seitenende fest (sonst scrollt der Test auf 640 dp, und die
+  // Einrichtung liegt beim Prüfen kurz unter dem Fuss; seit #162 wackelig)
+  await expect(page.locator('main .hv-tile').last()).toBeVisible({ timeout: 15_000 });
   // am Seitenende liegt nichts mehr unter dem Fuss (oben und in der Mitte scrollen Karten bewusst darunter durch)
   await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
   const geprueft = await nichtsVerdeckt(page);
