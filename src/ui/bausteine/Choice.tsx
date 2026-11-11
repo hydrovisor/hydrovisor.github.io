@@ -1,5 +1,6 @@
 // Baustein Choice (design-system/components/Choice.md): Wahlliste mit aria-pressed und Häkchen, ohne Systemtastatur
-// (Säen, Plan 23); Stufe als Badge mit Symbol und Wort (Passung, Plan 36)
+// (Säen, Plan 23); Stufe als Badge mit Symbol und Wort (Passung, Plan 36); Einzelauswahl mit rundem Punkt und in einer
+// Zeile als gleich breite Segmente (U-04, B7)
 import type { Einstufung } from '../../domain/passung/passung.ts';
 import { Stufe } from './Stufe.tsx';
 
@@ -26,6 +27,7 @@ export function Choice({
   onWahl,
   label,
   zeile,
+  einzeln,
 }: {
   optionen: readonly Option[];
   gewaehlt: readonly string[];
@@ -34,9 +36,21 @@ export function Choice({
   label: string;
   /** Optionen nebeneinander mit Umbruch */
   zeile?: boolean;
+  /** genau eine Option gilt: runder Punkt statt Häkchen, in einer Zeile gleich breite Segmente (U-04, B7) */
+  einzeln?: boolean;
 }) {
+  // bis drei Optionen in einer Zeile: gleich breite Segmente; mehr Optionen brechen um wie bisher
+  const segmente = einzeln === true && zeile === true && optionen.length <= 3;
+  const klasse = [
+    'hv-choice',
+    zeile && 'hv-choice-zeile',
+    einzeln && 'hv-choice-einzeln',
+    segmente && 'hv-choice-segmente',
+  ]
+    .filter(Boolean)
+    .join(' ');
   return (
-    <div className={zeile ? 'hv-choice hv-choice-zeile' : 'hv-choice'} role="group" aria-label={label}>
+    <div className={klasse} role="group" aria-label={label}>
       {optionen.map((o) => {
         const an = gewaehlt.includes(o.wert);
         return (
@@ -48,7 +62,7 @@ export function Choice({
             disabled={o.deaktiviert}
             onClick={() => onWahl(o.wert)}
           >
-            <span className="hv-choice-check">{an ? <Haken /> : null}</span>
+            <span className="hv-choice-check">{an && !einzeln ? <Haken /> : null}</span>
             <span className="hv-choice-text">
               <span className="hv-choice-titel">{o.titel}</span>{' '}
               {o.stufe ? (

@@ -304,6 +304,7 @@ export function Keimung({ satz }: { satz: string }) {
         <p className="hv-keimung-schritt">Station bestätigen</p>
         {stationen.length > 0 ? (
           <Choice
+            einzeln
             label="Station"
             zeile
             optionen={stationen.map((id) => {
@@ -405,6 +406,7 @@ export function Keimung({ satz }: { satz: string }) {
           })}
           <p className="hv-keimung-frage">{frage}</p>
           <Choice
+            einzeln
             label={frage}
             zeile
             optionen={[

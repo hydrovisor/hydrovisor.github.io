@@ -273,6 +273,9 @@ test('12 Phasenkarte auf Heute und Pflanzenansicht (wie phasen.spec.ts)', async 
     .getByRole('heading', { name: 'Salat · 4.4 · gesät 7.1.', exact: true })
     .locator('xpath=ancestor::section[1]');
   await sim.zeige('Phasenkarte: je Sorte «Ja» vorgewählt, Ausnahmen antippen');
+  // U-04 (B7): Antworten als Segmente mit rundem Punkt; Prüfer Runde 1 verlangt die Karte im Bilderbogen
+  await karte.scrollIntoViewIfNeeded();
+  await sim.regeln('Phasenkarte');
   await sim.tippe(
     karte.getByRole('group', { name: /^Eichblatt/ }).getByRole('button', { name: 'Noch nicht', exact: true }),
     'Noch nicht (Eichblatt)',

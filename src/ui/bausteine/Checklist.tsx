@@ -1,6 +1,7 @@
 // Baustein Checklist (design-system/components/Checklist.md): feste Reihenfolge, Timer gegen absolute Endzeit.
 // Variante «selbst» (Einrichtung UC0, Plan 18): Zeilen haken sich durch die Erfassung selbst ab.
-import type { ReactNode } from 'react';
+// U-04 (B6): erledigte Zeilen am Anfang auf Wunsch als eine Zeile «Punkte 1 bis n erledigt», aufklappbar.
+import { useState, type ReactNode } from 'react';
 
 export interface Zeile {
   nr: number;
@@ -43,6 +44,7 @@ export function Checklist({
   jetzt,
   variante = 'haken',
   label,
+  erledigteZusammenfassen,
 }: {
   zeilen: Zeile[];
   onHaken?: (nr: number) => void;
@@ -50,10 +52,41 @@ export function Checklist({
   /** «haken»: Tim hakt ab (R4.6); «selbst»: die Erfassung hakt ab (UC0) */
   variante?: 'haken' | 'selbst';
   label?: string;
+  /** erledigte Zeilen am Anfang als eine aufklappbare Zeile (Variante «selbst», Einrichtung; U-04, B6) */
+  erledigteZusammenfassen?: boolean;
 }) {
+  const [aufgeklappt, setAufgeklappt] = useState(false);
+  const erste = zeilen.findIndex((z) => z.zustand !== 'erledigt');
+  const fertig = erste === -1 ? zeilen.length : erste;
+  const zusammen = erledigteZusammenfassen === true && fertig > 0;
+  const bis = zeilen[fertig - 1]?.nr;
+  const sichtbar = zusammen && !aufgeklappt ? zeilen.slice(fertig) : zeilen;
   return (
     <ol className="hv-checklist" aria-label={label}>
-      {zeilen.map((z) => {
+      {zusammen ? (
+        <li className="hv-check-row hv-check-erledigt hv-check-zusammen">
+          <button
+            type="button"
+            className="hv-check-zusammen-knopf"
+            aria-expanded={aufgeklappt}
+            onClick={() => setAufgeklappt((a) => !a)}
+          >
+            {/* Name «Punkte 1 bis 6 erledigt anzeigen»: Gegenstand und Verb wie «Rundgang starten» (Prüfer Runde 1) */}
+            <span className="hv-check-zusammen-text">
+              <span>
+                {fertig === 1
+                  ? `Punkt ${String(bis)} erledigt`
+                  : `Punkte ${String(zeilen[0]?.nr)} bis ${String(bis)} erledigt`}
+              </span>{' '}
+              <span className="hv-check-zusammen-aktion">{aufgeklappt ? 'einklappen' : 'anzeigen'}</span>
+            </span>
+            <span className="hv-check-status" aria-hidden="true">
+              <Haken />
+            </span>
+          </button>
+        </li>
+      ) : null}
+      {sichtbar.map((z) => {
         const timerLaeuft = z.timerEnde !== undefined && z.timerEnde > jetzt;
         const gesperrt =
           z.zustand === 'offen' || (z.zustand === 'aktiv' && (timerLaeuft || z.gesperrt === true));

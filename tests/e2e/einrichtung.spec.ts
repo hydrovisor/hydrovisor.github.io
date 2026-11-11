@@ -21,10 +21,18 @@ const TITEL = [
 ];
 
 const liste = (page: Page) => page.getByRole('list', { name: 'Einrichtung' });
+// U-04 (B6): die Zeile «Punkte 1 bis n erledigt» trägt keinen Zustand; gezählt werden die neun Punkte
 const zustaende = (page: Page) =>
   liste(page)
-    .locator('li')
+    .locator('li[data-zustand]')
     .evaluateAll((li) => li.map((e) => e.getAttribute('data-zustand')));
+
+/** U-04 (B6): erledigte Punkte am Anfang stehen eingeklappt in einer Zeile; aufklappen zeigt sie wieder einzeln */
+async function aufklappen(page: Page): Promise<void> {
+  const zeile = liste(page).getByRole('button', { name: /^Punkte? 1( bis \d)? erledigt/ });
+  await zeile.click();
+  await expect(zeile).toHaveAttribute('aria-expanded', 'true');
+}
 
 async function heuteMit(page: Page, teile: () => Record<string, unknown[]>): Promise<void> {
   await sitzungSpeichern(page);
@@ -52,6 +60,7 @@ test('UC0-AK1 neun Punkte in fester Reihenfolge, jeder hakt sich selbst ab, dana
     stufe = n;
     await page.reload();
     await expect(page.getByRole('heading', { name: `Einrichtung · ${n} von 9 erledigt` })).toBeVisible();
+    await aufklappen(page);
     expect(await zustaende(page)).toEqual([
       ...Array(n).fill('erledigt'),
       'aktiv',
@@ -87,6 +96,7 @@ test('UC0-AK1 der aktive Punkt öffnet seinen Ablauf: Kalibrieren und Leitungswa
   await expect(liste(page).getByRole('timer')).toHaveText(/^6:00:0\d$/);
   await page.clock.fastForward('06:00:01');
   await expect(liste(page).getByRole('link', { name: 'Kalibrieren' })).toBeVisible();
+  await aufklappen(page);
   expect((await zustaende(page)).slice(0, 3)).toEqual(['erledigt', 'erledigt', 'aktiv']);
   // der Timer überlebt das Neuladen (absolute Endzeit im Gerätespeicher)
   await page.reload();

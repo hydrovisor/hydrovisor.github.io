@@ -343,6 +343,7 @@ export function Pflanze({ pflanzung }: { pflanzung: string }) {
         <div className="hv-pflanze-knoepfe">
           {a.ausloeserFrage ? (
             <Choice
+              einzeln
               label={AUSLOESER_FRAGE}
               zeile
               optionen={[
@@ -440,6 +441,7 @@ export function Pflanze({ pflanzung }: { pflanzung: string }) {
           ) : null}
           {mehrere ? (
             <Choice
+              einzeln
               label="Umfang"
               zeile
               optionen={[
@@ -518,6 +520,7 @@ export function Pflanze({ pflanzung }: { pflanzung: string }) {
               ) : null}
               <p className="hv-pflanze-zeile">Ausfall melden, Ursache wahlweise</p>
               <Choice
+                einzeln
                 label="Ursache (wahlweise)"
                 zeile
                 optionen={AUSFALL_URSACHEN.map((u) => ({ wert: u, titel: u }))}

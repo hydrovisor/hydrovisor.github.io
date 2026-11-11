@@ -321,6 +321,7 @@ function Formulare({ e, geraet }: { e: Zeile; geraet: Zeile | undefined }) {
             E-Mail, wenn Push fehlt
           </span>
           <Choice
+            einzeln
             label="E-Mail, wenn Push fehlt"
             zeile
             optionen={[
@@ -425,6 +426,7 @@ function Formulare({ e, geraet }: { e: Zeile; geraet: Zeile | undefined }) {
 
       <Abschnitt titel="Thema" rueckmeldung={rueck['thema']}>
         <Choice
+          einzeln
           label="Thema"
           zeile
           optionen={[

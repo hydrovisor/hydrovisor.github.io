@@ -31,7 +31,26 @@
   background: var(--status-danger-soft);
 }
 
+.hv-rundgang-punkt {
+  flex-wrap: wrap;
+}
+
+/* U-04 (B8): Zustand als Wort «ja»/«nein» mit Statussymbol 32 dp rechts neben der Frage */
 .hv-rundgang-urteil {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-left: auto;
+  font-weight: 700;
+}
+
+.hv-rundgang-urteil .hv-status-icon {
+  width: var(--icon-status-regal);
+  height: var(--icon-status-regal);
+}
+
+.hv-rundgang-vermerk {
+  flex-basis: 100%;
   font-weight: 500;
   font-size: var(--text-small-size);
 }
@@ -125,4 +144,17 @@ html:has(.hv-heute-fuss):not(:has(.hv-block)) {
 .hv-rundgang .hv-messen-kopf .hv-messen-titel {
   flex: 1 1 auto;
   min-width: 0;
+}
+
+/* U-04 (B8): Licht und Lüfter als volle Zeilen wie die Orte, Frage und «ja» in einer Zeile; eine Abweichung in der
+   Farbe der Abweichung wie bei den Orten (die Regeln der Kannenwahl oben gelten hier nicht) */
+.hv-rundgang-kannen > .hv-rundgang-punkt {
+  flex: 1 1 100%;
+  font-size: var(--text-text-regal-size);
+}
+
+.hv-rundgang-kannen > .hv-rundgang-punkt[aria-pressed='true'] {
+  border-color: var(--status-danger);
+  color: var(--status-danger);
+  background: var(--status-danger-soft);
 }
