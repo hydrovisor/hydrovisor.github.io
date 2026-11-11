@@ -6,7 +6,7 @@ Private PWA mit Supabase für Tims Hydroponikregal; einziger Nutzer Tim, bedient
 
 | Was | Wo |
 |---|---|
-| Fachkonzept (massgebend) | `docs/input/konzept_v1.5.md`; Änderungen nur als neue Fassung mit Eintrag in Anhang B.2 |
+| Fachkonzept (massgebend) | `docs/input/konzept_v1.6.md`; Änderungen nur als neue Fassung mit Eintrag in Anhang B.2 |
 | Rangfolge bei Widerspruch | Konzept vor `docs/input/use_cases_f4.md` vor `docs/input/duengeplan_v1.6.md` vor W0 |
 | Spezifikation (abgenommen 1.11.2026) | `docs/spec/` (Fachregeln, Datenmodell, Import W0, Architektur, Masken, Tests, Glossar) |
 | Entscheide | `docs/spec/00_rueckfragen.md` (Auftrag 1) und `docs/entscheide/` (je Entscheid eine Datei) |
@@ -126,6 +126,7 @@ Vorschau: Cloudflare Pages `hydrovisor-vorschau` baut jeden Zweig (`<zweig>.hydr
 - [0013 Tütenfotos über die S3-Schnittstelle sichern](docs/entscheide/0013-tuetenfotos-ueber-s3-sichern.md)
 - [0014 Planfreigabe im Chat, Wechselblock vor M2](docs/entscheide/0014-planfreigabe-im-chat-und-pool.md)
 - [0015 Karbonathärte wird nicht erfasst](docs/entscheide/0015-karbonathaerte-nicht-erfasst.md)
+- [0016 Usability-Befragung nur im Claude-Chat](docs/entscheide/0016-befragung-im-chat.md)
 - Übrige Entscheide vom 1.11.2026: `docs/spec/00_rueckfragen.md` (R1 bis R13, W1 bis W14, Annahmen 1 bis 16)
 
 ## Arbeitsweise in der Sitzung
