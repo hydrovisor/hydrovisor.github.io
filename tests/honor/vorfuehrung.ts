@@ -148,37 +148,42 @@ async function pause(page: Page, ms = TEMPO): Promise<void> {
   if (ms > 0) await page.waitForTimeout(ms);
 }
 
+/** Thema setzen (null = Attribut entfernen) und Farbübergänge abwarten (.hv-btn 0.15 s), sonst entstehen Zwischenfarben */
+async function themaSetzen(page: Page, attribut: string | null): Promise<void> {
+  await page.evaluate(async (a) => {
+    if (a === null) document.documentElement.removeAttribute('data-theme');
+    else document.documentElement.setAttribute('data-theme', a);
+    await new Promise((r) => setTimeout(r, 250));
+    await Promise.all(document.getAnimations().map((x) => x.finished.catch(() => undefined)));
+  }, attribut);
+}
+
 /** WCAG 2.2 AA mit axe-core in beiden Themen (U-02, Issue #156); nur main, ohne die Anzeige der Simulation */
 async function wcagPruefen(page: Page): Promise<Befund[]> {
   const befunde: Befund[] = [];
   const vorher = await page.evaluate(() => document.documentElement.getAttribute('data-theme'));
-  for (const [thema, attribut] of [
-    ['hell', 'light'],
-    ['dunkel', 'dark'],
-  ] as const) {
-    await page.evaluate((a) => document.documentElement.setAttribute('data-theme', a), attribut);
-    // Farbübergänge (.hv-btn 0.15 s) abwarten, sonst misst axe Zwischenfarben
-    await page.evaluate(async () => {
-      await new Promise((r) => setTimeout(r, 250));
-      await Promise.all(document.getAnimations().map((x) => x.finished.catch(() => undefined)));
-    });
-    const ergebnis = await new AxeBuilder({ page })
-      .include('main')
-      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
-      .analyze();
-    for (const v of ergebnis.violations) {
-      const ziel = v.nodes[0]?.target.join(' ') ?? '';
-      befunde.push({
-        art: 'Hinweis',
-        regel: `WCAG ${v.id} (${thema})`,
-        text: `${v.help}: ${v.nodes.length} Stelle(n), z. B. ${ziel}`.slice(0, 200),
-      });
+  try {
+    for (const [thema, attribut] of [
+      ['hell', 'light'],
+      ['dunkel', 'dark'],
+    ] as const) {
+      await themaSetzen(page, attribut);
+      const ergebnis = await new AxeBuilder({ page })
+        .include('main')
+        .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+        .analyze();
+      for (const v of ergebnis.violations) {
+        const ziel = v.nodes[0]?.target.join(' ') ?? '';
+        befunde.push({
+          art: 'Hinweis',
+          regel: `WCAG ${v.id} (${thema})`,
+          text: `${v.help}: ${v.nodes.length} Stelle(n), z. B. ${ziel}`.slice(0, 200),
+        });
+      }
     }
+  } finally {
+    await themaSetzen(page, vorher);
   }
-  await page.evaluate((a) => {
-    if (a === null) document.documentElement.removeAttribute('data-theme');
-    else document.documentElement.setAttribute('data-theme', a);
-  }, vorher);
   return befunde;
 }
 
@@ -251,15 +256,12 @@ function simFuer(page: Page, info: TestInfo): Sim {
     const thema = await page.evaluate(() => document.documentElement.getAttribute('data-theme'));
     try {
       await page.screenshot({ path: datei('hell') });
-      await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'dark'));
+      await themaSetzen(page, 'dark');
       await info.attach(`${maske} (dunkel)`, {
         body: await page.screenshot({ path: datei('dunkel') }),
         contentType: 'image/png',
       });
-      await page.evaluate((t) => {
-        if (t === null) document.documentElement.removeAttribute('data-theme');
-        else document.documentElement.setAttribute('data-theme', t);
-      }, thema);
+      await themaSetzen(page, thema);
       await page.evaluate(deutanEinbauen);
       for (const [variante, filter] of Object.entries(BOGEN_FILTER)) {
         await page.evaluate((f) => (document.documentElement.style.filter = f), filter);
@@ -269,11 +271,8 @@ function simFuer(page: Page, info: TestInfo): Sim {
         });
       }
     } finally {
-      await page.evaluate((t) => {
-        document.documentElement.style.filter = '';
-        if (t === null) document.documentElement.removeAttribute('data-theme');
-        else document.documentElement.setAttribute('data-theme', t);
-      }, thema);
+      await page.evaluate(() => (document.documentElement.style.filter = ''));
+      await themaSetzen(page, thema);
       await page.evaluate(() =>
         (window as unknown as { simVerbergen: (a: boolean) => void }).simVerbergen(false),
       );
