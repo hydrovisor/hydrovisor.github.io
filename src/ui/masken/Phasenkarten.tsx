@@ -255,6 +255,7 @@ export function Phasenkarten({ jetzt }: { jetzt: Date }) {
               </span>
               {z.pruefen ? <StatusBadge tone="info">prüfen</StatusBadge> : null}
               <Choice
+                einzeln
                 label={`${z.sorte} · ${z.uebergang}`}
                 zeile
                 optionen={ANTWORTEN}

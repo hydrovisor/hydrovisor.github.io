@@ -115,6 +115,7 @@ export function Einrichtung() {
       <Checklist
         variante="selbst"
         label="Einrichtung"
+        erledigteZusammenfassen
         jetzt={jetzt}
         zeilen={stand.punkte.map((p) => ({
           nr: p.nr,

@@ -413,6 +413,7 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
               />
               {gewaehlt.includes(s.sorteId) && s.kulturformen.length > 1 ? (
                 <Choice
+                  einzeln
                   label={`Kulturform ${s.name}`}
                   zeile
                   optionen={s.kulturformen.map((k) => ({ wert: k, titel: KULTURFORM_NAME[k] ?? k }))}
@@ -486,7 +487,8 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
         // Nachfolge-Topf: Datum statt Nummer, Zustand als Text (Status nie nur über Farbe)
         ...(t.belegtBis && t.zustand === 'frei'
           ? {
-              text: tagKurz(t.belegtBis),
+              // «bis 4.3.» statt «4.3.»: ein Datum allein sieht aus wie die Kennung eines Gefässes (U-04, B15)
+              text: `bis ${tagKurz(t.belegtBis)}`,
               zustandName: `frei als Nachfolge, belegt bis ${tagKurz(t.belegtBis)}`,
             }
           : {}),
@@ -521,6 +523,7 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
         {schrittText}
         {kopieHinweise}
         <Choice
+          einzeln
           label="Zielgefäss"
           zeile
           optionen={ziele.map((z) => ({
@@ -557,6 +560,7 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
             ) : null}
             {gewaehlt.length > 1 ? (
               <Choice
+                einzeln
                 label="Sorte zum Malen"
                 zeile
                 optionen={gewaehlt.map((id, i) => ({
@@ -789,6 +793,7 @@ function SatzKarte({
       )}
       {boxOffen && !gesperrt ? (
         <Choice
+          einzeln
           label={`Anzuchtbox ${s.name}`}
           zeile
           optionen={boxListe.map((b) => ({ wert: b.platzId, titel: `${b.kennung} · ${BOXTYP[b.typ]}` }))}

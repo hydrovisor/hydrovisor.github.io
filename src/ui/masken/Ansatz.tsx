@@ -887,6 +887,7 @@ function Abhakliste({ ort, teile: teileBuendel }: { ort: Ort; teile: Teile }) {
             <>
               <p>Kein Zielbereich: Ziel-EC und Stadium wählen</p>
               <Choice
+                einzeln
                 label="Stadium"
                 zeile
                 optionen={STADIEN}
@@ -909,6 +910,7 @@ function Abhakliste({ ort, teile: teileBuendel }: { ort: Ort; teile: Teile }) {
                 {`${zb ? `Zielbereich ${ecText(zb.min)} bis ${ecText(zb.max)} · ` : ''}Ziel-EC ${ecText(rechnung.ecZiel)} · Teil-Dosis ${String(rechnung.teilDosis)} %${rechnung.teilDosis < 100 ? ' bis k stabil' : ''}`}
               </p>
               <Choice
+                einzeln
                 label="Stadium"
                 zeile
                 optionen={STADIEN}

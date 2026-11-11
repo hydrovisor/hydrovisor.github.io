@@ -38,6 +38,7 @@ import { neueClientId, schreiben } from '../../daten/schreiben.ts';
 import type { Vorgang } from '../../domain/datenpfad/erfassung.ts';
 import { Button } from '../bausteine/Button.tsx';
 import { Notice } from '../bausteine/Notice.tsx';
+import { StatusIcon } from '../bausteine/StatusIcon.tsx';
 import { NumPad, type Taste } from '../bausteine/NumPad.tsx';
 import { useBuendel } from '../buendel.tsx';
 import { hashZu, oeffnen } from '../router.ts';
@@ -484,6 +485,19 @@ export function Rundgang({ kuerzel }: { kuerzel: string }) {
 }
 
 /** Sammel-Tipp der Ebene: «Alles ok» oder Ausnahmen einzeln (Wort und Symbol, nicht nur Farbe) */
+/** Prüfpunkt als Frage (U-04, B8): «Pumpe sprudelt» wird «Pumpe sprudelt?» */
+const frage = (text: string) => (text.endsWith('?') ? text : `${text}?`);
+
+/** Zustand der Kurzprüfung als Wort mit Symbol 32 dp, nie nur über Farbe (U-04, B8): ja, nach Tipp nein */
+function Urteil({ abweichung }: { abweichung: boolean }) {
+  return (
+    <span className="hv-rundgang-urteil">
+      <StatusIcon ton={abweichung ? 'danger' : 'ok'} />
+      {abweichung ? 'nein' : 'ja'}
+    </span>
+  );
+}
+
 function Kurzpruefung({
   ebene,
   titel,
@@ -515,8 +529,8 @@ function Kurzpruefung({
         <div className="hv-rundgang-kannen" role="group" aria-label="Licht und Lüfter">
           {(
             [
-              ['licht', 'Licht an'],
-              ['luefter', 'Lüfter läuft'],
+              ['licht', 'Licht an?'],
+              ['luefter', 'Lüfter läuft?'],
             ] as const
           ).map(([punkt, text]) => {
             const key = `${String(ebene.bereichId)}|${punkt}`;
@@ -530,7 +544,7 @@ function Kurzpruefung({
                 onClick={() => umschalten(key)}
               >
                 <span>{text}</span>
-                <span className="hv-rundgang-urteil">{ab ? '✗' : '✓'}</span>
+                <Urteil abweichung={ab} />
               </Button>
             );
           })}
@@ -549,15 +563,13 @@ function Kurzpruefung({
                 aria-pressed={ab}
                 onClick={() => umschalten(key)}
               >
-                <span>{`${kennung(z.code)} ${z.text}`}</span>
-                <span className="hv-rundgang-urteil">
-                  {ab ? '✗ Abweichung' : '✓ ok'}
-                  {z.vermerk
-                    ? z.vermerk === 'mitmarkiert'
-                      ? ' · Pumpe mitmarkiert'
-                      : ' · Belüftung prüfen'
-                    : ''}
-                </span>
+                <span>{`${kennung(z.code)} ${frage(z.text)}`}</span>
+                <Urteil abweichung={ab} />
+                {z.vermerk ? (
+                  <span className="hv-rundgang-vermerk">
+                    {z.vermerk === 'mitmarkiert' ? 'Pumpe mitmarkiert' : 'Belüftung prüfen'}
+                  </span>
+                ) : null}
               </Button>
             </li>
           );
