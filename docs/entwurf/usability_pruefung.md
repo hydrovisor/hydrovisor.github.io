@@ -1,6 +1,6 @@
 # Entwurf: Erweiterte Usability-Prüfung
 
-Stand 11.11.2026 · Lead · Auftrag Tim im Chat (11.11.2026): «Prüfe zusätzlich, ob du für die Usability mit Playwright die richtige Methode hast. […] visuelle Darstellungen, Haptik, Ansprechung der Buttons und sonstige Menüführungspunkte, Prozessvereinfachungen» · Status: **Vorschlag**, die Aufnahme ins Konzept (12.5, 12.6, 6.3) entscheidet Tim.
+Stand 11.11.2026 · Lead · Auftrag Tim im Chat (11.11.2026): «Prüfe zusätzlich, ob du für die Usability mit Playwright die richtige Methode hast. […] visuelle Darstellungen, Haptik, Ansprechung der Buttons und sonstige Menüführungspunkte, Prozessvereinfachungen» · Status: **entschieden** (Tim, 11.11.2026, Entscheid A): aufgenommen in Konzept v1.6 (6.3, 12.5, 12.6, 14.5, Erratum E11); SEQ und SUS nur als Befragung im Claude-Chat (Entscheid 0016).
 
 ## 1 Befund: Was Playwright heute leistet und was nicht
 
