@@ -148,7 +148,14 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with: { node-version: 22, cache: npm }
-      - run: npm ci && npx playwright install --with-deps chromium
+      # Playwright mit Systempaketen; sind die Ubuntu-Paketquellen nicht erreichbar (DNS-Störung der Runner 11.11.2026),
+      # Chromium ohne apt: das Runner-Image bringt Google Chrome und dessen Bibliotheken mit (A)
+      - run: |
+          npm ci
+          npx playwright install --with-deps chromium || {
+            echo "::warning::Systempakete nicht erreichbar, Chromium ohne apt installiert"
+            npx playwright install chromium
+          }
       - env:
           BASIS_URL: https://hydrovisor.github.io/
           ERWARTETER_COMMIT: ${{ inputs.rueckfall_probe && 'rueckfall-probe' || github.sha }}
