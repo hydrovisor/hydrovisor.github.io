@@ -15,10 +15,10 @@ Stand 11.11.2026 · Lead · B11 bis B14 aus der automatischen Prüfung U1 (Honor
 | B9 | Gefäss | Nebentasten («Lösung wechseln», «Ändern», «Leeren») ungleich breit, Zeilen ausgefranst | Ästhetik | 1 | gleich breite Raster-Tasten | #153 |
 | B10 | Heute, Einrichtung (aktiver Punkt) | Die Taste «Leitungswasser messen» ragt aus der Textspalte und überlappt den Statuskreis (`white-space: nowrap`) | Ästhetik, Fehlervermeidung | 3 | Taste bleibt in der Spalte und bricht um | #153 |
 
-| B11 | Säen (Schritt 2, Duplizieren) | «Ziel später» braucht 104 dp, die Taste hat 102 dp (Text stösst an den Rand) | Ästhetik | 1 | Taste breiter oder Text umbrechen | U-03 |
-| B12 | Messmaske bei Systemschrift 130 % | Ziffernblock «leeren» (89 statt 74 dp) und «weiter» (88 statt 74 dp) sowie Kacheltexte («EC mS/cm 1.25 vorher 1.20», 116 statt 102 dp) passen nicht; betrifft #94 am Honor | Sichtbarkeit, Erkennen | 3 | Funktionstasten mit Symbol oder kürzerem Text, Kachelzeilen umbrechen oder kürzen | U-03 |
-| B13 | Umsetzen, Bestätigung | «Umsetzen bestätigen» braucht 187 dp, die Taste hat 158 dp, schon bei normaler Schrift | Ästhetik, Fehlervermeidung | 3 | Taste über die ganze Breite oder Text umbrechen | U-03 |
-| B14 | Zeitwahl (Drehrad) | WCAG «scrollable-region-focusable»: das Rad ist per Tastatur nicht erreichbar | Zugänglichkeit | 1 | `tabindex="0"` am Rad; am Handy ohne Wirkung | U-03 |
+| B11 | Säen (Schritt 2, Duplizieren) | «Ziel später» braucht 104 dp, die Taste hat 102 dp (Text stösst an den Rand) | Ästhetik | 1 | Taste breiter oder Text umbrechen | erledigt in #158: Fusstasten teilen den Platz nach Textlänge |
+| B12 | Messmaske bei Systemschrift 130 % | Ziffernblock «leeren» (89 statt 74 dp) und «weiter» (88 statt 74 dp) sowie Kacheltexte («EC mS/cm 1.25 vorher 1.20», 116 statt 102 dp) passen nicht; betrifft #94 am Honor | Sichtbarkeit, Erkennen | 3 | Funktionstasten mit Symbol oder kürzerem Text, Kachelzeilen umbrechen oder kürzen | erledigt in #158: Text der Funktionstasten und Messwert wachsen nur bis zur Tastenbreite (Container-Einheiten) |
+| B13 | Umsetzen, Bestätigung | «Umsetzen bestätigen» braucht 187 dp, die Taste hat 158 dp, schon bei normaler Schrift | Ästhetik, Fehlervermeidung | 3 | Taste über die ganze Breite oder Text umbrechen | erledigt in #158: «Zurück» so breit wie sein Text, die Haupttaste nimmt den Rest |
+| B14 | Notfallblatt, Druckansicht Etiketten (Druckvorschau) | WCAG «scrollable-region-focusable»: die waagrecht scrollbare Vorschau `.hv-druck-vorschau` ist per Tastatur nicht erreichbar (zuerst irrtümlich dem Drehrad zugeordnet; das Rad hat `tabindex="0"` schon) | Zugänglichkeit | 1 | `tabindex="0"`, `role="region"` mit Namen | erledigt in #158 |
 
 ## Nicht geprüft (bleibt am Honor, U3)
 

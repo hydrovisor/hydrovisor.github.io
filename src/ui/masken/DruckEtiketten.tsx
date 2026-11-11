@@ -96,7 +96,8 @@ export function DruckEtiketten({ route }: { route: Druckroute }) {
         {meldung ? <Notice tone={meldung.ok ? 'ok' : 'danger'} title={meldung.text} kompakt /> : null}
         {liste.length === 0 ? <p>{liest ? 'Daten werden geladen' : 'Keine Etiketten gewählt'}</p> : null}
       </div>
-      <div className="hv-druck-vorschau">
+      {/* U-03 (B14): waagrecht scrollbar, darum per Tastatur erreichbar (WCAG 2.1.1, axe scrollable-region-focusable) */}
+      <div className="hv-druck-vorschau" role="region" aria-label="Druckvorschau Etiketten" tabIndex={0}>
         {liste.length > 0
           ? seiten.map((felder, i) => (
               <LabelSheet

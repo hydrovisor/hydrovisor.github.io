@@ -152,6 +152,7 @@ a:hover { color: var(--brand-strong); }
 .hv-druck-steuerung > * { flex: 0 1 auto; }
 .hv-druck-vorschau { overflow-x: auto; padding: 0 var(--space-4) var(--space-4); display: flex; flex-direction: column; gap: var(--space-4); }
 .hv-druck-vorschau .hv-sheet { flex: none; box-shadow: 0 0 0 1px var(--line); }
+.hv-druck-vorschau:focus-visible { outline: none; box-shadow: var(--focus-ring); }
 
 /* Notfallblatt «Stand je Gefäss» und Vertretungsblatt (A4, schwarz auf weiss) */
 .hv-blatt { width: 210mm; min-height: 297mm; box-sizing: border-box; padding: var(--page-margin); background: var(--label-paper); color: var(--label-ink); font-family: var(--font-sans);
@@ -183,6 +184,10 @@ a:hover { color: var(--brand-strong); }
   font-size: var(--text-value-size); line-height: 1; font-weight: 700; font-variant-numeric: tabular-nums; cursor: pointer; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
 .hv-numpad-key:active { background: var(--surface-sunken); }
 .hv-numpad-key-aktion { font-size: var(--text-text-regal-size); font-weight: 600; background: var(--surface-sunken); }
+/* U-03 (B12): Text der Funktionstasten («leeren», «weiter») wächst mit der Systemschrift nur so weit, wie er in die Taste passt; Massstab ist die Breite einer Taste, ein Viertel des Rasters ohne die drei Abstände (bei 76 dp höchstens 22.8 px, bei 100 % unverändert 21 px) */
+.hv-numpad-grid { container-type: inline-size; }
+.hv-numpad-key { padding: 0 2px; }
+.hv-numpad-key-aktion { font-size: min(var(--text-text-regal-size), calc((100cqi - 3 * var(--space-2)) * 0.075)); }
 .hv-numpad-key svg { width: var(--size-icon); height: var(--size-icon); vertical-align: middle; }
 .hv-numpad-save { margin-top: var(--space-2); }
 

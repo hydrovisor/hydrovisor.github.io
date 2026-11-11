@@ -44,6 +44,16 @@
   line-height: 40px;
 }
 
+/* U-03 (B12): der Messwert wächst mit der Systemschrift nur so weit, wie vier Zeichen («1.25», «20.5») in die Kachel
+   passen (Breite der Kachel als Massstab: bei 86 dp Innenbreite höchstens 41 px, also bei 100 % unverändert 40 px) */
+.hv-messen .hv-tile:not(.hv-tile-kompakt) {
+  container-type: inline-size;
+}
+
+.hv-messen .hv-tile:not(.hv-tile-kompakt) .hv-tile-value {
+  font-size: min(var(--text-value-regal-size), 48cqi);
+}
+
 .hv-messen .hv-tile:not(.hv-tile-kompakt) .hv-tile-trend {
   line-height: 18px;
 }

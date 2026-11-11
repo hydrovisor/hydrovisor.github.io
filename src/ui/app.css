@@ -601,8 +601,11 @@ body {
   background: var(--surface);
 }
 
+/* U-03 (B11): die Tasten teilen den Platz nach Textlänge, damit «Ziel später» nicht an den Rand stösst; Innenabstand
+   12 statt 20 dp, die Tippfläche bleibt 68 dp hoch */
 .hv-saeen-fuss > .hv-btn {
-  flex: 1;
+  flex: 1 1 auto;
+  padding-inline: var(--space-3);
 }
 
 .hv-saeen-box {

@@ -78,7 +78,8 @@ export function Notfallblatt({ kuerzel }: { kuerzel?: string }) {
           </Notice>
         ) : null}
       </div>
-      <div className="hv-druck-vorschau">
+      {/* U-03 (B14): waagrecht scrollbar, darum per Tastatur erreichbar (WCAG 2.1.1, axe scrollable-region-focusable) */}
+      <div className="hv-druck-vorschau" role="region" aria-label="Druckvorschau Notfallblatt" tabIndex={0}>
         <section className="hv-blatt" aria-label="Stand je Gefäss">
           <h2 className="hv-blatt-titel">Stand je Gefäss</h2>
           <p className="hv-blatt-meta">{`Anlage ${blatt.anlage} · ${blatt.stand} · Kanne ${blatt.kanne.toFixed(1)} l`}</p>
