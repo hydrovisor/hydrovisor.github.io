@@ -126,14 +126,11 @@ function RundgangFuss({ jetzt, faellig }: { jetzt: Date; faellig: readonly Aufga
   return (
     <nav className="hv-heute-fuss" aria-label="Rundgang">
       {n > 0 ? (
-        <a
-          className="hv-btn hv-btn-primary hv-btn-block"
-          href={hashZu({ name: 'rundgang', kuerzel: anlage.kuerzel })}
-        >
+        <a className="hv-btn hv-btn-primary" href={hashZu({ name: 'rundgang', kuerzel: anlage.kuerzel })}>
           {`Rundgang starten (${String(n)} ${n === 1 ? 'Ort' : 'Orte'})`}
         </a>
       ) : null}
-      <a className="hv-btn hv-btn-secondary hv-btn-block" href={hashZu({ name: 'stromausfall' })}>
+      <a className="hv-btn hv-btn-secondary" href={hashZu({ name: 'stromausfall' })}>
         Stromausfall erfassen
       </a>
     </nav>
