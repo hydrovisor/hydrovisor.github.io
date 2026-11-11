@@ -82,9 +82,35 @@
   line-height: 26px;
 }
 
-.hv-heute-fuss {
+/* Heute: Hauptaktion «Rundgang starten» fest im Daumenbereich (05_masken.md 3.1, #151); «Stromausfall erfassen»
+   bleibt am Seitenende im Fluss (selten, A). Ist ein Wechselblock offen, trägt er die Hauptaktion: Fuss im Fluss. */
+.hv-heute-ende {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
   margin-top: var(--space-6);
+}
+
+.hv-heute-fuss {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  display: flex;
+  padding: var(--space-2) 0 calc(var(--space-2) + env(safe-area-inset-bottom));
+  background: var(--surface);
+}
+
+.hv-heute-fuss > .hv-btn {
+  flex: 1 1 auto;
+  white-space: normal;
+  text-align: center;
+}
+
+main:has(.hv-block) .hv-heute-fuss {
+  position: static;
+  padding: 0;
+}
+
+/* gescrollte Ziele (Fokus, Sprungmarken) nicht unter dem festen Fuss verstecken */
+html:has(.hv-heute-fuss):not(:has(.hv-block)) {
+  scroll-padding-bottom: calc(var(--size-touch-regal) + 2 * var(--space-2) + var(--space-4));
 }
