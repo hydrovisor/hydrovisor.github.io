@@ -19,7 +19,7 @@ import {
   umsetzSichtenNachrechnen,
   zeileAufnehmen,
 } from '../fixtures/sichten.ts';
-import { UMSETZ_FAELLIG, umsetzTeile } from '../fixtures/umsetzen.ts';
+import { SATZ, UMSETZ_FAELLIG, UMSETZ_JETZT, umsetzTeile } from '../fixtures/umsetzen.ts';
 import { regelnImBrowser, schriftImBrowser, type Befund } from '../honor/regeln.ts';
 import { authNachbilden, sitzungSpeichern } from './hilfen.ts';
 import { restNachbilden } from './rest.ts';
@@ -179,46 +179,73 @@ for (const hoehe of [640, 780]) {
       }
       expect(await maengel(page)).toEqual([]);
     });
+
+    test(`U03-AK3 Umsetzen, Schritt «Gefäss» auf 360 × ${hoehe}: «Zurück» allein im Fuss bleibt so breit wie die Maske`, async ({
+      page,
+    }) => {
+      await oeffnen(
+        page,
+        umsetzTeile({ bestand23: true, zieltoepfe: ['2.3.2', '2.3.3', '1.1.1', '1.1.2', '1.1.3'] }),
+        `/#/umsetzen/${SATZ.rucola}`,
+        UMSETZ_JETZT,
+        (t) => umsetzSichtenNachrechnen(sichtenNachrechnen(t)),
+      );
+      await knopf(page, 'Ziel wählen').click();
+      await expect(page.getByText('Schritt 1 von 3')).toBeVisible();
+      const b = await knopf(page, 'Zurück').boundingBox();
+      // Seite ohne Rand 328 dp (360 − 2 × 16)
+      expect(b?.width ?? 0).toBeGreaterThan(300);
+      expect(b?.height ?? 0).toBeGreaterThanOrEqual(68);
+    });
   });
 }
 
-test('U03-AK4 Notfallblatt: die waagrecht scrollbare Druckvorschau ist per Tastatur erreichbar, axe-core meldet kein «scrollable-region-focusable»', async ({
-  page,
-}) => {
-  const jetzt = new Date('2026-12-10T08:00:00Z');
-  const t = regalTeile(jetzt);
-  t['einstellung'] = [
-    {
-      id: uid('31', 1),
-      push_zeit: '07:00:00',
-      vorlauf_n: 2,
-      kannengroesse_l: 10,
-      messmittel_ml: [1, 5, 20, 60],
-      messbecher: true,
-      thema: 'hell',
-      pflegebudget_min_werktag: 20,
-      pflegebudget_h_woche: 4,
-      zeitzone: 'Europe/Zurich',
-      telefon_vertretung: 'Platzhalter',
-    },
-  ];
-  await oeffnen(page, t, '/#/notfallblatt', jetzt);
-  const vorschau = page.locator('main .hv-druck-vorschau');
-  await expect(vorschau).toBeVisible({ timeout: 15_000 });
-  // die Vorschau ist breiter als 360 dp und scrollt waagrecht (A4-Blatt)
-  const [scroll, client] = await vorschau.evaluate((e) => [e.scrollWidth, e.clientWidth]);
-  expect(scroll).toBeGreaterThan(client);
-  const ergebnis = await new AxeBuilder({ page })
-    .include('main')
-    .withRules(['scrollable-region-focusable'])
-    .analyze();
-  expect(
-    ergebnis.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`),
-  ).toEqual([]);
-  // Name für Screenreader, damit der Fokus auf der Fläche angesagt wird
-  await expect(page.getByRole('region', { name: 'Druckvorschau Notfallblatt' })).toBeVisible();
-  await vorschau.focus();
-  await expect(vorschau).toBeFocused();
-  await page.keyboard.press('ArrowRight');
-  await expect.poll(() => vorschau.evaluate((e) => e.scrollLeft)).toBeGreaterThan(0);
-});
+for (const [was, pfad, name] of [
+  ['Notfallblatt', '/#/notfallblatt', 'Druckvorschau Notfallblatt'],
+  [
+    'Druckansicht Etiketten',
+    '/#/druck/etiketten?a=R&code=R-2.1&code=R-2.3&code=R-A1',
+    'Druckvorschau Etiketten',
+  ],
+] as const) {
+  test(`U03-AK4 ${was}: die waagrecht scrollbare Druckvorschau ist per Tastatur erreichbar, axe-core meldet kein «scrollable-region-focusable»`, async ({
+    page,
+  }) => {
+    const jetzt = new Date('2026-12-10T08:00:00Z');
+    const t = regalTeile(jetzt);
+    t['einstellung'] = [
+      {
+        id: uid('31', 1),
+        push_zeit: '07:00:00',
+        vorlauf_n: 2,
+        kannengroesse_l: 10,
+        messmittel_ml: [1, 5, 20, 60],
+        messbecher: true,
+        thema: 'hell',
+        pflegebudget_min_werktag: 20,
+        pflegebudget_h_woche: 4,
+        zeitzone: 'Europe/Zurich',
+        telefon_vertretung: 'Platzhalter',
+      },
+    ];
+    await oeffnen(page, t, pfad, jetzt);
+    const vorschau = page.locator('main .hv-druck-vorschau');
+    await expect(vorschau).toBeVisible({ timeout: 15_000 });
+    // die Vorschau ist breiter als 360 dp und scrollt waagrecht (A4-Blatt)
+    const [scroll, client] = await vorschau.evaluate((e) => [e.scrollWidth, e.clientWidth]);
+    expect(scroll).toBeGreaterThan(client);
+    const ergebnis = await new AxeBuilder({ page })
+      .include('main')
+      .withRules(['scrollable-region-focusable'])
+      .analyze();
+    expect(
+      ergebnis.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`),
+    ).toEqual([]);
+    // Name für Screenreader, damit der Fokus auf der Fläche angesagt wird
+    await expect(page.getByRole('region', { name })).toBeVisible();
+    await vorschau.focus();
+    await expect(vorschau).toBeFocused();
+    await page.keyboard.press('ArrowRight');
+    await expect.poll(() => vorschau.evaluate((e) => e.scrollLeft)).toBeGreaterThan(0);
+  });
+}

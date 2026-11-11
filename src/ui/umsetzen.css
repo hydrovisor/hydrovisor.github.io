@@ -60,7 +60,8 @@
   padding-inline: var(--space-3);
 }
 
-.hv-umsetzen-fuss > .hv-btn-secondary {
+/* steht «Zurück» allein im Fuss (Schritt «Gefäss»), bleibt es so breit wie die Maske (Prüfer Runde 1) */
+.hv-umsetzen-fuss > .hv-btn-secondary:not(:only-child) {
   flex: none;
 }
 
