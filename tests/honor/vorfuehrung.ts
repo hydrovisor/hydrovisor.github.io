@@ -1,12 +1,14 @@
 // Vorführung im Honor-Bildschirm (Issue #120, T-01): Schrittanzeige oben im Bild, roter Kreis an jeder Berührung,
 // Pause je Schritt, Bildschirmfotos und Prüfung der Bedienregeln (CLAUDE.md «Oberfläche», Konzept 10). Die Daten
 // kommen aus den E2E-Fixtures; die REST-Schnittstelle ist nachgebildet wie in tests/e2e (keine Datenbank, kein Netz).
+import { mkdirSync } from 'node:fs';
+import AxeBuilder from '@axe-core/playwright';
 import { expect, test as basis, type Locator, type Page, type TestInfo } from '@playwright/test';
 import type { Teile } from '../fixtures/regal.ts';
 import { sichtenNachrechnen, stornoAufnehmen, zeileAufnehmen } from '../fixtures/sichten.ts';
 import { authNachbilden, sitzungSpeichern } from '../e2e/hilfen.ts';
 import { restNachbilden } from '../e2e/rest.ts';
-import { regelnImBrowser, schriftImBrowser, type Befund } from './regeln.ts';
+import { bediendauer, regelnImBrowser, schriftImBrowser, type Befund } from './regeln.ts';
 
 export type { Befund };
 
@@ -48,6 +50,8 @@ export interface Sim {
   ): Promise<Befund[]>;
   /** Systemschrift annähern: alle Schriftgrössen des Design Systems × faktor (A) */
   schrift(faktor: number): Promise<void>;
+  /** Ende des Ablaufs: Berührungen und geschätzte Bediendauer (KLM, U-02) in den Bericht */
+  abschluss(): Promise<void>;
   /** Zeit von der Aktion bis zur sichtbaren Erwartung, mit gedrosselter CPU (A: Faktor 4) */
   messeZeit(was: string, aktion: () => Promise<void>, erwartung: Locator, grenzeMs: number): Promise<number>;
 }
@@ -144,7 +148,76 @@ async function pause(page: Page, ms = TEMPO): Promise<void> {
   if (ms > 0) await page.waitForTimeout(ms);
 }
 
+/** Thema setzen (null = Attribut entfernen) und Farbübergänge abwarten (.hv-btn 0.15 s), sonst entstehen Zwischenfarben */
+async function themaSetzen(page: Page, attribut: string | null): Promise<void> {
+  await page.evaluate(async (a) => {
+    if (a === null) document.documentElement.removeAttribute('data-theme');
+    else document.documentElement.setAttribute('data-theme', a);
+    await new Promise((r) => setTimeout(r, 250));
+    await Promise.all(document.getAnimations().map((x) => x.finished.catch(() => undefined)));
+  }, attribut);
+}
+
+/** WCAG 2.2 AA mit axe-core in beiden Themen (U-02, Issue #156); nur main, ohne die Anzeige der Simulation */
+async function wcagPruefen(page: Page): Promise<Befund[]> {
+  const befunde: Befund[] = [];
+  const vorher = await page.evaluate(() => document.documentElement.getAttribute('data-theme'));
+  try {
+    for (const [thema, attribut] of [
+      ['hell', 'light'],
+      ['dunkel', 'dark'],
+    ] as const) {
+      await themaSetzen(page, attribut);
+      const ergebnis = await new AxeBuilder({ page })
+        .include('main')
+        .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+        .analyze();
+      for (const v of ergebnis.violations) {
+        const ziel = v.nodes[0]?.target.join(' ') ?? '';
+        befunde.push({
+          art: 'Hinweis',
+          regel: `WCAG ${v.id} (${thema})`,
+          text: `${v.help}: ${v.nodes.length} Stelle(n), z. B. ${ziel}`.slice(0, 200),
+        });
+      }
+    }
+  } finally {
+    await themaSetzen(page, vorher);
+  }
+  return befunde;
+}
+
+/** Filter für den Bilderbogen (U-02): Blendung unter LED-Leisten (A) und Deuteranopie (Matrix nach Machado 2009) */
+const BOGEN_FILTER = {
+  blendung: 'contrast(0.5) brightness(1.3)',
+  deutan: 'url(#sim-deutan)',
+} as const;
+
+function deutanEinbauen(): void {
+  if (document.getElementById('sim-deutan-svg')) return;
+  const ns = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(ns, 'svg');
+  svg.id = 'sim-deutan-svg';
+  svg.setAttribute('width', '0');
+  svg.setAttribute('height', '0');
+  svg.style.position = 'absolute';
+  const filter = document.createElementNS(ns, 'filter');
+  filter.id = 'sim-deutan';
+  const matrix = document.createElementNS(ns, 'feColorMatrix');
+  matrix.setAttribute('type', 'matrix');
+  matrix.setAttribute(
+    'values',
+    '0.367 0.861 -0.228 0 0  0.280 0.673 0.047 0 0  -0.012 0.043 0.969 0 0  0 0 0 1 0',
+  );
+  filter.appendChild(matrix);
+  svg.appendChild(filter);
+  document.body.appendChild(svg);
+}
+
 function simFuer(page: Page, info: TestInfo): Sim {
+  // U-02: Berührungen (jede Markierung ist ein Tipp) und geprüfte Masken für die Bediendauer
+  let beruehrungen = 0;
+  const masken = new Set<string>();
   const zeige = async (text: string, farbe?: string) => {
     await page.evaluate(
       ([t, f]) => (window as unknown as { simZeige: (a: string, b?: string) => void }).simZeige(t ?? '', f),
@@ -152,6 +225,7 @@ function simFuer(page: Page, info: TestInfo): Sim {
     );
   };
   const markieren = async (ziel: Locator) => {
+    beruehrungen += 1;
     await ziel.scrollIntoViewIfNeeded();
     const box = await ziel.boundingBox();
     if (box)
@@ -171,7 +245,51 @@ function simFuer(page: Page, info: TestInfo): Sim {
       (window as unknown as { simVerbergen: (a: boolean) => void }).simVerbergen(false),
     );
   };
+  /** Bilderbogen (U-02): dunkel, Blendung, Deuteranopie; als Anhang und unter reports-honor/bogen/ */
+  const bogen = async (maske: string) => {
+    const datei = (variante: string) =>
+      `reports-honor/bogen/${info.title.slice(0, 2)}-${maske.replace(/[^A-Za-z0-9äöüÄÖÜ]+/g, '-')}-${variante}.png`;
+    mkdirSync('reports-honor/bogen', { recursive: true });
+    await page.evaluate(() =>
+      (window as unknown as { simVerbergen: (a: boolean) => void }).simVerbergen(true),
+    );
+    const thema = await page.evaluate(() => document.documentElement.getAttribute('data-theme'));
+    try {
+      await page.screenshot({ path: datei('hell') });
+      await themaSetzen(page, 'dark');
+      await info.attach(`${maske} (dunkel)`, {
+        body: await page.screenshot({ path: datei('dunkel') }),
+        contentType: 'image/png',
+      });
+      await themaSetzen(page, thema);
+      await page.evaluate(deutanEinbauen);
+      for (const [variante, filter] of Object.entries(BOGEN_FILTER)) {
+        await page.evaluate((f) => (document.documentElement.style.filter = f), filter);
+        await info.attach(`${maske} (${variante})`, {
+          body: await page.screenshot({ path: datei(variante) }),
+          contentType: 'image/png',
+        });
+      }
+    } finally {
+      await page.evaluate(() => (document.documentElement.style.filter = ''));
+      await themaSetzen(page, thema);
+      await page.evaluate(() =>
+        (window as unknown as { simVerbergen: (a: boolean) => void }).simVerbergen(false),
+      );
+    }
+  };
   return {
+    async abschluss() {
+      const sekunden = bediendauer(beruehrungen, masken.size);
+      info.annotations.push({
+        type: 'Bediendauer (KLM, Schätzung)',
+        description: `${beruehrungen} Berührungen, ${masken.size} Masken: rund ${sekunden.toFixed(1)} s`,
+      });
+      await info.attach('Bediendauer', {
+        body: JSON.stringify({ beruehrungen, masken: [...masken], sekunden }, null, 2),
+        contentType: 'application/json',
+      });
+    },
     async start(teile, pfad, jetzt, o = {}) {
       const nachrechnen = o.nachrechnen ?? sichtenNachrechnen;
       const m: Mitschnitt = { daten: nachrechnen(structuredClone(teile)), geschrieben: [] };
@@ -272,9 +390,13 @@ function simFuer(page: Page, info: TestInfo): Sim {
           druckseite: o.druckseite ?? false,
           vorprobe: o.vorprobe ?? false,
         });
+        masken.add(maske);
+        // U-02: WCAG 2.2 AA in beiden Themen; in der Vorprobe wie alle Befunde nur Hinweise
+        befunde.push(...(await wcagPruefen(page)));
         const maengel = befunde.filter((b) => b.art === 'Mangel');
         const hinweise = befunde.filter((b) => b.art === 'Hinweis');
         await foto(`${maske} (Regeln)`);
+        await bogen(maske);
         await info.attach(`${maske}: ${maengel.length} Mängel, ${hinweise.length} Hinweise`, {
           body: JSON.stringify(befunde, null, 2),
           contentType: 'application/json',
@@ -336,7 +458,9 @@ function simFuer(page: Page, info: TestInfo): Sim {
 
 export const test = basis.extend<{ sim: Sim }>({
   sim: async ({ page }, nutzen, info) => {
-    await nutzen(simFuer(page, info));
+    const sim = simFuer(page, info);
+    await nutzen(sim);
+    await sim.abschluss();
   },
 });
 

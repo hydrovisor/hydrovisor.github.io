@@ -68,6 +68,58 @@ export function regelnImBrowser(o: {
         text: `«${name(haupt)}» liegt oben (Mitte bei ${Math.round(r.top + r.height / 2)} von ${hoehe} dp)`,
       });
   }
+  // U-02 (Issue #156): Text passt in die Taste, Tasten überlappen nicht, Abstand 8 dp in Regal-Masken (Konzept 6.3);
+  // Löcher der Deckelgrafik zählen nicht (eigenes Raster)
+  const tasten = knoepfe.filter((el) => !/^Loch \d/.test(name(el)));
+  for (const el of tasten) {
+    const h = el as HTMLElement;
+    if (h.scrollWidth > h.clientWidth + 1)
+      befunde.push({
+        art: 'Mangel',
+        regel: 'Text passt in die Taste',
+        text: `«${name(el)}» braucht ${h.scrollWidth} dp, hat ${h.clientWidth} dp`,
+      });
+  }
+  for (let i = 0; i < tasten.length; i += 1) {
+    for (let j = i + 1; j < tasten.length; j += 1) {
+      const a = tasten[i];
+      const b = tasten[j];
+      if (!a || !b || a.contains(b) || b.contains(a)) continue;
+      const r = a.getBoundingClientRect();
+      const q = b.getBoundingClientRect();
+      const ueberX = Math.min(r.right, q.right) - Math.max(r.left, q.left);
+      const ueberY = Math.min(r.bottom, q.bottom) - Math.max(r.top, q.top);
+      if (ueberX > 1 && ueberY > 1) {
+        // unter einer haftenden oder festen Leiste scrollt Inhalt bewusst durch: nur ein Hinweis (A)
+        const haftet = (e: Element) =>
+          [
+            ...(function* (x: Element | null) {
+              for (let y = x; y; y = y.parentElement) yield y;
+            })(e),
+          ].some((y) => ['sticky', 'fixed'].includes(getComputedStyle(y).position));
+        befunde.push({
+          art: haftet(a) || haftet(b) ? 'Hinweis' : 'Mangel',
+          regel: 'Tasten überlappen nicht',
+          text: `«${name(a)}» und «${name(b)}»`,
+        });
+        continue;
+      }
+      if (!regal) continue;
+      // nebeneinander (gemeinsame Höhe) oder übereinander (gemeinsame Breite): Lücke dazwischen
+      const luecke =
+        ueberY > 1
+          ? Math.max(q.left - r.right, r.left - q.right)
+          : ueberX > 1
+            ? Math.max(q.top - r.bottom, r.top - q.bottom)
+            : Infinity;
+      if (luecke >= 0 && luecke < 7.5)
+        befunde.push({
+          art: 'Hinweis',
+          regel: 'Abstand zwischen Tasten mindestens 8 dp',
+          text: `«${name(a)}» und «${name(b)}»: ${Math.round(luecke)} dp`,
+        });
+    }
+  }
   const seite = document.scrollingElement ?? document.documentElement;
   // am Handy verbreitert Chrome die Seite, statt waagrecht zu scrollen: Bezug ist die Bildschirmbreite (360 dp).
   // Gemessen wird der rechte Rand des Inhalts von main (ohne die Anzeige der Simulation), nicht die Fensterbreite,
@@ -133,4 +185,12 @@ export function schriftImBrowser(faktor: number): number {
     }
   }
   return gesetzt;
+}
+
+/**
+ * Geschätzte Bediendauer nach dem Keystroke-Level-Modell (Card, Moran, Newell; U-02, A): je Berührung 0.6 s für Zielen
+ * und Tippen am Touchscreen, je neue Maske eine Denkpause von 1.35 s. Ergebnis in Sekunden, auf 0.01 gerundet.
+ */
+export function bediendauer(beruehrungen: number, masken: number): number {
+  return Math.round((beruehrungen * 0.6 + masken * 1.35) * 100) / 100;
 }
