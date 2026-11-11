@@ -116,7 +116,7 @@ export function Heute() {
   );
 }
 
-/** Fuss im Daumenbereich (Plan 30): Rundgang der echten Anlage, ohne echte der ersten (A1), und Stromausfall */
+/** Seitenende (Plan 30, #151): «Stromausfall erfassen» im Fluss, «Rundgang starten» fest im Daumenbereich (A1: echte Anlage) */
 function RundgangFuss({ jetzt, faellig }: { jetzt: Date; faellig: readonly Aufgabe[] }) {
   const { buendel } = useBuendel();
   const teile = buendel?.teile;
@@ -124,19 +124,24 @@ function RundgangFuss({ jetzt, faellig }: { jetzt: Date; faellig: readonly Aufga
   if (!teile || !anlage) return null;
   const n = aufgabenSicher(() => rundgangPlan(teile, faellig, anlage.id, jetzt, ZEITZONE).orteZahl, 0);
   return (
-    <nav className="hv-heute-fuss" aria-label="Rundgang">
-      {n > 0 ? (
-        <a
-          className="hv-btn hv-btn-primary hv-btn-block"
-          href={hashZu({ name: 'rundgang', kuerzel: anlage.kuerzel })}
-        >
-          {`Rundgang starten (${String(n)} ${n === 1 ? 'Ort' : 'Orte'})`}
+    <>
+      {/* direkte Kinder von main: sticky haftet nur innerhalb des Elternblocks */}
+      <div className="hv-heute-ende">
+        <a className="hv-btn hv-btn-secondary hv-btn-block" href={hashZu({ name: 'stromausfall' })}>
+          Stromausfall erfassen
         </a>
+      </div>
+      {n > 0 ? (
+        <nav className="hv-heute-fuss" aria-label="Rundgang">
+          <a
+            className="hv-btn hv-btn-primary hv-btn-block"
+            href={hashZu({ name: 'rundgang', kuerzel: anlage.kuerzel })}
+          >
+            {`Rundgang starten (${String(n)} ${n === 1 ? 'Ort' : 'Orte'})`}
+          </a>
+        </nav>
       ) : null}
-      <a className="hv-btn hv-btn-secondary hv-btn-block" href={hashZu({ name: 'stromausfall' })}>
-        Stromausfall erfassen
-      </a>
-    </nav>
+    </>
   );
 }
 
