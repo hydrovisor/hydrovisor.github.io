@@ -55,6 +55,15 @@
   flex: 1;
 }
 
+/* U-03 (B13): «Zurück» so breit wie sein Text, die Haupttaste nimmt den Rest («Umsetzen bestätigen» braucht 187 dp) */
+.hv-umsetzen-fuss > .hv-btn {
+  padding-inline: var(--space-3);
+}
+
+.hv-umsetzen-fuss > .hv-btn-secondary {
+  flex: none;
+}
+
 /* Plan 36: Zielgefäss mit Stufe und Gründen bricht um, statt über 360 dp hinauszuragen (Abnahme 1) */
 .hv-umsetzen-gefaesse > .hv-btn {
   min-width: 0;
