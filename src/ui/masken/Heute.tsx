@@ -74,16 +74,16 @@ export function Heute() {
       <header className="hv-seite-kopf hv-heute-kopf">
         <Logo height={32} />
         <nav className="hv-heute-nav" aria-label="Navigation">
-          <a className="hv-btn hv-btn-ghost hv-btn-compact" href={hashZu({ name: 'anlage' })}>
+          <a className="hv-btn hv-btn-secondary hv-btn-compact" href={hashZu({ name: 'anlage' })}>
             Anlage öffnen
           </a>
-          <a className="hv-btn hv-btn-ghost hv-btn-compact" href={hashZu({ name: 'saeen' })}>
+          <a className="hv-btn hv-btn-secondary hv-btn-compact" href={hashZu({ name: 'saeen' })}>
             Säen
           </a>
-          <a className="hv-btn hv-btn-ghost hv-btn-compact" href={hashZu({ name: 'info' })}>
+          <a className="hv-btn hv-btn-secondary hv-btn-compact" href={hashZu({ name: 'info' })}>
             Info öffnen
           </a>
-          <a className="hv-btn hv-btn-ghost hv-btn-compact" href={hashZu({ name: 'einstellungen' })}>
+          <a className="hv-btn hv-btn-secondary hv-btn-compact" href={hashZu({ name: 'einstellungen' })}>
             Einstellungen öffnen
           </a>
         </nav>

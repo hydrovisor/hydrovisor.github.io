@@ -88,3 +88,15 @@
   gap: var(--space-2);
   margin-top: var(--space-6);
 }
+
+/* Rundgang-Kopf (U-01, B1): ohne Spalte «Kultur» schrumpft der Titel und die Taste bricht um, statt über den Rand zu
+   ragen (messen.css setzt den Titel der Messmaske auf flex: none) */
+.hv-rundgang .hv-messen-kopf {
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+.hv-rundgang .hv-messen-kopf .hv-messen-titel {
+  flex: 1 1 auto;
+  min-width: 0;
+}

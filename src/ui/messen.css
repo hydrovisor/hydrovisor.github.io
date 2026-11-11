@@ -74,3 +74,21 @@
   display: flex;
   justify-content: flex-end;
 }
+
+/* U-01 (B3): «Speichern» steht in Eingabe und Ergebnis am unteren Rand; die Ergebniszone nutzt den Platz bis dorthin.
+   Auf 360 × 640 bleibt kein freier Platz, dort gilt weiter die Höhe des Ziffernblocks (296 dp, Tile.md). */
+.hv-messen > .hv-numpad {
+  flex: 1 1 auto;
+}
+
+/* 16 dp über «Speichern» (Konzept 6.3) bleiben: 8 dp Abstand der Spalte plus 8 dp Innenabstand */
+.hv-messen > .hv-numpad > .hv-numpad-save {
+  margin-top: auto;
+  padding-top: var(--space-2);
+}
+
+.hv-messen .hv-ergebniszone {
+  height: auto;
+  min-height: calc(var(--size-touch-regal) * 4 + var(--space-2) * 3);
+  flex: 1 1 0;
+}
