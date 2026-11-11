@@ -231,9 +231,11 @@ for (const [was, pfad, name] of [
     await oeffnen(page, t, pfad, jetzt);
     const vorschau = page.locator('main .hv-druck-vorschau');
     await expect(vorschau).toBeVisible({ timeout: 15_000 });
-    // die Vorschau ist breiter als 360 dp und scrollt waagrecht (A4-Blatt)
-    const [scroll, client] = await vorschau.evaluate((e) => [e.scrollWidth, e.clientWidth]);
-    expect(scroll).toBeGreaterThan(client);
+    // erst messen, wenn der Bogen da ist (die Etiketten laden nach); er ist breiter als 360 dp (A4-Blatt)
+    await expect(vorschau.locator('.hv-sheet, .hv-blatt').first()).toBeVisible({ timeout: 15_000 });
+    await expect
+      .poll(() => vorschau.evaluate((e) => e.scrollWidth - e.clientWidth), { timeout: 10_000 })
+      .toBeGreaterThan(0);
     const ergebnis = await new AxeBuilder({ page })
       .include('main')
       .withRules(['scrollable-region-focusable'])
