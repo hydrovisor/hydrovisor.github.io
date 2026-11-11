@@ -14,7 +14,8 @@ Tim: «Ich bin mit einem Veränderungen einverstanden. Ich möchte einzig keinen
 - **SEQ und SUS fragt der Lead im Claude-Chat ab.** Er stellt jede Frage einzeln: SEQ nach jeder Kernaufgabe («Wie leicht oder schwer war die Aufgabe?», 1 sehr schwer bis 7 sehr leicht), SUS mit den zehn Aussagen in deutscher Fassung (je 1 trifft gar nicht zu bis 5 trifft voll zu). Tim antwortet mit der Zahl, auf Wunsch mit einem Satz dazu.
 - Der Lead rechnet aus (SUS: bei ungeraden Aussagen Antwort − 1, bei geraden 5 − Antwort, Summe × 2.5) und hält Antworten, Ergebnis und Datum im zugehörigen Issue und in `docs/entwurf/usability_befunde.md` fest.
 - **Kein Formular, kein Papier, keine Maske in der App.** Es gibt dafür weder eine Tabelle noch eine Seite in Hydrovisor.
-- Termine (Konzept 12.6, 14.5): U3 vom 2. bis 7.1.2027 und um den 21.1.2027, U4 Ende Januar (M2) und Ende März (Datenschluss). Der Lead erinnert Tim zum Termin und beginnt die Befragung selbst.
+- Termine (Konzept 13.1): U3 vom 2. bis 7.1.2027 und um den 21.1.2027, U4 am 31.1. (M2) und 31.3. (Datenschluss). Der Lead erinnert Tim zum Termin und beginnt die Befragung selbst.
+- Die Bildschirmaufnahme des Aufgabentests (mit Tims Stimme) bleibt bei Tim; ins Issue und ins Repository kommen nur Zeiten, Fehler, Berührungen, SEQ und Stolpersteine (CLAUDE.md Regel 6).
 
 ## Abwägung
 
