@@ -40,7 +40,7 @@ a:hover { color: var(--brand-strong); }
 /* Gedrückt (U-01, B2): am Touchscreen gibt es kein Hover; Rückmeldung sofort und ohne Übergang, auch an Kacheln,
    Auswahl, Löchern, Stepper und Haken. Die blaue Tipp-Hervorhebung von Chrome entfällt dafür. */
 .hv-btn, .hv-tile, .hv-choice-item, .hv-loch, .hv-stepper-knopf, .hv-check-row button { -webkit-tap-highlight-color: transparent; }
-.hv-btn:active:not(:disabled), button.hv-tile:active, .hv-choice-item:active:not(:disabled), .hv-loch:active,
+.hv-btn:active:not(:disabled), button.hv-tile:active, .hv-choice-item:active:not(:disabled), .hv-loch:active:not([aria-disabled="true"]),
 .hv-stepper-knopf:active:not(:disabled), .hv-check-row button:active:not(:disabled) {
   transition: none; transform: translateY(1px); box-shadow: inset 0 2px 0 var(--line-control); }
 .hv-btn-primary:active:not(:disabled) { background: var(--brand-strong); }

@@ -1,6 +1,7 @@
 // Usability Runde 1 (Issue #153, Plan 153; docs/entwurf/usability_befunde.md B1 bis B4, B9). REST nachgebildet,
-// Fixtures der E2E; 360 × 640 aus der Konfiguration, U01-AK3 zusätzlich 360 × 780 (Honor).
+// Fixtures der E2E; 360 × 640 aus der Konfiguration, U01-AK1 im Honor-Profil (640 und 780), U01-AK3 auch 360 × 780.
 import { expect, test, type Locator, type Page } from '@playwright/test';
+import { ansatzTeile, um as ansatzUm } from '../fixtures/ansatz.ts';
 import { JETZT as MESS_JETZT, messTeile } from '../fixtures/messen.ts';
 import type { Teile } from '../fixtures/regal.ts';
 import { regalTeile } from '../fixtures/regal.ts';
@@ -45,38 +46,62 @@ async function ziffern(page: Page, folge: string): Promise<void> {
 }
 
 // Die Überlappung zeigt sich nur mit Mobil-Emulation wie am Honor (isMobile, Touch, Pixeldichte 3.5; Simulation #120)
-test.describe('Honor-Profil', () => {
-  test.use({ viewport: { width: 360, height: 780 }, isMobile: true, hasTouch: true, deviceScaleFactor: 3.5 });
-
-  test('U01-AK1 Rundgang: Titel und «Rundgang beenden» überlappen nicht, beide innerhalb von 360 dp, Taste 68 dp', async ({
-    page,
-  }) => {
-    await oeffnen(page, rundgangTeile({ orte: ['1.1', '2.1'] }), '/#/heute', RUNDGANG_JETZT);
-    await knopf(page, /^Rundgang starten/).click();
-    const titel = page.getByRole('heading', { level: 1, name: /^Rundgang/ });
-    const beenden = knopf(page, 'Rundgang beenden');
-    await expect(beenden).toBeVisible({ timeout: 10_000 });
-    // erst mit der Schrift des Design Systems messen (die Ersatzschrift ist schmaler)
-    await page.evaluate(async () => {
-      await document.fonts.ready;
+for (const hoehe of [640, 780]) {
+  test.describe(`Honor-Profil 360 × ${hoehe}`, () => {
+    test.use({
+      viewport: { width: 360, height: hoehe },
+      isMobile: true,
+      hasTouch: true,
+      deviceScaleFactor: 3.5,
     });
-    await page.waitForTimeout(300);
-    const t = await box(titel);
-    const b = await box(beenden);
-    const ueberlappt =
-      t.x < b.x + b.width && b.x < t.x + t.width && t.y < b.y + b.height && b.y < t.y + t.height;
-    expect(ueberlappt, 'Titel und Taste überlappen').toBe(false);
-    for (const r of [t, b]) expect(r.x + r.width, 'rechter Rand').toBeLessThanOrEqual(360);
-    expect(b.height).toBeGreaterThanOrEqual(68);
-    // die Taste schrumpft sonst auf 68 dp und ihr Text läuft über Titel und Rand (Befund B1)
-    await textPasst(titel);
-    await textPasst(beenden);
-  });
-});
 
-test('U01-AK2 gedrückter Zustand an Tasten, Kacheln und Haken; Vibration nur in Regal-Masken, höchstens 15 ms', async ({
-  page,
-}) => {
+    test(`U01-AK1 Rundgang auf 360 × ${hoehe}: Titel und «Rundgang beenden» überlappen nicht, beide innerhalb von 360 dp, Taste 68 dp`, async ({
+      page,
+    }) => {
+      await oeffnen(page, rundgangTeile({ orte: ['1.1', '2.1'] }), '/#/heute', RUNDGANG_JETZT);
+      await knopf(page, /^Rundgang starten/).click();
+      const titel = page.getByRole('heading', { level: 1, name: /^Rundgang/ });
+      const beenden = knopf(page, 'Rundgang beenden');
+      await expect(beenden).toBeVisible({ timeout: 10_000 });
+      // erst mit der Schrift des Design Systems messen (die Ersatzschrift ist schmaler)
+      await page.evaluate(async () => {
+        await document.fonts.ready;
+      });
+      await page.waitForTimeout(300);
+      const t = await box(titel);
+      const b = await box(beenden);
+      const ueberlappt =
+        t.x < b.x + b.width && b.x < t.x + t.width && t.y < b.y + b.height && b.y < t.y + t.height;
+      expect(ueberlappt, 'Titel und Taste überlappen').toBe(false);
+      for (const r of [t, b]) expect(r.x + r.width, 'rechter Rand').toBeLessThanOrEqual(360);
+      expect(b.height).toBeGreaterThanOrEqual(68);
+      // die Taste schrumpft sonst auf 68 dp und ihr Text läuft über Titel und Rand (Befund B1)
+      await textPasst(titel);
+      await textPasst(beenden);
+    });
+  });
+}
+
+/** Stil im Ruhezustand und bei gedrückter Maustaste (ohne loszulassen) */
+async function gedrueckt(page: Page, ziel: Locator): Promise<[string, string]> {
+  const stil = () =>
+    ziel.evaluate((e) => {
+      const s = getComputedStyle(e);
+      return `${s.backgroundColor}|${s.boxShadow}|${s.transform}`;
+    });
+  await ziel.scrollIntoViewIfNeeded();
+  const ruhe = await stil();
+  const b = await box(ziel);
+  await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2);
+  await page.mouse.down();
+  const unten = await stil();
+  // wegziehen und loslassen: kein click, keine Wirkung
+  await page.mouse.move(0, 0);
+  await page.mouse.up();
+  return [ruhe, unten];
+}
+
+async function vibrationMitschneiden(page: Page): Promise<() => Promise<number[]>> {
   await page.addInitScript(() => {
     const w = window as unknown as { vibriert: number[] };
     w.vibriert = [];
@@ -88,46 +113,61 @@ test('U01-AK2 gedrückter Zustand an Tasten, Kacheln und Haken; Vibration nur in
       },
     });
   });
+  return () => page.evaluate(() => [...(window as unknown as { vibriert: number[] }).vibriert]);
+}
+
+test('U01-AK2 gedrückter Zustand an Tasten, Kacheln und Haken sichtbar anders als in Ruhe', async ({
+  page,
+}) => {
   await oeffnen(page, regalTeile(), '/#/gefaess/R-1.1', new Date('2026-12-10T08:00:00Z'));
   const haupt = knopf(page, /Messen$/);
   await expect(haupt).toBeVisible({ timeout: 15_000 });
-  const vibriert = () => page.evaluate(() => (window as unknown as { vibriert: number[] }).vibriert);
-
-  // Ruhezustand gegen gedrückt (Maus unten halten, ohne loszulassen)
   for (const ziel of [haupt, page.locator('.hv-gefaess-neben .hv-btn').first()]) {
-    const ruhe = await ziel.evaluate((e) => {
-      const s = getComputedStyle(e);
-      return `${s.backgroundColor}|${s.boxShadow}|${s.transform}`;
-    });
-    const b = await box(ziel);
-    await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2);
-    await page.mouse.down();
-    const gedrueckt = await ziel.evaluate((e) => {
-      const s = getComputedStyle(e);
-      return `${s.backgroundColor}|${s.boxShadow}|${s.transform}`;
-    });
-    expect(gedrueckt, 'gedrückter Zustand sichtbar').not.toBe(ruhe);
-    const v = await vibriert();
-    expect(v.length, 'eine Vibration je Berührung').toBeGreaterThanOrEqual(1);
-    expect(Math.max(...v)).toBeLessThanOrEqual(15);
-    await page.mouse.move(0, 0);
-    await page.mouse.up();
+    const [ruhe, unten] = await gedrueckt(page, ziel);
+    expect(unten, 'Taste gedrückt').not.toBe(ruhe);
   }
-
-  // Kachel des Regalbilds (Anlage ist eine Schreibtisch-Maske: Zustand ja, Vibration nein)
   await page.goto('/#/anlage');
   const kachel = page.locator('button.hv-tile').first();
   await expect(kachel).toBeVisible({ timeout: 10_000 });
+  const [ruheK, untenK] = await gedrueckt(page, kachel);
+  expect(untenK, 'Kachel gedrückt').not.toBe(ruheK);
+
+  // Haken der Abhakliste (Lösung wechseln 2.3)
+  await oeffnen(page, ansatzTeile(), '/#/ansatz/R-2.3', ansatzUm('18:30'));
+  const haken = page.getByRole('button', { name: 'Zeile 0 abhaken', exact: true });
+  await expect(haken).toBeVisible({ timeout: 15_000 });
+  const [ruheH, untenH] = await gedrueckt(page, haken);
+  expect(untenH, 'Haken gedrückt').not.toBe(ruheH);
+});
+
+test('U01-AK2 Vibration: genau einmal je Tipp in Regal-Masken, höchstens 15 ms; am Schreibtisch und beim Wegziehen nicht', async ({
+  page,
+}) => {
+  const vibriert = await vibrationMitschneiden(page);
+  await oeffnen(page, messTeile(), '/#/messen/R-2.3', MESS_JETZT);
+  await expect(page.getByRole('button', { name: /^EC( |$)/ })).toBeVisible({ timeout: 15_000 });
+  expect(await page.locator('main').getAttribute('data-density')).toBe('regal');
+  for (const z of ['6', '8']) {
+    const vorher = (await vibriert()).length;
+    await page.getByRole('button', { name: `Ziffer ${z}`, exact: true }).click();
+    await page.waitForTimeout(120);
+    const v = await vibriert();
+    expect(v.length, `genau eine Vibration für Ziffer ${z}`).toBe(vorher + 1);
+    expect(v[v.length - 1]).toBeLessThanOrEqual(15);
+  }
+  // gedrückt und weggezogen: kein click, keine Vibration
+  const vorWeg = (await vibriert()).length;
+  await gedrueckt(page, page.getByRole('button', { name: 'Ziffer 1', exact: true }));
+  expect((await vibriert()).length, 'keine Vibration ohne Auslösen').toBe(vorWeg);
+
+  // Anlage ist eine Schreibtisch-Maske: kein Vibrieren
+  await page.goto('/#/anlage');
+  const kachel = page.locator('button.hv-tile').first();
+  await expect(kachel).toBeVisible({ timeout: 10_000 });
+  expect(await page.locator('main').getAttribute('data-density')).not.toBe('regal');
   const vorher = (await vibriert()).length;
-  const ruhe = await kachel.evaluate((e) => getComputedStyle(e).backgroundColor);
-  const k = await box(kachel);
-  await page.mouse.move(k.x + k.width / 2, k.y + k.height / 2);
-  await page.mouse.down();
-  expect(await kachel.evaluate((e) => getComputedStyle(e).backgroundColor)).not.toBe(ruhe);
-  await page.mouse.move(0, 0);
-  await page.mouse.up();
-  const regal = await page.locator('main').getAttribute('data-density');
-  if (regal !== 'regal') expect((await vibriert()).length, 'keine Vibration am Schreibtisch').toBe(vorher);
+  await kachel.click();
+  expect((await vibriert()).length, 'keine Vibration am Schreibtisch').toBe(vorher);
 });
 
 test('U01-AK3 Messmaske auf 780 dp: Hinweise ganz sichtbar, «Speichern» am unteren Rand und in beiden Zuständen an derselben Stelle', async ({

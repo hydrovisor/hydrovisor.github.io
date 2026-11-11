@@ -1,6 +1,8 @@
-// Haptik beim Tippen (U-01, B2; design-system/components/Button.md): in Regal-Masken eine kurze Vibration, sobald der
-// Finger eine Taste berührt. Ein Lauscher für die ganze App (pointerdown, Erfassungsphase), keine Änderung an den
-// Bausteinen. Geräte ohne Vibration (Desktop, iOS) und gesperrte Tasten bleiben still.
+// Haptik beim Tippen (U-01, B2; design-system/components/Button.md): in Regal-Masken eine kurze Vibration, wenn ein
+// Tipp eine Taste auslöst. Ein Lauscher für die ganze App (click, Erfassungsphase), keine Änderung an den Bausteinen.
+// click statt pointerdown (Prüfer #154): Bei Touch zählt erst das Loslassen als Nutzeraktion, die Chrome für
+// navigator.vibrate verlangt, und ein Wischen zum Scrollen über eine Taste löst keinen click aus. Die sichtbare
+// Rückmeldung beim Drücken liefert :active im Design System. Geräte ohne Vibration und gesperrte Tasten bleiben still.
 
 /** Dauer in ms (A): spürbar, aber kein Summen; Android-Chrome rundet kürzere Werte teils auf 0 */
 export const TIPP_MS = 10;
@@ -21,8 +23,8 @@ export function tippZiel(start: Element | null): Element | null {
 export function haptikEinbauen(doc: Document = document): () => void {
   const nav = doc.defaultView?.navigator;
   if (!nav || typeof nav.vibrate !== 'function') return () => undefined;
-  const beiBeruehrung = (e: PointerEvent) => {
-    if (e.button !== 0 && e.pointerType === 'mouse') return;
+  const beiTipp = (e: MouseEvent) => {
+    if (e.button !== 0) return;
     if (!tippZiel(e.target instanceof Element ? e.target : null)) return;
     try {
       nav.vibrate(TIPP_MS);
@@ -30,6 +32,6 @@ export function haptikEinbauen(doc: Document = document): () => void {
       // ohne Berechtigung oder ohne Nutzeraktion: still weiter
     }
   };
-  doc.addEventListener('pointerdown', beiBeruehrung, { capture: true, passive: true });
-  return () => doc.removeEventListener('pointerdown', beiBeruehrung, { capture: true });
+  doc.addEventListener('click', beiTipp, { capture: true, passive: true });
+  return () => doc.removeEventListener('click', beiTipp, { capture: true });
 }
