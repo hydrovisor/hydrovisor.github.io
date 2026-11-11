@@ -175,10 +175,8 @@ test('IB-AK2 nach dem Seed führt die Checkliste Punkt für Punkt durch die Inbe
   await expect(page.getByRole('heading', { name: 'Gefäss erfassen', level: 1 })).toBeVisible();
   await expect(gruppe(page, 'Rolle').getByRole('radio', { name: 'Messstelle W' })).toBeChecked();
   await knopf(page, 'Weiter').click();
+  // U-05 (B16): nach dem Speichern direkt in die Messmaske R-W
   await knopf(page, 'Speichern').click();
-  await expect(page).toHaveURL(/#\/anlage\?a=R$/);
-  await heute(page, 3);
-  await knopf(liste(page), 'Leitungswasser messen').click();
   await expect(page).toHaveURL(/#\/messen\/R-W$/);
   await page.getByRole('button', { name: /^EC/ }).click();
   await ziffern(page, '0.42');
@@ -221,9 +219,9 @@ test('IB-AK2 nach dem Seed führt die Checkliste Punkt für Punkt durch die Inbe
   await gruppe(page, 'Deckel oder Platte').getByRole('radio', { name: 'D2', exact: true }).check();
   await knopf(page, 'Weiter').click();
   await expect(page.getByText(/2\.3\.1 bis 2\.3\.6/)).toBeVisible();
-  await knopf(page, 'Speichern').click();
-  await expect(page).toHaveURL(/#\/gefaess\/R-2\.3$/);
-  await page.goto('/#/gefaess-neu?a=R');
+  // U-05 (B17): ohne Umweg über die Anlage gleich die Anzuchtbox
+  await knopf(page, 'Speichern und nächstes erfassen').click();
+  await expect(page.getByText('R-2.3 gespeichert')).toBeVisible();
   await gruppe(page, 'Rolle').getByRole('radio', { name: 'Anzuchtbox' }).check();
   await expect(page.getByText('Kennung A1')).toBeVisible();
   await knopf(page, 'Weiter').click();

@@ -51,9 +51,8 @@ Liegt die Gegenprobe ausserhalb 1.41 ± u_EC, bleibt «Speichern» gesperrt und 
 
 ## Punkt 4: Leitungswasser-EC messen (W)
 
-1. In der Checkliste «Messstelle W erfassen»: Der Assistent «Gefäss erfassen» öffnet mit der Rolle «Messstelle W». «Weiter», dann «Speichern».
-2. Zurück in Heute: «Leitungswasser messen» öffnet die Messmaske R-W.
-3. Giesskanne mit Leitungswasser füllen, EC messen, Kachel «EC» antippen, Wert tippen (zum Beispiel 0.42), «Speichern».
+1. In der Checkliste «Messstelle W erfassen»: Der Assistent «Gefäss erfassen» öffnet mit der Rolle «Messstelle W». «Weiter», dann «Speichern». Die App öffnet gleich die Messmaske R-W.
+2. Giesskanne mit Leitungswasser füllen, EC messen, Kachel «EC» antippen, Wert tippen (zum Beispiel 0.42), «Speichern».
 
 Ab jetzt rechnet die App mit dem gemessenen Wert statt mit der Annahme 0.5 mS/cm.
 
@@ -88,7 +87,7 @@ Der Punkt hakt sich ab, sobald es mindestens eine Box und einen Deckel gibt; fü
 
 ## Punkt 6: Gefässe, Anzuchtboxen und Messstelle W erfassen
 
-In der Checkliste «Gefässe erfassen». Je Gefäss vier Schritte: Platz (Rolle «Gefäss», Bereich, Position, Betriebsart, Luftpumpe), Box, Deckel oder Platte, Zusammenfassung mit Kennung und Töpfen; dann «Speichern» (oder «Speichern und Etikett drucken»). Danach über Anlage R › «Gefäss erfassen» das nächste.
+In der Checkliste «Gefässe erfassen». Je Gefäss vier Schritte: Platz (Rolle «Gefäss», Bereich, Position, Betriebsart, Luftpumpe), Box, Deckel oder Platte, Zusammenfassung mit Kennung und Töpfen; dann «Speichern und nächstes erfassen»: Die App meldet zum Beispiel «R-2.3 gespeichert» und beginnt mit derselben Rolle wieder bei Schritt 1. Beim letzten Gefäss «Speichern» (öffnet die Maske «Gefäss») oder «Speichern und Etikett drucken».
 
 | Kennung | Bereich, Position | Betriebsart | Luftpumpe | Box | Deckel |
 |---|---|---|---|---|---|
@@ -104,7 +103,7 @@ In der Checkliste «Gefässe erfassen». Je Gefäss vier Schritte: Platz (Rolle 
 
 Die Intervalle (Messen, Nachfüllen, Wechseln) schlägt die App nach der Betriebsart vor; sie stehen in der Zusammenfassung und lassen sich dort ändern.
 
-**Anzuchtboxen:** viermal Rolle «Anzuchtbox», «Weiter», «Speichern». Die App schlägt Kennung, Typ und Lage vor: A1 vorne und A2 hinten als Lichtkeimer (weiss), A3 vorne und A4 hinten als Dunkelkeimer (schwarz), je 25 Würfel (Konzept 5.8). Vorschlag in der Zusammenfassung prüfen.
+**Anzuchtboxen:** Rolle «Anzuchtbox», «Weiter», «Speichern und nächstes erfassen», viermal. Die App schlägt Kennung, Typ und Lage vor: A1 vorne und A2 hinten als Lichtkeimer (weiss), A3 vorne und A4 hinten als Dunkelkeimer (schwarz), je 25 Würfel (Konzept 5.8). Vorschlag in der Zusammenfassung prüfen.
 
 Die Messstelle W ist seit Punkt 4 erfasst. Der Punkt hakt sich ab, sobald mindestens ein Gefäss, eine Anzuchtbox und W da sind.
 

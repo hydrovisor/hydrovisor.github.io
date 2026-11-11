@@ -1,7 +1,8 @@
 // Assistent «Gefäss erfassen» (UC3, 05_masken.md 4; Plan 21): Kontext Schreibtisch, höchstens vier Schritte
 // (Platz, Box, Deckel, Zusammenfassung). Speichern ist ein Vorgang über schreiben(); eine Wiederholung sendet
-// dieselben Client-UUIDs (Konzept 11.4, TO2).
-import { useState } from 'react';
+// dieselben Client-UUIDs (Konzept 11.4, TO2). U-05 (#168): W öffnet nach dem Speichern die Messmaske (B16);
+// «Speichern und nächstes erfassen» beginnt mit derselben Rolle wieder bei Schritt 1 (B17).
+import { useRef, useState } from 'react';
 import { neueClientId, schreiben, type Schreibergebnis } from '../../daten/schreiben.ts';
 import type { Betriebsart } from '../../domain/anlage/anlegen.ts';
 import {
@@ -45,6 +46,9 @@ const ROLLEN: { wert: Rolle; text: string }[] = [
 ];
 const PUMPEN = ['P1', 'P2', 'P3', 'P4'] as const;
 type Pumpe = (typeof PUMPEN)[number] | null;
+
+/** Ziel nach dem Speichern: Maske des Orts (W: Messmaske), Etiketten oder nächster Ort im Assistenten */
+type Nach = 'maske' | 'drucken' | 'naechstes';
 
 /** Wahlgruppe als fieldset mit legend (TextField.md «Auswahl und Wahlgruppe») */
 function Wahl<T extends string | number | null>({
@@ -113,6 +117,10 @@ export function GefaessNeu({ kuerzel, rolle: startRolle }: { kuerzel?: string; r
   const [vorgang, setVorgang] = useState<{ schluessel: string; schritte: Vorgang }>();
   const [ergebnis, setErgebnis] = useState<Schreibergebnis>();
   const [sendet, setSendet] = useState(false);
+  /** Code des zuletzt mit «Speichern und nächstes erfassen» gespeicherten Orts (B17) */
+  const [gespeichert, setGespeichert] = useState<string>();
+  /** wohin nach dem Speichern; «Erneut senden» wiederholt dasselbe Ziel */
+  const nachRef = useRef<Nach>('maske');
 
   const vorschlag = anlage
     ? erfassenVorschlag(teile, anlage.id, {
@@ -177,11 +185,31 @@ export function GefaessNeu({ kuerzel, rolle: startRolle }: { kuerzel?: string; r
 
   function weiter() {
     setFehler([]);
+    setGespeichert(undefined);
     // Anzuchtbox und Messstelle direkt zur Zusammenfassung
     setSchritt(rolle === 'gefaess' ? schritt + 1 : 4);
   }
 
-  async function speichern(drucken = false) {
+  /** Assistent leeren, Rolle behalten (B17) */
+  function neuBeginnen(code: string) {
+    setGespeichert(code);
+    setSchritt(1);
+    setBereichId(undefined);
+    setPosition(undefined);
+    setBetriebsart(undefined);
+    setFesteDosis(false);
+    setLuftpumpe(null);
+    setModellId(undefined);
+    setVolumen(undefined);
+    setDeckelId(undefined);
+    setIntervalle(undefined);
+    setVorgang(undefined);
+    setErgebnis(undefined);
+    setFehler([]);
+  }
+
+  async function speichern(nach: Nach = nachRef.current) {
+    nachRef.current = nach;
     const e = eingabe();
     if (!e || !anlage) return;
     const f = erfassenPruefen(teile, e);
@@ -197,15 +225,20 @@ export function GefaessNeu({ kuerzel, rolle: startRolle }: { kuerzel?: string; r
     const antwort = await schreiben(aktuell.schritte, { jetzt: jetzt(), zeitzone: ZEITZONE });
     setSendet(false);
     setErgebnis(antwort);
-    if (antwort.status === 'gespeichert' && vorschlag?.code)
-      oeffnen(
-        // «Speichern und Etikett drucken» öffnet die Etiketten mit diesem Code (Plan 21 A6, Plan 22)
-        drucken
-          ? { name: 'etiketten', kuerzel: anlage.kuerzel, codes: [vorschlag.code] }
-          : rolle === 'messstelle'
-            ? { name: 'anlage', kuerzel: anlage.kuerzel }
-            : { name: 'gefaess', code: vorschlag.code },
-      );
+    if (antwort.status !== 'gespeichert' || !vorschlag?.code) return;
+    if (nach === 'naechstes') {
+      neuBeginnen(vorschlag.code);
+      return;
+    }
+    oeffnen(
+      // «Speichern und Etikett drucken» öffnet die Etiketten mit diesem Code (Plan 21 A6, Plan 22); W die
+      // Messmaske für das Leitungswasser (B16, Einrichtung Punkt 4)
+      nach === 'drucken'
+        ? { name: 'etiketten', kuerzel: anlage.kuerzel, codes: [vorschlag.code] }
+        : rolle === 'messstelle'
+          ? { name: 'messen', code: vorschlag.code }
+          : { name: 'gefaess', code: vorschlag.code },
+    );
   }
 
   const schreibfehler = ergebnis?.status === 'nicht_gespeichert' ? ergebnis.fehler : undefined;
@@ -223,6 +256,9 @@ export function GefaessNeu({ kuerzel, rolle: startRolle }: { kuerzel?: string; r
         </a>
       </header>
       <p className="hv-anlage-info">Schritt {schritt} von 4</p>
+      {gespeichert && schritt === 1 ? (
+        <Notice tone="ok" title={`${gespeichert} gespeichert`} kompakt />
+      ) : null}
       {!anlage ? (
         <Notice tone="warn" title="Zuerst eine Anlage anlegen" />
       ) : schritt === 1 ? (
@@ -415,12 +451,17 @@ export function GefaessNeu({ kuerzel, rolle: startRolle }: { kuerzel?: string; r
           {fehler.map((f) => (
             <Notice key={f.feld + f.grund} tone="danger" title={f.grund} />
           ))}
-          <Button block disabled={sendet} onClick={() => void speichern()}>
+          <Button block disabled={sendet} onClick={() => void speichern('maske')}>
             Speichern
           </Button>
-          <Button block variant="secondary" disabled={sendet} onClick={() => void speichern(true)}>
+          <Button block variant="secondary" disabled={sendet} onClick={() => void speichern('drucken')}>
             Speichern und Etikett drucken
           </Button>
+          {rolle !== 'messstelle' ? (
+            <Button block variant="secondary" disabled={sendet} onClick={() => void speichern('naechstes')}>
+              Speichern und nächstes erfassen
+            </Button>
+          ) : null}
         </div>
       )}
       {anlage && schritt < 4 ? (
