@@ -326,10 +326,19 @@ body {
   flex-wrap: wrap;
 }
 
+/* U-01 (B4): zwei Spalten statt drei umbrechender Zeilen, sichtbar als Tasten */
 .hv-heute-nav {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-1);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
+  width: 100%;
+}
+
+.hv-heute-nav > .hv-btn {
+  min-width: 0;
+  padding: 0 var(--space-2);
+  white-space: normal;
+  text-align: center;
 }
 
 /* Heute: Gruppen je Anlage ab zwei echten Anlagen (UC1-AK5, Plan 20) */
@@ -377,10 +386,18 @@ body {
 }
 
 /* Maske «Gefäss»: Nebenknöpfe (Plan 21) */
+/* U-01 (B9): Nebenknöpfe gleich breit im Raster */
 .hv-gefaess-neben {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-2);
+}
+
+.hv-gefaess-neben > .hv-btn {
+  min-width: 0;
+  padding: 0 var(--space-2);
+  white-space: normal;
+  text-align: center;
 }
 
 /* Heute: Aufgabe «Gefäss prüfen» (Plan 21 A7) */

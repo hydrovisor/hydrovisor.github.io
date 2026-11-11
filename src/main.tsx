@@ -5,9 +5,11 @@ import '../design-system/tokens.css';
 import '../design-system/components/bundle.css';
 import './ui/app.css';
 import { App } from './ui/App.tsx';
+import { haptikEinbauen } from './ui/haptik.ts';
 
 const wurzel = document.getElementById('app');
 if (!wurzel) throw new Error('Element #app fehlt');
+haptikEinbauen();
 createRoot(wurzel).render(
   <StrictMode>
     <App />

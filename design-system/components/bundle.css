@@ -37,6 +37,17 @@ a:hover { color: var(--brand-strong); }
 .hv-btn-danger { background: var(--surface-raised); border-color: var(--status-danger); color: var(--status-danger); }
 .hv-btn-danger:hover { background: var(--status-danger-soft); }
 .hv-btn:disabled { cursor: not-allowed; background: var(--surface-sunken); border-color: transparent; color: var(--ink-muted); }
+/* Gedrückt (U-01, B2): am Touchscreen gibt es kein Hover; Rückmeldung sofort und ohne Übergang, auch an Kacheln,
+   Auswahl, Löchern, Stepper und Haken. Die blaue Tipp-Hervorhebung von Chrome entfällt dafür. */
+.hv-btn, .hv-tile, .hv-choice-item, .hv-loch, .hv-stepper-knopf, .hv-check-row button { -webkit-tap-highlight-color: transparent; }
+.hv-btn:active:not(:disabled), button.hv-tile:active, .hv-choice-item:active:not(:disabled), .hv-loch:active:not([aria-disabled="true"]),
+.hv-stepper-knopf:active:not(:disabled), .hv-check-row button:active:not(:disabled) {
+  transition: none; transform: translateY(1px); box-shadow: inset 0 2px 0 var(--line-control); }
+.hv-btn-primary:active:not(:disabled) { background: var(--brand-strong); }
+.hv-btn-secondary:active:not(:disabled), button.hv-tile:active, .hv-choice-item:active:not(:disabled),
+.hv-stepper-knopf:active:not(:disabled) { background: var(--surface-sunken); }
+.hv-btn-ghost:active:not(:disabled) { background: var(--brand-soft); }
+.hv-btn-danger:active:not(:disabled) { background: var(--status-danger-soft); }
 
 /* Karte */
 .hv-card { background: var(--surface-raised); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: var(--space-4); box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: var(--space-3); }
@@ -231,6 +242,8 @@ button.hv-tile { cursor: pointer; touch-action: manipulation; }
 .hv-check-erledigt .hv-check-haken { background: var(--brand); border-color: var(--brand); }
 .hv-check-erledigt .hv-check-titel { text-decoration: line-through; text-decoration-thickness: 2px; color: var(--ink-muted); }
 .hv-check-aktion { margin-top: var(--space-2); }
+/* U-01 (B10): die Taste bleibt in der Textspalte und bricht um, statt in den Statuskreis zu ragen */
+.hv-check-aktion .hv-btn { max-width: 100%; white-space: normal; text-align: center; }
 /* Plan 29: Hinweis unter dem Titel (Notice-Ton) und fester Haken einer erledigten Zeile, die nicht mehr abwählbar ist */
 .hv-check-hinweis { margin-top: var(--space-1); font-size: var(--text-small-size); line-height: var(--text-small-line); color: var(--ink); }
 .hv-check-fest { display: inline-flex; align-items: center; justify-content: center; cursor: default; }
