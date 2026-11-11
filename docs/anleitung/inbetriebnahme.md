@@ -2,7 +2,7 @@
 
 Für die erste Einrichtung des Indoor-Regals in der installierten App am Honor, ab dem heutigen Produktionsstand: keine Anlage, keine Einstellungen, kein Wissen. Die App führt in Heute mit der Checkliste «Einrichtung · n von 9 erledigt» durch die Punkte 1 bis 9; jeder Punkt hakt sich selbst ab, sobald seine Daten gespeichert sind, und der aktive Punkt hat einen Knopf, der den passenden Ablauf öffnet. Nach Punkt 9 verschwindet die Checkliste.
 
-Alle Schritte sind im E2E-Durchlauf `tests/e2e/inbetriebnahme.spec.ts` nachgespielt (Issue #166): IB-AK1 für den leeren Stand, IB-AK2 für die Punkte 1 bis 9 mit Gefäss 2.3, Anzuchtbox A1 und Messstelle W. Die Werte stammen aus Konzept 5.2 bis 5.4 und `tests/fixtures/regal.ts`.
+Alle Schritte sind im E2E-Durchlauf `tests/e2e/inbetriebnahme.spec.ts` nachgespielt (Issue #166): IB-AK1 für den leeren Stand, IB-AK2 für die Punkte 1 bis 9 mit Gefäss 2.3, Anzuchtbox A1 und Messstelle W. Die Werte stammen aus Konzept 5.1 bis 5.8; der E2E-Durchlauf nutzt stellvertretend die Fixture `tests/fixtures/regal.ts`.
 
 ## Vorher
 
@@ -112,7 +112,7 @@ Die Messstelle W ist seit Punkt 4 erfasst. Der Punkt hakt sich ab, sobald mindes
 
 In der Checkliste «Etiketten drucken». Die Liste zeigt alle Orte der Anlage R.
 
-1. Zuerst mit «Testbogen auf Normalpapier» drucken und auf den Etikettenbogen legen; bei Versatz «Druckversatz X» und «Druckversatz Y» in mm eintragen.
+1. Zuerst «Testbogen auf Normalpapier» ankreuzen, «Druckansicht öffnen», auf Normalpapier drucken und auf den Etikettenbogen legen; bei Versatz «Druckversatz X» und «Druckversatz Y» in mm eintragen.
 2. Etiketten wählen, «Startfeld» setzen (bei einem angebrauchten Bogen das erste freie Feld), «Druckansicht öffnen», drucken (Honor: WLAN-Druck über Mopria oder als PDF).
 3. «Als gedruckt bestätigen».
 4. Etiketten in die Klarsicht-Taschen stecken: Rako-Boxen vorne mittig unter dem Stapelrand, Stationen um die Stirnseite, Anzuchtboxen zugeschnitten auf 55 × 25 mm, W an die Giesskanne (Konzept 5.4).

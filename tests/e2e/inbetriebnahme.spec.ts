@@ -1,7 +1,7 @@
 // Inbetriebnahme der Anlage R ab leerem Produktionsstand (Issue #166; docs/anleitung/inbetriebnahme.md). Spielt die
 // Schritte der Anleitung der Reihe nach über die Knöpfe der Einrichtungs-Checkliste nach. REST nachgebildet: POST und
 // PATCH aus schreiben() landen im nachgebildeten Bündel, die Sichten rechnet tests/fixtures/sichten.ts nach, dazu
-// v_ec_wasser und v_netztopf_platz hier. Werte aus tests/fixtures/regal.ts (Konzept 5.2); 360 × 640 aus der
+// v_ec_wasser und v_netztopf_platz hier. Werte aus tests/fixtures/regal.ts (Box abweichend von Konzept 5.3, siehe Issue #166 Befund 2); 360 × 640 aus der
 // Konfiguration.
 //
 // Annahmen (A):
@@ -73,8 +73,9 @@ async function oeffnen(page: Page, start: Teile): Promise<Stand> {
     (tabelle, zeilen) => {
       for (const z of zeilen) {
         s.geschrieben.push([tabelle, z]);
-        // die Datenbank vergibt id, wo schreiben() nur client_id sendet (Vorlagen)
-        zeileAufnehmen(s.daten, tabelle, { id: z['client_id'] ?? crypto.randomUUID(), ...z }, new Date());
+        // die Datenbank vergibt eine eigene id (default gen_random_uuid()), wo schreiben() nur client_id sendet
+        // (Vorlagen); verschieden von client_id, damit eine Verwechslung in der App auffällt
+        zeileAufnehmen(s.daten, tabelle, { ...z, id: z['id'] ?? crypto.randomUUID() }, new Date());
       }
       nachrechnen(s.daten);
     },
