@@ -1,6 +1,6 @@
 # Usability-Befunde Runde 1 (Expertenprüfung U2)
 
-Stand 11.11.2026 · Lead · Methode: heuristische Evaluation (Nielsen, 10 Heuristiken; ISO 9241-110) an den Bildschirmfotos der Honor-Simulation (360 × 780 dp, Pixeldichte 3.5, Fixtures der E2E, Stand `d83e072`), ergänzt um Code-Durchsicht. Schweregrad nach Nielsen: 0 kein Problem, 1 kosmetisch, 2 klein, 3 gross (vor dem Testbetrieb beheben), 4 Katastrophe (sofort). Rahmen: `docs/entwurf/usability_pruefung.md`.
+Stand 11.11.2026 · Lead · B11 bis B14 aus der automatischen Prüfung U1 (Honor-Simulation mit axe-core, #156) · Methode: heuristische Evaluation (Nielsen, 10 Heuristiken; ISO 9241-110) an den Bildschirmfotos der Honor-Simulation (360 × 780 dp, Pixeldichte 3.5, Fixtures der E2E, Stand `d83e072`), ergänzt um Code-Durchsicht. Schweregrad nach Nielsen: 0 kein Problem, 1 kosmetisch, 2 klein, 3 gross (vor dem Testbetrieb beheben), 4 Katastrophe (sofort). Rahmen: `docs/entwurf/usability_pruefung.md`.
 
 | Nr. | Maske | Befund | Heuristik | Schwere | Vorschlag | Weg |
 |---|---|---|---|---|---|---|
@@ -14,6 +14,11 @@ Stand 11.11.2026 · Lead · Methode: heuristische Evaluation (Nielsen, 10 Heuris
 | B8 | Rundgang, Kurzprüfung | «Licht an ✓», «Lüfter läuft ✓», «1.1 Pumpe sprudelt ✓ ok»: kleines ✓ und grosse Schrift; unklar, ob das ein Zustand ist oder eine Taste, die eine Abweichung meldet | Übereinstimmung mit der realen Welt | 2 | Beschriftung als Frage mit Zustand («Licht an? ja», Tipp meldet «nein»), Symbol 32 dp | Vorschlag an Tim |
 | B9 | Gefäss | Nebentasten («Lösung wechseln», «Ändern», «Leeren») ungleich breit, Zeilen ausgefranst | Ästhetik | 1 | gleich breite Raster-Tasten | #153 |
 | B10 | Heute, Einrichtung (aktiver Punkt) | Die Taste «Leitungswasser messen» ragt aus der Textspalte und überlappt den Statuskreis (`white-space: nowrap`) | Ästhetik, Fehlervermeidung | 3 | Taste bleibt in der Spalte und bricht um | #153 |
+
+| B11 | Säen (Schritt 2, Duplizieren) | «Ziel später» braucht 104 dp, die Taste hat 102 dp (Text stösst an den Rand) | Ästhetik | 1 | Taste breiter oder Text umbrechen | U-03 |
+| B12 | Messmaske bei Systemschrift 130 % | Ziffernblock «leeren» (89 statt 74 dp) und «weiter» (88 statt 74 dp) sowie Kacheltexte («EC mS/cm 1.25 vorher 1.20», 116 statt 102 dp) passen nicht; betrifft #94 am Honor | Sichtbarkeit, Erkennen | 3 | Funktionstasten mit Symbol oder kürzerem Text, Kachelzeilen umbrechen oder kürzen | U-03 |
+| B13 | Umsetzen, Bestätigung | «Umsetzen bestätigen» braucht 187 dp, die Taste hat 158 dp, schon bei normaler Schrift | Ästhetik, Fehlervermeidung | 3 | Taste über die ganze Breite oder Text umbrechen | U-03 |
+| B14 | Zeitwahl (Drehrad) | WCAG «scrollable-region-focusable»: das Rad ist per Tastatur nicht erreichbar | Zugänglichkeit | 1 | `tabindex="0"` am Rad; am Handy ohne Wirkung | U-03 |
 
 ## Nicht geprüft (bleibt am Honor, U3)
 
