@@ -124,10 +124,17 @@ export function GefaessNeu({ kuerzel, rolle: startRolle }: { kuerzel?: string; r
   const vorlageFertig = (text: string) => {
     setVorlageOffen(false);
     setVorlageMeldung(text);
-    // keine veraltete Wahl: bei einer einzigen Vorlage wählt der Rückfall sie, sonst wählt Tim (Prüfer #185, Befund 1)
+  };
+  // keine veraltete Wahl, aber nur die eigene: eine neue Box setzt Box und Volumen zurück, ein neuer Deckel nur den
+  // Deckel (Prüfer #185, Runde 1 Befund 1 und Nachprüfung); bei einer einzigen Vorlage wählt der Rückfall sie
+  const boxFertig = (text: string) => {
+    vorlageFertig(text);
     setModellId(undefined);
-    setDeckelId(undefined);
     setVolumen(undefined);
+  };
+  const deckelFertig = (text: string) => {
+    vorlageFertig(text);
+    setDeckelId(undefined);
   };
   const [intervalle, setIntervalle] = useState<Intervalle>();
   const [fehler, setFehler] = useState<Verstoss[]>([]);
@@ -411,7 +418,7 @@ export function GefaessNeu({ kuerzel, rolle: startRolle }: { kuerzel?: string; r
           {modelle.length === 0 || vorlageOffen ? (
             <BoxFormular
               bestand={vorlagenAusTeilen(teile).modelle}
-              fertig={vorlageFertig}
+              fertig={boxFertig}
               abbrechen={() => setVorlageOffen(false)}
             />
           ) : (
@@ -449,7 +456,7 @@ export function GefaessNeu({ kuerzel, rolle: startRolle }: { kuerzel?: string; r
           {deckel.length === 0 || vorlageOffen ? (
             <DeckelFormular
               bestand={vorlagenAusTeilen(teile).deckel}
-              fertig={vorlageFertig}
+              fertig={deckelFertig}
               abbrechen={() => setVorlageOffen(false)}
             />
           ) : (

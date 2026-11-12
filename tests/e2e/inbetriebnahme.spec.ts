@@ -388,3 +388,43 @@ test('W185-AK2 Gefäss ohne Vorlagen: Box und Deckel im Assistenten erfassen, gl
   expect(gefaess?.['gefaessmodell_id']).toBe((s.daten['gefaessmodell'] ?? [])[0]?.['id']);
   expect(modell?.['name']).toBe('Rako 40 × 30 × 17');
 });
+
+test('W185-AK2 zweiter Deckel im Assistenten behält die gewählte Box: Gefäss 2.2 mit Rako 30 × 20 × 12 und neuem D4', async ({
+  page,
+}) => {
+  // zwei Boxen (Rako 40 × 30 × 22, Rako 30 × 20 × 12) und ohne D4; andere Deckel vorhanden
+  const start = leeresRegal();
+  start['gefaessmodell'] = (start['gefaessmodell'] ?? []).filter((m) => m['name'] !== 'Leni Flori 36');
+  start['deckeltyp'] = (start['deckeltyp'] ?? []).filter((d) => d['name'] !== 'D4');
+  const s = await oeffnen(page, start);
+  await page.goto('/#/gefaess-neu?a=R');
+  await expect(page.getByRole('heading', { name: 'Gefäss erfassen', level: 1 })).toBeVisible({
+    timeout: 15_000,
+  });
+  await gruppe(page, 'Bereich').getByRole('radio', { name: 'Ebene 2', exact: true }).check();
+  await gruppe(page, 'Position').getByRole('radio', { name: '2', exact: true }).check();
+  await knopf(page, 'Weiter').click();
+  await gruppe(page, 'Box')
+    .getByRole('radio', { name: /^Rako 30 × 20 × 12/ })
+    .check();
+  await knopf(page, 'Weiter').click();
+
+  await knopf(page, 'Neuen Deckel erfassen').click();
+  const deckel = page.getByRole('form', { name: 'Deckel erfassen' });
+  await deckel.getByLabel('Name', { exact: true }).fill('D4');
+  await deckel.getByRole('radio', { name: '8 cm' }).check();
+  await deckel.getByLabel(/^Löcher je Reihe/).fill('1, 1');
+  await deckel.getByRole('group', { name: 'Service-Öffnung' }).getByRole('radio', { name: 'ja' }).check();
+  await taste(page, 'Speichern').click();
+  // mehrere Deckel: den neuen antippen
+  await gruppe(page, 'Deckel oder Platte').getByRole('radio', { name: 'D4', exact: true }).check();
+  await knopf(page, 'Weiter').click();
+  await expect(page.getByText('Rako 30 × 20 × 12', { exact: true })).toBeVisible();
+  await knopf(page, 'Speichern').click();
+  await expect(page).toHaveURL(/#\/gefaess\/R-2\.2$/);
+
+  const gefaesse = s.geschrieben.filter(([t]) => t === 'gefaess').map(([, z]) => z);
+  expect(gefaesse).toHaveLength(1);
+  const rako30 = (s.daten['gefaessmodell'] ?? []).find((m) => m['name'] === 'Rako 30 × 20 × 12');
+  expect(gefaesse[0]?.['gefaessmodell_id']).toBe(rako30?.['id']);
+});
