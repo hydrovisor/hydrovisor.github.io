@@ -1,4 +1,4 @@
-# 0018 W0-Freigabe durch den Lead, frankisgarden.de als Praxisquelle, alle Arten
+# 0018 W0-Freigabe durch den Lead, frankiesgarten.de als Praxisquelle, alle Arten
 
 Datum: 12.11.2026 · Entschieden von Tim (im Chat der W0-Lead-Sitzung nach den Freigabevorschlägen der Runde 1) · Issue #188 · weicht ab von Konzept 9.3 und 9.4 (Freigabe und Prüfung durch Tim) und von `docs/w0/ablauf.md` Abschnitt 4 Schritte 7 und 8 · Bezug #184, PR #187, RR16, Entscheid 0017
 
@@ -14,7 +14,7 @@ Tim (Chat, 12.11.2026, wörtlich): «Das Ziel ist, diese Datenbank entsprechend 
 2. **Prüfung nach Konzept 9.4.** Statt Tim prüft ein frischer Prüfer (Rolle `pruefer`, kein Teil des W0-Laufs) die Prüfliste gegen die Quellen: 100 % pH und EC der Phasen Anzucht und Wachstum, sonst eine Stichprobe von 10 %. Ein Befund geht an den Lead zurück; erst ohne offenen Befund kommt die Zeile nach `freigegeben/`.
 3. **Freigabevermerk.** `freigegeben_am` ist das Datum des Lead-Entscheids; `notiz_tim` beginnt mit «Lead nach Entscheid 0018:» und nennt den Grund (Regel 9.3 mit Nummer oder (A)).
 4. **Saatempfehlung Klasse D.** Findet die Recherche für eine Kulturform keine Quelle der Saatmengen-Skala A bis C, legt der Lead die Zeile mit `klasse_saatmenge = D`, leeren Herkunftsfeldern und einer `begruendung` mit Fachlogik an («Lead nach Entscheid 0018, (A): …»), wie bei Tims Entscheiden nach R12.3 (Annahme 6). Kandidaten A bis C gehen vor.
-5. **frankisgarden.de** ist zugelassene Hydroponik-Praxisquelle, Klasse C (Konzept 9.1: Praxisquelle ohne Versuch, Methode ausdrücklich hydroponisch), Quellenklasse `praxis`, für alle Grössen einschliesslich `dauer` und Saatmenge (Saatmengen-Skala B bei gleicher Substratklasse, sonst C). In Konflikten gilt Regel 1: A und B vor C. Die Methodenprüfung prüft je Seite, ob sie die Methode ausdrücklich hydroponisch beschreibt.
+5. **frankiesgarten.de** (Tims Schreibweise «frankisgarden.de»; die Domain frankisgarden.de existiert nicht, gemeint ist die deutsche Hydroponik-Praxisseite frankiesgarten.de mit Anleitungen je Kultur unter `/anleitungen/gemueseanbau/`) ist zugelassene Hydroponik-Praxisquelle, Klasse C (Konzept 9.1: Praxisquelle ohne Versuch, Methode ausdrücklich hydroponisch), Quellenklasse `praxis`, für alle Grössen einschliesslich `dauer` und Saatmenge (Saatmengen-Skala B bei gleicher Substratklasse, sonst C). In Konflikten gilt Regel 1: A und B vor C. Die Methodenprüfung prüft je Seite, ob sie die Methode ausdrücklich hydroponisch beschreibt.
 6. **Umfang.** Alle 11 Arten aus `data/stammdaten/sorten.csv` (22 Sorten): die acht des Probelaufs, dazu Spinat, Mangold und Randen (Kulturgruppe `fuchsschwanz`, Leitkultur Spinat, 03_import_w0.md 4.2.1); Saatempfehlungen je Art und jeder erlaubten Kulturform, damit Tim bei der Anpflanzung variieren kann.
 
 ## Kulturformen je Art (Lead, A)
@@ -52,4 +52,4 @@ Nach R1.2 (Kulturtyp der Sorte schränkt ein: Frucht → `dauerkultur_frucht`; B
 ## Verworfen
 
 - Freigabe weiter durch Tim je Runde mit höchstens vier Konflikten: bei rund 60 Konflikten und dem Hauptlauf mit drei weiteren Arten nicht bis zum 15.12. zu schaffen.
-- frankisgarden.de als Klasse B: die Seiten beschreiben Praxis ohne Versuch (Konzept 9.1).
+- frankiesgarten.de als Klasse B: die Seiten beschreiben Praxis ohne Versuch (Konzept 9.1).
