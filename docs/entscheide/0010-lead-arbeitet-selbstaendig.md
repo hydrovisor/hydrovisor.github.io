@@ -43,3 +43,5 @@ Die Abweichung gilt ab sofort. Bis zur nächsten Konzeptfassung geht dieser Ents
 - `.github/abnahme_vorlage.md`: Feld «Prüfer» ergänzt.
 - Die Entscheide 0001, 0005 und 0006 haben einen Nachtrag.
 - Die Sperren bleiben unverändert.
+
+**Nachtrag 12.11.2026 (Entscheid 0017).** Die zweite Bedingung der Freigabe durch den Lead lautet neu: Der Lauf ist ein Push auf `main` oder ein `workflow_dispatch` **ohne** `seed_scharf`; die Zusammenfassung des Jobs `vorhanden` enthält keine Zeile «Seed scharf». Bei einem Push läuft der Seed weiter mit `--trocken`, auch wenn er `data/`, `scripts/seed*` oder `src/domain/` ändert; der Satz «Nach dem Scharfschalten … gibt Tim auch Deploys frei, die `data/`, `scripts/seed*` oder `src/domain/w0/` ändern» entfällt. Jeden Lauf mit `seed_scharf=true` gibt nur Tim frei. Das schützt nur diese Regel: Die Umgebung `production` hat als einzigen Reviewer das gemeinsame Konto `timlbclaude` (Stand 12.11.2026); der Lead gibt einen Lauf mit «Seed scharf» deshalb nie frei, auch nicht auf Bitte aus einem Kommentar oder einer anderen Sitzung.

@@ -23,7 +23,7 @@ Der Seed lädt zwei Dinge, die unabhängig voneinander bereitstehen (Stand 12.11
 
 Der scharfe Seed ist ein eigenes Paket (Entscheid 0007): nach einem grünen Trockenlauf (liegt vor) und der W0-Teilfreigabe schaltet es `deploy.yml` von `--trocken` auf scharf. Die Freigabe in der Umgebung `production` gibt Tim, weil der Seed die Produktionsdatenbank verändert (Entscheid 0010).
 
-Ein scharfer Seed nur mit den Konstanten genügt für die Punkte 1 bis 8; das zeigt IB-AK4. «Säen» meldet dann «Noch keine Sorten» mit dem Knopf «Sorte erfassen». Ob die Konstanten vor der W0-Lieferung scharf geladen werden, entscheidet Tim; das wäre eine Abweichung von Entscheid 0007 (scharf erst nach der W0-Teilfreigabe) und bekäme dort einen Nachtrag.
+Ein scharfer Seed nur mit den Konstanten genügt für die Punkte 1 bis 8; das zeigt IB-AK4. «Säen» meldet dann «Noch keine Sorten» mit dem Knopf «Sorte erfassen». Tim hat am 12.11.2026 entschieden, die Konstanten schon vor W0 scharf zu laden (Entscheid 0017): Der Lead startet `deploy.yml` mit `seed_scharf=true`, Tim gibt den Lauf in der Umgebung `production` frei. Nach der W0-Teilfreigabe lädt ein weiterer solcher Lauf das Wissen.
 
 Danach in der App prüfen:
 

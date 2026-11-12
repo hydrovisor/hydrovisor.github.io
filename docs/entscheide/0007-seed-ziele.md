@@ -17,3 +17,5 @@ Datum 3.11.2026 · Entscheid des Lead im Paket I0-05 (#10, Plan `docs/plaene/10.
 **Folgen.** Neue devDependency `postgres` (postgres.js, exakt angeheftet). Ändert W0 eine `quelle` oder `kulturgruppe`, bricht der Lauf ab (keine Versionsspalten); dann neue `quelle_id` oder eigenes Paket mit Migration.
 
 **Nachtrag 4.11.2026.** Die Freigabe in `production` gibt nach Entscheid 0010 der Lead, wenn der Deploy die Produktionsdatenbank nicht verändert (keine Migration, Seed noch trocken). Mit Migration oder scharfem Seed bleibt sie bei Tim.
+
+**Nachtrag 12.11.2026 (Entscheid 0017).** Tim lässt die Seed-Konstanten schon vor der W0-Teilfreigabe scharf laden. Scharf lädt der Seed nur bei `workflow_dispatch` von `deploy.yml` mit `seed_scharf=true` (Freigabe in `production` durch Tim); jeder Push auf `main` bleibt beim Trockenlauf.
