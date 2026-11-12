@@ -15,6 +15,7 @@ Private PWA mit Supabase für Tims Hydroponikregal; einziger Nutzer Tim, bedient
 | Namen im Code | `docs/spec/glossar.md` |
 | Rollen der Subagents | `.claude/agents/` (Modell und Denkstufe fest in der Datei) |
 | Paketablauf | Skill `/umsetzen <issue>` in `.claude/skills/umsetzen/SKILL.md` |
+| W0-Lauf (Koordinator) | `docs/w0/ablauf.md`, Rollen `.claude/agents/w0_*.md` |
 
 Fakten nur aus dem Repository. Fachliche Fakten, die nicht im Repository stehen, fragst du Tim, statt sie anzunehmen. Technische Details entscheidest du selbst und kennzeichnest sie mit (A).
 
