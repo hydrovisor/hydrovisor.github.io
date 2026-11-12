@@ -285,7 +285,8 @@ export function GefaessNeu({ kuerzel, rolle: startRolle }: { kuerzel?: string; r
       ) : null}
       {!anlage ? (
         <Notice tone="warn" title="Zuerst eine Anlage anlegen" />
-      ) : schritt === 1 ? (
+      ) : schritt === 1 && !nachgeladen ? null : schritt === 1 ? (
+        // #172: bis zum Nachladen keine Wahlfelder; der alte Vorschlag sähe wie eine gültige Auswahl aus
         <div className="hv-formular">
           <p>
             Anlage {anlage.kuerzel} · {anlage.name}

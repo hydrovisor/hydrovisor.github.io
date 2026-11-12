@@ -178,3 +178,25 @@ test('W168-AK1 Gefäss auf dem geräumten Platz 2.3: «Weiter» wartet auf das n
   expect(gefaesse[0]?.[1]['platz_id']).toBe(platzId('2.3'));
   expect(geschrieben.filter(([t]) => t === 'platz')).toHaveLength(0);
 });
+
+test('W168-AK2 während des Nachladens zeigt Schritt 1 weder Kennung noch Wahlfelder, danach Rolle und neuen Vorschlag', async ({
+  page,
+}) => {
+  await mitDaten(page, leeresRegal());
+  await nachladenVerzoegern(page, 1500);
+  await gruppe(page, 'Rolle').getByRole('radio', { name: 'Anzuchtbox' }).check();
+  await expect(page.getByText('Kennung A1')).toBeVisible();
+  await knopf(page, 'Weiter').click();
+  await knopf(page, 'Speichern und nächstes erfassen').click();
+
+  await expect(
+    page.getByRole('status').filter({ hasText: 'R-A1 gespeichert, Stand wird geladen' }),
+  ).toBeVisible();
+  await expect(page.getByText(/^Kennung /)).toHaveCount(0);
+  await expect(gruppe(page, 'Rolle')).toHaveCount(0);
+  await expect(knopf(page, 'Weiter')).toBeDisabled();
+
+  await expect(page.getByText('Kennung A2')).toBeVisible({ timeout: 10_000 });
+  await expect(gruppe(page, 'Rolle').getByRole('radio', { name: 'Anzuchtbox' })).toBeChecked();
+  await expect(knopf(page, 'Weiter')).toBeEnabled();
+});
