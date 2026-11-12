@@ -240,3 +240,46 @@ Hinweise für den Lead: Rise Gardens nennt für Petersilie 8 Keimtage, frankiesg
 | Petersilie | anzucht | dauer | kein Kandidat mit `wert_min/wert_typ/wert_max`; offen neu: 7 (Rise Darki, Rise Forest Green, je Einzelwert aus Rechnung) |
 | Schnittlauch | keimung | dauer | kein Kandidat mit Typwert; offen neu: Gardyn 7–21 (Bereich ohne typ, Hydroponik nicht ausdrücklich) |
 | Schnittlauch | anzucht | dauer | keine neue Quelle (Klasse D); nur offen: Salve Regina 15 Tage, Simply Hydroponics 4–6 Wochen |
+
+## Runde 8 (13.11.2026): Keim- und Anzuchtdauer Schnittlauch
+
+Gesucht nur: `pw.allium_schoenoprasum.keimung.dauer`, `pw.allium_schoenoprasum.anzucht.dauer`.
+
+### Suchweg
+
+- Salve Regina Digital Commons `hydroponic_center/4`: Landingpage mit Cookie geladen, danach PDF-Link der Seite (`viewcontent.cgi?article=1004&context=hydroponic_center`, nicht 1003) mit Referer abgerufen (HTTP 200, PDF), Text mit pdftotext gelesen.
+- Websuche «chives hydroponic rockwool days after sowing transplanted», «hydroponic herb production extension chives germination days transplant», «Allium schoenoprasum hydroponic were sown transplanted».
+- Alabama Extension ANR-2954 (Transplant Production for Hydroponic and Greenhouse Systems), Fork Farms Herb Grow Guide (PDF März 2025), Florida State Hort. Soc. 114 (Kräuter im Turmsystem), Europe PMC (Volltextsuche Schnittlauch mit hydroponic/NFT/rockwool), SciELO Horticultura Brasileira (Schnittlauch NFT mit Magnesiumsulfat).
+
+### Befund Salve Regina (PDF Seite 2)
+
+Wörtlich: «Propagation: 5-10 seeds planted in rockwool cubes size small in a seed tray.» und im Block «Propagation»: «Days Dark: 8 / Days under Light: 7 / Transferred to Grow System on day 15 / First Harvest Day: Day 52 in the Tower 3 System». Lampen: Sun Blaze T5HO-48 mit T5-Röhren 6500 K (keine LED, daher `umgebung_quelle = andere`). Die Quelle sagt nicht ausdrücklich, dass die Sämlinge nach der Dunkelphase aufgelaufen sind; die Reihenfolge Dunkel → Licht → Umsetzen legt es nahe (Lesart für die Methodenprüfung).
+
+### Neue Kandidaten (alle offen, Einzelwerte)
+
+| zeile_id | Quelle | Wert wörtlich | grund |
+|---|---|---|---|
+| pw.allium_schoenoprasum.keimung.dauer#3 | salve-regina-schnittlauch-2023 (B1, Steinwollwürfel, T5) | «Days Dark: 8» | Einzelwert; Auflaufen nicht ausdrücklich |
+| pw.allium_schoenoprasum.anzucht.dauer#3 | salve-regina-schnittlauch-2023 | «Days under Light: 7»; Gegenrechnung «Transferred … on day 15» minus 8 = 7 | Einzelwert; Lichtbeginn als Auflaufen gelesen |
+
+Keine neue Quelle in `quelle.csv` (Salve Regina schon vorhanden).
+
+### Verworfen in Runde 8
+
+| Quelle | Grund |
+|---|---|
+| Alabama Extension ANR-2954 | Tabelle 2 nur Tomate, Peperoni, Gurke, Salat; kein Schnittlauch |
+| Fork Farms Herb Grow Guide (2025) | «Herb seeds on average take 5-7 days to germinate», nicht artspezifisch; Umsetzen nach Höhe, ohne Tage |
+| Florida State Hort. Soc. 114 (2001), Kräuter im Turm | Schnittlauch aus dem Versuch genommen, keine Zeiten |
+| EDEN ISS 2018 (PMC7264257) | Schnittlauch direkt auf Baumwollmatten gesät, kein Umsetzen, keine Keimdauer |
+| SciELO Horticultura Brasileira (Schnittlauch NFT, Magnesiumsulfat) | Jungpflanzen aus Gärtnerei «at 25 days after sowing», Anzucht nicht hydroponisch |
+| PMC9016137 (Chinese chives, Methyljasmonat) | Allium tuberosum, Substrattöpfe |
+| Horticulturae 2021 (DOAJ-Treffer) | Zwiebel (Allium cepa), nicht Schnittlauch |
+| letpot.com (Garlic Chives), scaleandstem | Allium tuberosum bzw. Seite ohne erkennbare Quelle |
+
+### Lückenliste nach Runde 8
+
+| Art | Phase | Grösse | Stand |
+|---|---|---|---|
+| Schnittlauch | keimung | dauer | kein Kandidat in Validatorform; offen: Salve Regina 8 (Einzelwert), Gardyn 7–21 (verworfen) |
+| Schnittlauch | anzucht | dauer | kein Kandidat in Validatorform; offen: Salve Regina 7 (Einzelwert, aus 15 minus 8) |

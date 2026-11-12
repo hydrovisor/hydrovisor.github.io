@@ -2,16 +2,18 @@
 # Aufruf im Repository-Wurzelordner:
 #   python -X utf8 scripts/w0/berichte.py runde-2
 #       erzeugt pruefliste_9-4_runde-2.md neu mit denselben zeile_id wie die bestehende Datei (Teil A und Teil B)
-#   python -X utf8 scripts/w0/berichte.py runde-7 --basis <git-ref>
+#   python -X utf8 scripts/w0/berichte.py runde-<n> --basis <git-ref> --issue <nr>
 #       Prüfliste und Lead-Entscheide für alle freigegebenen Zeilen, die gegenüber <git-ref> neu sind oder sich geändert haben
 import os
 import re
 import subprocess
 import sys
 import csv
+import datetime
 import io
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import w0lib  # noqa: E402
 from w0lib import Bestand, frei, REGELN, lesen  # noqa: E402
 
 B = 'data/wissensbasis/kandidaten/berichte'
@@ -99,7 +101,7 @@ def aktuell_frei(n):
     return rows
 
 
-def runde7(b, ref):
+def runde_n(b, ref, nr, issue):
     alt = basis_frei(ref)
     neu_ids = set()
     for n in ('art', 'profilwert', 'saatempfehlung'):
@@ -112,17 +114,17 @@ def runde7(b, ref):
     art_rows = [r for r in rows if r['zeile_id'].startswith('pw.') and r.get('ebene') == 'art']
     teil_a = [r for r in art_rows if r['phase'] in ('anzucht', 'wachstum') and r['groesse'] in ('ph', 'ec')]
     teil_b = [r for r in rows if r not in teil_a]
-    txt = ['# Prüfliste nach Konzept 9.4, Runde 7 (Entscheid 0018, Issue #190)',
+    txt = [f'# Prüfliste nach Konzept 9.4, Runde {nr} (Entscheid 0018, Issue #{issue})',
            f'Alle freigegebenen Zeilen, die gegenüber `{ref}` neu sind oder sich geändert haben (100 %, keine Stichprobe). '
            'Teil A: pH und EC der Phasen Anzucht und Wachstum auf Ebene Art. Teil B: übrige Zeilen (Dauern, Kulturgruppen-Mindestzeilen). '
            'Je Zeile Link öffnen, Fundstelle suchen, Kurzzitat und Wert vergleichen; bei eigenem Wert des Lead den Ausgangswert im Kurzzitat '
            'und die Regel in der Spalte Lead prüfen.', '', f'## Teil A ({len(teil_a)})', ''] + KOPF + [zeile(r, q) for r in teil_a]
     txt += ['', f'## Teil B ({len(teil_b)})', ''] + KOPF + [zeile(r, q) for r in teil_b] + ['']
-    with open(f'{B}/pruefliste_9-4_runde-7.md', 'w', encoding='utf-8', newline='') as f:
+    with open(f'{B}/pruefliste_9-4_runde-{nr}.md', 'w', encoding='utf-8', newline='') as f:
         f.write('\n'.join(txt))
-    le = ['# Lead-Entscheide W0 Runde 7 (Entscheid 0018, Issue #190)',
-          'Stand 12.11.2026. Erzeugt aus den Kandidatendateien (Spalte `notiz_tim` der freigegebenen Zeilen). '
-          'Werkzeug: `scripts/w0/lead_entscheide_runde7.py` mit `scripts/w0/w0lib.py`, Bericht `scripts/w0/berichte.py`.', '',
+    le = [f'# Lead-Entscheide W0 Runde {nr} (Entscheid 0018, Issue #{issue})',
+          f'Stand {datetime.date.fromisoformat(w0lib.HEUTE):%d.%m.%Y}. Erzeugt aus den Kandidatendateien (Spalte `notiz_tim` der freigegebenen Zeilen). '
+          f'Werkzeug: `scripts/w0/lead_entscheide_runde{nr}.py` mit `scripts/w0/w0lib.py`, Bericht `scripts/w0/berichte.py`.', '',
           '## Fachregeln für offene Werte (A)', '| Regel | Inhalt |', '|---|---|']
     le += [f'| {k} | {v} |' for k, v in REGELN.items()]
     le += ['', '## Neue oder geänderte freigegebene Zeilen auf Ebene Art', '', '| zeile_id | Wert | Quelle (Klasse) | Entscheid |', '|---|---|---|---|']
@@ -133,14 +135,15 @@ def runde7(b, ref):
                                                           lead(r))) + ' |')
     kg = [r for r in rows if r.get('ebene') == 'kulturgruppe']
     le += ['', f'Dazu {len(kg)} Kulturgruppen-Mindestzeilen (V13) als Kopie der neuen Art-Zeilen der Leitkultur bzw. mit «(A) andere Art».', '']
-    with open(f'{B}/lead_entscheide_runde-7.md', 'w', encoding='utf-8', newline='') as f:
+    with open(f'{B}/lead_entscheide_runde-{nr}.md', 'w', encoding='utf-8', newline='') as f:
         f.write('\n'.join(le))
-    print(f'Prüfliste Runde 7: Teil A {len(teil_a)}, Teil B {len(teil_b)}')
+    print(f'Prüfliste Runde {nr}: Teil A {len(teil_a)}, Teil B {len(teil_b)}')
 
 
 if __name__ == '__main__':
     b = Bestand()
     if sys.argv[1] == 'runde-2':
         runde2(b)
-    elif sys.argv[1] == 'runde-7':
-        runde7(b, sys.argv[sys.argv.index('--basis') + 1])
+    elif sys.argv[1].startswith('runde-'):
+        issue = sys.argv[sys.argv.index('--issue') + 1]
+        runde_n(b, sys.argv[sys.argv.index('--basis') + 1], sys.argv[1].split('-')[1], issue)

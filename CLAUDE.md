@@ -130,6 +130,7 @@ Vorschau: Cloudflare Pages `hydrovisor-vorschau` baut jeden Zweig (`<zweig>.hydr
 - [0016 Usability-Befragung nur im Claude-Chat](docs/entscheide/0016-befragung-im-chat.md)
 - [0017 Seed-Konstanten vor W0 scharf laden](docs/entscheide/0017-seed-konstanten-vor-w0.md)
 - [0018 W0-Freigabe durch den Lead, frankiesgarten.de, alle Arten](docs/entscheide/0018-w0-freigabe-durch-lead.md)
+- [0019 Nacht-Freigabe vom 12.11.2026 bis 13.11. 07:00](docs/entscheide/0019-nacht-freigabe-12-11.md)
 - Übrige Entscheide vom 1.11.2026: `docs/spec/00_rueckfragen.md` (R1 bis R13, W1 bis W14, Annahmen 1 bis 16)
 
 ## Arbeitsweise in der Sitzung

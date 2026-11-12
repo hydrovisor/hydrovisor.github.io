@@ -188,3 +188,52 @@ Hinweise, nicht beauftragt: Sci Rep 2026 nennt für Mangold 14 Tage Ebbe-Flut bi
 | beta_vulgaris_cicla | anzucht | ec | nur offen #1, #2 (Einzelwerte); D für ein Band |
 | beta_vulgaris_conditiva | anzucht | dauer | Entwurf #1 (Runde 6) in Prüfung; keine weitere Hydroponik-Quelle mit Keimdauer und Umsetztag (D) |
 | beta_vulgaris_conditiva | wachstum | dauer | Entwurf #1 (Runde 6) in Prüfung; neu nur offen #3 (21 Tage, Einzelwert) |
+
+## Runde 8 (13.11.2026): Anzucht-pH und -EC Mangold
+
+### Suchweg
+
+- Websuche englisch: «Swiss chard seedlings rockwool nutrient solution EC transplanting half-strength», «Swiss chard hydroponic seedlings nutrient solution EC pH nursery until transplanting floating», «hydroponic Swiss chard guide seedling stage EC extension», «chard seedlings half-strength Hoagland … hydroponic», «Swiss chard hydroponic grow guide seedlings EC … Freight Farms/Upstart/Fork Farms/Tower Garden», «"Swiss chard" "seedlings were" "nutrient solution" "EC of" transplanted».
+- Websuche spanisch und portugiesisch: «acelga … hidropónico plántulas semillero solución nutritiva conductividad eléctrica pH trasplante», «Chapingo huerto hidropónico acelga … plántulas charolas», «acelga … hidroponia mudas espuma fenólica solução nutritiva condutividade elétrica berçário».
+- Europe PMC (Open Access): Swiss chard/cicla mit hydroponic/floating/NFT und seedlings bzw. «electrical conductivity»; Volltexte PMC8465728, PMC9605674, PMC12687340, PMC7688993, PMC12610718, PMC12397901, PMC9855646, PMC9657353 nach Sämlingswerten durchsucht.
+- frankiesgarten.de: alle deutschen URLs aus `post-sitemap.xml` und `page-sitemap.xml` (157 Einträge) nach «Mangold» durchsucht; Treffer mit Anzuchtwert auf `/hydroponik-ec-wert/` (Tabelle mit Stufen Anzucht, Jungpflanze, Wachstum, Ernte) und gleichlautend `/pflanzen/`. Seiten `/hydroponik/ec-wert/`, `/hydroponik/ph-wert/`, `/hydroponik/anzucht/` nennen Mangold nicht.
+- Rise Gardens EC-Leitfaden und Plant Library Mangold erneut: kein Sämlingswert für Mangold (Sämlingswert nur für Salat).
+
+### Neue Kandidaten
+
+| Kandidat | Datei | Wert | Quelle | Grund (offen) |
+|---|---|---|---|---|
+| pw.beta_vulgaris_cicla.anzucht.ph#3 | profilwert | 5.5 bis 6.5 | frankiesgarten-ec-wert-tabelle (C, Würfel in Anzuchtbox, `substrat_inert`) | – |
+| pw.beta_vulgaris_cicla.anzucht.ec#3 | offen | 0.6 mS/cm gesamt, Stufe «Anzucht» (erste Blätter, Anzuchtbox) | frankiesgarten-ec-wert-tabelle (C) | Einzelwert |
+| pw.beta_vulgaris_cicla.anzucht.ec#4 | offen | 1.2 mS/cm gesamt, Stufe «Jungpflanze» (bis Umzug in den Tower) | frankiesgarten-ec-wert-tabelle (C) | Einzelwert; Geltung vor dem Umsetzen nicht eindeutig |
+| pw.beta_vulgaris_cicla.anzucht.ec#5 | offen | 0.68 mS/cm, Lösung 0.25-fach für die Sämlinge zehn Tage vor dem Umsetzen in Floating-Platten | plants-mangold-durchfluss-2021 (A, Indoor LED) | Einzelwert |
+| pw.beta_vulgaris_cicla.anzucht.ph#4 | offen | 6.5, gleiche Lösung | plants-mangold-durchfluss-2021 (A) | Einzelwert |
+
+Neue Quellen: frankiesgarten-ec-wert-tabelle (praxis, Seite «Der EC-Wert von Pflanzen in der Hydroponik», Stand 11.11.2026), plants-mangold-durchfluss-2021 (peer_review, Plants 10(9) 1840, doi:10.3390/plants10091840).
+
+Zuordnungen zur Prüfung:
+
+- ph#3: Die Tabelle hat eine einzige pH-Spalte je Pflanze; in derselben Zeile stehen die EC-Werte der Stufen Anzucht bis Ernte. Die Geltung für die Anzucht folgt aus dieser Zeile, nicht aus einem eigenen Satz (wie Rise Spinat anzucht.ph#1, Angabe für die ganze Kultur). Die Seite `/hydroponik/ph-und-ec-werte/` nennt für Mangold abweichend pH 6,0 bis 6,5 mit EC 1,8 bis 2,3 ohne Stufe; nicht angelegt, weil sie die Anzucht nicht nennt.
+- ec#3 und ec#4: zwei Stufen derselben Tabelle vor bzw. bis zum Umsetzen; nach der Grundregel nicht zu einem Band zusammengelegt (bei Randen hat der Lead in Runde 7 aus Keimling und Jungpflanze ein Band gebildet, Entscheid des Lead). Basis `gesamt` laut Seite («Der EC gilt immer für die fertige Nährlösung, also für dein Wasser und den Dünger zusammen.»).
+- ec#5 und ph#4: Die Sämlinge stehen nach dem Auflaufen in Vermiculit ab den ersten Laubblättern zehn Tage in stehender Lösung (Belüftung nicht genannt, als `dwc` erfasst), danach Umsetzen in Floating-Platten mit 0.5-facher Lösung (pH 6.5, EC 1.26, nicht beauftragt). Basis `gesamt`, weil die Quelle den Leitungswasser-EC 0.07 getrennt nennt und 0.68 der fertigen Lösung zuschreibt.
+
+### Verworfen
+
+| Quelle | Grund |
+|---|---|
+| Turkish J Agric Food Sci Technol 7(6) 2019 (Mangold, Salzbewässerung) | Sämlinge vom Produzenten, Kultur in Säcken mit Gewächshauserde |
+| UNAM-Tesis «Cultivo hidropónico en mangas verticales de dos variedades de acelga y lechuga» | Anzucht in Flusssand mit Wasser ohne Nährlösung; pH und EC (Einheit «µS/m-2») nur für die Mangas nach dem Umsetzen |
+| Agro Productividad (Chapingo, Huerto hidropónico) | Anzucht in Torf-Perlit-Schalen ohne Angabe einer Anzuchtlösung |
+| HortScience 60(6) S. 967 (2025) | Volltext erneut HTTP 403; Sämlinge auf Sprühnebelbank, pH 5.5 bis 6.5 und EC 1.5 bis 2.5 laut Suchtreffer für die NFT-Phase |
+| KidsGardening «Starting Seeds for Hydroponics» | nennt Mangoldsamen und halbe Düngerstärke, aber keinen pH- oder EC-Wert |
+| Agronomy 14 2704 (2024), Scientific Papers USAMV 2022 | Grünkohl/Kohl bzw. Salat, nicht Mangold |
+| Europe PMC PMC9605674, PMC12687340, PMC7688993, PMC12610718, PMC12397901, PMC9855646, PMC9657353 | Erde, andere Arten oder kein Sämlingswert für Mangold |
+| scaleandstem, dripcanopy, hydrogreenspace, growguru, scribd-Tabelle | Praxisseiten ohne erkennbare Quelle bzw. Blogs |
+| Eden Green Ratgeber Rainbow Chard, Johnny's Tech Sheet | HTTP 404 bzw. kein Inhalt abrufbar |
+
+### Lückenliste nach Runde 8
+
+| Art | Phase | Grösse | Stand |
+|---|---|---|---|
+| beta_vulgaris_cicla | anzucht | ph | neu Entwurf #3 (5.5 bis 6.5, C, Form erfüllt); offen #2, #4 (Einzelwerte 6.0, 6.5) |
+| beta_vulgaris_cicla | anzucht | ec | weiter kein Band (D); offen #1, #2 sowie neu #3 (0.6), #4 (1.2), #5 (0.68), alle Einzelwerte |
