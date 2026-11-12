@@ -67,3 +67,79 @@ Arten: `spinacia_oleracea` (Spinat Butterfly, Leitkultur), `beta_vulgaris_cicla`
 | beta_vulgaris_conditiva | babyleaf | ernteart; Saatempfehlung | Studie nennt keine Samen je Würfel |
 | beta_vulgaris_conditiva | schnitt | ernte_ab_d, kulturdauer_typisch_d, ernteintervall_d, schnitte_max; Saatempfehlung | nur offen (frankiesgarten: 1 Pflanze stehen lassen, Samenzahl fehlt) |
 | spinacia_oleracea | schnitt | Saatempfehlung | kein Beleg |
+
+## Runde 3 (12.11.2026, gezielte Pflichtlücken)
+
+### Suchweg
+
+- Mangold: «hydroponic swiss chard EC pH seedlings transplant»; Rise Gardens Plant Library (Bright Lights, `?p=972`); Salve Regina «Bright Lights Swiss Chard Hydroponic Grow Guide» (PDF HTTP 403); Iowa State Thesis zu EC bei Spezialblattgemüse (Repositorium HTTP 403) und Fachartikel desselben Autors in Produce Grower 2021; HortScience 60(6) S. 967 Swiss-chard-Sorten (HTTP 403); UF/IFAS HS1279 (keine Werte); Cornell GPN 2016 erneut als Text gelesen (Kopfsalat-Methode laut Quelle für Swiss chard übertragbar).
+- Spinat: UGA Extension C1304 (DWC, Gewächshaus); Cornell-Schlussbericht 2005 nach Anzucht-pH durchsucht (nur Keimversuch pH 4 bis 8, kein Sollwert); Rise Gardens «Nutrient Solution EC Levels for Different Plants» (Zeile Spinach & Kale, Gesamt-EC); Rise Plant Library Spinach Seaside; HortScience 56(6) S. 687 (HTTP 403).
+- Randen: frankiesgarten.de Rote-Bete-Seite erneut (Anzuchtkarte), FAQ (keine artbezogenen Angaben), Mangold-Seite (HTTP 404); Rise Plant Library Beet Touchstone Gold; Suche «hydroponic beet greens baby leaf Bull's Blood».
+- MDPI-Studien (horticulturae-mangold-meerwasser-2022, agriculture-randen-babyleaf-2025) nach Auftrag nicht erneut verwendet.
+
+### Neue Kandidaten
+
+- profilwert (Form erfüllt): Spinat wachstum.ec#6 1.4 bis 2.0 mS/cm gesamt (Rise, B2; System nicht genannt, daher `keine`/`andere`); Randen anzucht.ec#2 0.8 bis 1.2 mS/cm gesamt (frankiesgarten, C, ersetzt den wegen `ec_basis` verworfenen #1); Randen anzucht.wechselmerkmal#2 «zwei Blattpaare» (Rise, B2).
+- profilwert_offen: Spinat anzucht.dauer#2 (2 bis 3 Wochen ab Saat, UGA), wachstum.dauer#2 bis #4 (UGA 3 bis 4 Wochen, Cornell GPN 10 bis 14 Tage, Rise Tag 32 ab Saat); Mangold keimung.dauer#2 (Rise 0 bis 7), anzucht.dauer#2 (GPN etwa Tag 11 ab Saat, Kopfsalat übertragen), wachstum.dauer#2 und #3 (GPN 24 Tage, Rise Tag 39 ab Saat), wachstum.ec#2 bis #4 (Produce Grower 2.0 Einzelwert und 0.5 bis 2.0 zu breit, GPN 1.5 «mhos/cm2»); Randen anzucht.ec#3 (0.5 Keimling), wachstum.ec#4 (1.8 Tower, gesamt), wachstum.dauer#2 (8 bis 10 Wochen, Knolle).
+- art: kulturformen_erlaubt Mangold `schnitt` (Rise, mehrfache Ernte der äusseren Blätter) und Randen `schnitt` (frankiesgarten, laufende Blattentnahme); babyleaf für beide ohne Hydroponik-Beleg.
+- saatempfehlung_offen: Mangold schnitt#1 (Rise, 1 Pflanze stehen lassen, Samenzahl fehlt), schnitt#2 (Produce Grower, 1 Samen je Zelle, Kulturform nicht zugeordnet).
+
+### Verworfen
+
+- library.risegardens.com: Suchseite enthält zahlreiche Spam-Seiten (Casino); die Pflanzenseiten selbst wirken echt, Quellenprüfer bitte Seitenstand prüfen.
+- Gardyn «How to Grow Swiss Chard Indoors»: belegt Jungblatt- und Schnitternte, Methode aber nicht ausdrücklich hydroponisch (Pflanzabstand 6 Zoll, «whether you're using a hydroponic system or starting from scratch»).
+- truleaf.org, hydromakers.com, growai.shop, dripcanopy, scaleandstem.pages.dev, seechuragro.com, krishijagran.com: keine erkennbare Quelle oder Versuch.
+- SARE «Leafy Greens & Herbs Hydroponics for Beginners», Hort Americas «Organic Hydroponic Leafy Greens»: keine Angaben zu Spinat, Mangold oder Randen.
+- Johnny's Seeds Bull's Blood (Microgreen-Saatgut): Katalog, keine Hydroponik-Sollwerte.
+
+### Lückenliste nach Runde 3 (Klasse D bzw. nur offen)
+
+| Art | Phase/Feld | Stand |
+|---|---|---|
+| spinacia_oleracea | anzucht.dauer | nur offen (Cornell 7, UGA 2 bis 3 Wochen ab Saat) |
+| spinacia_oleracea | wachstum.dauer | nur offen (Cornell 12 bis 14, GPN 10 bis 14, UGA 3 bis 4 Wochen, Rise Tag 32) |
+| spinacia_oleracea | anzucht.ph | kein Wert (D) |
+| spinacia_oleracea | wachstum.ec | neu ladbar: Rise 1.4 bis 2.0 mS/cm gesamt (#6) |
+| beta_vulgaris_cicla | keimung.dauer, anzucht.dauer, wachstum.dauer | nur offen |
+| beta_vulgaris_cicla | anzucht.ph, anzucht.ec | kein Wert (D) |
+| beta_vulgaris_cicla | wachstum.ec | nur offen (3.10, 2.0, 0.5 bis 2.0, 1.5) |
+| beta_vulgaris_cicla | kulturformen_erlaubt | nur `schnitt` belegt; babyleaf D |
+| beta_vulgaris_cicla | Saatempfehlung schnitt, babyleaf | schnitt nur offen; babyleaf D |
+| beta_vulgaris_conditiva | anzucht.dauer, wachstum.dauer | nur offen |
+| beta_vulgaris_conditiva | anzucht.ec | neu ladbar: frankiesgarten 0.8 bis 1.2 mS/cm gesamt (#2) |
+| beta_vulgaris_conditiva | wachstum.ec | nur offen (2.4, 1.8 gesamt) |
+| beta_vulgaris_conditiva | anzucht.wechselmerkmal | neuer Kandidat Rise (#2) |
+| beta_vulgaris_conditiva | kulturformen_erlaubt | nur `schnitt` belegt; babyleaf nur aus MDPI-Studie |
+| beta_vulgaris_conditiva | Saatempfehlung babyleaf, schnitt | D |
+
+## Runde 6 (12.11.2026, letzte Pflichtlücken)
+
+### Suchweg
+
+- Mangold: «hydroponic swiss chard seedlings transplant days rockwool pH EC»; Lettuce Grow «Bright Lights Swiss Chard» (HTTP 429); Tower Garden «Growing a top superfood: Swiss chard» (HTTP 403); AeroGarden-FAQ (keine Artangaben); «Swiss chard … were transplanted … days after sowing»; ASHS-Kongressabstract 2010 Paper 3740 (NFT, Steinwolle, «two-week old seedlings»; Server HTTP 503, daher nicht wörtlich geprüft); HortScience 60(6) S. 967 (erneut HTTP 403); Journal of Horticultural Research 27(1) 2019 (Volltext gelesen); Cornell GPN 2016 erneut auf Anzucht-Lösung geprüft; CAFRE «Hydroponic production of leafy salads and herbs», Appendix 2 (S. 34 bis 35).
+- Randen: «beet/beetroot leaves hydroponic floating transplanted days after sowing» (nur die gesperrte MDPI-Studie agriculture-randen-babyleaf-2025).
+- Spinat: UGA C1304 erneut (kein pH); Rise-Spinat-Leitfaden (pH für die ganze Kultur); OSU HLA-6722 Table 2 erneut.
+
+### Neue Kandidaten
+
+- profilwert: Mangold anzucht.ph#1 5.5 bis 6.0 (Cornell GPN, Düngerabsatz gilt laut Sämlingsabsatz ab Tag 0, B1); Spinat anzucht.ph#1 6.0/6.5/7.0 (Rise, Angabe für die ganze Kultur, B2).
+- profilwert_offen: Mangold anzucht.ec#1 (GPN «about 1.5 mhos/cm2», Einzelwert), anzucht.dauer#3 (JOHR 2019: Saat 2.2.2017 in Steinwollwürfeln, Umsetzen 6.3.2017 bei zwei Laubblättern; Datumsangaben ab Saat, nicht umgerechnet), wachstum.dauer#4 (JOHR 2019: «harvested 30 days after transplanting», Einzelwert, Versuchsende).
+- quelle: johr-ph-modifier-blattgemuese-2019 (Klasse A, Ebbe-Flut, Gewächshaus).
+- Nicht beauftragt, nur Hinweis: JOHR 2019 nennt für die Ebbe-Flut-Phase pH 5.5 bis 6.5 und EC 1.5 bis 2.5 ds·m-1 (Mangold wachstum.ph bzw. wachstum.ec); nicht angelegt.
+
+### Verworfen
+
+- CAFRE Appendix 2 (EC, pH, Kulturzeit in Wochen für Chard): Balkendiagramm ohne Zahlen im Text; Werte nur ablesbar, nicht wörtlich zitierbar.
+- OSU HLA-6722 Table 2 für Spinat anzucht.ph: Textebene zeigt «5.5 to 6.0», die Quellenprüfung las in der Bildansicht «6.0 to 7.0» (Spalten verschoben); ohne eindeutige Stelle kein Kandidat.
+- ASHS 2010 Paper 3740: Server nicht erreichbar, Wortlaut nicht prüfbar. Tower Garden, Lettuce Grow: Abruf gesperrt. scaleandstem.pages.dev, krishijagran.com, hydrogreenspace.pages.dev: ohne erkennbare Quelle.
+- Ernteangaben 45 bis 60 Tage (Scotts, Tower Garden in Suchauszügen): ab Saat bzw. Erde, nicht verwendbar.
+
+### Lückenliste nach Runde 6
+
+| Art | Feld | Stand |
+|---|---|---|
+| beta_vulgaris_cicla | anzucht.dauer, wachstum.dauer | nur offen (neu JOHR 2019) |
+| beta_vulgaris_cicla | anzucht.ph | neu ladbar: Cornell GPN 5.5 bis 6.0 (#1) |
+| beta_vulgaris_cicla | anzucht.ec | nur offen (GPN 1.5 Einzelwert) |
+| beta_vulgaris_conditiva | anzucht.dauer, wachstum.dauer (Blatt) | kein neuer Hydroponik-Wert (D bzw. nur offen) |
+| spinacia_oleracea | anzucht.ph | neu ladbar: Rise 6.0/6.5/7.0 (#1, Angabe für die ganze Kultur) |

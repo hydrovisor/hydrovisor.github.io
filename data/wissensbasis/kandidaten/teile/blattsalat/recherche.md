@@ -120,3 +120,63 @@ Stand 12.11.2026 · Rechercheur blattsalat · Arten `lactuca_sativa` (Kulturform
 | valerianella_locusta | – | umsetzen_bis_d, standard_keimfaehigkeit, samentyp | nicht belegt |
 | valerianella_locusta | – | ak babyleaf: ernte_ab_d, ernteart | nicht belegt |
 | valerianella_locusta | – | Saatempfehlung kopf und babyleaf | keine Quelle nennt Samen je Würfel oder Zelle (Saatmenge D, Lead nach Entscheid 0018) |
+
+## Runde 3 (12.11.2026, gezielte Pflichtlücken)
+
+### Suchweg
+
+- frankiesgarten.de: Keimtabelle (Feldsalat nur Zusatztabelle ohne Keimdauer, Keimtyp «siehe Tüte»), Sitemap, Seite «EC-Wert» (kein Feldsalat); keine eigene Feldsalat-Seite gefunden.
+- Feldsalat: «lamb's lettuce/corn salad floating system pH EC», «Valerianella locusta hydroponic rockwool», «Feldsalat Hydroponik Steinwolle»; Plants 2023 (PMC) erneut auf Samen je Würfel und Anzucht-Lösung geprüft (nicht genannt).
+- Salat: «hydroponic lettuce rockwool germinate days transplant»; Alabama ANR-2954, UF/IFAS HS1488 und Rutgers «Lettuce Production» (Floating Hydroponics Greenhouse) ausgewertet.
+
+### Neue Kandidaten (alle in `profilwert_offen.csv`)
+
+| Kandidat | Wert | Quelle | Grund |
+|---|---|---|---|
+| pw.valerianella_locusta.anzucht.ph#1, wachstum.ph#2 | pH 6 | Acta Hort 242 (1989), PUR-Matten mit fliessender Lösung, Direktsaat | Einzelwert |
+| pw.valerianella_locusta.anzucht.ec#1, wachstum.ec#2 | about 1,4 mS/cm | dieselbe | Einzelwert, ec_basis unbekannt |
+| pw.lactuca_sativa.keimung.dauer#6 | 3-4 Tage | ANR-2954 Table 2 | Bereich ohne typ |
+| pw.lactuca_sativa.anzucht.dauer#6 | 2 weeks old | ANR-2954 | Wochen ab Saat, Einzelwert |
+| pw.lactuca_sativa.anzucht.dauer#7, #8 | one to three weeks; about two to three weeks old | HS1488 | Wochen ab Saat, Bereich ohne typ |
+| pw.lactuca_sativa.anzucht.dauer#9 | After 12 days | Rutgers | Tage ab Saat ohne Keimdauer derselben Quelle |
+
+Hinweis: ANR-2954 Table 2 gilt allgemein für Jungpflanzen im Gewächshaus; die Sämlinge stehen laut Abschnitt Lettuce in 1-inch Oasis-Würfeln. HS1488 nennt zudem «one to two seeds per grow cube» für Salat (nicht beauftragt, nicht angelegt).
+
+### Verworfen
+
+| Quelle | Grund |
+|---|---|
+| Hochschule Bochum, «Aussaatanleitung - Feldsalat» (THALES) | Erde und Freiland |
+| Horticulturae 11(9) 1076 (2025, Valerianella in Perlit), Biol. Life Sci. Forum 26 (Valerianella im Vertical Farm, Ebbe-Flut, Steinwolle), Iacuzzo et al. (Floating, Fe und Sulfat), J Sci Food Agric (hydroponisch vs. Erde, Feldsalat), Appl. Therm. Eng. 2014 | Volltext nicht abrufbar (403); Werte aus Suchauszügen nicht wörtlich prüfbar, daher keine Kandidaten |
+| Haifa «Hydroponic Lettuce Handbook» | Abruf gescheitert (TLS) |
+| hortamericas.com «Hydroponic Lettuce Production in Phenolic Foam» | 404 |
+| Uni Halle, Bachelorarbeit (Feldsalat) | Bot-Sperre, Inhalt nicht prüfbar |
+| scaleandstem.pages.dev, freshroot.pages.dev, plantiary.com | Seiten ohne erkennbare Quelle |
+
+### Lückenliste nach Runde 3 (Klasse D)
+
+| Art | Phase | Grösse oder Feld | Bemerkung |
+|---|---|---|---|
+| valerianella_locusta | keimung | dauer, keimart | weiter kein Hydroponik-Wert |
+| valerianella_locusta | anzucht | ph, ec | nur offen (Einzelwerte Acta Hort 242, Direktsaat ohne getrennte Anzucht) |
+| valerianella_locusta | anzucht | bbch, wechselmerkmal | keine Quelle |
+| valerianella_locusta | wachstum | ph, ec als Band | nur offen (Einzelwerte Plants 2023 und Acta Hort 242) |
+| valerianella_locusta | – | Saatempfehlung kopf, babyleaf | keine Quelle mit Samen je Würfel (Saatmenge D) |
+| lactuca_sativa | keimung | dauer mit min, typ, max | nur offen (neu ANR-2954 3-4 Tage ohne typ) |
+| lactuca_sativa | anzucht | dauer | nur offen (neu ANR-2954, HS1488, Rutgers; alle ab Saat oder in Wochen) |
+
+## Runde 6 (12.11.2026, nur Nüsslisalat keimung.dauer)
+
+### Suchweg
+
+- «mâche corn salad hydroponic days to germinate Rise Gardens/Gardyn/AeroGarden»; «Valerianella locusta hydroponic rockwool/stone wool/foam days after sowing germination»; «Feldsalat Hydroponik keimt nach Tagen Steinwolle/Anzuchtschwamm/Kratky».
+
+### Ergebnis
+
+- Kein Kandidat. Treffer nur Saatgutkataloge (Johnny's, Fedco, Renee's, Baker Creek, MIgardener: Keimdauer für Erde bzw. Freiland), scaleandstem.pages.dev (ohne erkennbare Quelle), Plants 2023 (MDPI, gesperrt; Keimdauer ohnehin nicht genannt), KTBL-Arbeitsblatt und Uni-Halle-Bachelorarbeit (bereits in Runde 3 verworfen bzw. ohne Feldsalat-Keimdauer im Auszug).
+
+### Lückenliste nach Runde 6
+
+| Art | Phase | Grösse | Stand |
+|---|---|---|---|
+| valerianella_locusta | keimung | dauer | weiter Klasse D |

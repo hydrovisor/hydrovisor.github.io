@@ -156,3 +156,96 @@ Bestehende Zeilen unverändert; nur neue Kandidaten mit der nächsten freien Num
 | anzucht bis fruchtbildung_reife | `licht_h`, `wassertemp` | Kandidaten 14 bis 16 h und 18 bis 24 °C (C) |
 | – | Artmerkmale | D: `samentyp`, `systemeignung` (keine DWC- oder Kratky-Quelle), übrige wie Tomate |
 | – | Kulturform `dauerkultur_frucht` | D: `ernte_ab_d`, `ernteintervall_d`, `kulturdauer_typisch_d`, `kulturdauer_max_d`, `entspitzen` |
+
+## Runde 3 (12.11.2026): Phasendauern Wachstum, Blüte, Fruchtbildung und Kulturform `dauerkultur_frucht`
+
+### Suchweg
+
+- frankiesgarten.de Tomaten- und Paprika-Seite erneut gelesen: Tomate nennt für Wachstum, Blüte und Frucht nur Pflanzenhöhen und Kalenderdaten (Anfang Juli bis Mitte Oktober), Druckkarte mit leeren Feldern «Erste Blüte nach: _ Tagen»; Paprika nur «Ab Tag 21 bis 35» (Umsetzen, schon Kandidat anzucht #7) und «3 bis 6 Wochen» Reife (schon offen #5). Keine neuen Werte.
+- Suche «days to first flowering» / «days after transplanting» Hydroponik Tomate und Chili, englisch und spanisch («días después del trasplante», «etapa vegetativa», Tezontle).
+- Fund Chili: Revista Mexicana de Ciencias Agrícolas 13(1) 2022, Chilhuacle negro im offenen Hydroponiksystem auf Tezontle (Gewächshaus), Phasendauern ab Umsetzen gemessen (Klasse A): Wachstum 29 Tage, Blütenknospe bis Fruchtansatz 11 Tage, Fruchtbildung 184 Tage. Alle Einzelwerte, daher `profilwert_offen.csv`.
+- Fund Tomate: CIGR Journal 27(2) 2025, NFT aus Reifenschläuchen im Folien-Gewächshaus (Klasse A): erste Blüte 43 Tage ab Saat (offen, Tage ab Saat), Erntebeginn 71 Tage nach dem Umsetzen (`ernte_ab_d` #1 in `art.csv`).
+
+### Hinweise für den Lead
+
+- Chilhuacle: Die Quelle widerspricht sich bei der Fruchtbildung (Ergebnisteil «duración de 184 días», Methodik «inició a los 41 ddt [...] finalizó a los 184 ddt»). Umsetzen bei 74 Tagen ab Saat (S. 157) und Ende der Ernte bei 184 ddt stehen in derselben Quelle; eine `kulturdauer_max_d` daraus wäre eine Rechnung, daher nicht angelegt. Die Phasen beginnen bzw. enden an der ersten Blütenknospe, nicht an der offenen Blüte.
+- CIGR 2025: Im selben Methodenabsatz steht auch «Tomatoes were harvested after 85 days from sowing»; das widerspricht 71 DAT bei einem Umsetzen nach Anzucht. Ernteende 91 DAT ist Versuchsende, keine Kulturdauer.
+
+### Verworfen
+
+- Explora: Environment and Resource 2(3) 2025, «Evaluation of yield performance of Capsicum annuum (chili) cultivated using a low-cost, sustainable hydroponic system» (erste Blüte 58 Tage, erste Frucht 82 Tage): Artikel zurückgezogen (Retraction Notice), Bezugspunkt nicht genannt.
+- Adams et al. 2001, Annals of Botany 88, «Effect of Temperature on the Growth and Development of Tomato Fruits» (Reife 95, 65, 46, 42 Tage nach Blühbeginn bei 14 bis 26 °C): Anbausystem auf der Seite nicht belegbar (nur «controlled environmental conditions»), Volltext nicht zugänglich.
+- Alabama ACES ANR-2955, MSU P2364 (Glossar), MSU P1828 (404), UT Morgan 2003, Journal of Horticultural Research 2023 (Single Truss, nur Kalenderdaten): keine Phasendauern in Tagen.
+- Revista Chapingo Serie Horticultura (Cherry-Tomate auf Tezontle, Tage bis Blüte und Reife): Server nicht erreichbar (Verbindungsabbruch), Werte nicht gelesen.
+- INIFAP-Server cienciasagricolas.inifap.gob.mx nicht erreichbar (DNS); Chilhuacle-Artikel über Dialnet gelesen.
+- University of Arizona Workshop-Modul 7 (Tomato Flowers and Fruit): PDF über 10 MB; WUR-Dissertation de Koning 1994: gescannt, ohne Text.
+- Blogs und Händlerseiten (Rise Gardens, scaleandstem, Alibaba «spice basics»): ohne Versuch und Belege.
+
+### Lückenliste nach Runde 3
+
+| Art | Phase / Feld | Stand |
+|---|---|---|
+| Tomate | `wachstum.dauer` | nur offen (#1 4 bis 6 Wochen, #2 43 Tage ab Saat) |
+| Tomate | `bluete.dauer`, `fruchtbildung_reife.dauer` | D für Tage; nur offen #1 (Wochen bzw. ohne Wert) |
+| Tomate | `ernte_ab_d` | neu #1 71 Tage (A) |
+| Tomate | `kulturdauer_typisch_d`, `kulturdauer_max_d` | D |
+| Chili | `wachstum.dauer` | nur offen (#2 29 Tage, Einzelwert) |
+| Chili | `bluete.dauer` | nur offen (#2 11 Tage, Einzelwert) |
+| Chili | `fruchtbildung_reife.dauer` | nur offen (#1 bis #6, neu #6 184 Tage) |
+| Chili | `ernte_ab_d`, `kulturdauer_typisch_d`, `kulturdauer_max_d` | D (Chilhuacle-Daten nur über Rechnung) |
+
+## Runde 4 (12.11.2026): letzte gezielte Suche Phasendauern Tomate und Chili
+
+### Suchweg
+
+- Englisch: «days after anthesis» / «days from flowering» / «weeks after pollination» / «fruit growth period» mit rockwool, perlite, NFT, DWC; «days to first flowering» «after transplanting» hydroponic (MDPI Horticulturae, Agronomy).
+- Spanisch: «días después del trasplante» mit floración, fructificación, inicio de cosecha, primer corte; Tezontle, hidroponía, jitomate, pimiento morrón, chile jalapeño/serrano/habanero.
+- Rund 15 Treffer geöffnet (PDF lokal mit eigenem Textauszug gelesen, wo WebFetch nur Binärdaten lieferte). Kein neuer Kandidat: keine Quelle mit hydroponischem Anbausystem und Phasendauer ab Phasenbeginn, die sich wörtlich belegen liess.
+
+### Verworfen
+
+- University of Kentucky «Greenhouse Tomatoes» (2018): nur «harvested two to three times per week», keine Phasendauern.
+- Advances in Horticultural Science 39(4) 2025, Cherry-Tomate Hydroponik (Perlit:Kokos) gegen Erde: keine Tage bis Blüte oder Reife.
+- Horticulturae 11 (2025) 454, Tomaten- und Paprika-Jungpflanzen im Indoor Vertical Farm: nur Anzucht (30 bzw. 40 Tage ab Saat), nicht gesucht.
+- Revista Chapingo Serie Horticultura 16(3) 2010, Pimiento morrón auf Tezontle (offenes Hydroponiksystem): nur Gesamtzyklus «de trasplante a fin de cosecha duró 110 a 120 días» (keine Phasendauer; allenfalls Kulturdauer, nicht Auftrag dieser Runde).
+- Revista Chapingo Serie Horticultura 17(2) 2011, «Fenología y rendimiento de híbridos de pimiento morrón (Capsicum annuum L.) cultivados en hidroponía» (laut Suchauszug Floración 33, Fructificación 44, Cambio de color 93, Inicio de cosecha 102 ddt): Redalyc nicht erreichbar (ECONNREFUSED), Scribd-Kopie ohne Text; Werte nicht wörtlich gelesen, daher kein Kandidat. Empfehlung: bei erreichbarem Server nachlesen, Kandidaten für Chili `wachstum`, `bluete`, `fruchtbildung_reife` wahrscheinlich (Klasse A).
+- Revista Mexicana de Ciencias Agrícolas 11(3) 2020, Fenología Chile im Gewächshaus: Substrat Torf, Perlit und «tierra de monte» (Erde), ausgeschlossen.
+- UAM Xochimilco, Servicio-social-Bericht Jitomate (2023): studentischer Bericht, Textstelle «50-60 días después de la apertura floral» im Auszug nicht auffindbar, Substrat unklar.
+- Horticultural Research (Japan) 17(3) 2018: Anbausystem nicht genannt, Abstract ohne Tageszahlen.
+- Hydro Environment «Guía de Cultivo del Jitomate» (HTTP 403), NMBU-Masterarbeit (DNS), Massey-Dissertation (über 10 MB), SARE «tomato hydroponics» und UT W844-C (Text nicht extrahierbar): nicht gelesen.
+- Blogs und Händlerseiten (Rise Gardens, scaleandstem, hydrobuilder, a-z-animals, Alibaba): ohne Versuch und Belege.
+
+### Lückenliste nach Runde 4
+
+Unverändert gegenüber Runde 3: Tomate `wachstum.dauer`, `bluete.dauer`, `fruchtbildung_reife.dauer` und Chili `wachstum.dauer`, `bluete.dauer`, `fruchtbildung_reife.dauer` ohne Kandidat in gültiger Form (nur Einträge in `profilwert_offen.csv`).
+
+## Runde 5 (12.11.2026): Phasendauern Chili (Revista Chapingo 2011) und Tomate
+
+### Suchweg
+
+- Revista Chapingo Serie Horticultura 17(2) 2011 über Redalyc (PDF 60949936002) geladen und mit eigenem Textauszug gelesen: 13 Paprika-Hybride, Gewächshaus Chapingo 2007, Umsetzen bei 67 dds in Beete mit Tropfbewässerung und Nährlösung (Substrat der Beete im Methodenteil nicht genannt, Titel «cultivados en hidroponía»). Werte ab Umsetzen (ddt): Blüte 33 (Hybride 30 bis 45), Fruchtansatz 44, Farbwechsel 93, Erntebeginn 102 (Giacomo 91, Grandísimo 117).
+- Neu Chili: `wachstum.dauer` #3 (30/33/45, `profilwert.csv`), `bluete.dauer` #3 (11 = 44 − 33, offen, Einzelwert), `fruchtbildung_reife.dauer` #7 (58 = 102 − 44, offen, Einzelwert), `ernte_ab_d` #1 (102, `art.csv`).
+- Tomate spanisch («fenología jitomate hidroponía», «días a floración», «antesis», Tezontle, Despunte), portugiesisch («dias após o transplante», «início da floração», NFT) und englisch («days after transplanting» «first flowering» hydroponic): kein Treffer mit wörtlich lesbaren Tagen ab Umsetzen bis Blüte, Fruchtansatz oder Reife im hydroponischen System.
+
+### Hinweise für den Lead
+
+- Chapingo 2011: Das Substrat der Produktionsbeete ist nicht genannt (Anzucht in Torf und Perlit 2:1); `system_quelle = substrat_inert` stützt sich auf den Titel und die Bewässerung mit Nährlösung, Methodenprüfung bitte prüfen. Die Spannweite 30 bis 45 sind Mittel einzelner Hybride (Cuadro 3, DFL 30.0 bis 45.3), der typische Wert 33 das Gesamtmittel (Text; Cuadro 3 «Media gral.» 33.4).
+- Der erste Fruchtansatz wurde entfernt («se eliminó el primer fruto»); Fruchtansatz 44 ddt bezieht sich laut Text auf «fructificación».
+
+### Verworfen
+
+- Revista Chapingo 18(2) 2012, sieben native Cherry-Tomaten auf Tezontle («días a floración», «días a madurez» des ersten Racimo): Server aramara.uan.mx nicht erreichbar (Socket geschlossen), Werte nicht gelesen.
+- Revista Chapingo 27(2) 2021 (Containervolumen und Spättransplantation, Tezontle) und 15(1) 2009 (Treppen-Dosel, Tezontle): keine Tage bis Blüte, Fruchtansatz oder Reife.
+- Revista Chapingo 31 (2025) e24011 und e25012: Feigen bzw. Text nicht extrahierbar, nicht einschlägig.
+- Semina Ciências Agrárias 2011 (Raísa in NFT): DOAJ HTTP 403; Probenahmen nur zu festen DAT.
+- Agrolink, agroportal.pt, Greenhouse Grower, UT W844-C: keine Hydroponik-Versuche oder nur allgemeine Angaben.
+
+### Lückenliste nach Runde 5
+
+| Art | Phase / Feld | Stand |
+|---|---|---|
+| Tomate | `wachstum.dauer`, `bluete.dauer`, `fruchtbildung_reife.dauer` | unverändert: nur offen, keine gültige Form (D für gültige Kandidaten) |
+| Chili | `wachstum.dauer` | neu #3 30/33/45 Tage (A) |
+| Chili | `bluete.dauer` | nur offen (#2 11, neu #3 11, Einzelwerte) |
+| Chili | `fruchtbildung_reife.dauer` | nur offen (neu #7 58, Einzelwert) |
+| Chili | `ernte_ab_d` | neu #1 102 Tage (A) |
