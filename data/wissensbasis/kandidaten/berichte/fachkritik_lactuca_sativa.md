@@ -239,3 +239,258 @@ Keine (je `zeile_id` höchstens eine Quelle).
 ## 7 Zahlen
 
 Salat: Konflikte 12 (davon 5 «nur offener Wert»), Plausibilitätsbefunde 27 (kein Verstoss gegen V3 bis V12 bei ladbaren Kandidaten; Gegenprobe-Konflikt bei Freigabe von `wachstum.ec#2`, ebenso bei «eigener Wert» aus `anzucht.ec#2` oder `wachstum.ec#3`), Lücken 23: 3 Pflichtgrössen, 2 Stammfelder, 11 Artmerkmale (dazu 1 bedingt, 1 optional), 6 Kulturform-Felder, 1 Saatempfehlung; zusätzlich 4 Prüfaufträge `licht_h` und `wassertemp` ohne Pflicht. Standardprofil: Konflikte 1 (nur offener Wert), Plausibilitätsbefunde 5, Lücken 10. Bestätigungen 2 (Salat).
+
+## 8 Runde 2 (12.11.2026)
+
+Issue #188 · Rolle Fachkritiker · Kulturformen nach Entscheid 0018: `kopf;schnitt;babyleaf`, Vorgabe `schnitt` · Grundlage: Zeilen von `lactuca_sativa` mit `status = geprueft` oder `vorgeschlagen` in `art.csv`, `profilwert.csv`, `profilwert_offen.csv`, `saatempfehlung.csv` und `saatempfehlung_offen.csv` (gibt es seit Runde 2). Die Quellen `frankiesgarten-salat-hydroponik` und `frankiesgarten-faq` stehen in `quelle.csv` auf `verworfen` nur wegen eines abweichenden Titels und gelten hier als geprüft. `ufl-hs1258-2015` steht auf `entwurf`; ihre beiden Zeilen (`kulturformen_erlaubt#1`, `kulturform_vorgabe#1`) stehen ebenfalls auf `entwurf` und zählen nicht.
+
+Geschrieben wurde nur `konflikt_id` in 23 Zeilen (11 in `profilwert.csv`, 9 in `profilwert_offen.csv`, 2 in `art.csv`, 1 in `saatempfehlung_offen.csv`); bestehende IDs blieben, Zeilen des Nüsslisalats und des Standardprofils sind nicht berührt. Gegenprobe: Salat (Schnitt) Anzucht 1.0, Wachstum 1.2; Salat (Babyleaf) Wachstum 1.0 mS/cm, jeweils als Gesamt-EC mit ECWasser 0.5 (`zuwachs` plus 0.5, `unbekannt` wie `gesamt`). Umrechnungen nur zur Prüfung.
+
+### 8.1 Konfliktliste (alle offenen Konflikte)
+
+15 Konflikte: K-salat-01 bis -12 aus Runde 1, neu K-salat-13 bis -15. «Nur offener Wert» (kein ladbarer Kandidat): K-salat-03, -07, -13, -15. K-salat-04, -06 und -10 waren in Runde 1 «nur offener Wert» und haben jetzt ladbare Kandidaten. Kein Kandidat ist bevorzugt. «neu» = Kandidat aus Runde 2. Die frankiesgarten-Quellen und `cornell-cea-lettuce-handbook` haben kein Jahr.
+
+#### K-salat-01 · Keimung · `keimtemp`
+
+| `kandidat_id` | Wert (min / typ / max) | Einheit | Basis | Quelle | Klasse | System | Umgebung | Jahr | Datei, Status, `grund` |
+|---|---|---|---|---|---|---|---|---|---|
+| `pw.lactuca_sativa.keimung.keimtemp#1` | 5 / 20 / 33 | °C | – | `sci-agric-lettuce-thermoinhibition-2003` | B1 | `keine` | `andere` | 2003 | ladbar, vorgeschlagen |
+| `pw.lactuca_sativa.keimung.keimtemp#2` | – / 20 / – | °C | – | `cornell-cea-lettuce-handbook` | B1 | `substrat_inert` | `gewaechshaus` | – | offen, «Einzelwert» |
+| `pw.lactuca_sativa.keimung.keimtemp#3` | Text «64-68 °F» | °F | – | `uky-ccd-hydroponic-lettuce-2016` | B1 | `substrat_inert` | `gewaechshaus` | 2016 | offen, «Angabe in °F, nicht umgerechnet; Bereich ohne typ» |
+| `pw.lactuca_sativa.keimung.keimtemp#4` | Text «70-75 °F» | °F | – | `utk-ufl-w844b-2019` | B1 | `substrat_inert` | `andere` | 2019 | offen, «Angabe in °F, nicht umgerechnet; Bereich ohne typ» |
+| `pw.lactuca_sativa.keimung.keimtemp#5` (neu) | – / 15 / –, Text «etwa 15 °C; über 24 °C schlechter» | °C | – | `frankiesgarten-salat-hydroponik` | C | `substrat_inert` | `indoor_led` | – | offen, «Einzelwert, kein min und max» |
+| `pw.lactuca_sativa.keimung.keimtemp#6` (neu) | 15 / – / 20 | °C | – | `frankiesgarten-keimtemperaturen` | C | `substrat_inert` | `indoor_led` | – | offen, «Bereich ohne typ» |
+
+#### K-salat-02 · Anzucht · `wechselmerkmal` (unverändert)
+
+| `kandidat_id` | Wert | Einheit | Basis | Quelle | Klasse | System | Umgebung | Jahr | Datei, Status |
+|---|---|---|---|---|---|---|---|---|---|
+| `pw.lactuca_sativa.anzucht.wechselmerkmal#1` | «Hat der Sämling drei bis vier echte Blätter?» | – | – | `cornell-gpn-leafy-greens-2016` | B1 | `dwc` | `gewaechshaus` | 2016 | ladbar, geprueft |
+| `pw.lactuca_sativa.anzucht.wechselmerkmal#2` | «Hat der Sämling drei bis fünf echte Blätter und sind Wurzeln unten am Würfel sichtbar?» | – | – | `utk-ufl-w844b-2019` | B1 | `dwc` | `andere` | 2019 | ladbar, vorgeschlagen |
+
+#### K-salat-03 · Anzucht · `dauer` · nur offener Wert (unverändert)
+
+| `kandidat_id` | Wert | Einheit | Basis | Quelle | Klasse | System | Umgebung | Jahr | Datei, Status, `grund` |
+|---|---|---|---|---|---|---|---|---|---|
+| `pw.lactuca_sativa.anzucht.dauer#4` | Text «11 Tage ab Saat inkl. Keimung» | Tage ab Saat | – | `cornell-cea-lettuce-handbook` | B1 | `substrat_inert` | `gewaechshaus` | – | offen, geprueft, «Einzelwert ab Saat inkl. Keimung» |
+
+Die neue Zeile `anzucht.dauer#5` (CTAHR, «1-3 weeks») ist verworfen und zählt nicht.
+
+#### K-salat-04 · Anzucht · `ph`
+
+| `kandidat_id` | Wert (min / typ / max) | Einheit | Basis | Quelle | Klasse | System | Umgebung | Jahr | Datei, Status, `grund` |
+|---|---|---|---|---|---|---|---|---|---|
+| `pw.lactuca_sativa.anzucht.ph#2` | – / 5.8 / – | pH | – | `cornell-cea-lettuce-handbook` | B1 | `substrat_inert` | `gewaechshaus` | – | offen, geprueft, «Einzelwert» |
+| `pw.lactuca_sativa.anzucht.ph#3` (neu) | 5.5 / 5.8 / 6.5 | pH | – | `frankiesgarten-salat-hydroponik` | C | `dwc` | `indoor_led` | – | ladbar, geprueft |
+
+#### K-salat-05 · Anzucht · `ec`
+
+| `kandidat_id` | Rohwert (min / typ / max) | Einheit | Basis | Quelle | Klasse | System | Umgebung | Jahr | Datei, Status, `grund` |
+|---|---|---|---|---|---|---|---|---|---|
+| `pw.lactuca_sativa.anzucht.ec#1` | 0.5 / – / 1.0 | mS/cm | `unbekannt` | `utk-ufl-w844b-2019` | B1 | `substrat_inert` | `andere` | 2019 | ladbar, vorgeschlagen |
+| `pw.lactuca_sativa.anzucht.ec#2` | – / 1200 / – | µS/cm | `zuwachs` | `cornell-cea-lettuce-handbook` | B1 | `substrat_inert` | `gewaechshaus` | – | offen, geprueft, «Einzelwert» |
+| `pw.lactuca_sativa.anzucht.ec#3` (neu) | 0.4 / – / 0.6 | mS/cm | `unbekannt` | `frankiesgarten-salat-hydroponik` | C | `dwc` | `indoor_led` | – | ladbar, geprueft |
+| `pw.lactuca_sativa.anzucht.ec#4` (neu) | 0.4 / – / 0.8 | mS/cm | `unbekannt` | `frankiesgarten-salat-hydroponik` | C | `dwc` | `indoor_led` | – | ladbar, geprueft |
+
+#### K-salat-06 · Anzucht · `licht_h`
+
+| `kandidat_id` | Wert (min / typ / max) | Einheit | Basis | Quelle | Klasse | System | Umgebung | Jahr | Datei, Status, `grund` |
+|---|---|---|---|---|---|---|---|---|---|
+| `pw.lactuca_sativa.anzucht.licht_h#2` | – / 24 / – | h | – | `cornell-cea-lettuce-handbook` | B1 | `substrat_inert` | `gewaechshaus` | – | offen, geprueft, «Einzelwert» |
+| `pw.lactuca_sativa.anzucht.licht_h#3` (neu) | 14 / – / 16 | h | – | `frankiesgarten-salat-hydroponik` | C | `dwc` | `indoor_led` | – | ladbar, geprueft |
+
+#### K-salat-07 · Wachstum · `dauer` · nur offener Wert
+
+| `kandidat_id` | Wert | Einheit | Bezugs-DLI | Quelle | Klasse | System | Umgebung | Jahr | Datei, Status, `grund` |
+|---|---|---|---|---|---|---|---|---|---|
+| `pw.lactuca_sativa.wachstum.dauer#1` | – / 24 / – | Tage ab Umsetzen | 17 | `cornell-gpn-leafy-greens-2016` | B1 | `dwc` | `gewaechshaus` | 2016 | offen, geprueft, «Einzelwert» |
+| `pw.lactuca_sativa.wachstum.dauer#2` | – / 48 / – | Tage ab Umsetzen | 8.5 | `cornell-gpn-leafy-greens-2016` | B1 | `dwc` | `gewaechshaus` | 2016 | offen, geprueft, «Einzelwert bei halbem DLI» |
+| `pw.lactuca_sativa.wachstum.dauer#3` | – / 24 / – | Tage ab Umsetzen | 17 | `cornell-cea-lettuce-handbook` | B1 | `dwc` | `gewaechshaus` | – | offen, geprueft, «Einzelwert» |
+| `pw.lactuca_sativa.wachstum.dauer#5` (neu) | Text «etwa 4 bis 6 Wochen im Tower» | Wochen | – | `frankiesgarten-salat-hydroponik` | C | `nft` | `indoor_led` | – | offen, geprueft, «Angabe in Wochen; Bereich ohne typ» |
+| `pw.lactuca_sativa.wachstum.dauer#6` (neu) | Text «about 4-6 weeks after transplanting» | Wochen ab Umsetzen | – | `ctahr-vc-1-2010` | B1 | `kratky` | `andere` | 2010 | offen, geprueft, «Angabe in Wochen; Bereich ohne typ» |
+
+#### K-salat-08 · Wachstum · `ph`
+
+| `kandidat_id` | Wert (min / typ / max) | Einheit | Basis | Quelle | Klasse | System | Umgebung | Jahr | Datei, Status |
+|---|---|---|---|---|---|---|---|---|---|
+| `pw.lactuca_sativa.wachstum.ph#1` | 5.6 / 5.8 / 6.0 | pH | – | `cornell-cea-lettuce-handbook` | B1 | `dwc` | `gewaechshaus` | – | ladbar, vorgeschlagen |
+| `pw.lactuca_sativa.wachstum.ph#2` | 5.5 / – / 6.0 | pH | – | `cornell-gpn-leafy-greens-2016` | B1 | `dwc` | `gewaechshaus` | 2016 | ladbar, geprueft |
+| `pw.lactuca_sativa.wachstum.ph#4` (neu) | 5.5 / 5.8 / 6.5 | pH | – | `frankiesgarten-salat-hydroponik` | C | `nft` | `indoor_led` | – | ladbar, geprueft |
+| `pw.lactuca_sativa.wachstum.ph#5` (neu) | 5.5 / – / 6.5 | pH | – | `ctahr-vc-1-2010` | B1 | `kratky` | `andere` | 2010 | ladbar, geprueft |
+
+Hinweis: Entscheid 0018 hat K-salat-08 vor dem Eingang von `#4` und `#5` auf `#1` entschieden. Die neuen Kandidaten tragen dieselbe ID; ob der Entscheid bleibt, ist offen.
+
+#### K-salat-09 · Wachstum · `ec`
+
+| `kandidat_id` | Rohwert (min / typ / max) | Einheit | Basis | Quelle | Klasse | System | Umgebung | Jahr | Datei, Status, `grund` |
+|---|---|---|---|---|---|---|---|---|---|
+| `pw.lactuca_sativa.wachstum.ec#2` | 1.5 / – / 2.0 | mS/cm | `unbekannt` | `utk-ufl-w844b-2019` | B1 | `dwc` | `andere` | 2019 | ladbar, vorgeschlagen |
+| `pw.lactuca_sativa.wachstum.ec#3` | 1150 / – / 1250 | µS/cm | `zuwachs` | `cornell-cea-lettuce-handbook` | B1 | `dwc` | `gewaechshaus` | – | offen, geprueft, «EC-Band 0.1 breit (unter 0.2)» |
+| `pw.lactuca_sativa.wachstum.ec#4` | – / 1.3 / – | mS/cm (Quelle dS/m) | `unbekannt` | `purdue-ho-309-2020` | B1 | `nft` | `andere` | 2020 | offen, geprueft, «Einzelwert» |
+| `pw.lactuca_sativa.wachstum.ec#6` (neu) | 1.0 / – / 1.3 | mS/cm | `unbekannt` | `frankiesgarten-salat-hydroponik` | C | `nft` | `indoor_led` | – | ladbar, geprueft |
+| `pw.lactuca_sativa.wachstum.ec#7` (neu) | 1.2 / – / 1.5 | mS/cm | `gesamt` | `ctahr-vc-1-2010` | B1 | `kratky` | `andere` | 2010 | ladbar, geprueft |
+| `pw.lactuca_sativa.wachstum.ec#8` (neu) | 1.6 / – / 2.0 | mS/cm | `gesamt` | `ctahr-vc-1-2010` | B1 | `kratky` | `andere` | 2010 | ladbar, geprueft |
+| `pw.lactuca_sativa.wachstum.ec#9` (neu) | 1.1 / – / 1.2 | mS/cm | `unbekannt` | `frankiesgarten-faq` | C | `keine` | `indoor_led` | – | offen, geprueft, «EC-Band 0.1 breit (unter 0.2)» |
+| `pw.lactuca_sativa.wachstum.ec#10` (neu) | 1 / 1.5 / 2.5 | mS/cm | `gesamt` | `ctahr-vc-1-2010` | B1 | `kratky` | `andere` | 2010 | offen, geprueft, «EC-Band 1.5 breit (über 1.2); max über 2.0» |
+| `pw.lactuca_sativa.wachstum.ec#11` (neu) | – / 1.2 / –, Text «ausgewachsen höchstens 1.6» | mS/cm | `unbekannt` | `frankiesgarten-faq` | C | `keine` | `indoor_led` | – | offen, geprueft, «Einzelwert je Stufe, kein min» |
+
+#### K-salat-10 · Wachstum · `wassertemp`
+
+| `kandidat_id` | Wert (min / typ / max) | Einheit | Basis | Quelle | Klasse | System | Umgebung | Jahr | Datei, Status, `grund` |
+|---|---|---|---|---|---|---|---|---|---|
+| `pw.lactuca_sativa.wachstum.wassertemp#1` | Text «nicht über 25 °C, kühlen bei 26 °C, heizen bei 24 °C» | °C | – | `cornell-cea-lettuce-handbook` | B1 | `dwc` | `gewaechshaus` | – | offen, geprueft, «Stellwerte, kein wörtlicher Bereich min bis max» |
+| `pw.lactuca_sativa.wachstum.wassertemp#2` (neu) | 18 / – / 22 | °C | – | `frankiesgarten-salat-hydroponik` | C | `nft` | `indoor_led` | – | ladbar, geprueft |
+| `pw.lactuca_sativa.wachstum.wassertemp#3` (neu) | 18 / – / 22 | °C | – | `frankiesgarten-faq` | C | `keine` | `indoor_led` | – | ladbar, geprueft |
+
+#### K-salat-11 · Artmerkmal · `umsetzen_ab_d` (unverändert)
+
+| `kandidat_id` | Wert | Einheit | Basis | Quelle | Klasse | System (Anbaumethode der Quelle) | Umgebung | Jahr | Status |
+|---|---|---|---|---|---|---|---|---|---|
+| `art.lactuca_sativa.umsetzen_ab_d#1` | 12 | Tage ab Saat | – | `utk-ufl-w844b-2019` | B1 | `dwc` | – | 2019 | vorgeschlagen |
+| `art.lactuca_sativa.umsetzen_ab_d#2` | 11 | Tage ab Saat | – | `cornell-cea-lettuce-handbook` | B1 | `dwc` | – | – | geprueft |
+
+#### K-salat-12 · Artmerkmal · `umsetzen_bis_d` (unverändert)
+
+| `kandidat_id` | Wert | Einheit | Basis | Quelle | Klasse | System (Anbaumethode der Quelle) | Umgebung | Jahr | Status |
+|---|---|---|---|---|---|---|---|---|---|
+| `art.lactuca_sativa.umsetzen_bis_d#1` | 18 | Tage ab Saat | – | `utk-ufl-w844b-2019` | B1 | `dwc` | – | 2019 | vorgeschlagen |
+| `art.lactuca_sativa.umsetzen_bis_d#2` | 22 | Tage ab Saat (bei halbem DLI) | – | `cornell-gpn-leafy-greens-2016` | B1 | `dwc` | – | 2016 | geprueft |
+
+#### K-salat-13 · Keimung · `dauer` · nur offener Wert (neu)
+
+| `kandidat_id` | Wert (min / typ / max) | Einheit | Basis | Quelle | Klasse | System | Umgebung | Jahr | Datei, Status, `grund` |
+|---|---|---|---|---|---|---|---|---|---|
+| `pw.lactuca_sativa.keimung.dauer#3` | – / 3 / –, Text «etwa 3 Tage» | Tage | – | `frankiesgarten-salat-hydroponik` | C | `substrat_inert` | `indoor_led` | – | offen, geprueft, «Einzelwert («etwa 3 Tage»), kein min und max» |
+| `pw.lactuca_sativa.keimung.dauer#5` | – / 3 / –, Text «etwa 3 Tage (gemessen bei 21 bis 23 °C)» | Tage | – | `frankiesgarten-keimtemperaturen` | C | `substrat_inert` | `indoor_led` | – | offen, geprueft, «Einzelwert («etwa 3 Tage»), kein min und max» |
+
+Gleiche Zahl, aber kein ladbarer Kandidat; die übrigen Keimdauer-Zeilen (`#1`, `#2`, `#4`) sind verworfen.
+
+#### K-salat-14 · Artmerkmal · `systemeignung` (neu)
+
+| `kandidat_id` | Wert | Einheit | Basis | Quelle | Klasse | System (Anbaumethode der Quelle) | Umgebung | Jahr | Status |
+|---|---|---|---|---|---|---|---|---|---|
+| `art.lactuca_sativa.systemeignung#1` | `kratky` | – | – | `ctahr-vc-1-2010` | B1 | `kratky` | – | 2010 | geprueft |
+| `art.lactuca_sativa.systemeignung#2` | `dwc` | – | – | `cornell-gpn-leafy-greens-2016` | B1 | `dwc` | – | 2016 | geprueft |
+
+#### K-salat-15 · Saatempfehlung `babyleaf` · nur offener Wert (neu)
+
+| `kandidat_id` | Wert (Samen je Schwamm / Obergrenze / stehen lassen) | Einheit | Basis | Quelle | Klasse Saatmenge | System (Anbaumethode der Quelle) | Umgebung | Jahr | Datei, Status, `grund` |
+|---|---|---|---|---|---|---|---|---|---|
+| `se.lactuca_sativa.babyleaf#1` | 6 / 12 / – | Samen | – | `cornell-gpn-leafy-greens-2016` | C | `dwc` | – | 2016 | `saatempfehlung_offen.csv`, geprueft, «Bereich 6 bis 12 je nach Kultur, nicht artbezogen; pflanzen_stehen_lassen nicht genannt» |
+
+### 8.2 Plausibilität Runde 2
+
+Die Befunde P1 bis P27 gelten weiter mit drei Ausnahmen: P8 ist überholt (`anzucht.ph#3` ist ladbar), P13 ebenso (Licht ist jetzt auf Ebene Art belegt) und P19 ist erledigt (`bluete.anwendbar#3` und `fruchtbildung_reife.anwendbar#3`, `entfaellt`, geprüft, Fundstelle der Art nach Annahme 2). P9, P24 und P27 bleiben offen.
+
+| Nr. | `kandidat_id` | Regel | Wert | Befund |
+|---|---|---|---|---|
+| P28 | `pw.lactuca_sativa.anzucht.ec#3` | V4, V5, Gegenprobe | 0.4 – 0.6 mS/cm, `unbekannt` | Untergrenze genau 0.4 und Bandbreite genau 0.2, also knapp zulässig; die Mitte 0.5 liegt 0.5 unter der Vergleichs-EC 1.0, bei Freigabe also ein Gegenprobe-Konflikt. |
+| P29 | `pw.lactuca_sativa.anzucht.ec#4` | V4, V5, Gegenprobe | 0.4 – 0.8 mS/cm, `unbekannt` | Zulässig (Bandbreite 0.4); die Mitte 0.6 liegt genau 0.4 unter 1.0 und damit noch nicht «mehr als 0.4» daneben, also auf der Grenze. |
+| P30 | `pw.lactuca_sativa.anzucht.ec#3`, `wachstum.ec#6` | Phase, System | Zeilen «Keimblätter offen» und «Kräftige Pflanze» | Beide stammen aus derselben Dünge-Tabelle im Abschnitt «2 Anzucht in der Station», tragen aber verschiedene Phasen und Systeme (`anzucht`/`dwc` und `wachstum`/`nft`); dass «Kräftige Pflanze» zur Phase Wachstum gehört, steht nicht in der Fundstelle. |
+| P31 | `pw.lactuca_sativa.wachstum.ec#6` | V4, V5, Gegenprobe | 1.0 – 1.3 mS/cm, `unbekannt` | Zulässig (Bandbreite 0.3); die Mitte 1.15 liegt 0.05 von 1.2 (Schnitt) und 0.15 von 1.0 (Babyleaf) entfernt, also kein Gegenprobe-Konflikt. |
+| P32 | `pw.lactuca_sativa.wachstum.ec#7` | V4, V5, Gegenprobe | 1.2 – 1.5 mS/cm, `gesamt` | Zulässig (Bandbreite 0.3); die Mitte 1.35 liegt 0.15 bzw. 0.35 von den Vergleichswerten entfernt, aber die Quelle nennt den Wert nur für «hot weather», und diese Bedingung steht nicht in der Zeile. |
+| P33 | `pw.lactuca_sativa.wachstum.ec#8` | V4, Gegenprobe | 1.6 – 2.0 mS/cm, `gesamt` | Obergrenze genau `ec_obergrenze_validator` 2.0; die Mitte 1.8 liegt 0.6 über 1.2 (Schnitt) und 0.8 über 1.0 (Babyleaf), bei Freigabe also ein Gegenprobe-Konflikt; die Quelle nennt den Wert nur für «cool weather». |
+| P34 | `pw.lactuca_sativa.wachstum.ec#7`, `#8`, `#10` | Herkunft | CTAHR S. 11 | Alle drei stammen aus demselben Abschnitt einer Kratky-Quelle mit Wetterbedingung (heiss, kühl, Spanne); für das Indoor-Regal ohne Wetter ist keine der Bedingungen in den Zeilen vermerkt. |
+| P35 | `pw.lactuca_sativa.wachstum.ec#9` | V5 | 1.1 – 1.2 mS/cm, `unbekannt` | Bandbreite 0.1 unter 0.2 (deshalb offen); die Mitte 1.15 liegt nahe bei 1.2; die Quelle bezieht den Wert auf ausgewachsenen Salat «bei weichem Wasser». |
+| P36 | `pw.lactuca_sativa.wachstum.ec#10` | V4, V5 | 1 / 1.5 / 2.5 mS/cm, `gesamt` | Doppelt nicht ladbar: max 2.5 über 2.0 und Bandbreite 1.5 über 1.2; typ 1.5 läge 0.3 über 1.2. |
+| P37 | `pw.lactuca_sativa.wachstum.ec#11` | Gegenprobe, Stufen | typ 1.2, Text «ausgewachsen höchstens 1.6» | typ entspricht genau der Vergleichs-EC 1.2; das Kurzzitat nennt vier Stufen (Anzucht 0.4, Jungpflanze 0.8, Wachstum 1.2, ausgewachsen höchstens 1.6), von denen nur die Stufe Wachstum als Kandidat erfasst ist. |
+| P38 | K-salat-09 gesamt | Gegenprobe, Kulturform | Schnitt 1.2, Babyleaf 1.0 | `profilwert` gilt je Art, die Gegenprobe-Tabelle trennt aber Salat (Schnitt) und Salat (Babyleaf); mit Vorgabe `schnitt` gelten 1.2 und 1.0, und gegen Babyleaf 1.0 verfehlen `#2` (1.75), `#8` (1.8) und `#3` als Gesamt-EC (1.7) die Grenze von 0.4. |
+| P39 | `pw.lactuca_sativa.anzucht.ph#3`, `wachstum.ph#4` | V3, V5, Phasenbezug | 5.5 / 5.8 / 6.5 | Zulässig (Bandbreite 1.0, typ im Band); die Fundstelle ist die Zeile pH der Übersichtstabelle, die «für alle Stadien» gilt, also nicht phasenbezogen, und dieselbe Zeile trägt einmal `dwc`, einmal `nft`. |
+| P40 | `pw.lactuca_sativa.wachstum.ph#1`, `#2`, `#4`, `#5` | V3, V5, Quervergleich | 5.6–6.0; 5.5–6.0; 5.5–6.5; 5.5–6.5 | Alle in 5.2 bis 7.0 mit Bandbreite 0.4 bis 1.0; die gemeinsame Schnittmenge ist 5.6 – 6.0 (Breite 0.4); 6.5 liegt über dem Standardprofil 5.5 – 6.2, Nüsslisalat typ 5.6 (offen) liegt in allen vier Bändern. |
+| P41 | `pw.lactuca_sativa.anzucht.ph#2`, `#3` | Quervergleich | typ 5.8; 5.5 / 5.8 / 6.5 | Gleiches typ; kein inhaltlicher Widerspruch, `#2` ist nur wegen der Form offen. |
+| P42 | `pw.lactuca_sativa.anzucht.licht_h#2`, `#3` | V7, Inhalt | 24 h; 14 – 16 h | Beide in 0 bis 24, inhaltlich aber gegensätzlich: Cornell fährt Dauerlicht, frankiesgarten nennt 16 h als Höchstwert («aber nie länger»). |
+| P43 | `pw.lactuca_sativa.wachstum.licht_h#2`, `wachstum.wassertemp#3`, `wachstum.ec#9`, `#11` | 9.1, Artbezug | `system_quelle = keine` | Die FAQ ist eine Hydroponik-Seite, nennt aber kein System; 9.1 verlangt für Licht, Wassertemperatur und EC eine hydroponische Quelle, und `licht_h#2` gilt laut Kurzzitat «egal ob Salat, Kräuter oder Fruchtgemüse», ist also nicht artspezifisch. |
+| P44 | `pw.lactuca_sativa.anzucht.wassertemp#1`, `wachstum.wassertemp#2`, `#3` | V7, Quervergleich | 18 – 22 °C | Zulässig (in 10 bis 28); liegt unter den Cornell-Stellwerten 24 bis 26 °C (`wassertemp#1`, offen) und unter dem offenen Standardwert 22.2 – 23.9 °C (K-standard-01); der Zusatz «bis 24 °C noch in Ordnung» steht nicht im Band. |
+| P45 | `pw.lactuca_sativa.keimung.keimtemp#5`, `#6` | 4.4.1, Quervergleich | typ 15 °C; 15 – 20 °C | Kein Validator-Grenzwert; `#6` überschneidet sich mit `#3` (17.8 – 20.0 °C) und enthält typ 20 von `#1` und `#2`; `#5` (15 °C) liegt unter allen anderen typ-Werten; die Warnung «über 24 °C schlechter, über 25 °C oft gar nicht» passt zur Thermoinhibition aus `#1`; Nüsslisalat 15 – 18 °C (frankiesgarten) liegt ähnlich. |
+| P46 | `pw.lactuca_sativa.keimung.dauer#3`, `#5` | V6, Bezugspunkt, Unabhängigkeit | typ 3 Tage | V6 nicht prüfbar (nur typ); beide Quellen sind Seiten desselben Betreibers und damit nicht unabhängig; `#5` ist bei 21 bis 23 °C gemessen, über der Keimtemperatur 15 – 20 °C derselben Quelle (`keimtemp#6`); ob «Keimdauer» das Auflaufen (BBCH 09) oder das Ende der Phase (BBCH 10, `keimung.wechselmerkmal#1`) meint, steht nicht in der Zeile. |
+| P47 | K-salat-13, K-salat-03, K-salat-11 | Konsistenz | 3; 11 ab Saat; 11 / 12 | Keimung 3 Tage plus Anzucht bis Umsetzen an Tag 11 oder 12 ergäbe 8 bis 9 Tage Anzucht; die Zahlen widersprechen sich nicht, stammen aber aus verschiedenen Quellen und Umgebungen (`indoor_led` gegen `gewaechshaus`). |
+| P48 | `pw.lactuca_sativa.wachstum.dauer#5`, `#6` | 9.2 (Bezugspunkt), Kulturform | 4 bis 6 Wochen | Umgerechnet 28 bis 42 Tage ab Umsetzen, zwischen Cornell typ 24 (DLI 17) und 48 (halbes DLI); `#6` gilt für Blatt- und Halbkopfsalat ab Umsetzen, `#5` ab Umsetzen in den Tower nach der Anzucht in der Station, deren Ende als Phasenbeginn nicht belegt ist (vgl. P30). |
+| P49 | `art.lactuca_sativa.systemeignung#1`, `#2` (K-salat-14) | 4.3.2, Fundstelle | `kratky`; `dwc` | Beide Werte sind gültig; die Cornell-Fundstelle nennt DWC und NFT für «leafy greens» allgemein, nicht für Salat allein; ein Kandidat `beide` liegt nicht vor. |
+| P50 | `art.lactuca_sativa.kulturformen_erlaubt#2` | Entscheid 0018, V11 | `kopf;babyleaf` | Der einzige geprüfte Kandidat enthält `schnitt` nicht (Fundstelle: «Schnitt nicht genannt»); Kandidaten mit `schnitt` (`kulturformen_erlaubt#1`) und die Vorgabe `schnitt` (`kulturform_vorgabe#1`) stehen auf `entwurf`; wird nur `#2` freigegeben, bricht eine Vorgabe `schnitt` V11, und die Zeilen `ak.lactuca_sativa.schnitt.*` und `se.lactuca_sativa.schnitt` gehörten zu einer nicht erlaubten Form; die Nutzung als Schnittsalat belegen `ak.lactuca_sativa.schnitt.ernteart#1` (A) und `#2` (C). |
+| P51 | `ak.lactuca_sativa.kopf.ernte_ab_d#1`, `kulturdauer_typisch_d#1`, `umsetzen_ab_d#2` | Konsistenz | 24 ab Umsetzen; 35 ab Saat; 11 | 11 + 24 = 35, die Kopf-Felder sind untereinander und mit Cornell stimmig; `ernteart` `einmalig` passt; V11 bei `kopf` ohne Befund. |
+| P52 | `se.lactuca_sativa.kopf#1`, `se.lactuca_sativa.schnitt#3` | R12.3 | 1 / 2 / 1, Klasse B bzw. C | Gleiche Quelle, gleicher Satz, gleiche Zahlen; Klasse B für Kopf und C für Schnitt (Analogie über Pflücksalat) sind folgerichtig; Obergrenze 2 ≥ 1 Samen, 1 Pflanze stehen lassen, formal ohne Befund. |
+| P53 | `se.lactuca_sativa.babyleaf#1` | R12.3, Methodenprüfung | 6 / 12 / – | Die Zahl gilt laut Kurzzitat «depending on crop» für mehrere Kulturen, nicht für Salat; die Passung nennt 1-Zoll-Zellen aus Steinwolle oder Oasis, während die Babyleaf-Zeilen `ak.lactuca_sativa.babyleaf.*` derselben Quelle und desselben Abschnitts verworfen sind, weil die Versuche in Torf/Perlit- oder Kokos-Schalen liefen; die beiden Prüfungen widersprechen sich. |
+| P54 | `q.frankiesgarten-salat-hydroponik`, `q.frankiesgarten-faq`, `q.frankiesgarten-keimtemperaturen` | 9.3 Regel (2) | `jahr` leer | Ohne Jahr ist «jüngere vor älterer Quelle» in K-salat-01, -04 bis -10 und -13 für diese Kandidaten nicht anwendbar; die Quellenklasse `praxis` und Klasse C entsprechen Entscheid 0018 Punkt 5. |
+| P55 | `art.lactuca_sativa.name_de#1`, `kulturgruppe_id#1` | 4.3 (Stammfelder) | `Salat`; `blattsalat` | Beide verworfen, weil GBIF den Wert nicht nennt; 4.3 verlangt als Herkunft der Stammfelder die GBIF-Seite, `name_de` folgt aber aus `sorten.csv` und `kulturgruppe_id` aus 4.2.1, also kann keine GBIF-Fundstelle den Wert wörtlich tragen (Hinweis an den Koordinator, gilt ebenso für Nüsslisalat). |
+
+Ohne Befund: V8, V10, V12 für alle neuen Zeilen; `keimung.keimart#1` bis `#3` (`licht`); `keimung.licht_h#2` (14 – 16 h, V7); `bluete.anwendbar#3`, `fruchtbildung_reife.anwendbar#3` (`entfaellt` nach R1.1). Weiterhin keine ladbare Dauer, V6 entfällt.
+
+### 8.3 Lückenliste nach Pflichtgrössen
+
+#### 8.3.1 Pflichtgrössen (03_import_w0.md 9)
+
+| Phase | Grösse | Stand |
+|---|---|---|
+| `keimung` | `anwendbar`, `bbch`, `keimart`, `keimtemp`, `wechselmerkmal` | belegt (ladbar) |
+| `keimung` | `dauer` | nur offen (K-salat-13) |
+| `anzucht` | `anwendbar`, `bbch`, `wechselmerkmal` (K-salat-02), `ph` (K-salat-04), `ec` (K-salat-05) | belegt (ladbar) |
+| `anzucht` | `dauer` | nur offen (K-salat-03) |
+| `wachstum` | `anwendbar`, `bbch`, `ph` (K-salat-08), `ec` (K-salat-09) | belegt (ladbar); `wechselmerkmal` entfällt als letzte anwendbare Phase |
+| `wachstum` | `dauer` | nur offen (K-salat-07) |
+| `bluete`, `fruchtbildung_reife` | `anwendbar` | belegt (`entfaellt`), keine weiteren Pflichtgrössen |
+
+Lücken der Klasse D bei Pflichtgrössen: keine. Alle drei `dauer`-Zeilen haben nur offene Kandidaten; bis zu einem Entscheid lädt der Seed Kulturform-Felder, Saatempfehlung und `profilwert` der Art nicht (03_import_w0.md 8 Punkt 4), und der Kulturgruppe `blattsalat` fehlen die Mindestzeilen `dauer` der Leitkultur (4.4.2, V13).
+
+#### 8.3.2 Keine Pflichtgrösse, Prüfauftrag nach R1.4
+
+| Art | Phase | Grösse |
+|---|---|---|
+| `lactuca_sativa` | `keimung` | `wassertemp` |
+
+#### 8.3.3 Stammfelder und Artmerkmale (4.3.2)
+
+Belegt: `name_wiss`, `gbif_key`, `wuchsform`, `pflanzen_je_m2`, `liter_je_pflanze`, `umsetzen_ab_d` (K-salat-11), `umsetzen_bis_d` (K-salat-12), `systemeignung` (K-salat-14), `kulturformen_erlaubt` (nur `kopf;babyleaf`, P50).
+
+| Art | Feld | Hinweis |
+|---|---|---|
+| `lactuca_sativa` | `name_de` | Stammfeld, Kandidat verworfen (P55) |
+| `lactuca_sativa` | `kulturgruppe_id` | Stammfeld, Kandidat verworfen (P55) |
+| `lactuca_sativa` | `kulturformen_erlaubt`, Teil `schnitt` | kein geprüfter Kandidat mit `schnitt` (P50) |
+| `lactuca_sativa` | `kulturform_vorgabe` | nur `entwurf` (Quelle `ufl-hs1258-2015` ebenfalls `entwurf`) |
+| `lactuca_sativa` | `samentyp` | |
+| `lactuca_sativa` | `standard_keimfaehigkeit` | Leitkultur, wird an neue Arten der Gruppe vererbt (4.4.2) |
+| `lactuca_sativa` | `wasserbedarf_je_pflanze_l` | |
+| `lactuca_sativa` | `wuchshoehe_max_mm` | |
+| `lactuca_sativa` | `photoperiode` | |
+| `lactuca_sativa` | `bestaeubung_noetig` | |
+| `lactuca_sativa` | `pythium` | |
+| `lactuca_sativa` | `schossen_handlung` | |
+| `lactuca_sativa` | `kritische_tageslaenge_h` | bedingt, nur bei `langtag` oder `kurztag` |
+| `lactuca_sativa` | `aussaatfenster_outdoor` | optional |
+
+`keimlinge_je_knaeuel` entfällt (keine Knäuelsaat).
+
+#### 8.3.4 Kulturform-Felder je erlaubter Kulturform (4.3.3)
+
+Alle drei Formen aus Entscheid 0018 haben mindestens eine belegte Quelle (`kopf` und `babyleaf` über `kulturformen_erlaubt#2`, `schnitt` über `ak.lactuca_sativa.schnitt.ernteart#1` und `#2`); keine Form entfällt mangels Quelle, die Aufnahme von `schnitt` in die Liste ist aber nicht belegt (P50).
+
+| Art | Kulturform | Vorhanden | Fehlt |
+|---|---|---|---|
+| `lactuca_sativa` | `kopf` | `ernteart` (`einmalig`), `ernte_ab_d` (24), `kulturdauer_typisch_d` (35) | `kulturdauer_max_d`, `entspitzen` |
+| `lactuca_sativa` | `schnitt` | `ernteart` (`mehrfach`, zwei Quellen) | `ernte_ab_d`, `ernteintervall_d`, `schnitte_max`, `kulturdauer_max_d`, `kulturdauer_typisch_d`, `entspitzen` |
+| `lactuca_sativa` | `babyleaf` | – (`ernte_ab_d#1` und `kulturdauer_typisch_d#1` verworfen) | `ernteart`, `ernte_ab_d`, `kulturdauer_max_d`, `kulturdauer_typisch_d`, `entspitzen`; `ernteintervall_d` und `schnitte_max` nur bei `mehrfach` |
+
+#### 8.3.5 Saatempfehlungen je erlaubter Kulturform
+
+| Art | Kulturform | Stand |
+|---|---|---|
+| `lactuca_sativa` | `kopf` | belegt: `se.lactuca_sativa.kopf#1` (1 / 2 / 1, Klasse B) |
+| `lactuca_sativa` | `schnitt` | belegt: `se.lactuca_sativa.schnitt#3` (1 / 2 / 1, Klasse C) |
+| `lactuca_sativa` | `babyleaf` | nur offen (K-salat-15); ohne Entscheid Klasse D nach Entscheid 0018 Punkt 4 |
+
+### 8.4 Bestätigungen Runde 2
+
+| `zeile_id` | Wert | Kandidaten |
+|---|---|---|
+| `pw.lactuca_sativa.keimung.keimart` | `licht` | `#1` (`uky-ccd-hydroponic-lettuce-2016`, B1), `#2` (`frankiesgarten-salat-hydroponik`, C), `#3` (`frankiesgarten-keimtemperaturen`, C); kein Konflikt |
+| `pw.lactuca_sativa.keimung.dauer` | typ 3 Tage | `#3` und `#5`, beide offen und von frankiesgarten (K-salat-13) |
+| `pw.lactuca_sativa.wachstum.ph` | 5.5 – 6.5 | `#4` (`frankiesgarten-salat-hydroponik`, C, mit typ 5.8) und `#5` (`ctahr-vc-1-2010`, B1), im Konflikt K-salat-08 |
+| `pw.lactuca_sativa.wachstum.licht_h` | 14 – 16 h | `#1` (`frankiesgarten-salat-hydroponik`) und `#2` (`frankiesgarten-faq`), gleicher Betreiber; kein Konflikt |
+| `pw.lactuca_sativa.wachstum.wassertemp` | 18 – 22 °C | `#2` (`frankiesgarten-salat-hydroponik`) und `#3` (`frankiesgarten-faq`), gleicher Betreiber, im Konflikt K-salat-10 |
+| `pw.lactuca_sativa.wachstum.dauer` | 4 bis 6 Wochen | `#5` (frankiesgarten, C) und `#6` (CTAHR, B1), beide offen (K-salat-07); dazu aus Runde 1 typ 24 Tage `#1` und `#3` |
+| `pw.lactuca_sativa.keimung.keimtemp` | typ 20 °C | `#1` und `#2` aus Runde 1 (K-salat-01) |
+| `ak.lactuca_sativa.schnitt.ernteart` | `mehrfach` | `#1` (`agronomy-lettuce-sequential-harvest-2021`, A) und `#2` (`frankiesgarten-salat-hydroponik`, C); kein Konflikt |
+
+### 8.5 Zahlen Runde 2
+
+Konflikte 15 offen (12 aus Runde 1, davon 8 mit neuen Kandidaten: -01, -04 bis -10; neu 3), davon 4 «nur offener Wert» (K-salat-03, -07, -13, -15). Plausibilitätsbefunde 28 neu (P28 bis P55); Gegenprobe-Konflikt bei Freigabe von `anzucht.ec#3`, `wachstum.ec#2` und `wachstum.ec#8`, `anzucht.ec#4` genau auf der Grenze. Lücken 26: Pflichtgrössen Klasse D keine (aber 3 `dauer` nur offen), 2 Stammfelder, 10 Artmerkmale (inklusive `schnitt` in `kulturformen_erlaubt` und `kulturform_vorgabe`; dazu 1 bedingt, 1 optional), 13 Kulturform-Felder (`kopf` 2, `schnitt` 6, `babyleaf` 5), 1 Prüfauftrag ohne Pflicht (`keimung.wassertemp`); Saatempfehlungen ohne Klasse-D-Lücke, `babyleaf` nur offen. Bestätigungen 8.

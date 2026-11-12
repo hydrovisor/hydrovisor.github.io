@@ -1,5 +1,5 @@
-// W178-AK1 [SQL] (Issue #178, Entscheid 0017): Der scharfe Seed mit dem heutigen Stand des Repositorys (ohne
-// W0-Dateien unter data/wissensbasis/freigegeben/) lädt genau die Seed-Konstanten: ein Messgerät, eine Zeile
+// W178-AK1 [SQL] (Issue #178, Entscheid 0017): Der scharfe Seed mit dem Stand des Repositorys ohne die
+// W0-Dateien unter data/wissensbasis/freigegeben/ (seit #188 im Test ausgeblendet) lädt genau die Seed-Konstanten: ein Messgerät, eine Zeile
 // einstellung mit den festen Kalibrierterminen, keine Art und keine Sorte; ein zweiter Lauf ändert nichts. Gegen die
 // lokale Datenbank (supabase start) wie tests/seed/inbetriebnahme.test.ts; jeder Test endet mit rollback.
 import { fileURLToPath } from 'node:url';
@@ -36,8 +36,12 @@ async function inTransaktion(f: (tx: Db) => Promise<void>): Promise<void> {
 
 /** Seed wie deploy.yml mit seed_scharf: Dateien aus dem Repository, kein --trocken, keine Gesamtfreigabe */
 async function seedScharf(tx: Db, commit: string): Promise<void> {
-  const { dateien, verstoesse } = dateienLesen(WURZEL);
+  const { dateien: alle, verstoesse } = dateienLesen(WURZEL);
   expect(verstoesse).toEqual([]);
+  // Seit #188 liegt W0 unter freigegeben/; der Fall «ohne W0» blendet diese Dateien aus (Sorten bleiben, laden aber ohne Art nicht)
+  const dateien = Object.fromEntries(
+    Object.entries(alle).filter(([pfad]) => !pfad.startsWith('data/wissensbasis/freigegeben/')),
+  ) as typeof alle;
   const plan = ladeplan(dateien, artAuswahl(dateien, seedKonstanten.pflichtgroessen), seedKonstanten);
   const seed = ladeskript(plan, { jetzt: JETZT, commit, gesamtfreigabe: false, trocken: false });
   await tx.unsafe(seed.vorbereitung);

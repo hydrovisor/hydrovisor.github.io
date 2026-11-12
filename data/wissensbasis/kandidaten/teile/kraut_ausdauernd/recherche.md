@@ -66,3 +66,132 @@ Stand 12.11.2026 · Rechercheur kraut_ausdauernd · Arten: Petersilie (`petrosel
 | Petersilie | Saatmenge | obergrenze_samen | Quelle nennt sie nicht (Feld leer) |
 | Schnittlauch | Saatmenge | obergrenze_samen, pflanzen_stehen_lassen | Quelle nennt sie nicht (Felder leer) |
 | alle | EC | ppm ohne Faktor | kein Fall aufgetreten |
+
+## Runde 2 (12.11.2026)
+
+### Suchweg
+
+- frankiesgarten.de (Entscheid 0018, Klasse C): Seite Petersilie (Tower, Schaumstoffwürfel), Übersicht `/anleitungen/gemueseanbau/` (keine Schnittlauch-Seite, «kommt noch»; `/schnittlauch-hydroponik/` liefert 404), Tabelle Keimtemperaturen und Keimdauer (Zeilen Petersilie und Schnittlauch), Einstieg «Hydroponik für Anfänger» (pH, EC-Stufen, Licht, Wassertemperatur, Samen je Würfel), FAQ.
+- BBCH-Monografie 2001 (englisch, PDF S. 111 Bulb vegetables, S. 122 bis 123 Leaf vegetables not forming heads); Petersilie und Schnittlauch nicht namentlich, Zuordnung über Rosettenwuchs (Fussnote 1) bzw. Gattung Allium.
+- Suche «parsley chives hydroponic propagation rockwool days»: Simply Hydroponics «Hydroponic Chives» (Praxisartikel, Klasse C), Fork Farms Herb Grow Guide (Hersteller, B2), Virginia Cooperative Extension SPES-466NP (B1, Petersilie in vier Hydroponiksystemen).
+- Suche Kardinaltemperaturen Keimung Petersilie: keine Studie gefunden.
+
+### Ergebnis
+
+- Ladbar neu: Keimart beider Arten, Keimtemperatur Schnittlauch (16/21/22 °C), BBCH aller drei Phasen beider Arten, pH und EC Anzucht beider Arten, pH und EC Wachstum beider Arten (u. a. Petersilie 1.6–1.8 mS/cm B1, Schnittlauch 1.8–2.0 mS/cm C), Licht und Wassertemperatur Anzucht und Wachstum, Keimung anwendbar Schnittlauch.
+- Konflikt zu entscheiden: Keimart Petersilie `dunkel` (frankiesgarten, C) gegen `licht` (Virginia Tech, B1: «performed better when placed under light»).
+- Wassertemperatur Petersilie Anzucht: frankiesgarten nennt auf derselben Seite 18–22 °C (Anzuchtkarte) und 18–24 °C (Text); beide als Kandidaten. Kurzzitate der frankiesgarten-Seiten stammen aus einer Zusammenfassung des Abrufwerkzeugs; der Quellenprüfer ersetzt sie durch den wörtlichen Satzteil.
+
+### Verworfene Quellen (Runde 2)
+
+| Quelle | Grund |
+|---|---|
+| Virginia Tech Table 2 Wassertemperatur «66 – 79°F» | °F, Umrechnung verboten |
+| Virginia Tech Table 1 «True Leaves 28 d», «Harvest 49-84 d» | Bezugspunkt der Tage nicht genannt; Anzuchtdauer nicht ableitbar |
+| Fork Farms «6-8 weeks before … first harvest», «harvested weekly, bi-weekly» | Wochen, nicht artspezifisch; Umrechnung verboten |
+| Fork Farms «Herb seeds on average take 5-7 days to germinate» | nicht artspezifisch |
+| frankiesgarten Petersilie «2 bis 4 Wochen» Keimdauer, «alle zwei bis drei Wochen» nachsäen | Wochen |
+| frankiesgarten Einstieg «oft rund um den 21. Tag» umsetzen | allgemein für alle Pflanzen, nicht artspezifisch |
+| Simply Hydroponics «replacing plants every two years» | Jahre, Umrechnung verboten |
+| Johnny's Chives Key Growing Information (7–14 Tage bei 65–70 °F, 3–4 Sämlinge je Plug) | Erde/Anzuchtplugs, nicht hydroponisch |
+| Ball Australia Cultural Notes Chives, UC Davis Parsley, Rutgers/UMD Parsley | Freiland oder Erde |
+| scaleandstem, dripcanopy, uvammicah, hydroponics-central, agrifarming | Seiten ohne erkennbare Quelle |
+
+### Lückenliste nach Runde 2 (Klasse D oder nur offen)
+
+| Art | Phase | Grösse | Bemerkung |
+|---|---|---|---|
+| Petersilie | keimung | dauer | nur offen (etwa 7 Tage; 7–14 Tage; 14 d) |
+| Petersilie | keimung | keimtemp | nur offen (15–20 °C ohne typ) |
+| Schnittlauch | keimung | dauer | nur offen (8–10 Tage ohne typ) |
+| Petersilie, Schnittlauch | anzucht | dauer | keine Tage ab Phasenbeginn (nur Wochen ab Saat) |
+| Petersilie, Schnittlauch | wachstum | dauer | keine Quelle (Dauerkultur) |
+| Petersilie, Schnittlauch | keimung | wassertemp | keine Quelle |
+| Schnittlauch | anzucht | wassertemp | keine Quelle |
+| Petersilie | keimung | licht_h | nur offen (10 h Einzelwert) |
+| Petersilie | – | kulturformen_erlaubt `schnitt` | keine Quelle belegt Schnittnutzung; Kandidaten nur `dauerkultur_blatt` |
+| Petersilie, Schnittlauch | – | standard_keimfaehigkeit, samentyp, umsetzen_ab_d, umsetzen_bis_d | keine Quelle mit Tagen ab Saat |
+| Schnittlauch | – | systemeignung | nur NFT belegt, kein DWC oder Kratky |
+| Petersilie, Schnittlauch | – | ernte_ab_d, ernteintervall_d, schnitte_max, kulturdauer_typisch_d, kulturdauer_max_d, entspitzen | nur Wochen oder unbestimmt («several weeks», «weekly») |
+| Petersilie | schnitt | ernteart | keine Quelle |
+| Petersilie, Schnittlauch | Saatmenge | pflanzen_stehen_lassen, typischer Wert | Quellen nennen 3–5 bzw. 3–6 oder 4 Samen, nie die Zahl stehender Pflanzen (nur offen) |
+| Petersilie, Schnittlauch | bluete, fruchtbildung_reife | anwendbar `entfaellt` | nicht neu angelegt; Regelwert nach Entscheid 0018 legt der Lead an |
+
+## Runde 3 (12.11.2026): Phasendauern ohne Kandidaten
+
+Gesucht nur: Petersilie `anzucht.dauer`, `wachstum.dauer`; Schnittlauch `keimung.dauer`, `anzucht.dauer`, `wachstum.dauer`. Alle neuen Kandidaten stehen in `profilwert_offen.csv` (keiner hat die Form des Validators).
+
+### Suchweg
+
+- frankiesgarten.de: Petersilie-Seite (Phasenkarten, Zeitplan, FAQ der Seite), Keimtabelle, FAQ, Übersicht `anleitungen/gemueseanbau/`
+- Websuche «hydroponic parsley days after transplanting», «Petroselinum crispum hydroponic days after sowing transplanting», «chives hydroponic days after transplanting rockwool», «Salve Regina hydroponic chives»
+- Volltexte: PLOS ONE 2021 (Dill, Petersilie, Brunnenkresse), Virginia Tech SPES-466 Table 1, Horticultura Brasileira 2022 (Schnittlauch NFT), Upstart University Petersilie, Salve Regina Growing Guide Schnittlauch (Beschreibungsseite)
+
+### Neue Kandidaten (alle offen)
+
+| zeile_id | Quelle | Wert wörtlich | grund |
+|---|---|---|---|
+| pw.petroselinum_crispum.wachstum.dauer#1 | upstart-petersilie-2016 (B2) | «5–6 weeks after that» (nach dem Umsetzen) | Wochen, Bereich ohne typ |
+| pw.petroselinum_crispum.wachstum.dauer#2 | plos-one-dill-petersilie-2021 (A) | «two, three, or four weeks after transplant» (Petersilie = four) | Wochen, Einzelwert, Zuordnung über Reihenfolge |
+| pw.petroselinum_crispum.wachstum.dauer#3 | vt-spes-466-2023 (B1) | Harvest «49-84 d» | Bezugspunkt nicht genannt, Bereich ohne typ |
+| pw.allium_schoenoprasum.anzucht.dauer#2 | salve-regina-schnittlauch-2023 (B1) | «propagate under grow lights in approximately 15 days» | Einzelwert, Bezugspunkt unklar |
+| pw.allium_schoenoprasum.wachstum.dauer#1 | hortic-bras-schnittlauch-2022 (A) | «40 days after transplanting (DAT)» | Einzelwert, Versuchsernte |
+
+### Verworfen in Runde 3
+
+| Quelle | Grund |
+|---|---|
+| frankiesgarten Petersilie: Phasen «nach dem Auflaufen», «mehrere echte Blätter», Ernte «laufend»; Zeitplan nur Leerfelder («In den Tower nach: … Tagen») | keine Dauer in Zahlen; Keimung «1 bis 4 Wochen» gehört nicht zu den gesuchten Grössen |
+| frankiesgarten Keimtabelle Schnittlauch «siehe Tüte» | kein Wert |
+| frankiesgarten: keine Schnittlauch-Seite («Schnittlauch, Rucola und weitere Kräuter kommen dazu»); FAQ nur Salat «4 bis 6 Wochen im Tower» | nicht artspezifisch |
+| Upstart University Petersilie «ready to transplant a few weeks later» | keine Zahl |
+| Horticultura Brasileira 2022 «seedlings … from a local nursery at 25 days after sowing» | Anzucht in Gärtnerei, nicht hydroponisch belegt |
+| Salve Regina Growing Guide (PDF) | PDF nicht abrufbar (HTTP 403); nur Beschreibungsseite gelesen. Suchmaschinen-Zusammenfassung «transferred day 15, first harvest day 52» nicht an der Quelle geprüft, daher kein Kandidat |
+| Rootless Farm «70–90 days to first harvest», Agrotonomy, gardeningtips.in, agrowtronics, dripcanopy, scaleandstem | Seiten ohne erkennbare Quelle oder Praxis ohne nachvollziehbare Methode |
+| BrightAgrotech (Medium) Schnittlauch «six to eight weeks» nach Umsetzen | nicht abrufbar (HTTP 403), nicht geprüft |
+| Agronomy 2019 (MDPI) Petersilie | nicht abrufbar (HTTP 403) |
+| Lettuce Grow, Rise Gardens Schnittlauch | nicht abrufbar (HTTP 429) |
+| Johnny's Chives 7–14 Tage | Erde/Anzuchtplugs (schon Runde 2) |
+
+### Lückenliste nach Runde 3
+
+| Art | Phase | Grösse | Bemerkung |
+|---|---|---|---|
+| Petersilie | anzucht | dauer | weiterhin nur Wochen ab Saat (Runde 2), keine neue Quelle |
+| Schnittlauch | keimung | dauer | keine hydroponische Quelle (Klasse D); Simply Hydroponics 8–10 Tage verworfen |
+| Schnittlauch | anzucht | dauer | nur offen (15 Tage, Bezugspunkt unklar) |
+| Petersilie, Schnittlauch | wachstum | dauer | nur offen (Wochen, Einzelwerte, Bezugspunkt unklar) |
+
+## Runde 6 (12.11.2026): Anzucht- und Keimdauer
+
+Gesucht nur: `pw.petroselinum_crispum.anzucht.dauer`, `pw.allium_schoenoprasum.anzucht.dauer`, `pw.allium_schoenoprasum.keimung.dauer`.
+
+### Suchweg
+
+- Websuche «chives rockwool germination days transplanted days after sowing», «parsley hydroponic NFT floating seedlings days after sowing», «CEA HERB sowing density parsley».
+- Rise Gardens Plant Library (keine Petersilie- oder Schnittlauch-Seite gefunden), Rise-Gardens-Produktseiten (HTTP 429).
+- CEA HERB (scri-ceaherb.org, Publikationsliste) → PDF HortTechnology 34(3) 2024 «Optimizing Sowing Density …», Text mit eigenem Lesekript aus dem Zwischenspeicher gelesen (Leerzeichen im Zitat wiederhergestellt).
+
+### Neuer Kandidat (offen)
+
+| zeile_id | Quelle | Wert wörtlich | grund |
+|---|---|---|---|
+| pw.petroselinum_crispum.anzucht.dauer#3 | horttech-34-saatdichte-petersilie-2024 (A, Phenolschaum 2.2 cm, Ebbe-Flut, danach DWC, Gewächshaus) | «21 (parsley, sage) days after sowing» | Tage ab Saat, Keimdauer nicht in derselben Quelle; Einzelwert. Für den Lead: mit der Keimdauer der Art umrechnen |
+
+### Verworfen in Runde 6
+
+| Quelle | Grund |
+|---|---|
+| HortTechnology 2024, «28 (parsley) days» in DWC | Wachstumsdauer, nicht gesucht (Hinweis für den Lead) |
+| Fachartikel greenhousemag.com und producegrower.com zur Saatdichte (CEA HERB Part 2, laut Suchausschnitt Keimtage je Art) | Seiteninhalt nicht abrufbar (leer), Zitat nicht prüfbar |
+| Johnny's Staro Chives 7–14 Tage, 75–85 Tage | Katalog/Erde, schon verworfen |
+| Simply Hydroponics Schnittlauch 4–6 Wochen | schon offen (#1) |
+| growwithhydroponics.com Petersilie 14–21 Tage | Seite ohne erkennbare Quelle |
+
+### Lückenliste nach Runde 6
+
+| Art | Phase | Grösse | Bemerkung |
+|---|---|---|---|
+| Petersilie | anzucht | dauer | nur offen: 21 Tage ab Saat (A), drei bzw. fünf Wochen ab Saat (Runde 2); Umrechnung durch den Lead |
+| Schnittlauch | keimung | dauer | weiterhin keine hydroponische Quelle (Klasse D) |
+| Schnittlauch | anzucht | dauer | keine neue Quelle; nur offen (15 Tage, 4–6 Wochen) |

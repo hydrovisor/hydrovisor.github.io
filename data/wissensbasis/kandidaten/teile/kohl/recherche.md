@@ -47,3 +47,46 @@ Stand 12.11.2026 · Art `brassica_rapa_chinensis` (Pak Choi), Kulturform `kopf`,
 | brassica_rapa_chinensis | kopf | ernteart, kulturdauer_max_d, entspitzen | kein Beleg |
 
 Saatempfehlung `se.brassica_rapa_chinensis.kopf`: zwei Kandidaten (B: 1 Samen je Steinwollstopfen; C: 5 Samen je Kokoszelle, 1 stehen lassen). Keine Studie mit Würfel 2 bis 3 cm (Klasse A) gefunden.
+
+## Runde 2 (12.11.2026, Auftrag `auftrag_runde-2.md`)
+
+### Suchweg
+
+- frankiesgarten.de (von Tim als Praxisquelle Klasse C zugelassen): Pak-Choi-Anleitung dreimal über WebFetch gelesen (Werte, Kurzzitate, Aufbau der Anzuchtstation und des Towers); FAQ-Seite gelesen (keine Pak-Choi-Werte, Frage «Wie viele Samen kommen in einen Würfel?» ohne Antwort).
+- Websuche: «baby leaf pak choi hydroponic harvest days», «pak choi baby leaf floating system», «Kratky pak choi CTAHR», «hydroponic pak choi rockwool germinate days», Wortlaut «Optimum germination temperatures … 75°F and 83°F».
+- Gelesen (PDF mit pdftotext): CTAHR VC-1 (2010), Cornell/GPN «Growing Hydroponic Leafy Greens» (2016), UT/UF W 844-B (2019), ACS Omega 2024 (rote Pak-Choi-Babyblätter).
+
+### Hinweise für Koordinator und Prüfer
+
+- **frankiesgarten.de:** Kein Veröffentlichungsdatum (Fusszeile «© 2025», Bildpfade 2026/11); `jahr` leer, `quelle_id` mit Abrufjahr. Keimung in Schaumstoffwürfeln in einer Anzuchtbox mit Deckel, Anzucht in einer Station (Würfel im 5-cm-Netztopf, Wasserstand wird abgesenkt bis 0.5 bis 1 cm Luft; keine Luftpumpe genannt) → `substrat_inert` (A). Wachstum im «Hydro Tower» (Pumpe fördert die Lösung nach oben, sie läuft durch die Etagen zurück) → `nft` als nächstliegender Wert (A). Lampen seitlich, LED nicht ausdrücklich für die eigene Anlage → `umgebung_quelle = andere`. EC in mS/cm, ob mit Leitungswasser gemessen ist nicht gesagt → `ec_basis = unbekannt`.
+- **EC-Stufen frankiesgarten** («Anzucht 0,5, Jungpflanze 0,9, Wachstum 1,4, Ernte 1,8»): Anzucht und Jungpflanze laufen laut Abschnitt 2 in der Anzuchtstation → `anzucht.ec` 0.5 bis 0.9; Wachstum und Ernte im Tower → `wachstum.ec` 1.4 bis 1.8. Die Stufen sind Einzelwerte je Unterphase, die Bandgrenzen sind deren Wortlaut (nichts ergänzt). Methodenprüfer: Zuordnung bitte bestätigen. `wachstum.ec` 1.4 bis 1.8 passt zum Düngeplan (Pak Choi Wachstum 1.4).
+- **Licht und Wassertemperatur frankiesgarten:** 14 bis 16 h und «Wasser 18 bis 22 °C» stehen ohne Phasentrennung; je ein Kandidat in `anzucht` und `wachstum`. Keimung im Dunkeln (Deckel) → kein `keimung.licht_h`.
+- **Dauern frankiesgarten:** Keimung «meist 4 bis 7 Tage» (Bereich ohne typ), Anzucht «etwa Tag 7 bis 21» (14 Tage, Einzelwert), Tower «etwa ab Tag 21» bis Ernte «etwa ab Tag 35» (14 Tage, Einzelwert): alle nach `profilwert_offen.csv`. Der Zählbeginn «ab Saat» ist nur aus der Beschriftung «Tag 0 bis 7» der Keimphase erschlossen. Keimtemperatur 20 bis 25 °C ohne typ ebenfalls offen (`keimtemp` verlangt `wert_typ`).
+- **Cornell/GPN 2016:** Autor ist Extension-Spezialist der Cornell CEA, erschienen in einer Fachzeitschrift → `universitaet_beratung`, B1 (Methodenprüfer bitte bestätigen). Satz «The above method for growing head lettuce can be similarly used for … pak choi» belegt Pak Choi als Kopf im DWC/NFT-Verfahren (Wortlaut mit Tippfehler «grow growing» der Quelle). Baby Leaf nennt die Quelle nur für lettuce, arugula, upland cress, kale, mizuna, mustard → Saatmenge Babyleaf nur als Analogie, Bereich 6 bis 12 → `saatempfehlung_offen.csv`.
+- **CTAHR VC-1:** In Runde 1 als «nicht ausreichend» verworfen; jetzt als Kandidat `systemeignung = kratky` eingetragen, weil der Satz Pak Choi ausdrücklich als mögliche Kultur des Kratky-Verfahrens nennt (ohne Versuchswerte). Mit Cornell (`dwc`) entscheidet der Lead, ob `beide` gilt; keine Quelle nennt beide Systeme zusammen.
+- **Babyleaf:** Rise Gardens' «baby bok choy» (21 bis 30 Tage ab Keimung) meint kleine Köpfe von Baby-Sorten, nicht Babyleaf; nicht übernommen.
+
+### Verworfene Quellen (Runde 2)
+
+- ACS Omega 2024 (rote Pak-Choi-Babyblätter, Ernte 24 DAS): Anbau in Töpfen mit Vermiculit-Erde, nicht hydroponisch.
+- Taylor & Francis, «Hydroponics for the Home Grower», Kapitel «Seeding, Transplanting of Vegetable Crops» (Keimtemperatur 75–83 °F (24–28 °C), ein Samen je Würfel laut Suchauszug): Volltext nicht zugänglich, Wortlaut nicht prüfbar.
+- UT/UF W 844-B (2019): nennt «pak choy» nur als geeignete Blattkultur, Babyleaf-Angaben nur für Salat; Keimtemperatur 70–75 °F allgemein und in °F.
+- Johnny's, Van Meuwen, Kitchen Garden Seeds (Babyleaf 30 Tage, Keimung 5–10 Tage): Kataloge bzw. Erde, nicht für Dauern zulässig.
+- Malaysische Raft-Studie (curly dwarf pak choy, 50 Pflanzen/m², EC 2.2) und indonesische Floating-Raft-Studie: nur Suchauszug, Volltext nicht gelesen; EC 2.2 über Obergrenze.
+- frankiesgarten.de FAQ: keine Pak-Choi-Werte.
+
+### Lückenliste nach Runde 2 (Klasse D, keine Zeile)
+
+| Art | Phase/Bereich | Grösse | Stand |
+|---|---|---|---|
+| brassica_rapa_chinensis | keimung | dauer | nur offen (Rise 3–5, frankiesgarten 4–7 Tage, je Bereich ohne typ) |
+| brassica_rapa_chinensis | keimung | keimtemp | nur offen (Rise 70–75 °F, frankiesgarten 20–25 °C ohne typ) |
+| brassica_rapa_chinensis | keimung | licht_h, wassertemp | kein Beleg (Keimung im Dunkeln im feuchten Würfel) |
+| brassica_rapa_chinensis | anzucht | dauer | nur offen (zusätzlich frankiesgarten 14 Tage als Einzelwert) |
+| brassica_rapa_chinensis | wachstum | dauer | nur offen (zusätzlich frankiesgarten 14 Tage als Einzelwert) |
+| brassica_rapa_chinensis | Artmerkmale | samentyp, standard_keimfaehigkeit | kein Beleg |
+| brassica_rapa_chinensis | Artmerkmale | kulturformen_erlaubt mit `babyleaf` | keine hydroponische Quelle belegt Pak Choi als Babyleaf; Kandidaten nur `kopf` |
+| brassica_rapa_chinensis | babyleaf | ernte_ab_d, ernteart, kulturdauer_typisch_d | kein hydroponischer Beleg |
+| brassica_rapa_chinensis | babyleaf | Saatempfehlung | nur offen (Cornell 6 bis 12 Samen je Zelle, Analogie) |
+
+Geschlossen in Runde 2 (Kandidat in Form): `keimung.keimart` (dunkel), `anzucht.ec` (0.5 bis 0.9 mS/cm), `anzucht.wassertemp`, `systemeignung` (dwc bzw. kratky), `kulturformen_erlaubt` und `kulturform_vorgabe` (kopf).

@@ -211,3 +211,271 @@ Vorhanden: `ernteart` = `mehrfach` (`ak.capsicum_annuum.dauerkultur_frucht.ernte
 | `keimung` | `keimtemp` | 25–26 °C | `pw.capsicum_annuum.keimung.keimtemp#1` (alberta, B1), `#2` (unalm, C) | beide ladbar, kein Konflikt |
 | `anzucht` | `licht_h` | 18 h | `pw.capsicum_annuum.anzucht.licht_h#1` (alberta, B1), `#3` (unalm, C) | beide offen, deshalb K-chili-06 «nur offener Wert» |
 | `wachstum` | `ec` | 2.5–3.5 mS/cm | `pw.capsicum_annuum.wachstum.ec#2` (alberta, B1), `#3` (unalm, C) | beide offen und Teil von K-chili-07; je Bezug die ersten ein bis zwei Wochen nach dem Auspflanzen |
+
+## Runde 2 (12.11.2026)
+
+W0 Runde 2, Issue #188. Kulturform nach Entscheid 0018 nur `dauerkultur_frucht`. Gesichtet: alle Zeilen der Art mit `status` = `geprueft` oder `vorgeschlagen` (auch aus Runde 1) in `art.csv`, `profilwert.csv`, `profilwert_offen.csv`, `saatempfehlung.csv`, `saatempfehlung_offen.csv` (neu vorhanden) und die zugehörigen Quellen in `quelle.csv`; Zeilen mit `verworfen` oder `entwurf` zählen nicht. `frankiesgarten-faq` ist in `quelle.csv` nur wegen des Titels verworfen und gilt hier als geprüft; kein Chili-Kandidat stützt sich darauf. Geändert wurde nur die Spalte `konflikt_id` (Chili-Zeilen in `profilwert.csv`, `profilwert_offen.csv`, `art.csv`); Konflikt-IDs der Tomate sind unberührt.
+
+Zusammenfassung Runde 2: 18 offene Konflikte (K-chili-01 bis -09 aus Runde 1, davon 7 mit neuen Kandidaten; neu K-chili-10 bis -18), davon noch 2 «nur offener Wert» (K-chili-02, K-chili-05); K-chili-04 und K-chili-06 haben jetzt einen ladbaren Kandidaten. 15 neue Plausibilitätsbefunde (P25 bis P39), P1 bis P24 gelten weiter. 22 Lücken (3 Pflichtgrössen, 2 Nicht-Pflichtgrössen, 11 Artmerkmale, 6 Kulturform-Felder, 0 Saatempfehlungen), dazu 2 Pflichtgrössen nur mit offenem Wert. 7 Bestätigungen.
+
+Neue Quellen dieser Runde (aus `quelle.csv`):
+
+| `quelle_id` | Klasse der Quelle | Jahr |
+|---|---|---|
+| `frankiesgarten-paprika` | praxis | ohne Jahr |
+| `frankiesgarten-keimtabelle` | praxis | ohne Jahr |
+| `forkfarms-minipaprika-2026` | hersteller | 2026 |
+
+### R2.1 Konfliktliste (alle offenen Konflikte)
+
+Datei: `pw` = `profilwert.csv`, `pw_offen` = `profilwert_offen.csv`, `art` = `art.csv`. Status `g` = `geprueft`, `v` = `vorgeschlagen`. «neu» kennzeichnet Kandidaten aus Runde 2. Hinweis für den Lead: Mehrere Kandidaten mit Status `vorgeschlagen` aus Runde 1 stehen in offenen Konflikten (K-chili-01, -03, -07 bis -13); die neuen Kandidaten machen K-chili-10 bis -13 erst strittig.
+
+#### K-chili-01 – Chili, Keimung, `wechselmerkmal` (unverändert)
+
+| `kandidat_id` | Datei | Status | Wert | Einheit | Basis | Quelle | Klasse | System | Umgebung | Jahr |
+|---|---|---|---|---|---|---|---|---|---|---|
+| `pw.capsicum_annuum.keimung.wechselmerkmal#1` | pw | v | «Sind die Keimblätter vollständig entfaltet?» | – | – | bbch-monografie-2001 | B1 | keine | andere | 2001 |
+| `pw.capsicum_annuum.keimung.wechselmerkmal#2` | pw | g | «Sind die ersten echten Laubblätter sichtbar?» | – | – | alberta-sweet-bell-peppers | B1 | substrat_inert | gewaechshaus | – |
+
+#### K-chili-02 – Chili, Keimung, `dauer` (verschiedene Werte und nur offener Wert)
+
+| `kandidat_id` | Datei | Status | Wert (min / typ / max) | Einheit | Basis | Quelle | Klasse | System | Umgebung | Jahr |
+|---|---|---|---|---|---|---|---|---|---|---|
+| `pw.capsicum_annuum.keimung.dauer#1` | pw_offen (Bereich ohne typ) | g | 7 / – / 10 | Tage | – | alberta-sweet-bell-peppers | B1 | substrat_inert | gewaechshaus | – |
+| `pw.capsicum_annuum.keimung.dauer#4` | pw_offen (Einzelwert) | g | – / 14 / – | Tage | – | ua-tomato-workshop-modul2-2026 | B1 | substrat_inert | gewaechshaus | 2026 |
+| `pw.capsicum_annuum.keimung.dauer#5` (neu) | pw_offen (Bereich ohne typ) | g | 7 / – / 14 | Tage | – | frankiesgarten-paprika | C | substrat_inert | andere | – |
+
+Weiterhin kein ladbarer Kandidat; Pflichtgrösse der Keimung (mindestens auf Ebene Art) hängt allein an offenen Werten.
+
+#### K-chili-03 – Chili, Anzucht, `wechselmerkmal` (unverändert)
+
+| `kandidat_id` | Datei | Status | Wert | Einheit | Basis | Quelle | Klasse | System | Umgebung | Jahr |
+|---|---|---|---|---|---|---|---|---|---|---|
+| `pw.capsicum_annuum.anzucht.wechselmerkmal#1` | pw | v | «Hat die Jungpflanze fünf bis sechs echte Blätter?» | – | – | aces-anr2954-2023 | B1 | substrat_inert | gewaechshaus | 2023 |
+| `pw.capsicum_annuum.anzucht.wechselmerkmal#2` | pw | g | «Hat die Jungpflanze sechs Blätter am Haupttrieb?» | – | – | unalm-pimientos-hidroponicos-2006 | C | substrat_inert | gewaechshaus | 2006 |
+
+#### K-chili-04 – Chili, Anzucht, `dauer` (jetzt verschiedene Werte, ladbarer Kandidat vorhanden)
+
+| `kandidat_id` | Datei | Status | Wert (min / typ / max) | Einheit | Basis | Quelle | Klasse | System | Umgebung | Jahr |
+|---|---|---|---|---|---|---|---|---|---|---|
+| `pw.capsicum_annuum.anzucht.dauer#5` | pw_offen (Einzelwert) | g | – / 21 / – | Tage | – | ua-tomato-workshop-modul2-2026 | B1 | substrat_inert | gewaechshaus | 2026 |
+| `pw.capsicum_annuum.anzucht.dauer#7` (neu) | pw | g | 14 / 14 / 28 | Tage | – | frankiesgarten-paprika | C | substrat_inert | indoor_led | – |
+
+#### K-chili-05 – Chili, Anzucht, `ec` (verschiedene Werte und nur offener Wert)
+
+| `kandidat_id` | Datei | Status | Wert (min / typ / max) | Einheit | Basis | Quelle | Klasse | System | Umgebung | Jahr |
+|---|---|---|---|---|---|---|---|---|---|---|
+| `pw.capsicum_annuum.anzucht.ec#1` | pw_offen (Einzelwert) | g | – / 2.5 / – | mS/cm (Quelle «mmhos») | unbekannt | alberta-sweet-bell-peppers | B1 | substrat_inert | gewaechshaus | – |
+| `pw.capsicum_annuum.anzucht.ec#3` | pw_offen (Einzelwert) | g | – / 2.3 / – | mS/cm (Quelle dS/m) | unbekannt | unalm-pimientos-hidroponicos-2006 | C | substrat_inert | gewaechshaus | 2006 |
+| `pw.capsicum_annuum.anzucht.ec#4` (neu) | pw_offen (Einzelwerte je Teilstufe) | g | – / 0.5 / – | mS/cm | unbekannt | frankiesgarten-paprika | C | substrat_inert | indoor_led | – |
+
+Weiterhin kein ladbarer Kandidat; Pflichtgrösse der Anzucht hängt allein an offenen Werten.
+
+#### K-chili-06 – Chili, Anzucht, `licht_h` (jetzt verschiedene Werte, ladbarer Kandidat vorhanden)
+
+| `kandidat_id` | Datei | Status | Wert (min / typ / max) | Einheit | Basis | Quelle | Klasse | System | Umgebung | Jahr |
+|---|---|---|---|---|---|---|---|---|---|---|
+| `pw.capsicum_annuum.anzucht.licht_h#1` | pw_offen (Einzelwert) | g | – / 18 / – | h | – | alberta-sweet-bell-peppers | B1 | substrat_inert | gewaechshaus | – |
+| `pw.capsicum_annuum.anzucht.licht_h#3` | pw_offen (Einzelwert) | g | – / 18 / – | h | – | unalm-pimientos-hidroponicos-2006 | C | substrat_inert | gewaechshaus | 2006 |
+| `pw.capsicum_annuum.anzucht.licht_h#4` (neu) | pw | g | 14 / – / 16 | h | – | frankiesgarten-paprika | C | substrat_inert | indoor_led | – |
+
+#### K-chili-07 – Chili, Wachstum, `ec`
+
+| `kandidat_id` | Datei | Status | Wert (min / typ / max) | Einheit | Basis | Quelle | Klasse | System | Umgebung | Jahr |
+|---|---|---|---|---|---|---|---|---|---|---|
+| `pw.capsicum_annuum.wachstum.ec#1` | pw | v | 0.8 / – / 1.8 | mS/cm | unbekannt | okstate-hla6722-2016 | B1 | substrat_inert | andere | 2016 |
+| `pw.capsicum_annuum.wachstum.ec#2` | pw_offen (Obergrenze über 2.6) | g | 2.5 / – / 3.5 | mS/cm (Quelle «mmhos») | unbekannt | alberta-sweet-bell-peppers | B1 | substrat_inert | gewaechshaus | – |
+| `pw.capsicum_annuum.wachstum.ec#3` | pw_offen (Obergrenze über 2.6) | g | 2.5 / – / 3.5 | mS/cm (Quelle «mS») | unbekannt | unalm-pimientos-hidroponicos-2006 | C | substrat_inert | gewaechshaus | 2006 |
+| `pw.capsicum_annuum.wachstum.ec#4` | pw_offen (Obergrenze über 2.6) | g | 2.5 / – / 3.0 | mS/cm (Quelle «mmhos») | unbekannt | alberta-sweet-bell-peppers | B1 | substrat_inert | gewaechshaus | – |
+| `pw.capsicum_annuum.wachstum.ec#5` | pw_offen (Obergrenze über 2.6) | g | 2.6 / – / 3.0 | mS/cm (Quelle dS/m) | unbekannt | unalm-pimientos-hidroponicos-2006 | C | substrat_inert | gewaechshaus | 2006 |
+| `pw.capsicum_annuum.wachstum.ec#6` (neu) | pw_offen (Einzelwert) | g | – / 1.5 / – | mS/cm | unbekannt | frankiesgarten-paprika | C | nft | indoor_led | – |
+
+#### K-chili-08 – Chili, Blüte, `ec`
+
+| `kandidat_id` | Datei | Status | Wert (min / typ / max) | Einheit | Basis | Quelle | Klasse | System | Umgebung | Jahr |
+|---|---|---|---|---|---|---|---|---|---|---|
+| `pw.capsicum_annuum.bluete.ec#1` | pw | v | 0.8 / – / 1.8 | mS/cm | unbekannt | okstate-hla6722-2016 | B1 | substrat_inert | andere | 2016 |
+| `pw.capsicum_annuum.bluete.ec#2` | pw_offen (Obergrenze über 2.6) | g | 2.5 / – / 3.0 | mS/cm (Quelle «mmhos») | unbekannt | alberta-sweet-bell-peppers | B1 | substrat_inert | gewaechshaus | – |
+| `pw.capsicum_annuum.bluete.ec#3` | pw_offen (Obergrenze über 2.6) | g | 2.6 / – / 3.0 | mS/cm (Quelle dS/m) | unbekannt | unalm-pimientos-hidroponicos-2006 | C | substrat_inert | gewaechshaus | 2006 |
+| `pw.capsicum_annuum.bluete.ec#4` (neu) | pw_offen (Einzelwert) | g | – / 2.0 / – | mS/cm | unbekannt | frankiesgarten-paprika | C | nft | indoor_led | – |
+
+#### K-chili-09 – Chili, Fruchtbildung und Reife, `ec`
+
+| `kandidat_id` | Datei | Status | Wert (min / typ / max) | Einheit | Basis | Quelle | Klasse | System | Umgebung | Jahr |
+|---|---|---|---|---|---|---|---|---|---|---|
+| `pw.capsicum_annuum.fruchtbildung_reife.ec#1` | pw | v | 0.8 / – / 1.8 | mS/cm | unbekannt | okstate-hla6722-2016 | B1 | substrat_inert | andere | 2016 |
+| `pw.capsicum_annuum.fruchtbildung_reife.ec#2` | pw_offen (Obergrenze über 2.6) | g | 2.5 / – / 3.0 | mS/cm (Quelle «mmhos») | unbekannt | alberta-sweet-bell-peppers | B1 | substrat_inert | gewaechshaus | – |
+| `pw.capsicum_annuum.fruchtbildung_reife.ec#3` | pw_offen (Obergrenze über 2.6) | g | 2.6 / – / 3.0 | mS/cm (Quelle dS/m) | unbekannt | unalm-pimientos-hidroponicos-2006 | C | substrat_inert | gewaechshaus | 2006 |
+| `pw.capsicum_annuum.fruchtbildung_reife.ec#4` (neu) | pw_offen (Einzelwert) | g | – / 2.0 / – | mS/cm | unbekannt | frankiesgarten-paprika | C | nft | indoor_led | – |
+
+#### K-chili-10 – Chili, Keimung, `keimtemp` (neu)
+
+| `kandidat_id` | Datei | Status | Wert (min / typ / max) | Einheit | Basis | Quelle | Klasse | System | Umgebung | Jahr |
+|---|---|---|---|---|---|---|---|---|---|---|
+| `pw.capsicum_annuum.keimung.keimtemp#1` | pw | v | 25 / – / 26 | °C | – | alberta-sweet-bell-peppers | B1 | substrat_inert | gewaechshaus | – |
+| `pw.capsicum_annuum.keimung.keimtemp#2` | pw | g | 25 / – / 26 | °C | – | unalm-pimientos-hidroponicos-2006 | C | substrat_inert | gewaechshaus | 2006 |
+| `pw.capsicum_annuum.keimung.keimtemp#3` (neu) | pw | g | 24 / – / 30 | °C | – | frankiesgarten-paprika | C | substrat_inert | andere | – |
+| `pw.capsicum_annuum.keimung.keimtemp#4` (neu) | pw | g | 24 / – / 30 | °C | – | frankiesgarten-keimtabelle | C | substrat_inert | andere | – |
+
+In Runde 1 Bestätigung (#1 = #2); mit #3 und #4 jetzt zwei verschiedene Bänder.
+
+#### K-chili-11 – Chili, Wachstum, `ph` (neu)
+
+| `kandidat_id` | Datei | Status | Wert (min / typ / max) | Einheit | Basis | Quelle | Klasse | System | Umgebung | Jahr |
+|---|---|---|---|---|---|---|---|---|---|---|
+| `pw.capsicum_annuum.wachstum.ph#1` | pw | v | 5.8 / – / 6.1 | pH | – | unalm-pimientos-hidroponicos-2006 | C | substrat_inert | gewaechshaus | 2006 |
+| `pw.capsicum_annuum.wachstum.ph#3` (neu) | pw | g | 5.5 / 5.8 / 6.0 | pH | – | frankiesgarten-paprika | C | nft | indoor_led | – |
+| `pw.capsicum_annuum.wachstum.ph#4` (neu) | pw | g | 5.5 / – / 6.0 | pH | – | forkfarms-minipaprika-2026 | B2 | nft | indoor_led | 2026 |
+
+#### K-chili-12 – Chili, Blüte, `ph` (neu)
+
+| `kandidat_id` | Datei | Status | Wert (min / typ / max) | Einheit | Basis | Quelle | Klasse | System | Umgebung | Jahr |
+|---|---|---|---|---|---|---|---|---|---|---|
+| `pw.capsicum_annuum.bluete.ph#1` | pw | v | 5.8 / – / 6.1 | pH | – | unalm-pimientos-hidroponicos-2006 | C | substrat_inert | gewaechshaus | 2006 |
+| `pw.capsicum_annuum.bluete.ph#3` (neu) | pw | g | 5.5 / 5.8 / 6.0 | pH | – | frankiesgarten-paprika | C | nft | indoor_led | – |
+| `pw.capsicum_annuum.bluete.ph#4` (neu) | pw | g | 5.5 / – / 6.0 | pH | – | forkfarms-minipaprika-2026 | B2 | nft | indoor_led | 2026 |
+
+#### K-chili-13 – Chili, Fruchtbildung und Reife, `ph` (neu)
+
+| `kandidat_id` | Datei | Status | Wert (min / typ / max) | Einheit | Basis | Quelle | Klasse | System | Umgebung | Jahr |
+|---|---|---|---|---|---|---|---|---|---|---|
+| `pw.capsicum_annuum.fruchtbildung_reife.ph#1` | pw | v | 5.8 / – / 6.1 | pH | – | unalm-pimientos-hidroponicos-2006 | C | substrat_inert | gewaechshaus | 2006 |
+| `pw.capsicum_annuum.fruchtbildung_reife.ph#3` (neu) | pw | g | 5.5 / 5.8 / 6.0 | pH | – | frankiesgarten-paprika | C | nft | indoor_led | – |
+| `pw.capsicum_annuum.fruchtbildung_reife.ph#4` (neu) | pw | g | 5.5 / – / 6.0 | pH | – | forkfarms-minipaprika-2026 | B2 | nft | indoor_led | 2026 |
+
+In K-chili-11 bis -13 haben #3 und #4 dasselbe Band 5.5–6.0; #3 nennt zusätzlich `wert_typ` 5.8.
+
+#### K-chili-14 – Chili, Wachstum, `licht_h` (neu)
+
+| `kandidat_id` | Datei | Status | Wert (min / typ / max) | Einheit | Basis | Quelle | Klasse | System | Umgebung | Jahr |
+|---|---|---|---|---|---|---|---|---|---|---|
+| `pw.capsicum_annuum.wachstum.licht_h#1` | pw | g | 14 / – / 16 | h | – | frankiesgarten-paprika | C | nft | indoor_led | – |
+| `pw.capsicum_annuum.wachstum.licht_h#2` | pw_offen (Einzelwert) | g | – / 18 / – | h | – | forkfarms-minipaprika-2026 | B2 | nft | indoor_led | 2026 |
+
+#### K-chili-15 – Chili, Blüte, `licht_h` (neu)
+
+| `kandidat_id` | Datei | Status | Wert (min / typ / max) | Einheit | Basis | Quelle | Klasse | System | Umgebung | Jahr |
+|---|---|---|---|---|---|---|---|---|---|---|
+| `pw.capsicum_annuum.bluete.licht_h#1` | pw | g | 14 / – / 16 | h | – | frankiesgarten-paprika | C | nft | indoor_led | – |
+| `pw.capsicum_annuum.bluete.licht_h#2` | pw_offen (Einzelwert) | g | – / 18 / – | h | – | forkfarms-minipaprika-2026 | B2 | nft | indoor_led | 2026 |
+
+#### K-chili-16 – Chili, Fruchtbildung und Reife, `licht_h` (neu)
+
+| `kandidat_id` | Datei | Status | Wert (min / typ / max) | Einheit | Basis | Quelle | Klasse | System | Umgebung | Jahr |
+|---|---|---|---|---|---|---|---|---|---|---|
+| `pw.capsicum_annuum.fruchtbildung_reife.licht_h#1` | pw | g | 14 / – / 16 | h | – | frankiesgarten-paprika | C | nft | indoor_led | – |
+| `pw.capsicum_annuum.fruchtbildung_reife.licht_h#2` | pw_offen (Einzelwert) | g | – / 18 / – | h | – | forkfarms-minipaprika-2026 | B2 | nft | indoor_led | 2026 |
+
+#### K-chili-17 – Chili, Artmerkmal `umsetzen_ab_d` (neu)
+
+`art.csv` hat keine Spalten für System und Umgebung; angegeben ist die Anbaumethode der Quelle aus `quelle.csv` und die Umgebung laut Fundstelle.
+
+| `kandidat_id` | Datei | Status | Wert | Einheit | Basis | Quelle | Klasse | System | Umgebung | Jahr |
+|---|---|---|---|---|---|---|---|---|---|---|
+| `art.capsicum_annuum.umsetzen_ab_d#1` | art | g | 10 | Tage ab Saat | – | forkfarms-minipaprika-2026 | B2 | nft (Flex Farm) | indoor_led (laut Fundstelle) | 2026 |
+| `art.capsicum_annuum.umsetzen_ab_d#2` | art | g | 21 | Tage ab Saat | – | frankiesgarten-paprika | C | nft (Tower) | – | – |
+
+#### K-chili-18 – Chili, Artmerkmal `umsetzen_bis_d` (neu)
+
+| `kandidat_id` | Datei | Status | Wert | Einheit | Basis | Quelle | Klasse | System | Umgebung | Jahr |
+|---|---|---|---|---|---|---|---|---|---|---|
+| `art.capsicum_annuum.umsetzen_bis_d#1` | art | g | 20 | Tage ab Saat | – | forkfarms-minipaprika-2026 | B2 | nft (Flex Farm) | indoor_led (laut Fundstelle) | 2026 |
+| `art.capsicum_annuum.umsetzen_bis_d#2` | art | g | 35 | Tage ab Saat | – | frankiesgarten-paprika | C | nft (Tower) | – | – |
+
+### R2.2 Plausibilität (neue Befunde)
+
+Geprüft wie in Runde 1 gegen V3 bis V7 und V11 (Fruchtgemüse EC 0.4 bis 2.6), die Gegenprobe Chili (Anzucht 1.1, Wachstum 1.7, Blüte 1.9, Fruchtbildung 2.1 mS/cm gesamt mit ECWasser 0.5; Basis `unbekannt` rechnet als `gesamt`, also ohne Zuschlag) und gegen die Tomate. Alle neuen EC-Rohwerte sind bereits mS/cm. P1 bis P24 gelten weiter; P19 betrifft jetzt K-chili-06 mit dem ladbaren Kandidaten #4.
+
+| Nr. | `kandidat_id` | Regel | Wert | Befund |
+|---|---|---|---|---|
+| P25 | `pw.capsicum_annuum.anzucht.ec#4` | V5, Gegenprobe, Inhalt | typ 0.5 | Einzelwert ohne Bandbreite, 0.6 mS/cm unter 1.1 (bei Freigabe Gegenprobe-Konflikt), und dieselbe Fundstelle nennt für die Jungpflanze 1.0, worauf sich der Vergleichswert «1. echte Blätter bzw. Jungpflanze» der Gegenprobe bezieht. |
+| P26 | `pw.capsicum_annuum.wachstum.ec#6` | V5, Gegenprobe | typ 1.5 | Einzelwert ohne Bandbreite (Grund der Ablage), Abweichung zu 1.7 nur 0.2 mS/cm und damit ohne Gegenprobe-Konflikt. |
+| P27 | `pw.capsicum_annuum.bluete.ec#4` | V5, Gegenprobe, Einheit | typ 2.0 | Einzelwert, Abweichung zu 1.9 nur 0.1 mS/cm; die Einheit steht nicht an der Fundstelle («EC steigt auf 2,0»), sondern im Steckbrief derselben Seite. |
+| P28 | `pw.capsicum_annuum.fruchtbildung_reife.ec#4` | V5, Gegenprobe | typ 2.0 | Einzelwert, Abweichung zu 2.1 nur 0.1 mS/cm, ohne Gegenprobe-Konflikt. |
+| P29 | `pw.capsicum_annuum.anzucht.dauer#7` | V6, Umrechnung, Vergleich | 14 / 14 / 28 | V6 erfüllt (typ gleich min); die Umrechnung auf den Anzuchtbeginn Tag 7 derselben Quelle ist nachvollziehbar und passt mit `keimung.dauer#5` (7–14) zu `umsetzen_ab_d#2`/`bis_d#2` (21 und 35 Tage ab Saat), weicht aber vom Wochenraster-Wert 21 aus #5 ab. |
+| P30 | `pw.capsicum_annuum.keimung.keimtemp#3`, `#4` | Vergleich | 24–30 °C | Keine Validatorregel; das Band ist 6 °C breit, schliesst 25–26 °C aus #1/#2 ein, liegt über der Tomate (22–28 bzw. 22–26 °C) und stammt aus zwei Seiten desselben Betreibers. |
+| P31 | `pw.capsicum_annuum.anzucht.ph#2` | V3, V5, Vergleich | 5.5 / 5.8 / 6.0 | Innerhalb 5.2 bis 7.0, Bandbreite 0.5; ein Steckbriefwert ohne Phasenangabe, für die Anzucht mit `substrat_inert`, für die übrigen Phasen mit `nft` erfasst; vergleichbar mit Tomate Anzucht 5.8–6.2. |
+| P32 | `pw.capsicum_annuum.{wachstum,bluete,fruchtbildung_reife}.ph#3`, `#4` | V3, V5, Vergleich | 5.5–6.0 | Innerhalb 5.2 bis 7.0, Bandbreite 0.5; gleiches Band wie Tomate aus Fork Farms (5.5–6.0), Untergrenze 0.3 unter #1 (5.8–6.1). |
+| P33 | `pw.capsicum_annuum.anzucht.licht_h#4` | V7, Phasenzuordnung | 14–16 h | In 0 bis 24; die Fundstelle liegt im Abschnitt «1 Keimphase», betrifft aber die Keimlinge nach dem Auflaufen, also den Beginn der Anzucht (BBCH 10), und weicht von 18 h Zusatzlicht im Gewächshaus (#1, #3) ab. |
+| P34 | `pw.capsicum_annuum.{wachstum,bluete,fruchtbildung_reife}.licht_h#1` | V7, Vergleich | 14–16 h | In 0 bis 24; ein Steckbriefwert ohne Phasenangabe für drei Phasen, gleich wie Tomate (14–16 h aus `frankiesgarten-faq`). |
+| P35 | `pw.capsicum_annuum.{wachstum,bluete,fruchtbildung_reife}.licht_h#2` | V7, Form | typ 18 | 18 h liegt in 0 bis 24, steht aber als Einzelwert in `wert_typ` statt `wert_min`/`wert_max`; die Tomate trägt denselben Fork-Farms-Wert (K-tomate-14 bis -16). |
+| P36 | `pw.capsicum_annuum.{anzucht,wachstum,bluete,fruchtbildung_reife}.wassertemp#1` | V7, Vergleich | 18–24 °C | In 10 bis 28 °C, ein Steckbriefwert ohne Phasenangabe für vier Phasen, gleich wie Tomate (18–24 °C). |
+| P37 | `art.capsicum_annuum.umsetzen_ab_d#1`, `umsetzen_bis_d#1` | Vergleich mit dem Profil | 10–20 Tage ab Saat | Umsetzen ab Tag 10 liegt vor dem frühesten Ende von Keimung und Anzucht nach den übrigen Kandidaten (7 + 14 = 21 Tage) und bezeichnet laut Fundstelle das Umsetzen in die Flex Farm. |
+| P38 | `…ec#4`/`#6` von `frankiesgarten-paprika` | Gruppenvergleich | 0.5 / 1.0 / 1.5 / 2.0 | Wie bei okstate (P23) liegt die Chili in derselben Quellenfamilie unter der Tomate (frankiesgarten-tomaten 0.4–1.3 / 1.4–2.0 / 2.0–2.5), während der Düngeplan die Chili gleich hoch oder höher setzt. |
+| P39 | `se.capsicum_annuum.dauerkultur_frucht#1` | 4.5 | 1 / 2 / 1, Klasse B | `obergrenze_samen` ≥ `samen_je_schwamm` und `pflanzen_stehen_lassen` ≥ 1 erfüllt; die `substrat_passung` vermerkt selbst, dass die Würfelgrösse der Quelle nicht belegt ist. |
+
+Ohne Befund: `keimart` #1 und #2 (`dunkel`, nur Phase `keimung`, V8 erfüllt; Tomate ebenfalls `dunkel`); `kulturformen_erlaubt#1` und `kulturform_vorgabe#1` (`dauerkultur_frucht`, V11 erfüllt; Beleg ist Mehrfachernte über Monate in Steinwolle bzw. Kokos); `bestaeubung_noetig#1` (`ja`, gleich wie Tomate); `umsetzen_ab_d#2`/`bis_d#2` (stimmig mit dem Profil derselben Quelle, siehe P29); `keimung.dauer#5` (7 ≤ 14, über 0; abgelegt wegen fehlendem typ). Allgemein bleibt: kein Chili-Kandidat stammt aus DWC; die neuen Sollwerte kommen aus NFT-Tower bzw. Flex Farm unter LED oder aus Schaumstoffwürfeln.
+
+### R2.3 Lückenliste nach Pflichtgrössen (03_import_w0.md 9)
+
+#### Pflichtgrössen ohne geprüften Kandidaten (Klasse D, Prüfauftrag)
+
+| Art | Phase | Grösse |
+|---|---|---|
+| Chili | `wachstum` | `dauer` |
+| Chili | `bluete` | `dauer` |
+| Chili | `fruchtbildung_reife` | `dauer` |
+
+Pflichtgrössen nur mit offenem Wert (kein ladbarer Kandidat, als Konflikt «nur offener Wert» geführt): `keimung.dauer` (K-chili-02), `anzucht.ec` (K-chili-05).
+
+Seit Runde 1 geschlossen (ladbarer Kandidat vorhanden): `keimung.keimart` (#1, #2), `anzucht.ph` (#2), `anzucht.dauer` (#7, in K-chili-04). Ladbar, aber in offenem Konflikt: `keimung.keimtemp` (K-chili-10), `keimung.wechselmerkmal` (K-chili-01), `anzucht.wechselmerkmal` (K-chili-03), `anzucht.dauer` (K-chili-04), `ec` von Wachstum bis Fruchtbildung (K-chili-07 bis -09), `ph` von Wachstum bis Fruchtbildung (K-chili-11 bis -13). Ohne Konflikt vollständig: `anwendbar` und `bbch` aller fünf Phasen, `wechselmerkmal` von Wachstum und Blüte (`fruchtbildung_reife` entfällt als letzte anwendbare Phase), `anzucht.ph`, `keimung.keimart`. Für die Teilfreigabe (8.4) fehlen damit noch 5 ladbare Pflichtwerte.
+
+#### Nicht-Pflichtgrössen ohne Wert auf Ebene Art (Prüfauftrag nach R1.4)
+
+| Art | Phase | Grösse |
+|---|---|---|
+| Chili | `keimung` | `licht_h` |
+| Chili | `keimung` | `wassertemp` |
+
+`licht_h` und `wassertemp` von Anzucht bis Fruchtbildung haben jetzt ladbare Kandidaten (`licht_h` in K-chili-06, -14 bis -16).
+
+#### Stammfelder
+
+Alle vier vorhanden (`name_de`, `name_wiss`, `gbif_key`, `kulturgruppe_id`, Status `vorgeschlagen`); P24 gilt weiter.
+
+#### Artmerkmale (03_import_w0.md 4.3.2)
+
+| Art | Feld |
+|---|---|
+| Chili | `samentyp` |
+| Chili | `standard_keimfaehigkeit` (einziger Kandidat verworfen) |
+| Chili | `systemeignung` |
+| Chili | `liter_je_pflanze` |
+| Chili | `wasserbedarf_je_pflanze_l` |
+| Chili | `pflanzen_je_m2` |
+| Chili | `wuchshoehe_max_mm` |
+| Chili | `wuchsform` |
+| Chili | `photoperiode` |
+| Chili | `pythium` |
+| Chili | `schossen_handlung` |
+
+Seit Runde 1 vorhanden: `kulturformen_erlaubt`, `kulturform_vorgabe`, `bestaeubung_noetig`, `umsetzen_ab_d` und `umsetzen_bis_d` (beide in Konflikt, K-chili-17 und -18). Nicht als Lücke gezählt wie in Runde 1: `keimlinge_je_knaeuel`, `kritische_tageslaenge_h`, `aussaatfenster_outdoor`.
+
+#### Kulturform-Felder `dauerkultur_frucht` (03_import_w0.md 4.3.3)
+
+Vorhanden: `ernteart` = `mehrfach` (`ak.capsicum_annuum.dauerkultur_frucht.ernteart#1`, Status `vorgeschlagen`).
+
+| Art | Kulturform | Feld |
+|---|---|---|
+| Chili | `dauerkultur_frucht` | `ernte_ab_d` |
+| Chili | `dauerkultur_frucht` | `ernteintervall_d` |
+| Chili | `dauerkultur_frucht` | `schnitte_max` (nach V11 nur bei `mehrfach` zulässig; im Auftrag Runde 2 nicht genannt) |
+| Chili | `dauerkultur_frucht` | `kulturdauer_max_d` |
+| Chili | `dauerkultur_frucht` | `kulturdauer_typisch_d` |
+| Chili | `dauerkultur_frucht` | `entspitzen` |
+
+#### Saatempfehlung
+
+Keine Lücke mehr: `se.capsicum_annuum.dauerkultur_frucht#1` (`saatempfehlung.csv`, `frankiesgarten-keimtabelle`, 1 / 2 / 1, Klasse B, Status `geprueft`) ist ladbar. Daneben `#2` in `saatempfehlung_offen.csv` (`frankiesgarten-paprika`, nur `samen_je_schwamm` = 1); kein Widerspruch, siehe Bestätigungen.
+
+### R2.4 Bestätigungen
+
+| Grösse bzw. Feld | Wert | Kandidaten (Quelle, Klasse) | Bemerkung |
+|---|---|---|---|
+| `keimung.keimart` | `dunkel` | `pw.capsicum_annuum.keimung.keimart#1` (frankiesgarten-paprika, C), `#2` (frankiesgarten-keimtabelle, C) | beide ladbar, kein Konflikt; beide Seiten desselben Betreibers |
+| `keimung.keimtemp` | 25–26 °C | `#1` (alberta, B1), `#2` (unalm, C) | jetzt Teil von K-chili-10 |
+| `keimung.keimtemp` | 24–30 °C | `#3` (frankiesgarten-paprika, C), `#4` (frankiesgarten-keimtabelle, C) | Teil von K-chili-10; desselben Betreibers |
+| `ph` Wachstum, Blüte, Fruchtbildung | 5.5–6.0 | je `#3` (frankiesgarten-paprika, C, typ 5.8), `#4` (forkfarms-minipaprika-2026, B2) | Teil von K-chili-11 bis -13 |
+| `anzucht.licht_h` | 18 h | `#1` (alberta, B1), `#3` (unalm, C) | beide offen, Teil von K-chili-06 |
+| `wachstum.ec` | 2.5–3.5 mS/cm | `#2` (alberta, B1), `#3` (unalm, C) | beide offen, Teil von K-chili-07 |
+| Saatempfehlung `samen_je_schwamm` | 1 | `se.capsicum_annuum.dauerkultur_frucht#1` (frankiesgarten-keimtabelle), `#2` offen (frankiesgarten-paprika) | #2 nennt nur diesen Wert, kein Konflikt |

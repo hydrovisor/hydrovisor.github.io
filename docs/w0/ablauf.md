@@ -1,6 +1,6 @@
 # W0-Lauf: Ablauf für den Koordinator
 
-Stand 12.11.2026 · Issue #182 · Grundlage: Konzept 9 (massgebend), `docs/input/w0_vorgehen.md`, `docs/spec/03_import_w0.md`. Der Koordinator ist der Lead. Er verteilt Aufträge, führt Dateien zusammen und hält den Stand; er recherchiert nicht und bewertet keine Werte.
+Stand 12.11.2026 · Issues #182, #188 · Entscheid 0018 (Freigabe durch den Lead) · Grundlage: Konzept 9 (massgebend), `docs/input/w0_vorgehen.md`, `docs/spec/03_import_w0.md`. Der Koordinator ist der Lead. Er verteilt Aufträge, führt Dateien zusammen und hält den Stand; er recherchiert nicht und bewertet keine Werte.
 
 ## 1 Rollen
 
@@ -11,7 +11,8 @@ Stand 12.11.2026 · Issue #182 · Grundlage: Konzept 9 (massgebend), `docs/input
 | Quellenprüfer | `.claude/agents/w0_quellenpruefer.md` | Opus 5.5, mittel | Spalten `quellenpruefung`, `abgerufen_am` |
 | Fachkritiker (je Art) | `.claude/agents/w0_fachkritiker.md` | Opus 5.5, hoch | Spalte `konflikt_id`, Bericht mit Konflikt-, Plausibilitäts- und Lückenliste |
 | Redaktor | `.claude/agents/w0_redaktor.md` | Fable 5.1, mittel | Status `vorgeschlagen`, Freigabevorschläge je Runde |
-| Tim | – | – | Entscheid je Konflikt und je Klasse-D-Lücke, Prüfung nach Konzept 9.4 |
+| Lead (Entscheid 0018) | – | – | Entscheid je Konflikt und je Klasse-D-Lücke mit Fachlogik, Abweichungen mit (A) |
+| Prüfer (`pruefer`, frisch) | `.claude/agents/pruefer.md` | – | Prüfung nach Konzept 9.4 anstelle von Tim (Entscheid 0018) |
 
 Keine Rolle prüft eigene Arbeit. Die Prüfrollen erhalten nur die Kandidatendateien (Zeilen mit Quelle und Kurzzitat) und den Link; den Bericht des Rechercheurs (`recherche.md`) und frühere Prüfberichte erhalten sie nicht.
 
@@ -36,7 +37,7 @@ data/wissensbasis/kandidaten/
 
 Der Validator prüft im Modus `--kandidaten` jede Zeile unabhängig vom Status. Ein wörtlich belegter Wert, der seine Form nicht erfüllt (Einzelwert, Dauer ohne typischen Wert, Band schmaler als 0.2 oder breiter als 1.2, ausserhalb der Grenzen V3, V4, V7), steht deshalb in `profilwert_offen.csv` mit der Spalte `grund`. Er durchläuft dieselben Prüfungen und erscheint in der Konfliktliste; übernehmen kann ihn nur Tim über «eigener Wert».
 
-Spalten und Reihenfolge der Arbeitsdateien sind fest (Abschnitt 6), damit das Zusammenführen ein reines Aneinanderhängen ist. `kulturgruppe.csv` legt der Koordinator aus `03_import_w0.md` 4.2.1 an (Struktur, keine Recherche). Nach `data/wissensbasis/freigegeben/` kommt nichts, bevor Tim entschieden hat.
+Spalten und Reihenfolge der Arbeitsdateien sind fest (Abschnitt 6), damit das Zusammenführen ein reines Aneinanderhängen ist. `kulturgruppe.csv` legt der Koordinator aus `03_import_w0.md` 4.2.1 an (Struktur, keine Recherche). Nach `data/wissensbasis/freigegeben/` kommt nichts, bevor der Lead entschieden hat (Entscheid 0018) und der Prüfer die Prüfliste nach Konzept 9.4 ohne offenen Befund abgeschlossen hat.
 
 ## 3 Statusfolge
 
@@ -50,7 +51,7 @@ Spalten und Reihenfolge der Arbeitsdateien sind fest (Abschnitt 6), damit das Zu
 | ein Kandidat je Konflikt gewählt | Redaktor | `vorgeschlagen` (die anderen bleiben `geprueft` als Alternativen) |
 | genau ein geprüfter Kandidat, kein Konflikt | Koordinator (mechanisch) | `vorgeschlagen` |
 | mehrere geprüfte Kandidaten mit gleichem Wert, kein Konflikt | Koordinator (mechanisch, Annahme 8) | höchste Klasse `vorgeschlagen`, übrige bleiben `geprueft` |
-| Tims Entscheid im Chat | Koordinator | `freigegeben` mit `freigegeben_am` und `notiz_tim`; die übrigen Kandidaten der `zeile_id` `verworfen` |
+| Entscheid des Lead (Entscheid 0018; vorher Tim im Chat) | Koordinator | `freigegeben` mit `freigegeben_am` und `notiz_tim` («Lead nach Entscheid 0018: …»); die übrigen Kandidaten der `zeile_id` `verworfen` |
 
 `quelle.csv`: Der Methodenprüfer prüft die Klasse und die Anbaumethode, der Quellenprüfer Titel und Link; der Status folgt derselben Tabelle (`verworfen` oder `geprueft`). Wird eine Quelle verworfen, verwirft dieselbe Rolle alle Datenzeilen mit dieser `quelle_id`. Das Kurzzitat liefert der Quellenprüfer (Konzept 9.3): Er bestätigt das Zitat des Rechercheurs oder ersetzt es durch den wörtlichen Satzteil der Fundstelle.
 
@@ -62,8 +63,8 @@ Spalten und Reihenfolge der Arbeitsdateien sind fest (Abschnitt 6), damit das Zu
 4. Zusammenführen (Abschnitt 5), `npm run w0:pruefen -- --kandidaten`; Formfehler gehen an den Rechercheur derselben Gruppe zurück.
 5. Fachkritiker je Art; Arten derselben Kulturgruppe nacheinander (gleiche Dateien), Gruppen parallel.
 6. Redaktor über alle Konfliktlisten: Freigabevorschläge mit höchstens vier Konflikten je Runde.
-7. Koordinator: mechanische Vorschläge setzen, zusammenführen, Validator, Commit, Freigabevorschläge Tim im Chat vorlegen (Auswahl: Vorschlag, Alternative 1, Alternative 2, eigener Wert), dazu die Klasse-D-Lücken und die Prüfliste nach Konzept 9.4 (100 % pH und EC der Phasen Anzucht und Wachstum, sonst Stichprobe 10 %).
-8. Nach Tims Entscheid: Status nachführen; Zeilen der Ebene `kulturgruppe` als Kopie der freigegebenen Leitkultur-Zeilen anlegen (`pw.<kulturgruppe_id>.<phase>.<groesse>`, gleiche Quelle, Fundstelle, Kurzzitat und Klasse; in `keimung` ohne `ph` und `ec`; Mindestzeilen nach 03_import_w0.md 4.4.2, V13), Tim gibt sie zusammen mit den Werten der Leitkultur frei; nach `freigegeben/kulturgruppe.csv` kommen nur Gruppen, deren Mindestzeilen in derselben Runde freigegeben sind (sonst bricht V13 ab); Saatempfehlungen der Klasse D nach Tims Entscheid anlegen; freigegebene Zeilen ohne Prüfspalten nach `freigegeben/` übertragen, `npm run w0:pruefen`, Seed-Trockenlauf; scharf nur über `deploy.yml` mit `seed_scharf=true` und Tims Freigabe in `production` (Entscheid 0017).
+7. Koordinator: mechanische Vorschläge setzen, zusammenführen, Validator, Commit. Seit Entscheid 0018 entscheidet der Lead je Konflikt (Vorschlag, Alternative 1, Alternative 2 oder eigener Wert nach Annahme 5) und je Klasse-D-Lücke mit Fachlogik und (A); ein frischer Prüfer (`pruefer`) prüft die Prüfliste nach Konzept 9.4 (100 % pH und EC der Phasen Anzucht und Wachstum, sonst Stichprobe 10 %) gegen die Quellen.
+8. Nach dem Entscheid des Lead (vorher Tims): Status nachführen; Zeilen der Ebene `kulturgruppe` als Kopie der freigegebenen Leitkultur-Zeilen anlegen (`pw.<kulturgruppe_id>.<phase>.<groesse>`, gleiche Quelle, Fundstelle, Kurzzitat und Klasse; in `keimung` ohne `ph` und `ec`; Mindestzeilen nach 03_import_w0.md 4.4.2, V13), der Lead gibt sie zusammen mit den Werten der Leitkultur frei; nach `freigegeben/kulturgruppe.csv` kommen nur Gruppen, deren Mindestzeilen in derselben Runde freigegeben sind (sonst bricht V13 ab); Saatempfehlungen der Klasse D nach dem Entscheid des Lead anlegen (Entscheid 0018 Punkt 4); freigegebene Zeilen ohne Prüfspalten nach `freigegeben/` übertragen, `npm run w0:pruefen`, Seed-Trockenlauf; scharf nur über `deploy.yml` mit `seed_scharf=true` und Tims Freigabe in `production` (Entscheid 0017).
 
 ## 5 Zusammenführen
 
@@ -102,3 +103,4 @@ npm run w0:pruefen -- --kandidaten
 6. (A) Saatempfehlungen, die Tim entschieden hat, ohne Quelle der Saatmengen-Skala A bis C, legt der Koordinator mit `klasse_saatmenge = D`, leeren Herkunftsfeldern (V9 nimmt Klasse D aus) und `begruendung` «entschieden von Tim, Konzept R12.3» an; Kandidaten der Rechercheure mit Quelle stehen daneben. Pflichtfelder, die der Entscheid nicht nennt (`samen_je_schwamm`, `obergrenze_samen`, `pflanzen_stehen_lassen`, `substrat_passung`), fragt der Koordinator mit den Freigabevorschlägen bei Tim ab.
 7. (A) `saatempfehlung_offen.csv` (Probelauf #184): Nennt eine Quelle der Saatmengen-Skala A bis C nicht alle Pflichtfelder (`samen_je_schwamm`, `obergrenze_samen`, `pflanzen_stehen_lassen`), steht die Zeile unverändert mit `grund` in dieser Datei, wie bei `profilwert_offen.csv` (Annahme 5). Sie durchläuft dieselben Prüfungen; die fehlenden Felder ergänzt nur Tim über «eigener Wert», danach legt der Koordinator die Zeile in `saatempfehlung.csv` an. Klasse-D-Zeilen nach Annahme 6, denen Pflichtfelder fehlen, stehen ebenfalls hier, bis Tim sie ergänzt.
 8. (A) Gleicher Wert aus mehreren geprüften Kandidaten derselben `zeile_id` ist kein Konflikt (Rolle Fachkritiker, «Bestätigung»). Der Koordinator setzt mechanisch den Kandidaten mit der höchsten Evidenzklasse auf `vorgeschlagen` (bei Gleichstand nach Regel 2 aus Konzept 9.3, sonst die kleinste Nummer); die übrigen bleiben `geprueft` als Bestätigung und werden bei Tims Entscheid wie Alternativen `verworfen`.
+9. (A) Entscheid 0018 (12.11.2026): Wo diese Datei von «Tim» als Entscheider spricht (Annahmen 5 bis 7, «eigener Wert»), entscheidet seit Runde 2 der Lead mit Fachlogik; `notiz_tim` beginnt mit «Lead nach Entscheid 0018:». frankiesgarten.de (Tims «frankisgarden.de») ist Praxisquelle der Klasse C (`praxis`) für alle Grössen einschliesslich `dauer` und Saatmenge.

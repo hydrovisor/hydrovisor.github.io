@@ -195,3 +195,252 @@ In `teile/kohl/profilwert.csv` steht keine Zeile mit `ebene = kulturgruppe`. Fü
 | pw.brassica_rapa_chinensis.wachstum.dauer | 21 d (nur min) | #1 sfa-ph-blattgemuese-2026 (B1), #2 frontiers-pakchoi-photoperiode-2025 (A); beide offen, Gegenwert #3 in K-pakchoi-07 |
 | pw.brassica_rapa_chinensis.wachstum.ph | 6.0 bis 7.0 | #1 sfa-ph-blattgemuese-2026 (B1, NFT, Gewächshaus), #2 risegardens-bok-choy-2026 (B2, DWC, LED; zusätzlich typ 6.5); weitere Werte in K-pakchoi-08 |
 | se.brassica_rapa_chinensis.kopf, Feld `pflanzen_stehen_lassen` | 1 | #1 frontiers-pakchoi-photoperiode-2025, #2 caatinga-pakchoi-ec-2024; `samen_je_schwamm` weicht ab (K-pakchoi-10) |
+
+## Runde 2 (12.11.2026)
+
+Issue #188. Grundlage: alle Zeilen der Art mit `status = geprueft` oder `vorgeschlagen` in `teile/kohl/` (`art.csv`, `profilwert.csv`, `profilwert_offen.csv`, `saatempfehlung.csv`, neu auch `saatempfehlung_offen.csv`) und die zugehörigen Zeilen in `quelle.csv`; verworfene Zeilen zählen nicht. Kulturformen im Auftrag nach Entscheid 0018: `kopf;babyleaf`, Vorgabe `kopf`; eine Form ohne belegte Quelle entfällt.
+
+Zusammenfassung Runde 2: 17 offene Konflikte (10 aus Runde 1, davon 4 mit neuen Kandidaten; 7 neu, K-pakchoi-11 bis K-pakchoi-17), davon 6 «nur offener Wert»; 10 neue Plausibilitätsbefunde (P17 bis P26, P1 bis P16 gelten weiter); 17 Lücken (keine Phasenlücke, 10 Artmerkmale, 2 Kulturform `kopf`, 5 Kulturform `babyleaf`), dazu 6 Pflichtzeilen ohne ladbaren Kandidaten und der Hinweis V13; 7 Bestätigungen.
+
+Gesetzte `konflikt_id` in Runde 2: `profilwert.csv` anzucht.ph#3 (K-05), wachstum.ph#6 (K-08), wachstum.licht_h#1 und #2 (K-13); `profilwert_offen.csv` keimung.dauer#2 (K-14), keimung.keimtemp#2 (K-15), anzucht.dauer#4 (K-16), wachstum.dauer#4 (K-07); `saatempfehlung.csv` kopf#3 (K-10); `saatempfehlung_offen.csv` babyleaf#1 (K-17); `art.csv` systemeignung#1 und #2 (K-11), kulturdauer_typisch_d#1 und #2 (K-12). Bestehende IDs sind unverändert.
+
+**Wichtiger Hinweis vorab (siehe P17):** Die Quelle `frankiesgarten-pakchoi-2026` steht in `quelle.csv` mit `status = verworfen` (Quellenprüfung: Titel weicht von der Seite ab). 14 geprüfte Kandidaten der Runde 2 verweisen auf sie. Bleibt die Quellenzeile verworfen, fehlt diesen Kandidaten der Fremdschlüssel (V2), und die Lücken L1 bis L4 der Runde 1 öffnen sich wieder.
+
+### R2.1 Konfliktliste
+
+Spalte «Status» ist der Status der Kandidatenzeile. «System» bei `art.csv` und `saatempfehlung.csv` = `anbaumethode` der Quelle. Quelle `frankiesgarten-pakchoi-2026` hat kein Jahr (Seite ohne Datum). Kein Kandidat ist bevorzugt.
+
+#### K-pakchoi-01 – Artmerkmal `umsetzen_ab_d` (Tage ab Saat), unverändert
+
+| kandidat_id | Status | Wert | Einheit | Basis | Quelle | Klasse | System | Umgebung | Jahr |
+|---|---|---|---|---|---|---|---|---|---|
+| art.brassica_rapa_chinensis.umsetzen_ab_d#1 | vorgeschlagen | 14 | d | – | sfa-ph-blattgemuese-2026 | B1 | nft | nicht angegeben | 2026 |
+| art.brassica_rapa_chinensis.umsetzen_ab_d#2 | geprueft | 7 | d | – | risegardens-bok-choy-2026 | B2 | dwc | nicht angegeben | 2026 |
+
+#### K-pakchoi-02 – Artmerkmal `umsetzen_bis_d` (Tage ab Saat), unverändert
+
+| kandidat_id | Status | Wert | Einheit | Basis | Quelle | Klasse | System | Umgebung | Jahr |
+|---|---|---|---|---|---|---|---|---|---|
+| art.brassica_rapa_chinensis.umsetzen_bis_d#1 | vorgeschlagen | 16 | d | – | sfa-ph-blattgemuese-2026 | B1 | nft | nicht angegeben | 2026 |
+| art.brassica_rapa_chinensis.umsetzen_bis_d#2 | geprueft | 10 | d | – | risegardens-bok-choy-2026 | B2 | dwc | nicht angegeben | 2026 |
+
+#### K-pakchoi-03 – Kulturform `kopf`, `ernte_ab_d` (Tage ab Umsetzen), unverändert
+
+| kandidat_id | Status | Wert | Einheit | Basis | Quelle | Klasse | System | Umgebung | Jahr |
+|---|---|---|---|---|---|---|---|---|---|
+| ak.brassica_rapa_chinensis.kopf.ernte_ab_d#1 | geprueft | 21 | d | – | sfa-ph-blattgemuese-2026 | B1 | nft | Gewächshaus | 2026 |
+| ak.brassica_rapa_chinensis.kopf.ernte_ab_d#2 | vorgeschlagen | 21 | d | – | frontiers-pakchoi-photoperiode-2025 | A | ebbe_flut | Klimakammer mit LED | 2025 |
+| ak.brassica_rapa_chinensis.kopf.ernte_ab_d#3 | geprueft | 35 | d | – | caatinga-pakchoi-ec-2024 | A | nft | Gewächshaus | 2024 |
+
+#### K-pakchoi-04 – Phase `anzucht`, `wechselmerkmal`, unverändert
+
+| kandidat_id | Status | Wert | Einheit | Basis | Quelle | Klasse | System | Umgebung | Jahr |
+|---|---|---|---|---|---|---|---|---|---|
+| pw.brassica_rapa_chinensis.anzucht.wechselmerkmal#1 | vorgeschlagen | Hat der Sämling 4 bis 5 echte Laubblätter? | – | – | caatinga-pakchoi-ec-2024 | A | nft | gewaechshaus | 2024 |
+| pw.brassica_rapa_chinensis.anzucht.wechselmerkmal#2 | geprueft | Sind Wurzeln unten am Würfel sichtbar? | – | – | risegardens-bok-choy-2026 | B2 | dwc | indoor_led | 2026 |
+| pw.brassica_rapa_chinensis.anzucht.wechselmerkmal#3 | geprueft | Ist das sechste Laubblatt voll entfaltet? | – | – | plosone-pakchoi-ec-2018 | A | ebbe_flut | gewaechshaus | 2018 |
+
+#### K-pakchoi-05 – Phase `anzucht`, `ph` (neuer Kandidat #3)
+
+| kandidat_id | Status | Wert | Einheit | Basis | Quelle | Klasse | System | Umgebung | Jahr |
+|---|---|---|---|---|---|---|---|---|---|
+| pw.brassica_rapa_chinensis.anzucht.ph#1 | vorgeschlagen | 6.0 bis 7.0 | pH | – | sfa-ph-blattgemuese-2026 | B1 | substrat_inert | andere | 2026 |
+| pw.brassica_rapa_chinensis.anzucht.ph#2 (offen: Einzelwert) | geprueft | 5.8 | pH | – | plosone-pakchoi-ec-2018 | A | ebbe_flut | gewaechshaus | 2018 |
+| pw.brassica_rapa_chinensis.anzucht.ph#3 **neu** | geprueft | 5.5 bis 6.5, typ 5.8 | pH | – | frankiesgarten-pakchoi-2026 | C | substrat_inert | andere | – |
+
+#### K-pakchoi-06 – Phase `anzucht`, `ec` – nur offener Wert, unverändert
+
+| kandidat_id | Status | Wert | Einheit | Basis | Quelle | Klasse | System | Umgebung | Jahr |
+|---|---|---|---|---|---|---|---|---|---|
+| pw.brassica_rapa_chinensis.anzucht.ec#1 (offen: Einzelwert) | geprueft | 1.2 | mS/cm | gesamt | plosone-pakchoi-ec-2018 | A | ebbe_flut | gewaechshaus | 2018 |
+
+Der neue Kandidat `anzucht.ec#2` (frankiesgarten, 0.5 bis 0.9 mS/cm) ist verworfen und zählt nicht; die Pflichtgrösse hängt weiter allein am offenen Wert.
+
+#### K-pakchoi-07 – Phase `wachstum`, `dauer` – nur offene Werte, Wertkonflikt (neuer Kandidat #4)
+
+| kandidat_id | Status | Wert | Einheit | Basis | Quelle | Klasse | System | Umgebung | Jahr |
+|---|---|---|---|---|---|---|---|---|---|
+| pw.brassica_rapa_chinensis.wachstum.dauer#1 (offen: Einzelwert) | geprueft | 21 (nur min) | d ab Umsetzen | – | sfa-ph-blattgemuese-2026 | B1 | nft | gewaechshaus | 2026 |
+| pw.brassica_rapa_chinensis.wachstum.dauer#2 (offen: Einzelwert) | geprueft | 21 (nur min), Bezugstemperatur 24 °C | d ab Umsetzen | – | frontiers-pakchoi-photoperiode-2025 | A | ebbe_flut | indoor_led | 2025 |
+| pw.brassica_rapa_chinensis.wachstum.dauer#3 (offen: Einzelwert) | geprueft | 35 (nur min) | d ab Umsetzen | – | caatinga-pakchoi-ec-2024 | A | nft | gewaechshaus | 2024 |
+| pw.brassica_rapa_chinensis.wachstum.dauer#4 (offen: Einzelwert, aus Tag 35 minus Tag 21) **neu** | geprueft | 14 (nur min) | d ab Phasenbeginn | – | frankiesgarten-pakchoi-2026 | C | nft | andere | – |
+
+Weiterhin kein ladbarer Kandidat.
+
+#### K-pakchoi-08 – Phase `wachstum`, `ph` (neuer Kandidat #6)
+
+| kandidat_id | Status | Wert | Einheit | Basis | Quelle | Klasse | System | Umgebung | Jahr |
+|---|---|---|---|---|---|---|---|---|---|
+| pw.brassica_rapa_chinensis.wachstum.ph#1 | geprueft | 6.0 bis 7.0 | pH | – | sfa-ph-blattgemuese-2026 | B1 | nft | gewaechshaus | 2026 |
+| pw.brassica_rapa_chinensis.wachstum.ph#2 | geprueft | 6.0 bis 7.0, typ 6.5 | pH | – | risegardens-bok-choy-2026 | B2 | dwc | indoor_led | 2026 |
+| pw.brassica_rapa_chinensis.wachstum.ph#3 | vorgeschlagen | 5.5 bis 6.5 | pH | – | caatinga-pakchoi-ec-2024 | A | nft | gewaechshaus | 2024 |
+| pw.brassica_rapa_chinensis.wachstum.ph#4 (offen: Einzelwert) | geprueft | 5.8 | pH | – | plosone-pakchoi-ec-2018 | A | ebbe_flut | gewaechshaus | 2018 |
+| pw.brassica_rapa_chinensis.wachstum.ph#5 (offen: Einzelwert) | geprueft | 5.7 | pH | – | frontiers-pakchoi-photoperiode-2025 | A | ebbe_flut | indoor_led | 2025 |
+| pw.brassica_rapa_chinensis.wachstum.ph#6 **neu** | geprueft | 5.5 bis 6.5, typ 5.8 | pH | – | frankiesgarten-pakchoi-2026 | C | nft | andere | – |
+
+Entscheid 0018 nennt für diesen Konflikt bereits einen Lead-Entscheid aus Runde 1; in den Kandidatendateien ist er nicht abgebildet, der Konflikt bleibt hier mit dem neuen Kandidaten aufgeführt. Bereich von #6 stimmt mit #3 überein (Bestätigung).
+
+#### K-pakchoi-09 – Phase `wachstum`, `ec`, unverändert
+
+| kandidat_id | Status | Wert | Einheit | Basis | Quelle | Klasse | System | Umgebung | Jahr |
+|---|---|---|---|---|---|---|---|---|---|
+| pw.brassica_rapa_chinensis.wachstum.ec#1 | vorgeschlagen | 1.5 bis 2.0 | mS/cm | unbekannt | okstate-hla6722-2016 | B1 | substrat_inert | andere | 2016 |
+| pw.brassica_rapa_chinensis.wachstum.ec#2 (offen: über Obergrenze, zwei Versuchsstufen) | geprueft | 1.8 bis 2.4 | mS/cm | gesamt | plosone-pakchoi-ec-2018 | A | ebbe_flut | gewaechshaus | 2018 |
+| pw.brassica_rapa_chinensis.wachstum.ec#3 (offen: Einzelwert, über Obergrenze) | geprueft | 2.3 | mS/cm | unbekannt | frontiers-pakchoi-photoperiode-2025 | A | ebbe_flut | indoor_led | 2025 |
+| pw.brassica_rapa_chinensis.wachstum.ec#4 (offen: über Obergrenze) | geprueft | 1.5 bis 2.5 | mS/cm | unbekannt | risegardens-bok-choy-2026 | B2 | dwc | indoor_led | 2026 |
+
+Der neue Kandidat `wachstum.ec#5` (frankiesgarten, 1.4 bis 1.8 mS/cm) ist verworfen und zählt nicht.
+
+#### K-pakchoi-10 – Saatempfehlung `se.brassica_rapa_chinensis.kopf` (neuer Kandidat #3)
+
+| kandidat_id | Status | Wert (Samen je Schwamm / Obergrenze / stehen lassen) | Einheit | Basis | Quelle | Klasse Saatmenge | System | Umgebung | Jahr |
+|---|---|---|---|---|---|---|---|---|---|
+| se.brassica_rapa_chinensis.kopf#1 | vorgeschlagen | 1 / 1 / 1 | Samen, Pflanzen | – | frontiers-pakchoi-photoperiode-2025 | B (Quelle A) | ebbe_flut, Steinwollstopfen | Klimakammer mit LED | 2025 |
+| se.brassica_rapa_chinensis.kopf#2 | geprueft | 5 / 5 / 1 | Samen, Pflanzen | – | caatinga-pakchoi-ec-2024 | C (Quelle A) | nft, Kokosfaser-Zellen | Gewächshaus | 2024 |
+| se.brassica_rapa_chinensis.kopf#3 **neu** | geprueft | 1 / 1 / 1 | Samen, Pflanzen | – | frankiesgarten-pakchoi-2026 | B (Quelle C) | nft, Schaumstoffwürfel | nicht angegeben | – |
+
+#3 stimmt mit #1 in allen drei Feldern überein (Bestätigung).
+
+#### K-pakchoi-11 – Artmerkmal `systemeignung` (neu)
+
+| kandidat_id | Status | Wert | Einheit | Basis | Quelle | Klasse | System | Umgebung | Jahr |
+|---|---|---|---|---|---|---|---|---|---|
+| art.brassica_rapa_chinensis.systemeignung#1 | geprueft | dwc | – | – | cornell-gpn-blattgemuese-2016 | B1 | dwc | nicht angegeben | 2016 |
+| art.brassica_rapa_chinensis.systemeignung#2 | geprueft | kratky | – | – | ctahr-vc1-2010 | B1 | kratky | nicht angegeben | 2010 |
+
+Beide Werte sind gültige Aufzählungswerte nach 4.3.2; die Quellen belegen je ein anderes System.
+
+#### K-pakchoi-12 – Kulturform `kopf`, `kulturdauer_typisch_d` (Tage ab Saat, neu)
+
+| kandidat_id | Status | Wert | Einheit | Basis | Quelle | Klasse | System | Umgebung | Jahr |
+|---|---|---|---|---|---|---|---|---|---|
+| ak.brassica_rapa_chinensis.kopf.kulturdauer_typisch_d#1 | vorgeschlagen | 32 | d ab Saat | – | frontiers-pakchoi-photoperiode-2025 | A | ebbe_flut | Klimakammer mit LED | 2025 |
+| ak.brassica_rapa_chinensis.kopf.kulturdauer_typisch_d#2 | geprueft | 35 | d ab Saat | – | frankiesgarten-pakchoi-2026 | C | nft | nicht angegeben | – |
+
+#### K-pakchoi-13 – Phase `wachstum`, `licht_h` (neu; keine Pflichtgrösse)
+
+| kandidat_id | Status | Wert | Einheit | Basis | Quelle | Klasse | System | Umgebung | Jahr |
+|---|---|---|---|---|---|---|---|---|---|
+| pw.brassica_rapa_chinensis.wachstum.licht_h#1 | vorgeschlagen | 12 bis 16 | h | – | risegardens-bok-choy-2026 | B2 | dwc | indoor_led | 2026 |
+| pw.brassica_rapa_chinensis.wachstum.licht_h#2 | geprueft | 14 bis 16 | h | – | frankiesgarten-pakchoi-2026 | C | nft | andere | – |
+
+#### K-pakchoi-14 – Phase `keimung`, `dauer` – nur offener Wert (neu)
+
+| kandidat_id | Status | Wert | Einheit | Basis | Quelle | Klasse | System | Umgebung | Jahr |
+|---|---|---|---|---|---|---|---|---|---|
+| pw.brassica_rapa_chinensis.keimung.dauer#2 (offen: Bereich ohne typ) | geprueft | 4 bis 7 | d | – | frankiesgarten-pakchoi-2026 | C | substrat_inert | andere | – |
+
+Pflichtgrösse auf Ebene Art; kein ladbarer Kandidat (`keimung.dauer#1` verworfen). Betrifft die Vorabladung der Keimung (03_import_w0.md 8 Nr. 4).
+
+#### K-pakchoi-15 – Phase `keimung`, `keimtemp` – nur offener Wert (neu)
+
+| kandidat_id | Status | Wert | Einheit | Basis | Quelle | Klasse | System | Umgebung | Jahr |
+|---|---|---|---|---|---|---|---|---|---|
+| pw.brassica_rapa_chinensis.keimung.keimtemp#2 (offen: Bereich ohne typ) | geprueft | 20 bis 25 | °C | – | frankiesgarten-pakchoi-2026 | C | substrat_inert | andere | – |
+
+Pflichtgrösse (Ebene Art oder Kulturgruppe); `keimtemp#1` verworfen.
+
+#### K-pakchoi-16 – Phase `anzucht`, `dauer` – nur offener Wert (neu)
+
+| kandidat_id | Status | Wert | Einheit | Basis | Quelle | Klasse | System | Umgebung | Jahr |
+|---|---|---|---|---|---|---|---|---|---|
+| pw.brassica_rapa_chinensis.anzucht.dauer#4 (offen: Einzelwert, aus Tag 21 minus Tag 7) | geprueft | 14 (nur min) | d ab Phasenbeginn | – | frankiesgarten-pakchoi-2026 | C | substrat_inert | andere | – |
+
+Pflichtgrösse auf Ebene Art; `anzucht.dauer#1` bis `#3` verworfen.
+
+#### K-pakchoi-17 – Saatempfehlung `se.brassica_rapa_chinensis.babyleaf` – nur offener Wert (neu)
+
+| kandidat_id | Status | Wert (Samen je Schwamm / Obergrenze / stehen lassen) | Einheit | Basis | Quelle | Klasse Saatmenge | System | Umgebung | Jahr |
+|---|---|---|---|---|---|---|---|---|---|
+| se.brassica_rapa_chinensis.babyleaf#1 (offen: Bereich 6 bis 12 ohne Zuordnung, Analogie, stehen lassen fehlt) | geprueft | 6 / 12 / leer | Samen, Pflanzen | – | cornell-gpn-blattgemuese-2016 | C (Quelle B1) | dwc, Steinwolle oder Oasis 1 inch | nicht angegeben | 2016 |
+
+Nur relevant, wenn `babyleaf` erlaubte Kulturform wird (siehe L-R2-10).
+
+### R2.2 Plausibilität
+
+Umrechnung nur zur Prüfung wie in Abschnitt 2 (alle EC-Rohwerte in mS/cm, Faktor 1). Neue EC-Kandidaten gibt es nicht (beide verworfen); die Gegenprobe ändert sich gegenüber Runde 1 nicht. P1 bis P16 gelten weiter.
+
+| Nr. | kandidat_id | Regel | Wert | Befund |
+|---|---|---|---|---|
+| P17 | art: kulturformen_erlaubt#2, kopf.kulturdauer_typisch_d#2; pw: keimung.keimart#1, anzucht.ph#3, anzucht.licht_h#2, anzucht.wassertemp#1, wachstum.ph#6, wachstum.licht_h#2, wachstum.wassertemp#2; offen: keimung.dauer#2, keimung.keimtemp#2, anzucht.dauer#4, wachstum.dauer#4; se: kopf#3 | V2 Fremdschlüssel `quelle_id` | frankiesgarten-pakchoi-2026 | Die Quellenzeile `q.frankiesgarten-pakchoi-2026` ist in `quelle.csv` verworfen (Titel weicht von der Seite ab), sodass diese 14 Kandidaten ohne gültige Quellenzeile nicht ladbar wären. |
+| P18 | pw.brassica_rapa_chinensis.keimung.dauer#2 | Form 4.4.1 (min, typ, max), V6 | 4 bis 7 d | `wert_typ` fehlt; min ≤ max und alle Werte über 0 sind erfüllt. |
+| P19 | pw.brassica_rapa_chinensis.keimung.keimtemp#2 | Form 4.4.1 (min, typ, max) | 20 bis 25 °C | `wert_typ` fehlt, den 4.4.1 für `keimtemp` verlangt; der Bereich selbst ist geordnet. |
+| P20 | pw.brassica_rapa_chinensis.anzucht.dauer#4 | V6, Form 4.4.1 | min 14 d | Nur `wert_min` belegt, aus «etwa Tag 7 bis 21» gerechnet, wobei der Zählbeginn ab Saat nur aus der Beschriftung des Anbauplans erschlossen ist; V6 ist so nicht vollständig prüfbar. |
+| P21 | pw.brassica_rapa_chinensis.anzucht.dauer#4 gegen art.umsetzen_ab_d und umsetzen_bis_d (#1, #2) | Vergleich mit den übrigen Kandidaten der Art | Ende Anzucht Tag 21 ab Saat | Die Quelle setzt erst an Tag 21 nach Saat in den Tower um, 5 Tage nach dem höchsten Kandidaten `umsetzen_bis_d` (16) und 11 Tage nach dem niedrigeren (10); ohne Validatorverstoss. |
+| P22 | pw.brassica_rapa_chinensis.wachstum.dauer#4 | V6, Form 4.4.1 | min 14 d | Nur `wert_min` belegt, aus Tag 35 minus Tag 21 gerechnet; V6 ist so nicht vollständig prüfbar. |
+| P23 | pw.brassica_rapa_chinensis.wachstum.dauer#4 | Vergleich mit den übrigen Kandidaten der Art | 14 d | Der Wert liegt unter allen übrigen Wachstumsdauern und `ernte_ab_d`-Kandidaten (21, 21, 35 d), bei der Caatinga-Studie um den Faktor 2.5; ohne Validatorverstoss. |
+| P24 | pw.brassica_rapa_chinensis.wachstum.licht_h#2, anzucht.licht_h#1, anzucht.licht_h#2 | Vergleich mit Artmerkmal `photoperiode` | 14 bis 16 h | Wie P16: Bei `photoperiode` = `langtag` ohne `kritische_tageslaenge_h` ist nicht prüfbar, ob bis 16 h Licht das Schossen auslösen (V7 eingehalten). |
+| P25 | art.brassica_rapa_chinensis.kulturformen_erlaubt#2 | Abgleich Wert und Fundstelle (R1.2) | kopf | Die Fundstelle nennt neben der Ernte der ganzen Rosette auch die laufende Ernte äusserer Blätter, was zu `kopf` mit `ernteart` `einmalig` nur teilweise passt; der Wert selbst ist gültig. |
+| P26 | se.brassica_rapa_chinensis.babyleaf#1 | 4.5 Pflichtfelder, R12.3 | 6 / 12 / leer | `pflanzen_stehen_lassen` fehlt (Pflicht ≥ 1), und `samen_je_schwamm` 6 ist die Untergrenze eines Bereichs, den die Quelle keiner Kultur zuordnet; Pak Choi ist dort nicht genannt (Analogie). |
+
+**Ohne Befund geprüft:** `anzucht.ph#3` und `wachstum.ph#6` 5.5 bis 6.5, typ 5.8 (V3 innerhalb 5.2 bis 7.0, V5 Bandbreite 1.0, typ im Bereich); `anzucht.wassertemp#1` und `wachstum.wassertemp#2` 18 bis 22 °C (V7 10 bis 28 °C; die Quelle ordnet den Wert keiner Phase zu, er steht in beiden); `anzucht.licht_h#2` und `wachstum.licht_h#2` 14 bis 16 h (V7); `keimung.keimart#1` `dunkel` (V8 nur `keimung`, V12); `bluete.anwendbar#2` und `fruchtbildung_reife.anwendbar#2` `entfaellt` (R1.1 Blattgemüse); `kulturdauer_typisch_d#2` 35 d entspricht in derselben Quelle Keimung 7 plus Anzucht 14 plus Wachstum 14; `kulturformen_erlaubt` `kopf` und `kulturform_vorgabe` `kopf` (V11 erfüllt); `systemeignung` `dwc` und `kratky` (V12); `se.kopf#3` 1 / 1 / 1 (Obergrenze ≥ Samen, stehen lassen ≥ 1, Klasse B bei gleichem Material nach Entscheid 0018 Punkt 5).
+
+**Vergleich mit der Kulturgruppe:** Pak Choi ist weiterhin die einzige Art in `teile/kohl/`.
+
+### R2.3 Lückenliste
+
+Klasse D, Prüfauftrag. Pflichtgrössen nach `03_import_w0.md` 9; verworfene Zeilen zählen nicht. Offene Kandidaten zählen als Kandidaten (keine Lücke), sind aber ohne Entscheid nicht ladbar.
+
+**Phasen und Pflichtgrössen (0).** Gegenüber Runde 1 geschlossen: L2 `keimung.keimart` (`#1`), L5 `bluete.anwendbar` und L6 `fruchtbildung_reife.anwendbar` (`#2`, `entfaellt`); L1 `keimung.dauer`, L3 `keimung.keimtemp` und L4 `anzucht.dauer` haben nun einen offenen Kandidaten. Mit `entfaellt` für Blüte und Fruchtbildung ist `wachstum` die letzte anwendbare Phase und braucht kein `wechselmerkmal`.
+
+Pflichtzeilen ohne ladbaren Kandidaten (nur offene Werte, 6): `keimung.dauer` (K-pakchoi-14), `keimung.keimtemp` (K-pakchoi-15), `anzucht.dauer` (K-pakchoi-16), `anzucht.ec` (K-pakchoi-06), `wachstum.dauer` (K-pakchoi-07), `se.brassica_rapa_chinensis.babyleaf` (K-pakchoi-17, nur bei erlaubtem `babyleaf`). Ohne Entscheid fehlen damit `dauer` und `ec` auf Ebene Art, und der Seed lädt Kulturform, Saatempfehlung und `profilwert` der Art nicht (8 Nr. 4).
+
+Bedingt (P17): Bleibt die Quelle `frankiesgarten-pakchoi-2026` verworfen, sind `keimung.keimart`, `keimung.dauer`, `keimung.keimtemp` und `anzucht.dauer` wieder Lücken.
+
+Nicht gezählt (Standardprofil, R1.4): `licht_h` in `keimung`, `wassertemp` in `keimung`.
+
+**Stammfelder (0).** `name_de`, `name_wiss`, `gbif_key`, `kulturgruppe_id` liegen vor (`vorgeschlagen`).
+
+**Artmerkmale (10).**
+
+| Nr. | Art | Feld |
+|---|---|---|
+| L-R2-01 | brassica_rapa_chinensis | samentyp |
+| L-R2-02 | brassica_rapa_chinensis | standard_keimfaehigkeit |
+| L-R2-03 | brassica_rapa_chinensis | liter_je_pflanze |
+| L-R2-04 | brassica_rapa_chinensis | wasserbedarf_je_pflanze_l |
+| L-R2-05 | brassica_rapa_chinensis | wuchshoehe_max_mm |
+| L-R2-06 | brassica_rapa_chinensis | kritische_tageslaenge_h (nötig, weil `photoperiode` = `langtag`) |
+| L-R2-07 | brassica_rapa_chinensis | bestaeubung_noetig |
+| L-R2-08 | brassica_rapa_chinensis | pythium |
+| L-R2-09 | brassica_rapa_chinensis | schossen_handlung |
+| L-R2-10 | brassica_rapa_chinensis | kulturformen_erlaubt: kein Kandidat belegt `babyleaf` (beide Kandidaten nennen nur `kopf`); nach Entscheid 0018 entfällt die Form ohne belegte Quelle |
+
+Gegenüber Runde 1 geschlossen: `systemeignung` (K-pakchoi-11), `kulturformen_erlaubt` für `kopf`, `kulturform_vorgabe`. Nicht gezählt: `keimlinge_je_knaeuel`, `aussaatfenster_outdoor`.
+
+**Kulturform `kopf` (2).**
+
+| Nr. | Art | Kulturform | Feld |
+|---|---|---|---|
+| L-R2-11 | brassica_rapa_chinensis | kopf | kulturdauer_max_d |
+| L-R2-12 | brassica_rapa_chinensis | kopf | entspitzen |
+
+Nicht gezählt: `ernteintervall_d`, `schnitte_max` (nur bei `mehrfach`).
+
+**Kulturform `babyleaf` (5, nur falls die Form erlaubt wird; sonst entfallen sie mit L-R2-10).**
+
+| Nr. | Art | Kulturform | Feld |
+|---|---|---|---|
+| L-R2-13 | brassica_rapa_chinensis | babyleaf | ernte_ab_d |
+| L-R2-14 | brassica_rapa_chinensis | babyleaf | ernteart |
+| L-R2-15 | brassica_rapa_chinensis | babyleaf | kulturdauer_typisch_d |
+| L-R2-16 | brassica_rapa_chinensis | babyleaf | kulturdauer_max_d |
+| L-R2-17 | brassica_rapa_chinensis | babyleaf | entspitzen |
+
+`ernteintervall_d` und `schnitte_max` hängen von `ernteart` ab und sind nicht gezählt.
+
+**Saatempfehlungen.** `kopf`: drei Kandidaten (K-pakchoi-10), keine Lücke. `babyleaf`: nur offener Kandidat (K-pakchoi-17), keine Lücke im Sinn «ohne Kandidat».
+
+**Hinweis V13, Ebene Kulturgruppe `kohl`:** unverändert, keine Zeile mit `ebene = kulturgruppe` in `teile/kohl/profilwert.csv` (siehe 3.6).
+
+### R2.4 Bestätigungen
+
+| Zeile | Wert | Übereinstimmende Kandidaten |
+|---|---|---|
+| ak.brassica_rapa_chinensis.kopf.ernte_ab_d | 21 d ab Umsetzen | #1 sfa (B1), #2 frontiers (A); Gegenwert #3 in K-pakchoi-03 (unverändert) |
+| pw.brassica_rapa_chinensis.wachstum.dauer | 21 d (nur min) | #1 sfa (B1), #2 frontiers (A), beide offen; Gegenwerte #3, #4 in K-pakchoi-07 |
+| pw.brassica_rapa_chinensis.wachstum.ph | 6.0 bis 7.0 | #1 sfa (B1, NFT), #2 risegardens (B2, DWC) |
+| pw.brassica_rapa_chinensis.wachstum.ph | 5.5 bis 6.5 | #3 caatinga-pakchoi-ec-2024 (A, NFT, Gewächshaus), #6 frankiesgarten-pakchoi-2026 (C, NFT; zusätzlich typ 5.8) |
+| se.brassica_rapa_chinensis.kopf | 1 / 1 / 1 | #1 frontiers (B, Steinwolle), #3 frankiesgarten (B, Schaumstoff); `pflanzen_stehen_lassen` 1 auch in #2 |
+| pw.brassica_rapa_chinensis.anzucht.licht_h | 14 bis 16 h | #1 risegardens-bok-choy-2026 (B2, DWC, LED), #2 frankiesgarten-pakchoi-2026 (C) |
+| art.brassica_rapa_chinensis.kulturformen_erlaubt | kopf | #1 cornell-gpn-blattgemuese-2016 (B1, DWC), #2 frankiesgarten-pakchoi-2026 (C) |
