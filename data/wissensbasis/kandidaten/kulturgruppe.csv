@@ -1,7 +1,7 @@
 kandidat_id,zeile_id,kulturgruppe_id,name,leitkultur_art_id,ec_obergrenze_validator,konflikt_id,status,freigegeben_am,notiz_tim
-fruchtgemuese#1,fruchtgemuese,fruchtgemuese,Fruchtgemüse,solanum_lycopersicum,2.6,,entwurf,,
-blattsalat#1,blattsalat,blattsalat,Blattsalate,lactuca_sativa,2.0,,entwurf,,
-kohl#1,kohl,kohl,Kohlgewächse,brassica_rapa_chinensis,2.0,,entwurf,,
-kraut_einjaehrig#1,kraut_einjaehrig,kraut_einjaehrig,Einjährige Kräuter,ocimum_basilicum,2.0,,entwurf,,
-kraut_ausdauernd#1,kraut_ausdauernd,kraut_ausdauernd,Ausdauernde Kräuter,petroselinum_crispum,2.0,,entwurf,,
-fuchsschwanz#1,fuchsschwanz,fuchsschwanz,Fuchsschwanzgewächse,spinacia_oleracea,2.0,,entwurf,,
+fruchtgemuese#1,fruchtgemuese,fruchtgemuese,Fruchtgemüse,solanum_lycopersicum,2.6,,freigegeben,2026-11-12,Lead nach Entscheid 0018: Kulturgruppe nach 03_import_w0.md 4.2.1 mit Mindestzeilen V13
+blattsalat#1,blattsalat,blattsalat,Blattsalate,lactuca_sativa,2.0,,freigegeben,2026-11-12,Lead nach Entscheid 0018: Kulturgruppe nach 03_import_w0.md 4.2.1 mit Mindestzeilen V13
+kohl#1,kohl,kohl,Kohlgewächse,brassica_rapa_chinensis,2.0,,freigegeben,2026-11-12,Lead nach Entscheid 0018: Kulturgruppe nach 03_import_w0.md 4.2.1 mit Mindestzeilen V13
+kraut_einjaehrig#1,kraut_einjaehrig,kraut_einjaehrig,Einjährige Kräuter,ocimum_basilicum,2.0,,freigegeben,2026-11-12,Lead nach Entscheid 0018: Kulturgruppe nach 03_import_w0.md 4.2.1 mit Mindestzeilen V13
+kraut_ausdauernd#1,kraut_ausdauernd,kraut_ausdauernd,Ausdauernde Kräuter,petroselinum_crispum,2.0,,freigegeben,2026-11-12,Lead nach Entscheid 0018: Kulturgruppe nach 03_import_w0.md 4.2.1 mit Mindestzeilen V13
+fuchsschwanz#1,fuchsschwanz,fuchsschwanz,Fuchsschwanzgewächse,spinacia_oleracea,2.0,,freigegeben,2026-11-12,Lead nach Entscheid 0018: Kulturgruppe nach 03_import_w0.md 4.2.1 mit Mindestzeilen V13
