@@ -53,3 +53,39 @@ Hinweis zu Rise Gardens: Blogartikel eines Herstellers hydroponischer Indoor-Gä
 | ocimum_basilicum | dauerkultur_blatt | ernte_ab_d, ernteintervall_d, schnitte_max, kulturdauer_max_d, kulturdauer_typisch_d | kein Beleg in Tagen (FAO: Ernte ab 15 cm Höhe, Ernte «continues for 30-50 days») |
 
 Saatmenge: Klasse A vorhanden (Steinwolle 2.5 cm, 2 Samen, 1 Pflanze), keine Lücke. Offene Frage für Tim: Babyleaf als weitere Kulturform (Johnny's nennt «Baby-leaf crop grown in hydroponic raft system»); nicht angelegt, weil der Auftrag nur Dauerkultur Blatt nennt.
+
+## Runde 2 (12.11.2026)
+
+### Suchweg
+
+- frankiesgarten.de Basilikum-Anleitung (Klasse C nach Entscheid 0018): Keimart, Keimdauer, Keimtemperatur, pH, EC-Stufen, Wassertemperatur (Anzuchtkarte und Wachstum), Lichtstunden, Samen je Würfel, Ernte der Triebspitzen. System «Hydro Tower» (Pumpe, Lösung läuft an den Wurzeln vorbei) als `nft` erfasst, Keimung und Anzucht in Schaumstoffwürfeln als `substrat_inert`. Keine Tage bis Umsetzen oder Ernte (Felder der Anzuchtkarte leer).
+- frankiesgarten.de FAQ: keine basilikumspezifischen Zahlen; Licht «14 bis 16 Stunden am Tag, egal ob Salat, Kräuter oder Fruchtgemüse» nicht übernommen (allgemein, Basilikum-Seite nennt dasselbe artbezogen).
+- CAFRE «Hydroponic production of leafy salads and herbs» (B1): Abschnitt 5.6 Basil belegt Rückschnitt und wiederholte Ernte der Seitentriebe (Kulturform Schnitt). Anhang 2 (Balkengrafiken EC, pH, Lufttemperatur, Kulturzeit in Wochen) ist im Text nicht lesbar, Werte nicht ablesbar, nicht erfasst.
+- Acta Horticulturae 1377 (2023, A): Basilikum in DWC und Kratky angebaut → `systemeignung = beide`.
+- Johnny's Broschüre (C): Mehrsamen-Pille 5 bis 6 Samen je 2½-Zoll-Würfel → `saatempfehlung_offen.csv`.
+- Frontiers 2021 (bereits Quelle): 16 h Licht für Sämlinge in Steinwolle unter LED, Einzelwert → offen.
+
+### Verworfen
+
+- Doty u. a. 2020 (HortTechnology 30(5), Umsetzen 14, 21, 28 Tage nach Saat in NFT): Sämlinge in Torfsubstrat angezogen, für Dauer und Umsetzfenster nicht hydroponisch (Konzept 9.1).
+- Corrado u. a. 2020 (Agronomy 10, 830, Schnitte nach 47 und 75 Tagen): Töpfe mit Torf und Perlit, nicht hydroponisch.
+- Walters und Currey 2015 (HortTechnology): Volltext gesperrt (HTTP 403), Umsetzen nur «2 weeks after sowing» (Wochen, Umrechnung verboten).
+- Alabama Extension ANR-2954, Illinois Extension Handouts: keine Basilikumwerte.
+- Johnny's Saatmenge 5 bis 15 Samen je 4-Zoll-Topf: Topf mit Substrat für den Verkauf, nicht hydroponisch belegt.
+- Blogs und KI-Seiten aus der Websuche (agrifarming.in, climatebiz, pages.dev-Seiten): ohne erkennbare Quelle.
+
+### Lückenliste nach Runde 2 (Klasse D)
+
+| Art | Phase / Kulturform | Grösse / Feld | Stand |
+|---|---|---|---|
+| ocimum_basilicum | keimung | dauer | nur offen: FAO 6–7, frankiesgarten 5–14 Tage (je ohne typ) |
+| ocimum_basilicum | keimung | keimtemp | nur offen: FAO und frankiesgarten 20–25 °C (ohne typ), Tüte 20 °C |
+| ocimum_basilicum | anzucht | dauer | kein Wert in Tagen ab Anzuchtbeginn |
+| ocimum_basilicum | anzucht | ec | nur offen: frankiesgarten Einzelwerte 0.4 (Anzucht) und 0.8 (Jungpflanze) |
+| ocimum_basilicum | anzucht | ph | Kandidat frankiesgarten 5.5–6.5 ohne Phasenangabe (Methodenprüfung offen) |
+| ocimum_basilicum | wachstum | dauer | kein Wert in Tagen ab Phasenbeginn |
+| ocimum_basilicum | keimung | licht_h, wassertemp | kein Wert |
+| ocimum_basilicum | anzucht | licht_h | nur offen: Frontiers 16 h (Einzelwert) |
+| ocimum_basilicum | – | umsetzen_ab_d, umsetzen_bis_d, standard_keimfaehigkeit, samentyp | kein hydroponischer Beleg |
+| ocimum_basilicum | dauerkultur_blatt | ernte_ab_d, ernteintervall_d, kulturdauer_typisch_d, kulturdauer_max_d | kein Wert in Tagen (CAFRE: Ernte «at roughly 3 week intervals», Wochen) |
+| ocimum_basilicum | schnitt | ernte_ab_d, ernteintervall_d, kulturdauer_typisch_d, schnitte_max | kein Wert in Tagen (CAFRE wie oben) |

@@ -88,3 +88,71 @@ Werte, die nur in `profilwert_offen.csv` stehen, sind mit «offen» markiert (be
 | – | Saatempfehlung `dauerkultur_frucht` | D: keine Quelle A bis C (UNALM nennt Steinwollwürfel 2.5 x 3.0 cm, aber keine Samenzahl) |
 | – | Artmerkmale | D wie Tomate; `pflanzen_je_m2` nur als Bereich (Alberta «3 to 6 plants/m²», CEAC «4-6 plants/m2») |
 | – | Kulturform-Felder | D wie Tomate (ausser `ernteart`) |
+
+## Runde 2 (12.11.2026, Auftrag `auftrag_runde-2.md`, Entscheid 0018)
+
+Bestehende Zeilen unverändert; nur neue Kandidaten mit der nächsten freien Nummer je `zeile_id` (über `profilwert.csv` und `profilwert_offen.csv` bzw. beide Saatempfehlungsdateien gezählt). Alle neuen Zeilen `status = entwurf`.
+
+### Suchweg
+
+- frankiesgarten.de (Entscheid 0018 Punkt 5, Klasse C, `praxis`): Tomaten-Seite `/anleitungen/gemueseanbau/tomaten-hydroponik/` (Keimung im Schaumstoffwürfel, Anzuchtstation mit Nährlösung und Luftsprudler unter Lampe, danach HydroFlex-Tower mit Pumpe 5 an/30 aus im Gewächshaus), Paprika-Seite `/anleitungen/gemueseanbau/paprika-hydroponik/` (Schaumstoffwürfel, Anzuchtstation, Hydrotower drinnen), Tabelle `/anleitungen/keimtemperaturen-und-keimdauer/` (Zeilen Tomate, Paprika, Chili; Samen je Würfel), `/faq/`. Eine eigene Chili-Seite gibt es nicht; die Paprika-Seite gilt für `capsicum_annuum`, die Keimtabelle hat eine eigene Zeile Chili.
+- Fork Farms Help Center (Hersteller des Indoor-Systems Flex Farm, B2): «Mini Tomatoes», «Mini Peppers» (Keimdauer, Tage bis zum Umsetzen, pH, Licht).
+- University of Hawaii, Kratky-Versuch Tomate 2005 (nicht zirkulierend, B1): EC-Stufen, Systemeignung Kratky. PDF über WebFetch geladen und gelesen.
+- EU-Richtlinie 2002/55/EG Anhang II (legislation.gov.uk): Mindestkeimfähigkeit Tomate und Paprika für `standard_keimfaehigkeit`.
+- Suchen nach Dauer je Phase (Blüte bis Ernte, Tage ab Umsetzen bis Blüte) in Hydroponik-Studien und Beratungsschriften für Tomate und Peperoni: kein Treffer mit Tageswerten min, typ, max.
+
+### Hinweise für Prüfer und Lead
+
+1. `system_quelle`: Den HydroFlex-Tower (Wurzeln hängen in Nährlösung, Pumpe im Intervall) und die Flex Farm habe ich als `nft` erfasst, weil die Aufzählung kein Turmsystem kennt; die Seiten nennen den Begriff NFT nicht. Anzuchtstation mit Luftsprudler (Tomate) als `dwc`, Anzuchtstation mit Schaumstoff im Wasser (Paprika) und Keimbox als `substrat_inert`. Die Methodenprüfung möge das je Zeile bestätigen.
+2. EC-Einheit frankiesgarten Tomate: Die Tomaten-Seite nennt neben den EC-Stufen keine Einheit; als `mS/cm` erfasst, weil die FAQ derselben Website für Tomaten «mS/cm» nennt und die Paprika-Seite «EC-Wert (mS/cm)». Kratky 2005 schreibt «mS» ohne Längenbezug.
+3. `pw.capsicum_annuum.anzucht.dauer#7` (14/14/28): Rechnung Tage ab Saat minus Beginn der Anzuchtphase (Tag 7), alle Zahlen aus der Paprika-Seite (Unterzeile «etwa Tag 7 bis 21», «Nach etwa 21 Tagen», «Ab Tag 21 bis 35 Tag»). Prüfen, ob «Tag 7» als Phasenbeginn genügt (die Keimdauer derselben Seite ist 7 bis 14 Tage).
+4. `standard_keimfaehigkeit`: gesetzliche Mindestkeimfähigkeit für Handelssaatgut (75 % Tomate, 65 % Paprika), als 0.75 bzw. 0.65 geschrieben; keine Hydroponik-Quelle, aber eine Saatguteigenschaft unabhängig vom Anbausystem. Klasse C, Quellenklasse `universitaet_beratung` (amtliche Norm); Lead entscheidet, ob die Grösse so zulässig ist.
+5. `art.solanum_lycopersicum.systemeignung#1 = kratky`: Der Versuch füllt die Tanks über ein Schwimmerventil nach und nennt die Methode «has promise», warnt aber vor dem hohen Wasserbedarf langer Kulturen. Für DWC fand ich keine Tomaten- oder Chili-Quelle; `beide` ist daher nicht belegt.
+6. `ak.solanum_lycopersicum.dauerkultur_frucht.entspitzen#1 = ja`: Die Quelle beschreibt Stabtomaten bis 2 m; die Sorten im Auftrag sind kompakte Balkon- und Ampeltomaten. Fachlich offen, ob Entspitzen bei ihnen gilt.
+7. Saatempfehlung: frankiesgarten-keimtabelle nennt 1 Samen je Würfel für einzeln wachsende Pflanzen (Tomate, Paprika, Chili) und 2 Samen bei Keimkraft unter 50 Prozent; daraus `samen_je_schwamm 1`, `obergrenze_samen 2`, `pflanzen_stehen_lassen 1`, Skala B (Schaumstoffwürfel, Grösse nicht genannt). Die Tomaten- und die Paprika-Seite nennen nur «ein Samen», deshalb in `saatempfehlung_offen.csv`.
+8. BBCH: In Runde 2 keine neuen BBCH-Zeilen. Die bestehende Quelle `bbch-monografie-2001` hat in `quelle.csv` noch den Link `reterurale.it`; laut Auftrag gilt https://www.politicheagricole.it/flex/AppData/WebLive/Agrometeo/MIEPFY800/BBCHengl2001.pdf. Die Zeile habe ich nicht geändert (Runde 1 abgeschlossen); Korrektur durch den Koordinator.
+
+### Verworfene Quellen (Runde 2)
+
+- scaleandstem.pages.dev, freshroot.pages.dev, mds.oandg.co.uk, my-niche-site-web-gmpz.vercel.app, mayfairfarms.com: ohne erkennbare Quelle bzw. Produkt-Vergleichsseiten.
+- greenwaybiotech.com (Blog eines Düngerhändlers ohne eigene Versuchsangaben, nicht geöffnet), greenhousegrower.com Royalstar («eight weeks after transplanting», Wochenangabe, Erde oder Substrat nicht genannt).
+- cales.arizona.edu/hydroponictomatoes: Seite nicht mehr erreichbar (404).
+- University of Arizona, Workshop-Modul 5 (Tomato Morphology and Steering): PDF über 10 MB, nicht lesbar.
+- EUR-Lex konsolidierte Fassung: Seite lieferte keinen Text; ersatzweise legislation.gov.uk (Fassung 31.12.2020).
+- Studien zu Peperoni in NFT (Kolumbien, Indien) und zu schwimmender Kultur (BMC Plant Biology 2024): nur Messzeitpunkte nach dem Umsetzen, keine Phasendauern.
+- frankiesgarten Tomaten-Seite, Termine (Aussaat ab 20. März, Umzug Mitte Mai, Ernte Anfang Juli bis Mitte Oktober): Kalenderdaten, keine Tage; nicht umgerechnet.
+- Fork Farms «Days to Harvest: 50-55 Days» (Tomate) und «75-90 Days» (Peperoni): Bezugspunkt nicht eindeutig (ab Saat oder ab Umsetzen) und nur Bereich; nicht als `ernte_ab_d` erfasst.
+- Kratky 2005, Daten Saat 5. Mai, Umsetzen 18. Juni, Ernte 18. August bis 29. Oktober 1999: Kalenderdaten, nicht in Tage umgerechnet; Erntedauer «72 day harvest period» ist ein Einzelwert der Sorte Big Beef und nicht als `kulturdauer` erfasst (Bezug ab Saat fehlt).
+
+### Lückenliste nach Runde 2 (ohne ladbaren Kandidaten, Klasse D)
+
+#### Tomate (`solanum_lycopersicum`)
+
+| Phase | Grösse | Stand nach Runde 2 |
+|---|---|---|
+| keimung | `dauer` | weiter nur offen (6 bis 10 Tage zweimal, 2 bis 4 Tage; alle ohne typ) |
+| keimung | `keimart` | geschlossen: `dunkel` (#1, #2, Klasse C) |
+| anzucht | `dauer` | weiter nur offen; keine neue Quelle mit Tagen |
+| anzucht | `ec` | neuer Kandidat #3 0.4 bis 1.3 mS/cm (C); dazu offen #4 (Einzelwerte) |
+| wachstum, bluete, fruchtbildung_reife | `dauer` | D: keine Hydroponik-Quelle mit Tagen min, typ, max |
+| keimung, anzucht | `licht_h` | keimung D; anzucht #1 12 bis 16 h |
+| alle | `wassertemp` | Kandidaten für alle fünf Phasen (C) |
+| wachstum, bluete, fruchtbildung_reife | `licht_h` | #1 14 bis 16 h (FAQ, C), offen #2 18 h |
+| – | Artmerkmale | D: `samentyp`, `liter_je_pflanze`, `wasserbedarf_je_pflanze_l`, `pflanzen_je_m2`, `wuchshoehe_max_mm`, `wuchsform`, `photoperiode`, `pythium`, `schossen_handlung`; `systemeignung` nur `kratky` |
+| – | Kulturform `dauerkultur_frucht` | D: `ernte_ab_d`, `ernteintervall_d`, `kulturdauer_typisch_d`, `kulturdauer_max_d` |
+
+#### Chili (`capsicum_annuum`)
+
+| Phase | Grösse | Stand nach Runde 2 |
+|---|---|---|
+| keimung | `dauer` | weiter nur offen (7 bis 14 Tage, 4 bis 7 Tage; ohne typ) |
+| keimung | `keimart` | geschlossen: `dunkel` (#1, #2, Klasse C) |
+| anzucht | `dauer` | neuer Kandidat #7 14/14/28 Tage (C, Rechnung siehe Hinweis 3) |
+| anzucht | `ph` | neuer Kandidat #2 5.5/5.8/6.0 (C) |
+| anzucht | `ec` | weiter nur offen (neu #4 Einzelwerte 0.5 und 1.0) |
+| wachstum, bluete | `dauer` | D |
+| fruchtbildung_reife | `dauer` | weiter nur offen (neu #5 3 bis 6 Wochen) |
+| keimung | `licht_h`, `wassertemp` | D |
+| anzucht bis fruchtbildung_reife | `licht_h`, `wassertemp` | Kandidaten 14 bis 16 h und 18 bis 24 °C (C) |
+| – | Artmerkmale | D: `samentyp`, `systemeignung` (keine DWC- oder Kratky-Quelle), übrige wie Tomate |
+| – | Kulturform `dauerkultur_frucht` | D: `ernte_ab_d`, `ernteintervall_d`, `kulturdauer_typisch_d`, `kulturdauer_max_d`, `entspitzen` |

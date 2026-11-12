@@ -64,3 +64,59 @@ Stand 12.11.2026 · Rechercheur blattsalat · Arten `lactuca_sativa` (Kulturform
 | valerianella_locusta | – | systemeignung (Kratky), liter_je_pflanze, schossen_handlung, photoperiode, umsetzen_ab_d/bis_d | nicht belegt |
 | standard | keimung | ph, wassertemp, licht_h | keine allgemeine Quelle für die Keimung im Würfel |
 | standard | wachstum | ph #2, wassertemp #2 | nur offen (UNH pH 5.5–7.0 zu breit; Oklahoma State in °F) |
+
+## Runde 2 (Issue #188, 12.11.2026)
+
+### Suchweg (Stichworte)
+
+- frankiesgarten.de (Entscheid 0018, Klasse C): Seite «Salat in Hydroponik», FAQ, «Keimtemperaturen und Keimdauer», Übersicht Gemüseanbau. Keine Seite zu Feldsalat, Babyleaf oder Microgreens (Übersicht geprüft; Websuche ohne Treffer).
+- Cornell GPN 2016 neu gelesen (PDF mit pdftotext): Kopfsalat 35 Tage ab Saat, 24 Tage ab Umsetzen; Abschnitt Baby Leaf Greens (6 bis 12 Samen je Zelle, Versuch 'Outredgeous' 3 Tage Keimung plus 10 Tage DWC).
+- University of Hawaii CTAHR VC-1 (2010, Kratky-Verfahren für Salat): pH, EC, Anzucht 1 bis 3 Wochen, Ernte 4 bis 6 Wochen nach Umsetzen, ein bis zwei Samen je Zelle.
+- Nüsslisalat: Plants 2023 Volltext über Europe PMC (PMC10097257) für Saat, Umsetzen und Ernte; Acta Hort 644 (Abstract), Acta Hort 1377 (Abstract), Rivista di Agraria 2018; Suchen italienisch (floating, alveolo, semi per foro) und englisch (mâche hydroponic rockwool).
+
+### Hinweise für den Koordinator
+
+- `system_quelle` der Salat-Seite von frankiesgarten.de: Keimung im Schaumstoffwürfel = `substrat_inert`; Anzucht in der «Station» mit Luftsprudler Tag und Nacht = `dwc`; Wachstum im HydroFlex Tower (Intervallpumpe 5 min an, 30 min aus, Wurzeln hängen frei) = `nft` als nächster Wert der Aufzählung (A). `umgebung_quelle = indoor_led`, weil die Seite Werte für «Licht drinnen» mit Pflanzenlampe nennt (A).
+- Die EC-Werte von frankiesgarten.de stehen in der Tabelle ohne Einheit; die FAQ derselben Seite nennt mS/cm. `ec_basis = unbekannt`. Die Kurzzitate der Dünge-Tabelle (anzucht.ec #3, wachstum.ec #6) sind aus Tabellenzellen zusammengesetzt («…»); der Quellenprüfer möge sie durch den Zellentext ersetzen.
+- `kulturdauer_typisch_d` als Summe aus derselben Quelle: Salat Babyleaf 13 = 3 Tage Keimung plus 10 Tage DWC (GPN); Nüsslisalat Kopf 51 = 22 Tage bis Umsetzen plus 29 Tage bis Ernte (Plants 2023, Saat 15.9., Ernte 5.11.2021). Rechnung jeweils in `fundstelle`.
+- Babyleaf Salat (GPN): Der Versuch lief in Speedling-Schalen mit Torf/Perlit, schwimmend im DWC; die Methodenprüfung hat in Runde 1 ein gleiches Substrat beim Nüsslisalat verworfen (Acta Hort 659). Die Werte stehen trotzdem als Kandidaten, weil die Wachstumsphase im DWC lief; Entscheid beim Lead.
+- `systemeignung` Salat: #1 `kratky` (CTAHR VC-1), #2 `dwc` (GPN); zusammen sprechen sie für `beide`, eine einzelne Quelle mit beiden Systemen fehlt.
+- `kulturformen_erlaubt` Salat: #1 (HS1258) nennt alle drei Formen, #2 (GPN) nur `kopf;babyleaf`. Nüsslisalat: #1 `kopf` (Plants 2023), #2 `babyleaf` (Rivista 2018); zusammen `kopf;babyleaf` wie Entscheid 0018.
+- `kulturform_vorgabe`: keine Quelle legt eine Vorgabe fest; die Kandidaten belegen nur die Nutzung der Form (Salat `schnitt` mit HS1258, Nüsslisalat `kopf` mit Plants 2023), die Wahl folgt Entscheid 0018.
+- `umsetzen_ab_d` Nüsslisalat 22 (Plants 2023) ist ein einzelner Umsetztag; `umsetzen_bis_d` nicht angelegt.
+- Saatempfehlung Salat Kopf: frankiesgarten.de (Schaumstoffwürfel, B) neu; Schnitt #3 als Analogie über Pflücksalat (C). CTAHR VC-1 («one or two seeds») und GPN Babyleaf («six to 12 depending on crop») in `saatempfehlung_offen.csv`.
+
+### Verworfene oder nicht verwendete Quellen (Runde 2)
+
+| Quelle | Grund |
+|---|---|
+| sites.google.com/view/ukybaehydroponics (Capstone-Projekt, Salat in NFT, zwei Samen je Steinwollwürfel, Umsetzen nach 1 bis 2 Wochen) | Projektseite von Studierenden ohne Herkunft der Werte, keine Organisation genannt |
+| LWG Bayern, Faltblatt «Salatkultur im Wasserbeet» (2018) | DWC beschrieben, aber keine Zahlen zu pH, EC, Dauer oder Saat |
+| Acta Hort 1377 (2023, Valerianella, Gaswechsel) | Abstract ohne pH, EC, Dauer oder Saatmenge |
+| Johnny's Seeds, West Coast Seeds, MIgardener, True Leaf Market (Mâche) | Katalog bzw. Erde; Keimdauer 7 bis 21 Tage gilt für Erde, nicht für Sollwerte |
+| frankiesgarten.de FAQ «Wie viele Samen kommen in einen Würfel?» | Frage ohne Antwort auf der FAQ-Seite; Antwort nur auf der Salat-Seite (verwendet) |
+| Agronomy 2020 und 2021 (Mehrfachschnitt) | Volltext weiter nicht abrufbar; kein Ernteintervall und keine Schnittzahl |
+
+### Lückenliste nach Runde 2 (Klasse D, keine Zeile angelegt)
+
+| Art | Phase | Grösse oder Feld | Bemerkung |
+|---|---|---|---|
+| lactuca_sativa | keimung | dauer | weiter nur offen: Einzelwerte «etwa 3 Tage» (frankiesgarten.de, zwei Seiten), 24 h (GPN); keine Quelle mit min, typ, max |
+| lactuca_sativa | anzucht | dauer | nur offen (neu VC-1 «1-3 weeks», Bereich ohne typ) |
+| lactuca_sativa | wachstum | dauer | nur offen (neu 4 bis 6 Wochen, frankiesgarten.de und VC-1) |
+| lactuca_sativa | keimung | wassertemp | kein Wert (Keimung ohne Nährlösung) |
+| lactuca_sativa | – | name_de, kulturgruppe_id | GBIF nennt «Salat» und die Kulturgruppe nicht; Stammfelder legt der Koordinator nach 4.3.1 und 4.2.1 fest |
+| lactuca_sativa | – | standard_keimfaehigkeit, samentyp | keine Hydroponik-Quelle |
+| lactuca_sativa | – | ak schnitt: ernte_ab_d, kulturdauer_typisch_d, ernteintervall_d, schnitte_max | kein Wert (frankiesgarten.de nennt keinen Erntetakt) |
+| lactuca_sativa | – | ak babyleaf: ernteart | kein Wert |
+| lactuca_sativa | – | Saatempfehlung babyleaf | nur offen (GPN 6 bis 12, nicht artbezogen) |
+| valerianella_locusta | keimung | dauer, keimart | kein Hydroponik-Wert (frankiesgarten.de: Keimtyp «siehe Tüte») |
+| valerianella_locusta | keimung | keimtemp | nur offen (neu frankiesgarten.de 15 bis 18 °C ohne typ) |
+| valerianella_locusta | anzucht | dauer | nur offen (Plants 2023: 22 Tage ab Saat inkl. Keimung) |
+| valerianella_locusta | anzucht | bbch, wechselmerkmal, ph, ec | keine Quelle (Plants 2023 nennt keine Blattzahl beim Umsetzen und keine Anzucht-Lösung) |
+| valerianella_locusta | wachstum | dauer, ph, ec | nur offen (Einzelwerte Plants 2023) |
+| valerianella_locusta | wachstum | bbch | abhängig von der fehlenden Anzucht-Grenze |
+| valerianella_locusta | alle | licht_h, wassertemp | kein Hydroponik-Wert |
+| valerianella_locusta | – | umsetzen_bis_d, standard_keimfaehigkeit, samentyp | nicht belegt |
+| valerianella_locusta | – | ak babyleaf: ernte_ab_d, ernteart | nicht belegt |
+| valerianella_locusta | – | Saatempfehlung kopf und babyleaf | keine Quelle nennt Samen je Würfel oder Zelle (Saatmenge D, Lead nach Entscheid 0018) |
