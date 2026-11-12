@@ -19,7 +19,6 @@ import {
 import {
   anlagenAus,
   bereicheAus,
-  plaetzeAus,
   zeilen,
   type DeckeltypZeile,
   type GefaessmodellZeile,
@@ -50,6 +49,7 @@ type Pumpe = (typeof PUMPEN)[number] | null;
 
 /** Ziel nach dem Speichern: Maske des Orts (W: Messmaske), Etiketten oder nächster Ort im Assistenten */
 type Nach = 'maske' | 'drucken' | 'naechstes';
+type Neu = Extract<Vorgang[number], { art: 'neu' }>;
 
 /** Wahlgruppe als fieldset mit legend (TextField.md «Auswahl und Wahlgruppe») */
 function Wahl<T extends string | number | null>({
@@ -119,7 +119,7 @@ export function GefaessNeu({ kuerzel, rolle: startRolle }: { kuerzel?: string; r
   const [ergebnis, setErgebnis] = useState<Schreibergebnis>();
   const [sendet, setSendet] = useState(false);
   /** zuletzt mit «Speichern und nächstes erfassen» gespeicherter Ort (B17) */
-  const [gespeichert, setGespeichert] = useState<{ code: string; kennung: string }>();
+  const [gespeichert, setGespeichert] = useState<{ code: string; warten: readonly Neu[] }>();
   /** wohin nach dem Speichern; «Erneut senden» wiederholt dasselbe Ziel */
   const nachRef = useRef<Nach>('maske');
 
@@ -177,9 +177,13 @@ export function GefaessNeu({ kuerzel, rolle: startRolle }: { kuerzel?: string; r
   const fehlerZu = (feld: string) => fehler.find((f) => f.feld === feld)?.grund;
   // B17 (Prüfer Runde 1, Befund 1): Vorschlag und Prüfung rechnen aus dem Bündel; bis es den eben gespeicherten Ort
   // enthält, würde der Assistent dieselbe Kennung noch einmal vorschlagen. Deshalb bis dahin warten.
+  // #170: gewartet wird auf alle neuen Zeilen des Vorgangs (gleiche Client-UUIDs), nicht nur auf die Kennung; ein
+  // schon bestehender Platz (Gefäss früher entfernt) stünde sonst zu früh im Bündel
   const nachgeladen =
     !gespeichert ||
-    (anlage !== undefined && plaetzeAus(teile, anlage.id).some((p) => p.kennung === gespeichert.kennung));
+    gespeichert.warten.every((w) =>
+      zeilen<{ client_id?: string | null }>(teile, w.tabelle).some((z) => z.client_id === w.felder.client_id),
+    );
   const weiterMoeglich = !nachgeladen
     ? false
     : schritt === 1
@@ -201,8 +205,12 @@ export function GefaessNeu({ kuerzel, rolle: startRolle }: { kuerzel?: string; r
    * Nächsten Ort beginnen (B17): Rolle, Bereich und Luftpumpe bleiben (die Gefässe einer Ebene teilen meist die
    * Pumpe, Konzept 5.2); Position schlägt die App neu vor, Box, Deckel und Intervalle sind leer.
    */
-  function neuBeginnen(code: string, kennung: string) {
-    setGespeichert({ code, kennung });
+  function neuBeginnen(code: string, schritte: Vorgang) {
+    // nur Tabellen im Bündel; Ereignisse, Etiketten und Netztöpfe reichen dafür nicht aus
+    const warten = schritte.filter(
+      (x): x is Neu => x.art === 'neu' && ['platz', 'gefaess', 'anzuchtort'].includes(x.tabelle),
+    );
+    setGespeichert({ code, warten });
     setSchritt(1);
     setPosition(undefined);
     setBetriebsart(undefined);
@@ -235,7 +243,7 @@ export function GefaessNeu({ kuerzel, rolle: startRolle }: { kuerzel?: string; r
     setErgebnis(antwort);
     if (antwort.status !== 'gespeichert' || !vorschlag?.code) return;
     if (nach === 'naechstes') {
-      neuBeginnen(vorschlag.code, vorschlag.kennung ?? '');
+      neuBeginnen(vorschlag.code, aktuell.schritte);
       return;
     }
     oeffnen(

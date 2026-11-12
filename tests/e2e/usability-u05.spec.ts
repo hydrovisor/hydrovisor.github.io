@@ -2,7 +2,7 @@
 // die Messmaske, Gefässe lassen sich ohne Umweg über die Anlage in Folge erfassen. REST nachgebildet wie
 // gefaess.spec.ts; Regal R ohne Plätze aus tests/fixtures/regal.ts; 360 × 640 aus der Konfiguration.
 import { expect, test, type Locator, type Page } from '@playwright/test';
-import { leeresRegal, type Teile } from '../fixtures/regal.ts';
+import { leeresRegal, platzId, uid, type Teile } from '../fixtures/regal.ts';
 import { sichtenNachrechnen, zeileAufnehmen } from '../fixtures/sichten.ts';
 import { authNachbilden, sitzungSpeichern } from './hilfen.ts';
 import { restNachbilden } from './rest.ts';
@@ -64,8 +64,8 @@ test('U05-AK1 Speichern der Messstelle W öffnet die Messmaske R-W', async ({ pa
 });
 
 /** verzögert das Nachladen der Plätze nach dem Speichern (wie ein langsames Netz am Regal) */
-async function nachladenVerzoegern(page: Page, ms: number): Promise<void> {
-  await page.route('**/rest/v1/platz*', async (route) => {
+async function nachladenVerzoegern(page: Page, ms: number, tabelle = 'platz'): Promise<void> {
+  await page.route(`**/rest/v1/${tabelle}*`, async (route) => {
     if (route.request().method() === 'GET') await new Promise((r) => setTimeout(r, ms));
     await route.fallback();
   });
@@ -138,4 +138,43 @@ test('U05-AK2 Anzuchtbox A1, dann A2: bis der neue Stand geladen ist, sperrt der
     .filter(([t, z]) => t === 'platz' && z['rolle'] === 'anzuchtort')
     .map(([, z]) => z['kennung']);
   expect(boxen).toEqual(['A1', 'A2']);
+});
+
+test('W168-AK1 Gefäss auf dem geräumten Platz 2.3: «Weiter» wartet auf das neue Gefäss im Bündel, danach Position 1', async ({
+  page,
+}) => {
+  // Platz 2.3 besteht schon ohne Gefäss (früher entfernt); das Erfassen legt nur ein Gefäss an, keinen Platz
+  const start = leeresRegal();
+  start['platz'] = [
+    {
+      id: platzId('2.3'),
+      client_id: platzId('2.3'),
+      anlage_id: uid('2a', 1),
+      bereich_id: uid('2e', 2),
+      kennung: '2.3',
+      rolle: 'gefaess',
+      aktiv: true,
+      storniert_am: null,
+    },
+  ];
+  const geschrieben = await mitDaten(page, start);
+  await nachladenVerzoegern(page, 1500, 'gefaess');
+  await gruppe(page, 'Luftpumpe').getByRole('radio', { name: 'P2', exact: true }).check();
+  await gefaessBisZusammenfassung(page, '3');
+  await knopf(page, 'Speichern und nächstes erfassen').click();
+
+  await expect(
+    page.getByRole('status').filter({ hasText: 'R-2.3 gespeichert, Stand wird geladen' }),
+  ).toBeVisible();
+  await expect(knopf(page, 'Weiter')).toBeDisabled();
+  await expect(page.getByRole('status').filter({ hasText: /^R-2\.3 gespeichert$/ })).toBeVisible({
+    timeout: 10_000,
+  });
+  await expect(gruppe(page, 'Position').getByRole('radio', { name: '1', exact: true })).toBeChecked();
+  await expect(knopf(page, 'Weiter')).toBeEnabled();
+
+  const gefaesse = geschrieben.filter(([t]) => t === 'gefaess');
+  expect(gefaesse).toHaveLength(1);
+  expect(gefaesse[0]?.[1]['platz_id']).toBe(platzId('2.3'));
+  expect(geschrieben.filter(([t]) => t === 'platz')).toHaveLength(0);
 });
