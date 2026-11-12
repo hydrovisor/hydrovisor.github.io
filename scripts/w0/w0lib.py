@@ -14,7 +14,13 @@ def lesen(pfad):
         return [], None
     with open(pfad, encoding='utf-8', newline='') as f:
         r = csv.DictReader(f)
-        return list(r), r.fieldnames
+        rows = list(r)
+    # Zeilen mit unquotiertem Komma im letzten Feld (notiz_tim) wieder zusammenfügen (Issue #190)
+    for row in rows:
+        rest = row.pop(None, None)
+        if rest:
+            row[r.fieldnames[-1]] = ','.join([row[r.fieldnames[-1]]] + rest)
+    return rows, r.fieldnames
 
 
 def schreiben(pfad, zeilen, kopf):
@@ -428,7 +434,7 @@ def uebertrag(b, log):
         for r in b.alle(n):
             if r['status'] == 'freigegeben' and r.get('quelle_id'):
                 benutzt.add(r['quelle_id'])
-    gesetzt = set()
+    gesetzt = {r['quelle_id'] for r in b.alle('quelle') if r['status'] == 'freigegeben'}
     for g in GRUPPEN:
         for r in b.d[(g, 'quelle')]:
             if r['status'] == 'entwurf' and r['methodenpruefung'] == 'zugelassen' and r['quellenpruefung'] == 'bestaetigt':
