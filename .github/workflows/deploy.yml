@@ -47,7 +47,13 @@ jobs:
           fetch-depth: 0
           fetch-tags: true
       - id: f
+        env:
+          SCHARF: ${{ inputs.seed_scharf }}
         run: |
+          # zuerst, vor den frühen exit 0: ein scharfer Lauf ist in der Zusammenfassung immer erkennbar (Entscheid 0017)
+          if [ "$SCHARF" = "true" ]; then
+            echo "### Seed scharf (Entscheid 0017) – schreibt in die Produktionsdatenbank, Freigabe von production nur durch Tim" >> "$GITHUB_STEP_SUMMARY"
+          fi
           [ -f package.json ] && echo app=true >> "$GITHUB_OUTPUT" || echo app=false >> "$GITHUB_OUTPUT"
           if [ ! -f supabase/config.toml ]; then echo db=false >> "$GITHUB_OUTPUT"; echo mig=false >> "$GITHUB_OUTPUT"; exit 0; fi
           # ausstehend ist alles seit der letzten erfolgreichen Migration, nicht nur der letzte Push
@@ -65,9 +71,6 @@ jobs:
           else
             echo mig=false >> "$GITHUB_OUTPUT"
             echo "### Keine ausstehende Migration – Functions und Seed-Trockenlauf, Freigabe durch den Lead (Entscheid 0010)" >> "$GITHUB_STEP_SUMMARY"
-          fi
-          if [ "${{ inputs.seed_scharf }}" = "true" ]; then
-            echo "### Seed scharf (Entscheid 0017) – schreibt in die Produktionsdatenbank, Freigabe von production nur durch Tim" >> "$GITHUB_STEP_SUMMARY"
           fi
       - name: Rückfall-Probe nur, wenn letzter-guter-stand der laufende Stand ist (sonst ein echter Rückfall)
         if: inputs.rueckfall_probe

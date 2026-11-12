@@ -50,7 +50,14 @@ async function zaehlen(tx: Db): Promise<Record<string, number>> {
            (select count(*)::int from public.einstellung) as einstellung,
            (select count(*)::int from public.art) as art,
            (select count(*)::int from public.sorte) as sorte,
-           (select count(*)::int from public.saatgut) as saatgut`;
+           (select count(*)::int from public.saatgut) as saatgut,
+           (select count(*)::int from public.herkunft) as herkunft,
+           (select count(*)::int from public.produkt) as produkt,
+           (select count(*)::int from public.k_faktor) as k_faktor,
+           (select count(*)::int from public.pflichtgroesse) as pflichtgroesse,
+           (select count(*)::int from public.kulturform_profilende) as kulturform_profilende,
+           (select count(*)::int from public.auswertung_fenster) as auswertung_fenster,
+           (select count(*)::int from public.ereignis) as ereignis`;
   return z ?? {};
 }
 
@@ -70,6 +77,9 @@ describe('W178-AK1 scharfer Seed ohne W0', () => {
       expect(nachher['art']).toBe(vorher['art']);
       expect(nachher['sorte']).toBe(vorher['sorte']);
       expect(nachher['saatgut']).toBe(vorher['saatgut']);
+      expect(nachher['herkunft']).toBe(vorher['herkunft']);
+      // ohne W0 keine Ereignisse «sollwert_geaendert»
+      expect(nachher['ereignis']).toBe(vorher['ereignis']);
 
       const [e] = await tx<{ termine: string[]; grenze: string }[]>`
         select feste_kalibriertermine::text[] as termine, stationsgrenze_ab::text as grenze from public.einstellung`;
@@ -78,7 +88,7 @@ describe('W178-AK1 scharfer Seed ohne W0', () => {
       const geraete = await tx<{ modell: string }[]>`select modell from public.messgeraet`;
       expect(geraete.map((g) => g.modell)).toContain(seedKonstanten.messgeraet.modell);
 
-      // idempotent: der zweite Lauf legt nichts mehr an
+      // idempotent: der zweite Lauf legt in keiner der gezählten Tabellen etwas an, auch nicht bei den Konstanten
       await seedScharf(tx, 'w178-2');
       expect(await zaehlen(tx)).toEqual(nachher);
     });

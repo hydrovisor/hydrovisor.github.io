@@ -18,7 +18,8 @@ Tim: «Ja, Konstanten jetzt».
 
 - Messgerät und Einstellung legt der Seed nur an, wenn die Tabellen leer sind; ein späterer Lauf überschreibt Tims Änderungen nicht (Ladeskript, A7).
 - [SQL]-Test W178-AK1 (`tests/seed/konstanten-ohne-w0.test.ts`) sichert, dass ein scharfer Lauf ohne W0 nur die Konstanten anlegt und wiederholbar ist.
-- Entscheid 0007 erhält einen Nachtrag; CLAUDE.md (Befehle, Entscheide) und die Anleitung Inbetriebnahme sind nachgeführt.
+- Entscheide 0007 und 0010 erhalten einen Nachtrag (Freigabe durch den Lead nur für Läufe ohne `seed_scharf`); CLAUDE.md (Regeln 1 und 4, Befehle, Entscheide) und die Anleitung Inbetriebnahme sind nachgeführt.
+- Ein Lauf mit `seed_scharf` deployt wie jeder Lauf des Jobs `migration` auch die Edge Functions, Pages mit Rauchtest und zieht das Tag `letzte-migration` nach; steht eine Migration aus, liefe auch `supabase db push`. Vor dem Start prüft der Lead, dass `git diff --name-only letzte-migration origin/main -- supabase/migrations` leer ist, und nennt das in der Nachricht an Tim.
 
 ## Verworfen
 
