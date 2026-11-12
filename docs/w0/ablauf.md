@@ -24,12 +24,14 @@ data/wissensbasis/kandidaten/
   teile/<kulturgruppe_id>/profilwert.csv
   teile/<kulturgruppe_id>/saatempfehlung.csv
   teile/<kulturgruppe_id>/profilwert_offen.csv  belegte Werte, die die Form des Validators nicht erfüllen
+  teile/<kulturgruppe_id>/saatempfehlung_offen.csv  belegte Saatempfehlungen ohne alle Pflichtfelder (Annahme 7)
   teile/<kulturgruppe_id>/recherche.md        Lückenliste und Suchweg des Rechercheurs (nur Koordinator)
   berichte/fachkritik_<art_id>.md             Fachkritiker
   berichte/freigabevorschlaege_runde-<n>.md   Redaktor
   quelle.csv, kulturgruppe.csv, art.csv,      zusammengeführt durch den Koordinator;
   profilwert.csv, saatempfehlung.csv          diese Dateien prüft der Validator
   profilwert_offen.csv                        zusammengeführt, vom Validator nicht gelesen
+  saatempfehlung_offen.csv                    zusammengeführt, vom Validator nicht gelesen
 ```
 
 Der Validator prüft im Modus `--kandidaten` jede Zeile unabhängig vom Status. Ein wörtlich belegter Wert, der seine Form nicht erfüllt (Einzelwert, Dauer ohne typischen Wert, Band schmaler als 0.2 oder breiter als 1.2, ausserhalb der Grenzen V3, V4, V7), steht deshalb in `profilwert_offen.csv` mit der Spalte `grund`. Er durchläuft dieselben Prüfungen und erscheint in der Konfliktliste; übernehmen kann ihn nur Tim über «eigener Wert».
@@ -68,7 +70,7 @@ Je Datei die Kopfzeile der ersten Arbeitsdatei, dann alle Datenzeilen. In `quell
 
 ```bash
 k=data/wissensbasis/kandidaten
-for d in art profilwert profilwert_offen saatempfehlung; do
+for d in art profilwert profilwert_offen saatempfehlung saatempfehlung_offen; do
   { head -n 1 "$(ls $k/teile/*/$d.csv | head -n 1)"; tail -q -n +2 $k/teile/*/$d.csv; } > $k/$d.csv
 done
 { head -n 1 "$(ls $k/teile/*/quelle.csv | head -n 1)"; tail -q -n +2 $k/teile/*/quelle.csv | awk -F, '!gesehen[$1]++'; } > $k/quelle.csv
@@ -83,6 +85,7 @@ npm run w0:pruefen -- --kandidaten
 | `art.csv` | `kandidat_id,zeile_id,art_id,kulturform,feld,wert,quelle_id,fundstelle,kurzzitat,evidenzklasse,vermerk,methodenpruefung,quellenpruefung,abgerufen_am,konflikt_id,status,freigegeben_am,notiz_tim` |
 | `profilwert.csv` | `kandidat_id,zeile_id,ebene,bezug,phase,groesse,wert_min,wert_typ,wert_max,text_wert,einheit_quelle,ec_basis,bezugstemperatur_c,bezugs_dli,system_quelle,umgebung_quelle,quelle_id,fundstelle,kurzzitat,evidenzklasse,vermerk,methodenpruefung,quellenpruefung,abgerufen_am,konflikt_id,status,freigegeben_am,notiz_tim` |
 | `profilwert_offen.csv` | Spalten von `profilwert.csv`, dazu am Ende `grund` |
+| `saatempfehlung_offen.csv` | Spalten von `saatempfehlung.csv`, dazu am Ende `grund` |
 | `saatempfehlung.csv` | `kandidat_id,zeile_id,ebene,bezug,kulturform,samen_je_schwamm,obergrenze_samen,pflanzen_stehen_lassen,klasse_saatmenge,substrat_passung,quelle_id,fundstelle,kurzzitat,begruendung,methodenpruefung,quellenpruefung,abgerufen_am,konflikt_id,status,freigegeben_am,notiz_tim` |
 | `kulturgruppe.csv` | `kandidat_id,zeile_id,kulturgruppe_id,name,leitkultur_art_id,ec_obergrenze_validator,konflikt_id,status,freigegeben_am,notiz_tim` |
 
@@ -96,3 +99,4 @@ npm run w0:pruefen -- --kandidaten
 4. (A) Die Arbeitsdateien unter `teile/` und die Berichte bleiben im Repository wie die Kandidatendateien (Konzept 9.2); der Validator liest sie nicht.
 5. (A) `profilwert_offen.csv` ist eine Arbeitsdatei ausserhalb von 03_import_w0.md 3, weil der Validator verworfene Kandidaten nicht überspringt und Konzept 9.1 Ergänzen, Kürzen und Mitteln verbietet. Ein Wert daraus kommt nur über Tims «eigener Wert» als neue Kandidatenzeile in `profilwert.csv`. Sie trägt Quelle, Fundstelle, Kurzzitat und Klasse des offenen Kandidaten, auf den sich Tim stützt (das Kurzzitat bleibt wörtlich und belegt den Ausgangswert), Vermerk `keine` und in `notiz_tim` Tims Wert mit Grund und der `kandidat_id` des offenen Kandidaten. Stützt sich Tims Wert auf keinen Kandidaten, entsteht keine Zeile (Klasse D, Prüfauftrag).
 6. (A) Saatempfehlungen, die Tim entschieden hat, ohne Quelle der Saatmengen-Skala A bis C, legt der Koordinator mit `klasse_saatmenge = D`, leeren Herkunftsfeldern (V9 nimmt Klasse D aus) und `begruendung` «entschieden von Tim, Konzept R12.3» an; Kandidaten der Rechercheure mit Quelle stehen daneben. Pflichtfelder, die der Entscheid nicht nennt (`samen_je_schwamm`, `obergrenze_samen`, `pflanzen_stehen_lassen`, `substrat_passung`), fragt der Koordinator mit den Freigabevorschlägen bei Tim ab.
+7. (A) `saatempfehlung_offen.csv` (Probelauf #184): Nennt eine Quelle der Saatmengen-Skala A bis C nicht alle Pflichtfelder (`samen_je_schwamm`, `obergrenze_samen`, `pflanzen_stehen_lassen`), steht die Zeile unverändert mit `grund` in dieser Datei, wie bei `profilwert_offen.csv` (Annahme 5). Sie durchläuft dieselben Prüfungen; die fehlenden Felder ergänzt nur Tim über «eigener Wert», danach legt der Koordinator die Zeile in `saatempfehlung.csv` an.
