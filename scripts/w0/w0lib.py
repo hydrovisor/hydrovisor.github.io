@@ -6,7 +6,7 @@ GRUPPEN = ['blattsalat', 'fruchtgemuese', 'kohl', 'kraut_einjaehrig', 'kraut_aus
 DATEIEN = ['quelle', 'art', 'profilwert', 'profilwert_offen', 'saatempfehlung', 'saatempfehlung_offen']
 OK = ('geprueft', 'vorgeschlagen')
 KLASSE = {'A': 4, 'B1': 3, 'B2': 2, 'C': 1, 'B': 3, 'D': 0}
-HEUTE = '2026-11-12'
+HEUTE = os.environ.get('W0_HEUTE', '2026-11-12')  # Datum des Lead-Entscheids; je Runde mit W0_HEUTE setzen
 
 
 def lesen(pfad):

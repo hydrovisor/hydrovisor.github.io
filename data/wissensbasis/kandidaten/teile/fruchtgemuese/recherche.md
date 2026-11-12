@@ -337,3 +337,32 @@ Nur `pw.solanum_lycopersicum.bluete.dauer` (Blüte bis Fruchtansatz) und `pw.sol
 |---|---|---|
 | Tomate | `bluete.dauer` | nur offen: neu #2 14.00 bis 14.67 Tage (B1); kein gültiger Kandidat (D für gültige Form) |
 | Tomate | `fruchtbildung_reife.dauer` | nur offen: neu #5 58.46 bis 59.13 Tage (B1), #6 35 Tage (A), #7 35 Tage (A); dazu #2 bis #4 aus Runde 7 (ab Blüte, verworfen); kein gültiger Kandidat |
+
+## Runde 9 (13.11.2026): Blütedauer Tomate
+
+Nur `pw.solanum_lycopersicum.bluete.dauer` (offene Blüte, BBCH 60/61, bis Fruchtansatz, BBCH 71), Ebene Art. Kein neuer Kandidat, keine neue Quelle.
+
+### Suchweg
+
+- Europe PMC (REST, Volltext-XML): tomato mit hydroponic, rockwool, soilless und «BBCH» mit anthesis/«fruit set»; «days to fruiting», «days to fruit setting», «days to 50% fruit set», «days to first fruiting», «first fruit setting»; «fruit set was (recorded|scored|determined)» mit «after anthesis»/«DAA». Gelesen: PMC12328372, PMC4235429, PMC13274057, PMC10142461, PMC12432177, PMC13360295, PMC10009779, PMC6211714, PMC6339924, PMC8777011.
+- Websuche englisch «days from anthesis to fruit set», «from flowering to fruit set» mit hydroponic/rockwool/plant factory; türkisch («topraksız domates» «ilk çiçeklenme» «meyve tutumu»); chinesisch («番茄 基质栽培 始花期 坐果期 定植后»).
+- University of Arizona CEAC, Workshop «Module 7 Tomato Flowers and Fruit» (2026, PDF) gelesen.
+- Rise Gardens Blog (zwei Tomatenartikel) mit curl gelesen.
+
+### Verworfen
+
+| Quelle | Grund |
+|---|---|
+| Arizona CEAC Module 7 (2026): «Open flowers are ready for pollination (anthesis)» «After ~2 days, petals close and then fall off» | Lebensdauer der Einzelblüte (Schliessen der Kronblätter), nicht Blühbeginn bis Fruchtansatz; Fruchtansatz nur «visually confirm fruit set», ohne Tage |
+| Frontiers 2014 PMC4235429 (Leitfaden Tomate in Klimakammern): «between 6 and 8 weeks after flowering fruits will reach the (red) ripe stage» | Blüte bis Reife, kein Fruchtansatz; zitiert Literatur ohne Systemangabe |
+| PMC13274057, PMC12432177, PMC8777011, PMC10319911 und weitere Treffer zu «fruit set» mit DAA | Probenahmen oder Pflanzenmarkierung an festen Tagen nach Anthese (Protokoll), keine gemessene Dauer bis Fruchtansatz; PMC13274057 ist Peperoni |
+| Rise Gardens Blog (Kirschtomaten, Hydroponik) | nur erste Ernte 55 bis 70 Tage ab Umsetzen, keine Blüte- oder Fruchtansatztage |
+| JASHS (Scribd-Kopie, Klimakammer, 'Azes'): Tage Anthese bis Reife | laut Suchauszug Klimakammer ohne Hydroponik, ab Anthese bis Reife; Scribd-Kopie nicht geöffnet |
+| Turkish Journal of Agriculture, Dergipark-Treffer (Kokopit, Perlit) | Auszüge nur Tage bis Blüte bzw. EC je Phase, kein Fruchtansatz in Tagen |
+| Chinesische Treffer (casb.org.cn, napstic), Taiwan MOA A02_2 (PDF, Text nicht extrahierbar) | Erde bzw. ohne Phasentage; Taiwan-Merkblatt allgemeine Kulturübersicht |
+
+### Lückenliste nach Runde 9
+
+| Art | Phase / Feld | Stand |
+|---|---|---|
+| Tomate | `bluete.dauer` | unverändert D für gültige Form: keine Hydroponik-Quelle mit Tagen Blühbeginn bis Fruchtansatz; offen nur #1 (UA CEAC, verworfen) und #2 (UNALM 2019, verworfen) |
