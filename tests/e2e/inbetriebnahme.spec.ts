@@ -6,7 +6,8 @@
 //
 // Annahmen (A):
 // (A1) «Nach dem Seed» heisst: Messgerät, Einstellungen und Wissen aus W0 mit Arten, Sorten und Packungen sind da
-//      (scripts/seed/ladeskript.ts); keine Anlage. Hier stellvertretend das Wissen aus tests/fixtures/saeen.ts.
+//      (scripts/seed/ladeskript.ts); keine Anlage. Hier stellvertretend das Wissen aus tests/fixtures/saeen.ts. Ohne
+//      W0-Dateien lädt der Seed nur die Konstanten (Messgerät, Einstellungen): IB-AK4 (#174).
 // (A2) Gefässe: stellvertretend 2.3 (Rako 40 × 30 × 22, D2, P2), Anzuchtbox A1 und Messstelle W; die übrigen zwölf
 //      Gefässe und A2 bis A4 erfasst Tim mit demselben Ablauf (gefaess.spec.ts).
 import { expect, test, type Locator, type Page } from '@playwright/test';
@@ -35,6 +36,11 @@ function nachDemSeed(): Teile {
   const w = saatWissen();
   const wissen = ['einstellung', 'art', 'saatempfehlung', 'sorte', 'v_sollwert', 'saatgut', 'v_keimrate'];
   return { messgeraet: [{ ...MESSGERAET }], ...Object.fromEntries(wissen.map((n) => [n, w[n] ?? []])) };
+}
+
+/** scharfer Seed ohne W0-Dateien (#174): nur die Seed-Konstanten Messgerät und Einstellungen, kein Wissen */
+function nurKonstanten(): Teile {
+  return { messgeraet: [{ ...MESSGERAET }], einstellung: saatWissen()['einstellung'] ?? [] };
 }
 
 const offen = (z: Zeile) => z['storniert_am'] === null || z['storniert_am'] === undefined;
@@ -134,12 +140,8 @@ test('IB-AK1 leerer Produktionsstand: Heute zeigt «0 von 9», die Einstellungen
   ).toBeVisible();
 });
 
-test('IB-AK2 nach dem Seed führt die Checkliste Punkt für Punkt durch die Inbetriebnahme, jeder Punkt hakt sich ab', async ({
-  page,
-}) => {
-  test.setTimeout(180_000);
-  await page.clock.install();
-  const s = await oeffnen(page, nachDemSeed());
+/** Punkte 1 bis 8 der Checkliste über ihre Knöpfe, wie die Anleitung sie beschreibt; endet mit «8 von 9» */
+async function punkte1bis8(page: Page, s: Stand): Promise<void> {
   await heute(page, 0);
 
   // Punkt 1: Anlage R mit vier Ebenen (Konzept 5.2)
@@ -255,6 +257,15 @@ test('IB-AK2 nach dem Seed führt die Checkliste Punkt für Punkt durch die Inbe
   await taste(page, 'Stimmt').click();
   await expect(page.getByText('in Betrieb (Volumen offen)')).toBeVisible();
   await heute(page, 8);
+}
+
+test('IB-AK2 nach dem Seed führt die Checkliste Punkt für Punkt durch die Inbetriebnahme, jeder Punkt hakt sich ab', async ({
+  page,
+}) => {
+  test.setTimeout(180_000);
+  await page.clock.install();
+  const s = await oeffnen(page, nachDemSeed());
+  await punkte1bis8(page, s);
 
   // Punkt 9: erste Aussaat Lollo Rossa in A1 mit Ziel 2.3, Reihe 1
   await knopf(liste(page), 'Aussaat erfassen').click();
@@ -281,4 +292,22 @@ test('IB-AK2 nach dem Seed führt die Checkliste Punkt für Punkt durch die Inbe
   await page.reload();
   await expect(page.getByRole('heading', { name: 'Heute', level: 1 })).toBeVisible({ timeout: 15_000 });
   await expect(liste(page)).toHaveCount(0);
+});
+
+test('IB-AK4 Seed nur mit Konstanten (ohne W0): Punkte 1 bis 8 gehen durch, die Aussaat wartet auf die Sorten', async ({
+  page,
+}) => {
+  test.setTimeout(180_000);
+  await page.clock.install();
+  const s = await oeffnen(page, nurKonstanten());
+  await punkte1bis8(page, s);
+  await knopf(liste(page), 'Aussaat erfassen').click();
+  await expect(page.getByRole('heading', { name: 'Säen', level: 1 })).toBeVisible();
+  await expect(page.getByRole('button', { name: /^Lollo Rossa/ })).toHaveCount(0);
+  await expect(page.getByRole('status').filter({ hasText: 'Noch keine Sorten' })).toBeVisible();
+  await expect(knopf(page, 'Weiter')).toBeDisabled();
+  // Regal-Maske: auch diese Taste 68 dp (CLAUDE.md, Oberfläche)
+  expect((await knopf(page, 'Sorte erfassen').boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(68);
+  await knopf(page, 'Sorte erfassen').click();
+  await expect(page).toHaveURL(/#\/sorten\/neu$/);
 });

@@ -389,6 +389,20 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
         {passungen && zielG ? (
           <p className="hv-saeen-zeile">Für {zielG.kennung} · gerechnet am Umsetztag der Sorte</p>
         ) : null}
+        {/* #174: ohne Sorten (Seed ohne W0) nicht nur eine leere Liste mit gesperrtem «Weiter» */}
+        {teile && sorten.length === 0 ? (
+          <Notice
+            title="Noch keine Sorten"
+            action={
+              <a className="hv-btn hv-btn-secondary hv-btn-compact" href={hashZu({ name: 'sorte-neu' })}>
+                Sorte erfassen
+              </a>
+            }
+          >
+            Die Sorten der ersten Runde kommen mit dem Wissen (W0) über den Seed. Einzelne Sorten erfasst du
+            selbst.
+          </Notice>
+        ) : null}
         <div className="hv-choice" role="group" aria-label="Sorten">
           {sichtbar.map((s) => (
             <div key={s.sorteId} className="hv-saeen-sorte">
