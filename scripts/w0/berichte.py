@@ -2,7 +2,7 @@
 # Aufruf im Repository-Wurzelordner:
 #   python -X utf8 scripts/w0/berichte.py runde-2
 #       erzeugt pruefliste_9-4_runde-2.md neu mit denselben zeile_id wie die bestehende Datei (Teil A und Teil B)
-#   python -X utf8 scripts/w0/berichte.py runde-<n> --basis <git-ref> [--issue <nr>]
+#   python -X utf8 scripts/w0/berichte.py runde-<n> --basis <git-ref> --issue <nr>
 #       Prüfliste und Lead-Entscheide für alle freigegebenen Zeilen, die gegenüber <git-ref> neu sind oder sich geändert haben
 import os
 import re
@@ -13,6 +13,7 @@ import datetime
 import io
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import w0lib  # noqa: E402
 from w0lib import Bestand, frei, REGELN, lesen  # noqa: E402
 
 B = 'data/wissensbasis/kandidaten/berichte'
@@ -122,7 +123,7 @@ def runde_n(b, ref, nr, issue):
     with open(f'{B}/pruefliste_9-4_runde-{nr}.md', 'w', encoding='utf-8', newline='') as f:
         f.write('\n'.join(txt))
     le = [f'# Lead-Entscheide W0 Runde {nr} (Entscheid 0018, Issue #{issue})',
-          f'Stand {datetime.date.today():%d.%m.%Y}. Erzeugt aus den Kandidatendateien (Spalte `notiz_tim` der freigegebenen Zeilen). '
+          f'Stand {datetime.date.fromisoformat(w0lib.HEUTE):%d.%m.%Y}. Erzeugt aus den Kandidatendateien (Spalte `notiz_tim` der freigegebenen Zeilen). '
           f'Werkzeug: `scripts/w0/lead_entscheide_runde{nr}.py` mit `scripts/w0/w0lib.py`, Bericht `scripts/w0/berichte.py`.', '',
           '## Fachregeln für offene Werte (A)', '| Regel | Inhalt |', '|---|---|']
     le += [f'| {k} | {v} |' for k, v in REGELN.items()]
@@ -144,5 +145,5 @@ if __name__ == '__main__':
     if sys.argv[1] == 'runde-2':
         runde2(b)
     elif sys.argv[1].startswith('runde-'):
-        issue = sys.argv[sys.argv.index('--issue') + 1] if '--issue' in sys.argv else '190'
+        issue = sys.argv[sys.argv.index('--issue') + 1]
         runde_n(b, sys.argv[sys.argv.index('--basis') + 1], sys.argv[1].split('-')[1], issue)

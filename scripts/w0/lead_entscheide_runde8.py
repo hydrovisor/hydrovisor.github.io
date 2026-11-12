@@ -12,9 +12,7 @@ from w0lib import *  # noqa: F401,F403,E402
 
 b = Bestand()
 LOG = []
-R7 = 'Runde 8, '
-import w0lib  # noqa: E402
-w0lib.HEUTE = '2026-11-13'
+RN = 'Runde 8, '
 
 
 def ok(kid):
@@ -36,7 +34,7 @@ def E(zid, basis, felder, grund):
         LOG.append(('UEBERSPRUNGEN', zid, f'{basis} nicht geprüft'))
         return None
     vorher = frei(b, zid)
-    neu = eigen(b, zid, basis, felder, R7 + grund)
+    neu = eigen(b, zid, basis, felder, RN + grund)
     _ersetzt(zid, neu['kandidat_id'], vorher)
     LOG.append(('EIGEN', zid, {k: v for k, v in felder.items() if k.startswith('wert')}))
     return neu
@@ -48,17 +46,10 @@ def W(zid, kid, grund):
         LOG.append(('UEBERSPRUNGEN', zid, f'{kid} nicht geprüft oder offen'))
         return
     vorher = frei(b, zid)
-    freigeben(b, zid, kid, R7 + grund)
+    freigeben(b, zid, kid, RN + grund)
     _ersetzt(zid, kid, vorher)
     LOG.append(('WAHL', zid, kid))
 
-
-def zitat(*kids):
-    rows = [finde(b, k)[2] for k in kids]
-    return ' … '.join(r['kurzzitat'] for r in rows)
-
-
-P = 'pw.'
 
 P = 'pw.'
 
@@ -83,7 +74,7 @@ E(f'{P}{a}.fruchtbildung_reife.dauer', f'{P}{a}.fruchtbildung_reife.dauer#5', d3
 
 # Mangold: Anzucht-pH (einziger Kandidat in Validatorform) und Anzucht-EC
 a = 'beta_vulgaris_cicla'
-W(f'{P}{a}.anzucht.ph', f'{P}{a}.anzucht.ph#3', 'einziger geprüfter Kandidat in Validatorform (frankiesgarten, Zeile Mangold mit Stufe Anzucht)')
+W(f'{P}{a}.anzucht.ph', f'{P}{a}.anzucht.ph#3', 'einziger geprüfter Kandidat in Validatorform (frankiesgarten, Zeile Mangold mit Stufe Anzucht); bestätigt durch #4 (Plants 2021, Klasse A, pH 6.5 der Sämlingslösung, im Band), kein Konflikt nach Regel 1')
 E(f'{P}{a}.anzucht.ec', f'{P}{a}.anzucht.ec#5', band(0.68),
   'Regel E1 (A): Einzelwert 0.68 mS/cm der Sämlingslösung (Klasse A, Indoor-LED) vor #3 und #4 (frankiesgarten, Klasse C, Regel 1)')
 
@@ -111,7 +102,7 @@ def v13_nachfuehren():
                        methodenpruefung=quelle.get('methodenpruefung', ''), quellenpruefung=quelle.get('quellenpruefung', ''),
                        freigegeben_am='', notiz_tim='')
             alt = r['kandidat_id']
-            n = anlegen(b, g, 'profilwert', neu, f'{R7}Mindestzeile V13 als Kopie von {quelle["kandidat_id"]} ({wie}); ersetzt {alt}')
+            n = anlegen(b, g, 'profilwert', neu, f'{RN}Mindestzeile V13 als Kopie von {quelle["kandidat_id"]} ({wie}); ersetzt {alt}')
             _ersetzt(r['zeile_id'], n['kandidat_id'], r)
             LOG.append(('V13_NEU', r['zeile_id'], quelle['kandidat_id']))
 

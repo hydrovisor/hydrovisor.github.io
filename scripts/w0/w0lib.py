@@ -455,8 +455,8 @@ def uebertrag(b, log):
     kg, kgkopf = lesen(f'{K}/kulturgruppe.csv')
     for r in kg:
         r['status'] = 'freigegeben'
-        r['freigegeben_am'] = HEUTE
-        r['notiz_tim'] = notiz('Kulturgruppe nach 03_import_w0.md 4.2.1 mit Mindestzeilen V13')
+        r['freigegeben_am'] = r.get('freigegeben_am') or HEUTE
+        r['notiz_tim'] = r.get('notiz_tim') or notiz('Kulturgruppe nach 03_import_w0.md 4.2.1 mit Mindestzeilen V13')
     schreiben(f'{K}/kulturgruppe.csv', kg, kgkopf)
     b.speichern()
     # Zusammenführen (ablauf.md Abschnitt 5; Quelle: freigegebene bzw. beste Zeile je kandidat_id)

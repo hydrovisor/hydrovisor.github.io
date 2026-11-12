@@ -299,7 +299,7 @@ Nur `pw.solanum_lycopersicum.bluete.dauer` (Blüte bis Fruchtansatz) und `pw.sol
 - Europe PMC (REST, Volltext-XML): tomato mit hydroponic, rockwool, soilless, perlite, coir, NFT und «fruit set» «days after transplanting», «from fruit set to», «anthesis to fruit set», «fruit set stage», «days after fruit set», «days to first fruit set», «fruit development period», «fruit growth period», «fruit set was determined» «days after anthesis». Gelesen u. a. PMC6328480, PMC7698269, PMC6515393, PMC11255863, PMC6403137, PMC13164892, PMC11882041, PMC12646150, PMC10319911.
 - Beratung englisch: Alabama Extension (Greenhouse Tomato Production), UGA B1182, UF/IFAS HS169, Grodan-Whitepaper (Fruchtqualität), Tower Garden Tomaten: keine Tage Fruchtansatz bis Ernte.
 - Japanisch («養液栽培» «着果から収穫まで»): Berichte der Präfekturen Akita, Ibaraki, Yamaguchi, Hokkaido: keine Tage ab Fruchtansatz.
-- Spanisch («amarre de fruto» «ddt» Tezontle, «desde el cuajado hasta la recolección», «de cuajado a cosecha» hidropónico): Treffer Masterarbeit UNALM 2019 (Castro, CIHNM Lima) mit «Días a floración», «Días a fructificación», «Días a cosecha» ab Umsetzen; über die DSpace-REST-Schnittstelle als PDF geladen und gelesen.
+- Spanisch («amarre de fruto» «ddt» Tezontle, «desde el cuajado hasta la recolección», «de cuajado a cosecha» hidropónico): Treffer Masterarbeit UNALM 2019 (CIHNM Lima) mit «Días a floración», «Días a fructificación», «Días a cosecha» ab Umsetzen; über die DSpace-REST-Schnittstelle als PDF geladen und gelesen.
 - Portugiesisch («início da frutificação» «dias após o transplantio» hidropônico): Revista Ciência Agronômica, PAB 2007 (NFT Viçosa), Nativa, Embrapa: Fruchtansatz nur als Nährlösungsphase, ohne Tage.
 
 ### Neue Kandidaten (alle offen)

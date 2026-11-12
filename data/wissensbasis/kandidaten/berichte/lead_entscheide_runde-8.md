@@ -19,7 +19,7 @@ Stand 12.11.2026. Erzeugt aus den Kandidatendateien (Spalte `notiz_tim` der frei
 | zeile_id | Wert | Quelle (Klasse) | Entscheid |
 |---|---|---|---|
 | `pw.beta_vulgaris_cicla.anzucht.ec` | 0.48/0.88 mS/cm | plants-mangold-durchfluss-2021 (A) | eigener Wert aus pw.beta_vulgaris_cicla.anzucht.ec#5: Runde 8, Regel E1 (A): Einzelwert 0.68 mS/cm der Sämlingslösung (Klasse A, Indoor-LED) vor #3 und #4 (frankiesgarten, Klasse C, Regel 1) |
-| `pw.beta_vulgaris_cicla.anzucht.ph` | 5.5/6.5 | frankiesgarten-ec-wert-tabelle (C) | Runde 8, einziger geprüfter Kandidat in Validatorform (frankiesgarten, Zeile Mangold mit Stufe Anzucht) |
+| `pw.beta_vulgaris_cicla.anzucht.ph` | 5.5/6.5 | frankiesgarten-ec-wert-tabelle (C) | Runde 8, einziger geprüfter Kandidat in Validatorform (frankiesgarten, Zeile Mangold mit Stufe Anzucht); bestätigt durch #4 (Plants 2021, Klasse A, pH 6.5 der Sämlingslösung, im Band), kein Konflikt nach Regel 1 |
 | `pw.solanum_lycopersicum.fruchtbildung_reife.dauer` | 47/59/74 | unalm-tomate-mnb-tesis-2019 (B1) | eigener Wert aus pw.solanum_lycopersicum.fruchtbildung_reife.dauer#5: Runde 8, Regel D3 (A): erste Ernte minus Fruchtansatz derselben Arbeit = 58.5 bis 59.1, gerundet 59 (wie Chili fruchtbildung_reife.dauer 58) |
 
 Dazu 1 Kulturgruppen-Mindestzeilen (V13) als Kopie der neuen Art-Zeilen der Leitkultur bzw. mit «(A) andere Art».
