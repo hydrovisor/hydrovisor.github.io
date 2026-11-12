@@ -32,6 +32,8 @@ import { TextField } from '../bausteine/TextField.tsx';
 import { useBuendel } from '../buendel.tsx';
 import { jetzt } from '../bundeldaten.ts';
 import { hashZu, oeffnen } from '../router.ts';
+import { vorlagenAusTeilen } from '../../domain/vorlagen/bestand.ts';
+import { BoxFormular, DeckelFormular } from './Vorlagen.tsx';
 
 const BETRIEBSARTEN: { wert: Betriebsart; text: string }[] = [
   { wert: 'dwc', text: 'DWC' },
@@ -110,9 +112,19 @@ export function GefaessNeu({ kuerzel, rolle: startRolle }: { kuerzel?: string; r
   const [betriebsart, setBetriebsart] = useState<Betriebsart>();
   const [festeDosis, setFesteDosis] = useState(false);
   const [luftpumpe, setLuftpumpe] = useState<Pumpe>(null);
-  const [modellId, setModellId] = useState<string>();
+  const [modellWahl, setModellId] = useState<string>();
   const [volumen, setVolumen] = useState<string>();
-  const [deckelId, setDeckelId] = useState<string>();
+  const [deckelWahl, setDeckelId] = useState<string>();
+  // #185: Box und Deckel lassen sich im Assistenten selbst erfassen; gibt es genau eine Vorlage (etwa die eben
+  // erfasste), ist sie gewählt, damit «Weiter» ohne weiteren Tipp frei ist
+  const modellId = modellWahl ?? (modelle.length === 1 ? modelle[0]?.id : undefined);
+  const deckelId = deckelWahl ?? (deckel.length === 1 ? deckel[0]?.id : undefined);
+  const [vorlageOffen, setVorlageOffen] = useState(false);
+  const [vorlageMeldung, setVorlageMeldung] = useState<string>();
+  const vorlageFertig = (text: string) => {
+    setVorlageOffen(false);
+    setVorlageMeldung(text);
+  };
   const [intervalle, setIntervalle] = useState<Intervalle>();
   const [fehler, setFehler] = useState<Verstoss[]>([]);
   const [vorgang, setVorgang] = useState<{ schluessel: string; schritte: Vorgang }>();
@@ -196,6 +208,8 @@ export function GefaessNeu({ kuerzel, rolle: startRolle }: { kuerzel?: string; r
 
   function weiter() {
     setFehler([]);
+    setVorlageOffen(false);
+    setVorlageMeldung(undefined);
     setGespeichert(undefined);
     // Anzuchtbox und Messstelle direkt zur Zusammenfassung
     setSchritt(rolle === 'gefaess' ? schritt + 1 : 4);
@@ -362,7 +376,7 @@ export function GefaessNeu({ kuerzel, rolle: startRolle }: { kuerzel?: string; r
       ) : schritt === 2 ? (
         <div className="hv-formular">
           {modelle.length === 0 ? (
-            <Notice tone="warn" title="Zuerst Vorlagen für Box und Deckel erfassen" />
+            <Notice title="Noch keine Box-Vorlage: hier erfassen, sie gilt danach für alle Gefässe" />
           ) : (
             <Wahl
               titel="Box"
@@ -378,19 +392,34 @@ export function GefaessNeu({ kuerzel, rolle: startRolle }: { kuerzel?: string; r
               }}
             />
           )}
-          <TextField
-            label="Betriebsvolumen"
-            unit="l"
-            inputMode="decimal"
-            value={volumenText}
-            error={fehlerZu('betriebsvolumen')}
-            onChange={(e) => setVolumen(e.target.value)}
-          />
+          {/* #185: bei offenem Box-Formular gilt dessen Betriebsvolumen, nicht zwei Felder untereinander */}
+          {modelle.length > 0 && !vorlageOffen ? (
+            <TextField
+              label="Betriebsvolumen"
+              unit="l"
+              inputMode="decimal"
+              value={volumenText}
+              error={fehlerZu('betriebsvolumen')}
+              onChange={(e) => setVolumen(e.target.value)}
+            />
+          ) : null}
+          {vorlageMeldung ? <Notice kompakt tone="ok" title={vorlageMeldung} /> : null}
+          {modelle.length === 0 || vorlageOffen ? (
+            <BoxFormular
+              bestand={vorlagenAusTeilen(teile).modelle}
+              fertig={vorlageFertig}
+              abbrechen={() => setVorlageOffen(false)}
+            />
+          ) : (
+            <Button variant="secondary" onClick={() => setVorlageOffen(true)}>
+              Neue Box erfassen
+            </Button>
+          )}
         </div>
       ) : schritt === 3 ? (
         <div className="hv-formular">
           {deckel.length === 0 ? (
-            <Notice tone="warn" title="Zuerst Vorlagen für Box und Deckel erfassen" />
+            <Notice title="Noch kein Deckel: hier erfassen, er gilt danach für alle Gefässe" />
           ) : (
             <Wahl
               titel="Deckel oder Platte"
@@ -412,6 +441,18 @@ export function GefaessNeu({ kuerzel, rolle: startRolle }: { kuerzel?: string; r
               />
             </>
           ) : null}
+          {vorlageMeldung ? <Notice kompakt tone="ok" title={vorlageMeldung} /> : null}
+          {deckel.length === 0 || vorlageOffen ? (
+            <DeckelFormular
+              bestand={vorlagenAusTeilen(teile).deckel}
+              fertig={vorlageFertig}
+              abbrechen={() => setVorlageOffen(false)}
+            />
+          ) : (
+            <Button variant="secondary" onClick={() => setVorlageOffen(true)}>
+              Neuen Deckel erfassen
+            </Button>
+          )}
         </div>
       ) : (
         <div className="hv-formular">

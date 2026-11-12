@@ -149,7 +149,8 @@ function Formularknoepfe({ sendet, abbrechen }: { sendet: boolean; abbrechen: ()
   );
 }
 
-function DeckelFormular({
+/** auch im Assistenten «Gefäss erfassen» (#185) */
+export function DeckelFormular({
   bestand,
   ersetzt,
   vorschlag,
@@ -304,7 +305,8 @@ function Vorschlag({ e, uebernehmen }: { e: GefaessmodellEingabe; uebernehmen: (
   return null;
 }
 
-function BoxFormular({
+/** auch im Assistenten «Gefäss erfassen» (#185) */
+export function BoxFormular({
   bestand,
   ersetzt,
   fertig,

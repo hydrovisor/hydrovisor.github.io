@@ -13,15 +13,35 @@ import { useBuendel } from '../buendel.tsx';
 import { abschlussGemerkt, abschlussMerken, einweichenEndeLesen, einweichenStarten } from '../einweichen.ts';
 import { hashZu } from '../router.ts';
 
-function Aktion({ punkt, starten }: { punkt: Punkt; starten: () => void }) {
+function Aktion({
+  punkt,
+  starten,
+  ueberspringen,
+}: {
+  punkt: Punkt;
+  starten: () => void;
+  ueberspringen: () => void;
+}) {
   const z = punkt.ziel;
+  // #185: wer den Messstift schon eingelegt hat, hakt den Punkt mit «Schon eingeweicht» sofort ab
+  const schon = (
+    <Button variant="secondary" onClick={ueberspringen}>
+      Schon eingeweicht
+    </Button>
+  );
   if (z.art === 'einweichen')
     return punkt.timerEnde === undefined ? (
-      <Button variant="secondary" onClick={starten}>
-        {punkt.knopf}
-      </Button>
+      <>
+        <Button variant="secondary" onClick={starten}>
+          {punkt.knopf}
+        </Button>
+        {schon}
+      </>
     ) : (
-      <span className="hv-check-menge">Läuft, hakt sich nach 12 Stunden selbst ab</span>
+      <>
+        <span className="hv-check-menge">Läuft, hakt sich nach 12 Stunden selbst ab</span>
+        {schon}
+      </>
     );
   if (z.art === 'gefaess-neu')
     return (
@@ -106,6 +126,12 @@ export function Einrichtung() {
     setEnde(neu);
     setJetzt(Date.now());
   };
+  const ueberspringen = () => {
+    const neu = Date.now();
+    einweichenStarten(neu);
+    setEnde(neu);
+    setJetzt(neu);
+  };
   const erledigt = stand.punkte.filter((p) => p.erledigt).length;
   return (
     <section className="hv-einrichtung" aria-labelledby="einrichtung-titel">
@@ -122,7 +148,9 @@ export function Einrichtung() {
           titel: p.titel,
           zustand: p.zustand,
           ...(p.timerEnde !== undefined ? { timerEnde: p.timerEnde } : {}),
-          ...(p.zustand === 'aktiv' ? { aktion: <Aktion punkt={p} starten={starten} /> } : {}),
+          ...(p.zustand === 'aktiv'
+            ? { aktion: <Aktion punkt={p} starten={starten} ueberspringen={ueberspringen} /> }
+            : {}),
         }))}
       />
     </section>
