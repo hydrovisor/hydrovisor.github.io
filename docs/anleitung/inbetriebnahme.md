@@ -50,7 +50,7 @@ Heute › Checkliste › «Anlage anlegen».
 
 ## Punkt 2: Messstift 12 h einweichen
 
-Messstift ohne Kappe in Leitungswasser stellen (Trockenelektrode, Konzept 5.6). In der Checkliste «Einweichen starten»: Der Timer zählt 12:00:00 herunter und läuft auch nach dem Schliessen der App weiter. Nach Ablauf hakt sich der Punkt ab, und «Kalibrieren» wird aktiv. Liegt der Stift schon länger im Wasser, tippe «Schon eingeweicht»: Der Punkt hakt sich sofort ab, auch während der Timer läuft.
+Messstift ohne Kappe in Leitungswasser stellen (Trockenelektrode, Konzept 5.6). In der Checkliste «Einweichen starten»: Der Timer zählt 12:00:00 herunter und läuft auch nach dem Schliessen der App weiter. Nach Ablauf hakt sich der Punkt ab, und «Kalibrieren» wird aktiv. Liegt der Stift schon länger im Wasser, tippe «Einweichen überspringen»: Der Punkt hakt sich sofort ab, auch während der Timer läuft.
 
 ## Punkt 3: Messgerät kalibrieren mit Gegenprobe
 
@@ -112,7 +112,7 @@ In der Checkliste «Gefässe erfassen». Je Gefäss vier Schritte: Platz (Rolle 
 | 4.4 | Ebene 4, 4 | Konstantpegel, «Feste Dosis (Station)» | P4 | Leni Flori 36 | S5 |
 | 4.5 | Ebene 4, 5 | Konstantpegel, «Feste Dosis (Station)» | P3 | Leni Flori 36 | S5 |
 
-Fehlt für ein Gefäss noch die passende Box oder der Deckel, erfasst du sie direkt im Assistenten: In Schritt 2 «Neue Box erfassen» bzw. in Schritt 3 «Neuen Deckel erfassen» (ohne Vorlage ist das Formular gleich offen), «Speichern»; die neue Vorlage ist danach gewählt, und «Weiter» geht. Die Intervalle (Messen, Nachfüllen, Wechseln) schlägt die App nach der Betriebsart vor; sie stehen in der Zusammenfassung und lassen sich dort ändern.
+Fehlt für ein Gefäss noch die passende Box oder der Deckel, erfasst du sie direkt im Assistenten: In Schritt 2 «Neue Box erfassen» bzw. in Schritt 3 «Neuen Deckel erfassen» (ohne Vorlage ist das Formular gleich offen), «Speichern»; ist es die erste Vorlage, ist sie danach gewählt; sonst die neue Vorlage in der Liste antippen, dann «Weiter». Die Intervalle (Messen, Nachfüllen, Wechseln) schlägt die App nach der Betriebsart vor; sie stehen in der Zusammenfassung und lassen sich dort ändern.
 
 **Anzuchtboxen:** Rolle «Anzuchtbox», «Weiter», «Speichern und nächstes erfassen», viermal. Die App schlägt Kennung, Typ und Lage vor: A1 vorne und A2 hinten als Lichtkeimer (weiss), A3 vorne und A4 hinten als Dunkelkeimer (schwarz), je 25 Würfel (Konzept 5.8). Vorschlag in der Zusammenfassung prüfen.
 

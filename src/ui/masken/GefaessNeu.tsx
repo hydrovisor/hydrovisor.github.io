@@ -124,6 +124,10 @@ export function GefaessNeu({ kuerzel, rolle: startRolle }: { kuerzel?: string; r
   const vorlageFertig = (text: string) => {
     setVorlageOffen(false);
     setVorlageMeldung(text);
+    // keine veraltete Wahl: bei einer einzigen Vorlage wählt der Rückfall sie, sonst wählt Tim (Prüfer #185, Befund 1)
+    setModellId(undefined);
+    setDeckelId(undefined);
+    setVolumen(undefined);
   };
   const [intervalle, setIntervalle] = useState<Intervalle>();
   const [fehler, setFehler] = useState<Verstoss[]>([]);
@@ -533,7 +537,14 @@ export function GefaessNeu({ kuerzel, rolle: startRolle }: { kuerzel?: string; r
       {anlage && schritt < 4 ? (
         <div className="hv-messen-speichern">
           {schritt > 1 ? (
-            <Button variant="secondary" onClick={() => setSchritt(rolle === 'gefaess' ? schritt - 1 : 1)}>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setVorlageOffen(false);
+                setVorlageMeldung(undefined);
+                setSchritt(rolle === 'gefaess' ? schritt - 1 : 1);
+              }}
+            >
               Zurück
             </Button>
           ) : null}

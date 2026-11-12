@@ -312,7 +312,7 @@ test('IB-AK4 Seed nur mit Konstanten (ohne W0): Punkte 1 bis 8 gehen durch, die 
   await expect(page).toHaveURL(/#\/sorten\/neu$/);
 });
 
-test('W185-AK1 «Schon eingeweicht» hakt Punkt 2 sofort ab, auch während der Timer läuft', async ({
+test('W185-AK1 «Einweichen überspringen» hakt Punkt 2 sofort ab, auch während der Timer läuft', async ({
   page,
 }) => {
   await page.clock.install();
@@ -327,7 +327,7 @@ test('W185-AK1 «Schon eingeweicht» hakt Punkt 2 sofort ab, auch während der T
   // Timer gestartet, dann doch schon eingeweicht (Messstift lag seit gestern im Wasser)
   await knopf(liste(page), 'Einweichen starten').click();
   await expect(liste(page).getByRole('timer')).toHaveText('12:00:00');
-  await knopf(liste(page), 'Schon eingeweicht').click();
+  await knopf(liste(page), 'Einweichen überspringen').click();
   await expect(page.getByRole('heading', { name: 'Einrichtung · 2 von 9 erledigt' })).toBeVisible();
   await expect(knopf(liste(page), 'Kalibrieren')).toBeVisible();
   // bleibt nach dem Neuladen abgehakt

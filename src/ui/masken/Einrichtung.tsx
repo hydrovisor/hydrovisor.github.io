@@ -23,10 +23,10 @@ function Aktion({
   ueberspringen: () => void;
 }) {
   const z = punkt.ziel;
-  // #185: wer den Messstift schon eingelegt hat, hakt den Punkt mit «Schon eingeweicht» sofort ab
+  // #185: wer den Messstift schon eingelegt hat, hakt den Punkt mit «Einweichen überspringen» sofort ab
   const schon = (
     <Button variant="secondary" onClick={ueberspringen}>
-      Schon eingeweicht
+      Einweichen überspringen
     </Button>
   );
   if (z.art === 'einweichen')
