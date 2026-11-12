@@ -251,3 +251,33 @@ Hinweis für die Methodenprüfung: Erster Fund mit Bezug ab Keimung statt ab Saa
 |---|---|---|---|
 | valerianella_locusta | keimung | dauer | weiter Klasse D (keine Hydroponik-Quelle mit Keim- oder Auflaufdauer) |
 | valerianella_locusta | anzucht | dauer | kein Kandidat in Validatorform; offen: #1 22 Tage ab Saat, #2 14 Tage ab Saat, neu #3 14 Tage ab Keimung (Einzelwert) |
+
+## Runde 9 (13.11.2026): Nüsslisalat keimung.dauer und anzucht.dauer
+
+Kein neuer Kandidat, keine neue Quelle.
+
+### Suchweg
+
+- Websuche deutsch «Feldsalat Floating-Verfahren/Hydrokultur Versuch Aussaat Auflaufen Tage Pflanzung» (LVG, LWG, Versuchsanstalten); italienisch «valerianella floating system semina emergenza giorni trapianto»; englisch «Gonnella lamb's lettuce floating system sowing emergence».
+- Europe PMC (Volltext, Open Access) Valerianella/lamb's lettuce/corn salad/mache mit hydroponic, floating, rockwool, vertical farm, plant factory, NFT, soilless, growth chamber und germination/emergence/transplanted: neu gelesen PMC12197136, PMC12526387, PMC8117335.
+- unibz-Repositorium (JSFA 91(2) 2011, Feldsalat im Floating mit Eisen und Sulfat): nur Metadaten.
+
+### Verworfen
+
+| Quelle | Grund |
+|---|---|
+| Plants 14 (2025, PMC12197136, Valerianella unter Rot-Blau-LED, Klimakammer) | Anzucht in Sand und Perlit 1:1, «cultivated for 36 days from seed sowing»; keine Keim- oder Umsetztage |
+| Front. Plant Sci. 2021 (PMC8117335, Floating und Ebbe-Flut, Baby-Leaf) | «At the cotyledon stage (6–8 days after sowing), plantlets were transferred» gilt für Salat und Endivie; Feldsalat nur zitiert (Gonnella) |
+| PMC12526387 | kein Feldsalat |
+| JSFA 91(2) 2011 (unibz, Floating) | Volltext nicht frei; Repositorium nur Titel |
+| Gonnella et al., Acta Hort. 644 (2004), Floating | Volltext nicht frei; Abstracts nur Ernte rund 50 Tage nach Saat |
+| Zanin et al. (Padova, Floating mit Saatdichten), CNR-Eintrag | Abstracts ohne Keim- oder Umsetztage |
+| oekolandbau.nrw.de (Feldsalat unter Glas, Saat- und Pflanztermine) | Anbau in Erde bzw. Topfballen, nicht hydroponisch; nur Kalenderdaten |
+| Uni-Halle-Bachelorarbeit, Horticulture Journal 85(2), BLSF 2023 | schon in früheren Runden geprüft |
+
+### Lückenliste nach Runde 9
+
+| Art | Phase | Grösse | Stand |
+|---|---|---|---|
+| valerianella_locusta | keimung | dauer | weiter Klasse D (keine Hydroponik-Quelle mit Keim- oder Auflaufdauer) |
+| valerianella_locusta | anzucht | dauer | unverändert: kein Kandidat in Validatorform; offen #1 bis #3 (Einzelwerte, ab Saat bzw. ab Keimung) |

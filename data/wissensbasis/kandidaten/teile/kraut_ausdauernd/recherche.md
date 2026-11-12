@@ -283,3 +283,33 @@ Keine neue Quelle in `quelle.csv` (Salve Regina schon vorhanden).
 |---|---|---|---|
 | Schnittlauch | keimung | dauer | kein Kandidat in Validatorform; offen: Salve Regina 8 (Einzelwert), Gardyn 7–21 (verworfen) |
 | Schnittlauch | anzucht | dauer | kein Kandidat in Validatorform; offen: Salve Regina 7 (Einzelwert, aus 15 minus 8) |
+
+## Runde 9 (13.11.2026): Keim- und Anzuchtdauer Schnittlauch
+
+Gesucht nur: `pw.allium_schoenoprasum.keimung.dauer`, `pw.allium_schoenoprasum.anzucht.dauer`. Kein neuer Kandidat, keine neue Quelle.
+
+### Suchweg
+
+- Websuche Hersteller: «chives hydroponic days to germinate transplant» mit Tower Garden, Lettuce Grow, Aerospring, Click and Grow; «Tower Garden chives rockwool transplant after sprouting».
+- Websuche Beratung: «hydroponic herb production guide table chives days to germination days to transplant extension».
+- Europe PMC (Volltext, Open Access): Schnittlauch/chives mit rockwool, hydroponic, vertical farm, plant factory, NFT, DWC, ebb and flow und sown/transplanted/emergence; gelesen PMC5894456 (Sci. Hortic. 2018, Weltraum-Gewächshaus, Steinwollplugs), PMC10724622, PMC13088466, PMC9818334.
+- Japanisch («チャイブ 水耕栽培 播種 発芽 定植»), NCSU Plants for Human Health «Starting Seeds for a Tower Garden».
+
+### Verworfen
+
+| Quelle | Grund |
+|---|---|
+| Tower Garden «How to Grow Chives and Bring Your Meals Alive» (us.towergarden.com) | Cloudflare-Sperre (curl «Just a moment», WebFetch HTTP 403), keine Archivkopie; laut Suchauszug «ready to transplant about two weeks after sprouting» (wäre Einzelwert für `anzucht.dauer`). Nicht prüfbar, kein Kandidat. Hinweis für den Lead: Tim könnte die Seite im Browser öffnen und das Zitat bestätigen |
+| Sci. Hortic. 2018 (PMC5894456, EDEN-ISS-Vorversuch, Steinwollplugs 2 cm) | Schnittlauch nur Ernte nach 42 Tagen und Nachwuchs 8 Tage; keine Keim- oder Umsetztage |
+| PMC10724622, PMC13088466, PMC9818334 | kein Schnittlauch mit Keim- oder Umsetzangaben (PMC9818334 Allium tuberosum) |
+| NCSU «Starting Seeds for a Tower Garden» | keine Art, keine Tage (Umsetzen bei ersten echten Blättern) |
+| Rise Gardens «Red Baron Bunching» (10 Tage Keimung) | Allium fistulosum, schon verworfen |
+| Johnny's, Fork Farms Herb Grow Guide, Alabama ANR-2954, The Growcer, dripcanopy, letpot, scaleandstem | schon in Runden 6 bis 8 verworfen |
+| Japanische Treffer (Präfektur Hiroshima, Nichias) | Negi (Allium fistulosum) im Wasserkultur-Verfahren, kein Schnittlauch |
+
+### Lückenliste nach Runde 9
+
+| Art | Phase | Grösse | Stand |
+|---|---|---|---|
+| Schnittlauch | keimung | dauer | unverändert: kein Kandidat in Validatorform; offen Salve Regina 8 (Einzelwert) |
+| Schnittlauch | anzucht | dauer | unverändert: kein Kandidat in Validatorform; offen Salve Regina 7 (Einzelwert); Tower Garden «about two weeks after sprouting» nicht prüfbar (Cloudflare) |
