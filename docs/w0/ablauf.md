@@ -49,18 +49,18 @@ Spalten und Reihenfolge der Arbeitsdateien sind fest (Abschnitt 6), damit das Zu
 | genau ein geprüfter Kandidat, kein Konflikt | Koordinator (mechanisch) | `vorgeschlagen` |
 | Tims Entscheid im Chat | Koordinator | `freigegeben` mit `freigegeben_am` und `notiz_tim`; die übrigen Kandidaten der `zeile_id` `verworfen` |
 
-`quelle.csv`: Der Methodenprüfer prüft die Klasse und die Anbaumethode, der Quellenprüfer Titel und Link.
+`quelle.csv`: Der Methodenprüfer prüft die Klasse und die Anbaumethode, der Quellenprüfer Titel und Link; der Status folgt derselben Tabelle (`verworfen` oder `geprueft`). Wird eine Quelle verworfen, verwirft dieselbe Rolle alle Datenzeilen mit dieser `quelle_id`. Das Kurzzitat liefert der Quellenprüfer (Konzept 9.3): Er bestätigt das Zitat des Rechercheurs oder ersetzt es durch den wörtlichen Satzteil der Fundstelle.
 
 ## 4 Ablauf einer Runde
 
 1. `get_usage` vor jedem Schritt (RR2: W0 höchstens 30 % des Wochenkontingents).
-2. Rechercheure parallel, je Kulturgruppe einer; Auftrag nennt Kulturgruppe, Arten mit `art_id`, Kulturformen und Sorten aus `data/stammdaten/sorten.csv`.
+2. Rechercheure parallel, je Kulturgruppe einer; Auftrag nennt Kulturgruppe, Arten mit `art_id`, Kulturformen und Sorten aus `data/stammdaten/sorten.csv`. Das Standardprofil (`ebene = standard`: `ph`, `wassertemp`, `licht_h`) weist der Koordinator genau einem Rechercheur zu. Die von Tim entschiedenen Saatmengen (R12.3: Petersilie 15 Samen je Schwamm, Tomate 1 Pflanze je Topf) legt der Koordinator als Saatempfehlung der Klasse D an (Annahme 6); Eissalat Roxette als Schnittsalat ist eine Kulturform der Sorte und deckt sich mit `se.lactuca_sativa.schnitt`.
 3. Methodenprüfer je Kulturgruppe, danach Quellenprüfer je Kulturgruppe (parallel über die Gruppen, nie zwei Rollen auf denselben Dateien gleichzeitig).
 4. Zusammenführen (Abschnitt 5), `npm run w0:pruefen -- --kandidaten`; Formfehler gehen an den Rechercheur derselben Gruppe zurück.
-5. Fachkritiker je Art.
+5. Fachkritiker je Art; Arten derselben Kulturgruppe nacheinander (gleiche Dateien), Gruppen parallel.
 6. Redaktor über alle Konfliktlisten: Freigabevorschläge mit höchstens vier Konflikten je Runde.
 7. Koordinator: mechanische Vorschläge setzen, zusammenführen, Validator, Commit, Freigabevorschläge Tim im Chat vorlegen (Auswahl: Vorschlag, Alternative 1, Alternative 2, eigener Wert), dazu die Klasse-D-Lücken und die Prüfliste nach Konzept 9.4 (100 % pH und EC der Phasen Anzucht und Wachstum, sonst Stichprobe 10 %).
-8. Nach Tims Entscheid: Status nachführen, freigegebene Zeilen ohne Prüfspalten nach `freigegeben/` übertragen, `npm run w0:pruefen`, Seed-Trockenlauf; scharf nur über `deploy.yml` mit `seed_scharf=true` und Tims Freigabe in `production` (Entscheid 0017).
+8. Nach Tims Entscheid: Status nachführen; Zeilen der Ebene `kulturgruppe` als Kopie der freigegebenen Leitkultur-Zeilen anlegen (`pw.<kulturgruppe_id>.<phase>.<groesse>`, gleiche Quelle, Fundstelle, Kurzzitat und Klasse; in `keimung` ohne `ph` und `ec`; Mindestzeilen nach 03_import_w0.md 4.4.2, V13), Tim gibt sie mit der nächsten Runde frei; Saatempfehlungen der Klasse D nach Tims Entscheid anlegen; freigegebene Zeilen ohne Prüfspalten nach `freigegeben/` übertragen, `npm run w0:pruefen`, Seed-Trockenlauf; scharf nur über `deploy.yml` mit `seed_scharf=true` und Tims Freigabe in `production` (Entscheid 0017).
 
 ## 5 Zusammenführen
 
@@ -86,7 +86,7 @@ npm run w0:pruefen -- --kandidaten
 | `saatempfehlung.csv` | `kandidat_id,zeile_id,ebene,bezug,kulturform,samen_je_schwamm,obergrenze_samen,pflanzen_stehen_lassen,klasse_saatmenge,substrat_passung,quelle_id,fundstelle,kurzzitat,begruendung,methodenpruefung,quellenpruefung,abgerufen_am,konflikt_id,status,freigegeben_am,notiz_tim` |
 | `kulturgruppe.csv` | `kandidat_id,zeile_id,kulturgruppe_id,name,leitkultur_art_id,ec_obergrenze_validator,konflikt_id,status,freigegeben_am,notiz_tim` |
 
-`kandidat_id`: `<zeile_id>#<n>`, `n` ab 1 je weiterer Quelle zum selben Wert (Beispiel `pw.lactuca_sativa.wachstum.ec#2`); bei `quelle.csv` gleich `q.<quelle_id>`. Felder mit Komma, Anführungszeichen oder Zeilenumbruch in `"…"` (RFC 4180), UTF-8 ohne BOM, Zeilenende LF.
+`kandidat_id`: `<zeile_id>#<n>`, `n` ab 1 je weiterer Quelle zum selben Wert (Beispiel `pw.lactuca_sativa.wachstum.ec#2`); bei `quelle.csv` gleich `q.<quelle_id>`, dort ist `zeile_id` gleich `quelle_id` (03_import_w0.md 4.1). Felder mit Komma, Anführungszeichen oder Zeilenumbruch in `"…"` (RFC 4180), UTF-8 ohne BOM, Zeilenende LF.
 
 ## 7 Annahmen (A)
 
@@ -94,4 +94,5 @@ npm run w0:pruefen -- --kandidaten
 2. (A) `anwendbar`, `bbch` und `wechselmerkmal` hängen nicht von der Anbaumethode ab (Konzept 9.1 schliesst Nicht-Hydroponik nur für pH, EC, Phasendauer, Licht und Wassertemperatur aus). Zugelassen ist dafür die BBCH-Monografie des Julius Kühn-Instituts (Klasse `universitaet_beratung`, Evidenzklasse B1, `system_quelle = keine`) oder eine hydroponische Quelle. `anwendbar = entfaellt` für Blüte und Fruchtbildung bei Blattgemüse und Kräutern folgt aus R1.1 und trägt als Quelle dieselbe Monografie mit der Fundstelle der Art.
 3. (A) Wechselmerkmale formuliert der Rechercheur als Frage nahe am Kurzzitat (höchstens 120 Zeichen); das Kurzzitat bleibt wörtlich.
 4. (A) Die Arbeitsdateien unter `teile/` und die Berichte bleiben im Repository wie die Kandidatendateien (Konzept 9.2); der Validator liest sie nicht.
-5. (A) `profilwert_offen.csv` ist eine Arbeitsdatei ausserhalb von 03_import_w0.md 3, weil der Validator verworfene Kandidaten nicht überspringt und Konzept 9.1 Ergänzen, Kürzen und Mitteln verbietet. Ein Wert daraus kommt nur über Tims «eigener Wert» als neue Kandidatenzeile in `profilwert.csv` (Vermerk in `notiz_tim`).
+5. (A) `profilwert_offen.csv` ist eine Arbeitsdatei ausserhalb von 03_import_w0.md 3, weil der Validator verworfene Kandidaten nicht überspringt und Konzept 9.1 Ergänzen, Kürzen und Mitteln verbietet. Ein Wert daraus kommt nur über Tims «eigener Wert» als neue Kandidatenzeile in `profilwert.csv`. Sie trägt Quelle, Fundstelle, Kurzzitat und Klasse des offenen Kandidaten, auf den sich Tim stützt (das Kurzzitat bleibt wörtlich und belegt den Ausgangswert), Vermerk `keine` und in `notiz_tim` Tims Wert mit Grund und der `kandidat_id` des offenen Kandidaten. Stützt sich Tims Wert auf keinen Kandidaten, entsteht keine Zeile (Klasse D, Prüfauftrag).
+6. (A) Saatempfehlungen, die Tim entschieden hat, ohne Quelle der Saatmengen-Skala A bis C, legt der Koordinator mit `klasse_saatmenge = D`, leeren Herkunftsfeldern (V9 nimmt Klasse D aus) und `begruendung` «entschieden von Tim, Konzept R12.3» an; Kandidaten der Rechercheure mit Quelle stehen daneben.
