@@ -129,6 +129,7 @@ Vorschau: Cloudflare Pages `hydrovisor-vorschau` baut jeden Zweig (`<zweig>.hydr
 - [0015 Karbonathärte wird nicht erfasst](docs/entscheide/0015-karbonathaerte-nicht-erfasst.md)
 - [0016 Usability-Befragung nur im Claude-Chat](docs/entscheide/0016-befragung-im-chat.md)
 - [0017 Seed-Konstanten vor W0 scharf laden](docs/entscheide/0017-seed-konstanten-vor-w0.md)
+- [0018 W0-Freigabe durch den Lead, frankisgarden.de, alle Arten](docs/entscheide/0018-w0-freigabe-durch-lead.md)
 - Übrige Entscheide vom 1.11.2026: `docs/spec/00_rueckfragen.md` (R1 bis R13, W1 bis W14, Annahmen 1 bis 16)
 
 ## Arbeitsweise in der Sitzung
