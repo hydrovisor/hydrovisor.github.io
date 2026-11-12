@@ -11,7 +11,7 @@
 // (A2) Gefässe: stellvertretend 2.3 (Rako 40 × 30 × 22, D2, P2), Anzuchtbox A1 und Messstelle W; die übrigen zwölf
 //      Gefässe und A2 bis A4 erfasst Tim mit demselben Ablauf (gefaess.spec.ts).
 import { expect, test, type Locator, type Page } from '@playwright/test';
-import { DECKELTYPEN, type Teile } from '../fixtures/regal.ts';
+import { DECKELTYPEN, leeresRegal, type Teile } from '../fixtures/regal.ts';
 import { netztopfPlatz, saatWissen } from '../fixtures/saeen.ts';
 import { sichtenNachrechnen, stornoAufnehmen, zeileAufnehmen } from '../fixtures/sichten.ts';
 import { authNachbilden, sitzungSpeichern } from './hilfen.ts';
@@ -310,4 +310,121 @@ test('IB-AK4 Seed nur mit Konstanten (ohne W0): Punkte 1 bis 8 gehen durch, die 
   expect((await knopf(page, 'Sorte erfassen').boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(68);
   await knopf(page, 'Sorte erfassen').click();
   await expect(page).toHaveURL(/#\/sorten\/neu$/);
+});
+
+test('W185-AK1 «Einweichen überspringen» hakt Punkt 2 sofort ab, auch während der Timer läuft', async ({
+  page,
+}) => {
+  await page.clock.install();
+  await oeffnen(page, nachDemSeed());
+  await heute(page, 0);
+  await knopf(liste(page), 'Anlage anlegen').click();
+  await page.getByLabel('Name', { exact: true }).fill('Indoor-Regal');
+  await page.getByLabel('Kürzel', { exact: true }).fill('R');
+  await page.getByRole('button', { name: 'Anlage speichern' }).click();
+  await expect(page).toHaveURL(/#\/anlage\?a=R$/);
+  await heute(page, 1);
+  // Timer gestartet, dann doch schon eingeweicht (Messstift lag seit gestern im Wasser)
+  await knopf(liste(page), 'Einweichen starten').click();
+  await expect(liste(page).getByRole('timer')).toHaveText('12:00:00');
+  await knopf(liste(page), 'Einweichen überspringen').click();
+  await expect(page.getByRole('heading', { name: 'Einrichtung · 2 von 9 erledigt' })).toBeVisible();
+  await expect(knopf(liste(page), 'Kalibrieren')).toBeVisible();
+  // bleibt nach dem Neuladen abgehakt
+  await heute(page, 2);
+});
+
+test('W185-AK2 Gefäss ohne Vorlagen: Box und Deckel im Assistenten erfassen, gleich gewählt, dann speichern', async ({
+  page,
+}) => {
+  const start = leeresRegal();
+  start['gefaessmodell'] = [];
+  start['deckeltyp'] = [];
+  const s = await oeffnen(page, start);
+  await page.goto('/#/gefaess-neu?a=R');
+  await expect(page.getByRole('heading', { name: 'Gefäss erfassen', level: 1 })).toBeVisible({
+    timeout: 15_000,
+  });
+  await gruppe(page, 'Bereich').getByRole('radio', { name: 'Ebene 2', exact: true }).check();
+  await gruppe(page, 'Position').getByRole('radio', { name: '3', exact: true }).check();
+  await knopf(page, 'Weiter').click();
+
+  // Schritt 2: ohne Vorlage gleich das Box-Formular, nur ein Feld «Betriebsvolumen»
+  await expect(page.getByText('Schritt 2 von 4')).toBeVisible();
+  const box = page.getByRole('form', { name: 'Box erfassen' });
+  await expect(box).toBeVisible();
+  await expect(page.getByLabel(/^Betriebsvolumen/)).toHaveCount(1);
+  await expect(knopf(page, 'Weiter')).toBeDisabled();
+  await box.getByLabel('Name', { exact: true }).fill('Rako 40 × 30 × 17');
+  await box.getByRole('radio', { name: 'rechteckig' }).check();
+  await box.getByLabel(/^Länge/).fill('365');
+  await box.getByLabel(/^Breite/).fill('265');
+  await box.getByLabel(/^Höhe/).fill('150');
+  await box.getByLabel(/^Betriebsvolumen/).fill('9');
+  await taste(page, 'Speichern').click();
+  await expect(gruppe(page, 'Box').getByRole('radio', { name: /^Rako 40 × 30 × 17/ })).toBeChecked();
+  await expect(page.getByLabel(/^Betriebsvolumen/)).toHaveValue('9');
+  await knopf(page, 'Weiter').click();
+
+  // Schritt 3: Deckel D2 im Assistenten
+  const deckel = page.getByRole('form', { name: 'Deckel erfassen' });
+  await expect(deckel).toBeVisible();
+  await deckel.getByLabel('Name', { exact: true }).fill('D2');
+  await deckel.getByRole('radio', { name: '8 cm' }).check();
+  await deckel.getByLabel(/^Löcher je Reihe/).fill('3, 3');
+  await deckel.getByRole('group', { name: 'Service-Öffnung' }).getByRole('radio', { name: 'ja' }).check();
+  await taste(page, 'Speichern').click();
+  await expect(
+    gruppe(page, 'Deckel oder Platte').getByRole('radio', { name: 'D2', exact: true }),
+  ).toBeChecked();
+  await knopf(page, 'Weiter').click();
+  await expect(page.getByText(/2\.3\.1 bis 2\.3\.6/)).toBeVisible();
+  await knopf(page, 'Speichern').click();
+  await expect(page).toHaveURL(/#\/gefaess\/R-2\.3$/);
+
+  const modell = s.geschrieben.find(([t]) => t === 'gefaessmodell')?.[1];
+  const gefaess = s.geschrieben.find(([t]) => t === 'gefaess')?.[1];
+  expect(gefaess?.['betriebsvolumen_l']).toBe(9);
+  expect(gefaess?.['gefaessmodell_id']).toBe((s.daten['gefaessmodell'] ?? [])[0]?.['id']);
+  expect(modell?.['name']).toBe('Rako 40 × 30 × 17');
+});
+
+test('W185-AK2 zweiter Deckel im Assistenten behält die gewählte Box: Gefäss 2.2 mit Rako 30 × 20 × 12 und neuem D4', async ({
+  page,
+}) => {
+  // zwei Boxen (Rako 40 × 30 × 22, Rako 30 × 20 × 12) und ohne D4; andere Deckel vorhanden
+  const start = leeresRegal();
+  start['gefaessmodell'] = (start['gefaessmodell'] ?? []).filter((m) => m['name'] !== 'Leni Flori 36');
+  start['deckeltyp'] = (start['deckeltyp'] ?? []).filter((d) => d['name'] !== 'D4');
+  const s = await oeffnen(page, start);
+  await page.goto('/#/gefaess-neu?a=R');
+  await expect(page.getByRole('heading', { name: 'Gefäss erfassen', level: 1 })).toBeVisible({
+    timeout: 15_000,
+  });
+  await gruppe(page, 'Bereich').getByRole('radio', { name: 'Ebene 2', exact: true }).check();
+  await gruppe(page, 'Position').getByRole('radio', { name: '2', exact: true }).check();
+  await knopf(page, 'Weiter').click();
+  await gruppe(page, 'Box')
+    .getByRole('radio', { name: /^Rako 30 × 20 × 12/ })
+    .check();
+  await knopf(page, 'Weiter').click();
+
+  await knopf(page, 'Neuen Deckel erfassen').click();
+  const deckel = page.getByRole('form', { name: 'Deckel erfassen' });
+  await deckel.getByLabel('Name', { exact: true }).fill('D4');
+  await deckel.getByRole('radio', { name: '8 cm' }).check();
+  await deckel.getByLabel(/^Löcher je Reihe/).fill('1, 1');
+  await deckel.getByRole('group', { name: 'Service-Öffnung' }).getByRole('radio', { name: 'ja' }).check();
+  await taste(page, 'Speichern').click();
+  // mehrere Deckel: den neuen antippen
+  await gruppe(page, 'Deckel oder Platte').getByRole('radio', { name: 'D4', exact: true }).check();
+  await knopf(page, 'Weiter').click();
+  await expect(page.getByText('Rako 30 × 20 × 12', { exact: true })).toBeVisible();
+  await knopf(page, 'Speichern').click();
+  await expect(page).toHaveURL(/#\/gefaess\/R-2\.2$/);
+
+  const gefaesse = s.geschrieben.filter(([t]) => t === 'gefaess').map(([, z]) => z);
+  expect(gefaesse).toHaveLength(1);
+  const rako30 = (s.daten['gefaessmodell'] ?? []).find((m) => m['name'] === 'Rako 30 × 20 × 12');
+  expect(gefaesse[0]?.['gefaessmodell_id']).toBe(rako30?.['id']);
 });
