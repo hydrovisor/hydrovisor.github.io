@@ -23,12 +23,16 @@ data/wissensbasis/kandidaten/
   teile/<kulturgruppe_id>/art.csv             Prüfrollen füllen nur ihre Spalten)
   teile/<kulturgruppe_id>/profilwert.csv
   teile/<kulturgruppe_id>/saatempfehlung.csv
+  teile/<kulturgruppe_id>/profilwert_offen.csv  belegte Werte, die die Form des Validators nicht erfüllen
   teile/<kulturgruppe_id>/recherche.md        Lückenliste und Suchweg des Rechercheurs (nur Koordinator)
   berichte/fachkritik_<art_id>.md             Fachkritiker
   berichte/freigabevorschlaege_runde-<n>.md   Redaktor
   quelle.csv, kulturgruppe.csv, art.csv,      zusammengeführt durch den Koordinator;
   profilwert.csv, saatempfehlung.csv          diese Dateien prüft der Validator
+  profilwert_offen.csv                        zusammengeführt, vom Validator nicht gelesen
 ```
+
+Der Validator prüft im Modus `--kandidaten` jede Zeile unabhängig vom Status. Ein wörtlich belegter Wert, der seine Form nicht erfüllt (Einzelwert, Dauer ohne typischen Wert, Band schmaler als 0.2 oder breiter als 1.2, ausserhalb der Grenzen V3, V4, V7), steht deshalb in `profilwert_offen.csv` mit der Spalte `grund`. Er durchläuft dieselben Prüfungen und erscheint in der Konfliktliste; übernehmen kann ihn nur Tim über «eigener Wert».
 
 Spalten und Reihenfolge der Arbeitsdateien sind fest (Abschnitt 6), damit das Zusammenführen ein reines Aneinanderhängen ist. `kulturgruppe.csv` legt der Koordinator aus `03_import_w0.md` 4.2.1 an (Struktur, keine Recherche). Nach `data/wissensbasis/freigegeben/` kommt nichts, bevor Tim entschieden hat.
 
@@ -64,7 +68,7 @@ Je Datei die Kopfzeile der ersten Arbeitsdatei, dann alle Datenzeilen. In `quell
 
 ```bash
 k=data/wissensbasis/kandidaten
-for d in art profilwert saatempfehlung; do
+for d in art profilwert profilwert_offen saatempfehlung; do
   { head -n 1 "$(ls $k/teile/*/$d.csv | head -n 1)"; tail -q -n +2 $k/teile/*/$d.csv; } > $k/$d.csv
 done
 { head -n 1 "$(ls $k/teile/*/quelle.csv | head -n 1)"; tail -q -n +2 $k/teile/*/quelle.csv | awk -F, '!gesehen[$1]++'; } > $k/quelle.csv
@@ -78,6 +82,7 @@ npm run w0:pruefen -- --kandidaten
 | `quelle.csv` | `kandidat_id,zeile_id,quelle_id,titel,autoren,jahr,link,klasse,anbaumethode,abgerufen_am,methodenpruefung,quellenpruefung,konflikt_id,status,freigegeben_am,notiz_tim` |
 | `art.csv` | `kandidat_id,zeile_id,art_id,kulturform,feld,wert,quelle_id,fundstelle,kurzzitat,evidenzklasse,vermerk,methodenpruefung,quellenpruefung,abgerufen_am,konflikt_id,status,freigegeben_am,notiz_tim` |
 | `profilwert.csv` | `kandidat_id,zeile_id,ebene,bezug,phase,groesse,wert_min,wert_typ,wert_max,text_wert,einheit_quelle,ec_basis,bezugstemperatur_c,bezugs_dli,system_quelle,umgebung_quelle,quelle_id,fundstelle,kurzzitat,evidenzklasse,vermerk,methodenpruefung,quellenpruefung,abgerufen_am,konflikt_id,status,freigegeben_am,notiz_tim` |
+| `profilwert_offen.csv` | Spalten von `profilwert.csv`, dazu am Ende `grund` |
 | `saatempfehlung.csv` | `kandidat_id,zeile_id,ebene,bezug,kulturform,samen_je_schwamm,obergrenze_samen,pflanzen_stehen_lassen,klasse_saatmenge,substrat_passung,quelle_id,fundstelle,kurzzitat,begruendung,methodenpruefung,quellenpruefung,abgerufen_am,konflikt_id,status,freigegeben_am,notiz_tim` |
 | `kulturgruppe.csv` | `kandidat_id,zeile_id,kulturgruppe_id,name,leitkultur_art_id,ec_obergrenze_validator,konflikt_id,status,freigegeben_am,notiz_tim` |
 
@@ -89,3 +94,4 @@ npm run w0:pruefen -- --kandidaten
 2. (A) `anwendbar`, `bbch` und `wechselmerkmal` hängen nicht von der Anbaumethode ab (Konzept 9.1 schliesst Nicht-Hydroponik nur für pH, EC, Phasendauer, Licht und Wassertemperatur aus). Zugelassen ist dafür die BBCH-Monografie des Julius Kühn-Instituts (Klasse `universitaet_beratung`, Evidenzklasse B1, `system_quelle = keine`) oder eine hydroponische Quelle. `anwendbar = entfaellt` für Blüte und Fruchtbildung bei Blattgemüse und Kräutern folgt aus R1.1 und trägt als Quelle dieselbe Monografie mit der Fundstelle der Art.
 3. (A) Wechselmerkmale formuliert der Rechercheur als Frage nahe am Kurzzitat (höchstens 120 Zeichen); das Kurzzitat bleibt wörtlich.
 4. (A) Die Arbeitsdateien unter `teile/` und die Berichte bleiben im Repository wie die Kandidatendateien (Konzept 9.2); der Validator liest sie nicht.
+5. (A) `profilwert_offen.csv` ist eine Arbeitsdatei ausserhalb von 03_import_w0.md 3, weil der Validator verworfene Kandidaten nicht überspringt und Konzept 9.1 Ergänzen, Kürzen und Mitteln verbietet. Ein Wert daraus kommt nur über Tims «eigener Wert» als neue Kandidatenzeile in `profilwert.csv` (Vermerk in `notiz_tim`).

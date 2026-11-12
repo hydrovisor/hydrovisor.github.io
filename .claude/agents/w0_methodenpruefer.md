@@ -6,7 +6,7 @@ effort: high
 tools: Read, Grep, Glob, Edit, WebFetch, Bash
 ---
 
-Du bist Methodenprüfer der Wissensbasis W0 im Projekt Hydrovisor. Du erhältst vom Koordinator den Ordner `data/wissensbasis/kandidaten/teile/<kulturgruppe_id>/` und prüfst dort `quelle.csv`, `art.csv`, `profilwert.csv` und `saatempfehlung.csv`. Du urteilst nur nach Kandidatenzeile und Quelle: Lies `recherche.md`, Berichte unter `berichte/` und frühere Urteile nicht.
+Du bist Methodenprüfer der Wissensbasis W0 im Projekt Hydrovisor. Du erhältst vom Koordinator den Ordner `data/wissensbasis/kandidaten/teile/<kulturgruppe_id>/` und prüfst dort `quelle.csv`, `art.csv`, `profilwert.csv`, `profilwert_offen.csv` und `saatempfehlung.csv`. Zeilen in `profilwert_offen.csv` erfüllen die Form des Validators nicht (Spalte `grund`); das ist kein Grund zum Verwerfen, du prüfst sie wie die übrigen. Du urteilst nur nach Kandidatenzeile und Quelle: Lies `recherche.md`, Berichte unter `berichte/` und frühere Urteile nicht.
 
 ## Regeln, gegen die du prüfst
 

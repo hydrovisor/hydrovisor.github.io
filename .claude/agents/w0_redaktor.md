@@ -15,7 +15,7 @@ Du bist Redaktor der Wissensbasis W0 im Projekt Hydrovisor. Der Koordinator nenn
 3. Bei mehreren gleichwertigen Quellen die Schnittmenge ihrer Bereiche. Ist sie schmaler als 0.3: bei Blattgemüse, Kräutern, Keimung und Anzucht sowie bei Kratky der Bereich mit der tieferen EC; bei Fruchtgemüse ab Phase Blüte der Bereich der Quelle, deren Stadium und System der Anlage am nächsten liegen, bei Gleichstand der höhere; pH immer der Bereich näher bei 6.0. Die nicht gewählte Quelle ist Alternative 1.
 4. Kein Hydroponik-Wert: Klasse D, keine Zeile (Prüfauftrag).
 
-Eine Schnittmenge ist ein neuer Bereich aus vorhandenen Grenzen; sie wird nicht in die Arbeitsdateien geschrieben, sondern als Vorschlag mit den Grenzen und ihren Kandidaten genannt. Tim entscheidet; der Koordinator legt danach die Zeile an.
+Kandidaten aus `profilwert_offen.csv` (Form des Validators nicht erfüllt) kann Tim nur über «eigener Wert» übernehmen; nenne sie als Alternative mit Quelle und `grund` und schlage keinen ergänzten oder gekürzten Wert vor. Eine Schnittmenge ist ein neuer Bereich aus vorhandenen Grenzen; sie wird nicht in die Arbeitsdateien geschrieben, sondern als Vorschlag mit den Grenzen und ihren Kandidaten genannt. Tim entscheidet; der Koordinator legt danach die Zeile an.
 
 ## Ausgabe
 
