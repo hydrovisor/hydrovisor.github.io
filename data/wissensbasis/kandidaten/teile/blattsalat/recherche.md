@@ -212,3 +212,42 @@ Hinweis: ANR-2954 Table 2 gilt allgemein für Jungpflanzen im Gewächshaus; die 
 |---|---|---|---|
 | valerianella_locusta | keimung | dauer | weiter Klasse D (keine Hydroponik-Quelle mit Keimdauer) |
 | valerianella_locusta | anzucht | dauer | nur offen (#1 22 Tage ab Saat, #2 14 Tage ab Saat; beide ohne Keimdauer derselben Quelle) |
+
+## Runde 8 (13.11.2026): Nüsslisalat keimung.dauer und anzucht.dauer
+
+### Suchweg
+
+- Websuche «lamb's lettuce Valerianella hydroponic seedlings emergence days rockwool floating transplanted», «corn salad floating system nursery days after sowing», «Valerianella locusta … germination chamber / seedlings emerged … NFT», «Elixir lamb's lettuce vertical farm ebb-and-flow rockwool after germination», deutsch «Feldsalat Hydroponik Steinwolle Tage nach der Aussaat».
+- Europe PMC (Volltext, Open Access) Valerianella/lamb's lettuce/corn salad/mache mit hydroponic/floating/soilless/rockwool/vertical farm: PMC9654129, PMC9855646, PMC10084971, PMC10097257, PMC8549008, PMC13577782 durchsucht.
+- Horticulture Journal 85(2) 2016 als PDF (J-STAGE) erneut, Tabelle 1 gelesen.
+- ISHS Acta Hort. 242_38 (PUR-Matten 1989) und 1164_5 (Bioseedling 2017), SARE «Leafy Greens Hydroponic» (2022), Johnny's Hydroponics Information Guide.
+- Biol. Life Sci. Forum 26, 10 (2023): mdpi.com und sciforum HTTP 403, PDF über `mdpi-res.com` (HTTP 200) gelesen.
+
+### Neuer Kandidat (offen)
+
+| zeile_id | Quelle | Wert wörtlich | grund |
+|---|---|---|---|
+| pw.valerianella_locusta.anzucht.dauer#3 | blsf-valerianella-vertikalfarm-2023 (A, Vertical Farm mit LED, Ebbe-Flut, Steinwolle; Proceedings-Beitrag) | «transferred in the VF on rockwool 14 days after germination» | Einzelwert; «germination» statt Auflaufen, Anzuchtort vor dem Umsetzen nicht genannt |
+
+Hinweis für die Methodenprüfung: Erster Fund mit Bezug ab Keimung statt ab Saat. Klasse A gesetzt, weil Konferenzbeitrag mit Begutachtung im MDPI-Proceedings-Format (A); falls die Prüfung Proceedings nicht als begutachtet zählt, B1. Dieselbe Quelle nennt pH 5.6 und 16 h Licht in der Vertical Farm (nicht beauftragt).
+
+### Verworfen in Runde 8
+
+| Quelle | Grund |
+|---|---|
+| Horticulture Journal 85(2) 2016, Tabelle 1 «From sowing to flotation (days)» 15 (Frühling) bzw. 9 (Spätfrühling) für Valerianella olitoria | Torfsubstrat (Neuhaus Huminsubstrat N17) mit Überkopfbewässerung im Anzuchthaus, also nicht hydroponisch; zudem ab Saat einschliesslich Keimung |
+| Notulae Bot. Horti Agrobot. 52(2) 2024 (Hydroponik vs. Erde, Salz) | Artikelseite HTTP 403; Abstract ohne Keim- oder Umsetztage |
+| ISHS 242_38 (PUR-Matten, 1989) | vorgekeimtes Saatgut, nur «ready for harvesting after about 60 days» |
+| ISHS 1164_5 (Bioseedling 2017) | Saatgutqualität, ökologischer Anbau, keine Hydroponik-Zeiten |
+| PMC9855646 (Baby-Leaf im Floating) | nur «48 h in the dark» nach Saat und Baby-Leaf «five/six weeks after sowing», kein Auflaufen oder Umsetzen |
+| PMC10084971 | Erde bzw. Direktsaat, Gewächshaus und Freiland |
+| PMC9654129, PMC8549008, PMC13577782 | keine Valerianella-Keim- oder Umsetztage im Hydrosystem |
+| SARE Leafy Greens Hydroponic 2022, Johnny's Hydroponics Guide, USAMV 2022 (NFT-Salat) | kein Feldsalat |
+| scaleandstem.pages.dev | Seite ohne erkennbare Quelle |
+
+### Lückenliste nach Runde 8
+
+| Art | Phase | Grösse | Stand |
+|---|---|---|---|
+| valerianella_locusta | keimung | dauer | weiter Klasse D (keine Hydroponik-Quelle mit Keim- oder Auflaufdauer) |
+| valerianella_locusta | anzucht | dauer | kein Kandidat in Validatorform; offen: #1 22 Tage ab Saat, #2 14 Tage ab Saat, neu #3 14 Tage ab Keimung (Einzelwert) |

@@ -289,3 +289,51 @@ Nur `pw.solanum_lycopersicum.wachstum.dauer`, `bluete.dauer` und `fruchtbildung_
 | Tomate | `wachstum.dauer` | nur offen: neu #3 28 DAT (Einzelwert, A), #4 21.4 bis 22.6 DAP (A), #5 15.87 bis 16.80 Tage (A), #6 42.4 bis 46.7 dds (A) |
 | Tomate | `bluete.dauer` | D: keine Hydroponik-Quelle mit Tagen Blüte bis Fruchtansatz |
 | Tomate | `fruchtbildung_reife.dauer` | nur offen: neu #2 89 Tage Blühbeginn bis erste Ernte (A), #3 67.0 bis 71.7 DAA (A), #4 96.0 bis 117.9 dds (A); alle ab Blüte, nicht ab Fruchtansatz |
+
+## Runde 8 (13.11.2026): Blüte und Fruchtbildung Tomate
+
+Nur `pw.solanum_lycopersicum.bluete.dauer` (Blüte bis Fruchtansatz) und `pw.solanum_lycopersicum.fruchtbildung_reife.dauer` (Fruchtansatz bis erste reife Frucht), Ebene Art. Alle neuen Zeilen in `profilwert_offen.csv`, `status = entwurf`; kein Kandidat erfüllt die Form des Validators (Dezimalwerte oder Einzelwerte). Neue Quellen: `unalm-tomate-mnb-tesis-2019` (B1), `frontiers-mo-genotyp-tomate-2018` (A), `sensors-cherry-greenhouse-ai-2020` (A).
+
+### Suchweg
+
+- Europe PMC (REST, Volltext-XML): tomato mit hydroponic, rockwool, soilless, perlite, coir, NFT und «fruit set» «days after transplanting», «from fruit set to», «anthesis to fruit set», «fruit set stage», «days after fruit set», «days to first fruit set», «fruit development period», «fruit growth period», «fruit set was determined» «days after anthesis». Gelesen u. a. PMC6328480, PMC7698269, PMC6515393, PMC11255863, PMC6403137, PMC13164892, PMC11882041, PMC12646150, PMC10319911.
+- Beratung englisch: Alabama Extension (Greenhouse Tomato Production), UGA B1182, UF/IFAS HS169, Grodan-Whitepaper (Fruchtqualität), Tower Garden Tomaten: keine Tage Fruchtansatz bis Ernte.
+- Japanisch («養液栽培» «着果から収穫まで»): Berichte der Präfekturen Akita, Ibaraki, Yamaguchi, Hokkaido: keine Tage ab Fruchtansatz.
+- Spanisch («amarre de fruto» «ddt» Tezontle, «desde el cuajado hasta la recolección», «de cuajado a cosecha» hidropónico): Treffer Masterarbeit UNALM 2019 (Castro, CIHNM Lima) mit «Días a floración», «Días a fructificación», «Días a cosecha» ab Umsetzen; über die DSpace-REST-Schnittstelle als PDF geladen und gelesen.
+- Portugiesisch («início da frutificação» «dias após o transplantio» hidropônico): Revista Ciência Agronômica, PAB 2007 (NFT Viçosa), Nativa, Embrapa: Fruchtansatz nur als Nährlösungsphase, ohne Tage.
+
+### Neue Kandidaten (alle offen)
+
+| kandidat_id | Wert | Quelle | grund |
+|---|---|---|---|
+| `bluete.dauer#2` | 14.00 bis 14.67 Tage (Fruchtansatz 28.00 bis 28.67 DDT minus Blüte 14.00 DDT) | UNALM-Tesis 2019, Cuadro 5 | Dezimalwerte, Bereich ohne typ |
+| `fruchtbildung_reife.dauer#5` | 58.46 bis 59.13 Tage (erste Ernte 86.60 bis 87.13 DDT minus Fruchtansatz) | UNALM-Tesis 2019, Cuadro 5 | Dezimalwerte, Bereich ohne typ |
+| `fruchtbildung_reife.dauer#6` | 35 Tage ab Markierung beim Fruchtansatz bis Handelsreife | Frontiers 2018 (Perlit) | Einzelwert, Probenahmeprotokoll |
+| `fruchtbildung_reife.dauer#7` | 35 Tage Fruchtwachstum (Beginn sichtbares Fruchtwachstum bis Ernte der Rispe) | Sensors 2020 (Steinwolle) | Einzelwert, Rechenannahme der Autoren |
+
+### Hinweise für den Lead
+
+1. UNALM-Tesis 2019 ist die einzige Quelle mit Fruchtansatz als eigenem Zeitpunkt in Tagen ab Umsetzen («fructificación (desarrollo de primeros frutos)»). Blüte ist dort als «comenzaron a desarrollar el primer ramo floral» definiert, also Beginn der ersten Rispe und nicht ausdrücklich offene Blüte; alle Pflanzen 14 DDT.
+2. UNALM-Tesis: Text und Cuadro 5 widersprechen sich bei der Spaltenzuordnung des Fruchtansatzes (28.67 laut Tabelle ConMNB Ar, laut Text ConMNB CAr) und bei der Ernte SinMNB Ar (Tabelle 87.13, Text 88.73; dann 60.20 Tage). Die Spanne der Kandidaten folgt der Tabelle. Substrat Ar ist Sand (inert), CAr Sand und Reisspelzen 1:1 (organischer Anteil); Anlage im CIHNM mit Schattennetz, Wetterstation mit Niederschlag, daher `umgebung_quelle = andere`. Masterarbeit ohne Begutachtung: Klasse B1 (Universität mit eigenen Hydroponik-Angaben), `quelle_klasse = universitaet_beratung`.
+3. Frontiers 2018 und Sensors 2020 nennen je 35 Tage ab Fruchtansatz; beide sind Protokoll- bzw. Rechenwerte, keine gemessene Phasendauer. Sensors 2020 zeigt gemessene Fruchtwachstumsdauern nur in Abbildungen (nicht wörtlich lesbar).
+
+### Verworfen
+
+- PMC6403137 (2019, Phasen «flowering stage, first blossom to first fruit set» mit Datumsangaben): Anbau in Erde mit Salzzugabe in Containern und Freiland.
+- PMC6515393 (Autonomous Greenhouse Challenge 2018): mittlere Fruchtwachstumsdauer 17.3 Tage gilt für Gurke, nicht Tomate.
+- PMC11255863 (Kirschtomate, Kokos/Perlit, Palermo): keine Dauer ab Fruchtansatz.
+- PMC12646150, PMC10319911 (Micro-Tom auf Steinwolle): Fruchtknotenwachstum 2 bis 4 DAA, kein Fruchtansatz als Phasengrenze.
+- BUAP-Masterarbeit (Puebla, Bioles): Anbau in Erde (Bodenlösung mit Lysimetern).
+- Revista Chapingo/Terra Latinoamericana (Redalyc 263119723001, 57311101006), MAPA-Hortícolas-Hefte (Galicien, Lorca, Almería): keine Hydroponik oder keine Tage ab Fruchtansatz.
+- Costa Rica MAG F01-9820 (Phasen 31 bis 40 und 41 bis 79 DDT): laut Suchauszug Freiland, nicht geöffnet.
+- Grodan-Whitepaper «Improving tomato fruit quality»: nur Risikofenster 10 bis 14 Tage nach Blüte (Blütenendfäule), keine Phasengrenze.
+- Portalfrutícola «Manual de Producción de Tomate Bajo Invernadero» (60 bis 70 Tage Antesis bis Ernte, laut Suchauszug): Gewächshaus ohne Hydroponik-Angabe, zählt ab Antesis; nicht geöffnet.
+- UNSM-Tesis 2023 (San Martín): Literaturarbeit ohne eigenen Versuch, zitiert die UNALM-Tesis.
+- repositoriotec.tec.ac.cr (Costa Rica, Alter der Setzlinge), UTN Ecuador: keine Datei geladen.
+
+### Lückenliste nach Runde 8
+
+| Art | Phase / Feld | Stand |
+|---|---|---|
+| Tomate | `bluete.dauer` | nur offen: neu #2 14.00 bis 14.67 Tage (B1); kein gültiger Kandidat (D für gültige Form) |
+| Tomate | `fruchtbildung_reife.dauer` | nur offen: neu #5 58.46 bis 59.13 Tage (B1), #6 35 Tage (A), #7 35 Tage (A); dazu #2 bis #4 aus Runde 7 (ab Blüte, verworfen); kein gültiger Kandidat |
