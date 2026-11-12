@@ -18,12 +18,12 @@ Der Seed lädt zwei Dinge, die unabhängig voneinander bereitstehen (Stand 12.11
 
 | Teil | Quelle | Stand | wofür |
 |---|---|---|---|
-| Seed-Konstanten: Messgerät, Einstellungen (Kalibriertermine, Stationsgrenze) | im Repository | bereit | Punkte 1 bis 8 |
+| Seed-Konstanten: Messgerät, Einstellungen (Kalibriertermine, Stationsgrenze), Dünger-Produkte und k-Startwerte, feste Regeln (Pflichtgrössen, Profilende, Auswertungsfenster) | im Repository | bereit | Punkte 1 bis 8 |
 | Wissen aus W0: Arten, Kulturformen, Sollwerte, Saatempfehlungen; Sortenstamm mit 22 Sorten und Packungen aus `data/stammdaten/sorten.csv` | `data/wissensbasis/freigegeben/` (W0, Freigabe durch Tim) | noch nicht geliefert; der Sortenstamm wartet auf `art.csv` | Punkt 9 (Aussaat) |
 
 Der scharfe Seed ist ein eigenes Paket (Entscheid 0007): nach einem grünen Trockenlauf (liegt vor) und der W0-Teilfreigabe schaltet es `deploy.yml` von `--trocken` auf scharf. Die Freigabe in der Umgebung `production` gibt Tim, weil der Seed die Produktionsdatenbank verändert (Entscheid 0010).
 
-Ein scharfer Seed nur mit den Konstanten genügt für die Punkte 1 bis 8; das zeigt IB-AK4. «Säen» meldet dann «Noch keine Sorten» mit dem Knopf «Sorte erfassen». Ob die Konstanten vor der W0-Lieferung scharf geladen werden, entscheidet Tim.
+Ein scharfer Seed nur mit den Konstanten genügt für die Punkte 1 bis 8; das zeigt IB-AK4. «Säen» meldet dann «Noch keine Sorten» mit dem Knopf «Sorte erfassen». Ob die Konstanten vor der W0-Lieferung scharf geladen werden, entscheidet Tim; das wäre eine Abweichung von Entscheid 0007 (scharf erst nach der W0-Teilfreigabe) und bekäme dort einen Nachtrag.
 
 Danach in der App prüfen:
 

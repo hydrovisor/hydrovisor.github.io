@@ -394,7 +394,7 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
           <Notice
             title="Noch keine Sorten"
             action={
-              <a className="hv-btn hv-btn-secondary" href={hashZu({ name: 'sorte-neu' })}>
+              <a className="hv-btn hv-btn-secondary hv-btn-compact" href={hashZu({ name: 'sorte-neu' })}>
                 Sorte erfassen
               </a>
             }
