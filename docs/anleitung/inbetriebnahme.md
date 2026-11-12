@@ -87,7 +87,7 @@ Der Punkt hakt sich ab, sobald es mindestens eine Box und einen Deckel gibt; fü
 
 ## Punkt 6: Gefässe, Anzuchtboxen und Messstelle W erfassen
 
-In der Checkliste «Gefässe erfassen». Je Gefäss vier Schritte: Platz (Rolle «Gefäss», Bereich, Position, Betriebsart, Luftpumpe), Box, Deckel oder Platte, Zusammenfassung mit Kennung und Töpfen; dann «Speichern und nächstes erfassen»: Die App meldet zum Beispiel «R-2.3 gespeichert» und beginnt mit derselben Rolle wieder bei Schritt 1. Beim letzten Gefäss «Speichern» (öffnet die Maske «Gefäss») oder «Speichern und Etikett drucken».
+In der Checkliste «Gefässe erfassen». Je Gefäss vier Schritte: Platz (Rolle «Gefäss», Bereich, Position, Betriebsart, Luftpumpe), Box, Deckel oder Platte, Zusammenfassung mit Kennung und Töpfen; dann «Speichern und nächstes erfassen»: Die App meldet zum Beispiel «R-2.3 gespeichert» und beginnt wieder bei Schritt 1; Rolle, Bereich und Luftpumpe bleiben, die Position schlägt sie neu vor. Steht kurz «Stand wird geladen», ist «Weiter» gesperrt, bis der eben gespeicherte Ort geladen ist. Beim letzten Gefäss «Speichern» (öffnet die Maske «Gefäss») oder «Speichern und Etikett drucken».
 
 | Kennung | Bereich, Position | Betriebsart | Luftpumpe | Box | Deckel |
 |---|---|---|---|---|---|

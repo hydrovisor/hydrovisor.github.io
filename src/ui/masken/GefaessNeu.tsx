@@ -19,6 +19,7 @@ import {
 import {
   anlagenAus,
   bereicheAus,
+  plaetzeAus,
   zeilen,
   type DeckeltypZeile,
   type GefaessmodellZeile,
@@ -117,8 +118,8 @@ export function GefaessNeu({ kuerzel, rolle: startRolle }: { kuerzel?: string; r
   const [vorgang, setVorgang] = useState<{ schluessel: string; schritte: Vorgang }>();
   const [ergebnis, setErgebnis] = useState<Schreibergebnis>();
   const [sendet, setSendet] = useState(false);
-  /** Code des zuletzt mit «Speichern und nächstes erfassen» gespeicherten Orts (B17) */
-  const [gespeichert, setGespeichert] = useState<string>();
+  /** zuletzt mit «Speichern und nächstes erfassen» gespeicherter Ort (B17) */
+  const [gespeichert, setGespeichert] = useState<{ code: string; kennung: string }>();
   /** wohin nach dem Speichern; «Erneut senden» wiederholt dasselbe Ziel */
   const nachRef = useRef<Nach>('maske');
 
@@ -174,8 +175,14 @@ export function GefaessNeu({ kuerzel, rolle: startRolle }: { kuerzel?: string; r
   }
 
   const fehlerZu = (feld: string) => fehler.find((f) => f.feld === feld)?.grund;
-  const weiterMoeglich =
-    schritt === 1
+  // B17 (Prüfer Runde 1, Befund 1): Vorschlag und Prüfung rechnen aus dem Bündel; bis es den eben gespeicherten Ort
+  // enthält, würde der Assistent dieselbe Kennung noch einmal vorschlagen. Deshalb bis dahin warten.
+  const nachgeladen =
+    !gespeichert ||
+    (anlage !== undefined && plaetzeAus(teile, anlage.id).some((p) => p.kennung === gespeichert.kennung));
+  const weiterMoeglich = !nachgeladen
+    ? false
+    : schritt === 1
       ? rolle !== 'gefaess' || (bereichId !== undefined && pos !== undefined)
       : schritt === 2
         ? modellId !== undefined
@@ -190,15 +197,16 @@ export function GefaessNeu({ kuerzel, rolle: startRolle }: { kuerzel?: string; r
     setSchritt(rolle === 'gefaess' ? schritt + 1 : 4);
   }
 
-  /** Assistent leeren, Rolle behalten (B17) */
-  function neuBeginnen(code: string) {
-    setGespeichert(code);
+  /**
+   * Nächsten Ort beginnen (B17): Rolle, Bereich und Luftpumpe bleiben (die Gefässe einer Ebene teilen meist die
+   * Pumpe, Konzept 5.2); Position schlägt die App neu vor, Box, Deckel und Intervalle sind leer.
+   */
+  function neuBeginnen(code: string, kennung: string) {
+    setGespeichert({ code, kennung });
     setSchritt(1);
-    setBereichId(undefined);
     setPosition(undefined);
     setBetriebsart(undefined);
     setFesteDosis(false);
-    setLuftpumpe(null);
     setModellId(undefined);
     setVolumen(undefined);
     setDeckelId(undefined);
@@ -211,7 +219,7 @@ export function GefaessNeu({ kuerzel, rolle: startRolle }: { kuerzel?: string; r
   async function speichern(nach: Nach = nachRef.current) {
     nachRef.current = nach;
     const e = eingabe();
-    if (!e || !anlage) return;
+    if (!e || !anlage || !nachgeladen) return;
     const f = erfassenPruefen(teile, e);
     setFehler(f);
     if (f.length > 0) return;
@@ -227,7 +235,7 @@ export function GefaessNeu({ kuerzel, rolle: startRolle }: { kuerzel?: string; r
     setErgebnis(antwort);
     if (antwort.status !== 'gespeichert' || !vorschlag?.code) return;
     if (nach === 'naechstes') {
-      neuBeginnen(vorschlag.code);
+      neuBeginnen(vorschlag.code, vorschlag.kennung ?? '');
       return;
     }
     oeffnen(
@@ -257,7 +265,15 @@ export function GefaessNeu({ kuerzel, rolle: startRolle }: { kuerzel?: string; r
       </header>
       <p className="hv-anlage-info">Schritt {schritt} von 4</p>
       {gespeichert && schritt === 1 ? (
-        <Notice tone="ok" title={`${gespeichert} gespeichert`} kompakt />
+        <Notice
+          tone={nachgeladen ? 'ok' : 'info'}
+          title={
+            nachgeladen
+              ? `${gespeichert.code} gespeichert`
+              : `${gespeichert.code} gespeichert, Stand wird geladen`
+          }
+          kompakt
+        />
       ) : null}
       {!anlage ? (
         <Notice tone="warn" title="Zuerst eine Anlage anlegen" />
