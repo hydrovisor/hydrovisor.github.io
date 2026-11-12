@@ -23,7 +23,7 @@ Der Seed lädt zwei Dinge, die unabhängig voneinander bereitstehen (Stand 13.11
 
 Scharf lädt der Seed nur ein Lauf von `deploy.yml` mit `seed_scharf=true` (Entscheid 0017, weicht von 0007 ab); jeder Push bleibt beim Trockenlauf. Die Freigabe in der Umgebung `production` gibt Tim, weil der Seed die Produktionsdatenbank verändert (Entscheid 0010).
 
-Ein scharfer Seed nur mit den Konstanten genügt für die Punkte 1 bis 8; das zeigt IB-AK4. «Säen» meldet dann «Noch keine Sorten» mit dem Knopf «Sorte erfassen». Tim hat am 12.11.2026 entschieden, die Konstanten schon vor W0 scharf zu laden (Entscheid 0017): Der Lead startet `deploy.yml` mit `seed_scharf=true`, Tim gibt den Lauf in der Umgebung `production` frei. Der erste Lauf ist am 12.11.2026 gelaufen; die Einrichtung kann mit Punkt 1 beginnen. Nach der W0-Teilfreigabe lädt ein weiterer solcher Lauf das Wissen.
+Ein scharfer Seed nur mit den Konstanten genügt für die Punkte 1 bis 8; das zeigt IB-AK4. «Säen» meldet dann «Noch keine Sorten» mit dem Knopf «Sorte erfassen». Tim hat am 12.11.2026 entschieden, die Konstanten schon vor W0 scharf zu laden (Entscheid 0017): Der Lead startet `deploy.yml` mit `seed_scharf=true`, Tim gibt den Lauf in der Umgebung `production` frei. Der erste Lauf ist am 12.11.2026 gelaufen; die Einrichtung kann mit Punkt 1 beginnen. Das Wissen aus W0 ist am 12. und 13.11.2026 geladen (Läufe 43318210369 und 43325621271).
 
 Danach in der App prüfen:
 
