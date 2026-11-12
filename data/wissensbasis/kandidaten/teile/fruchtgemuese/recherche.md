@@ -249,3 +249,43 @@ Unverändert gegenüber Runde 3: Tomate `wachstum.dauer`, `bluete.dauer`, `fruch
 | Chili | `bluete.dauer` | nur offen (#2 11, neu #3 11, Einzelwerte) |
 | Chili | `fruchtbildung_reife.dauer` | nur offen (neu #7 58, Einzelwert) |
 | Chili | `ernte_ab_d` | neu #1 102 Tage (A) |
+
+## Runde 7 (12.11.2026): Phasendauern Tomate
+
+Nur `pw.solanum_lycopersicum.wachstum.dauer`, `bluete.dauer` und `fruchtbildung_reife.dauer` (Ebene Art). Alle neuen Zeilen in `profilwert_offen.csv`, `status = entwurf`; kein Kandidat erfüllt die Form des Validators.
+
+### Suchweg
+
+- Revista Chapingo 18(2) 2012 (native Cherry-Tomaten auf Tezontle, in Runde 5 nicht erreichbar): aramara.uan.mx weiter unerreichbar; über die DOI-Weiterleitung `revistas.chapingo.mx` als PDF geladen und gelesen. Neu `wachstum.dauer#6`, `fruchtbildung_reife.dauer#4` (Tage ab Saat).
+- Europe PMC (REST-Suche, Volltext-XML): «tomato» mit hydroponic, rockwool, nutrient film, coir und «days after transplanting», «first flower», «anthesis», «first harvest», «days after anthesis», «fruit set». Gelesen: Frontiers in Plant Science 2016 (NFT, Bari), New Phytologist 2020 (Steinwolle, Wageningen), Frontiers in Plant Science 2023 (Kokos-Tanks, Guangzhou). Neu `wachstum.dauer#3` bis `#5`, `fruchtbildung_reife.dauer#2`, `#3`.
+- Portugiesisch («dias após o transplantio», florescimento, início da colheita, NFT): Treffer gefunden, aber alle brasilianischen Server (unicamp, ifto, ifmg, confea, Embrapa, scielo.br, redalyc 4457) lieferten keine Datei.
+- Spanisch («ddt», «inicio de cosecha», «amarre de fruto», «primer corte», Tezontle, Despunte): Treffer geöffnet, ohne Tomaten-Phasendauern ab Umsetzen.
+- UF/IFAS (Florida Greenhouse Vegetable Production Handbook HS785, HS940, Bericht 97-14 Perlite): nur Kalenderdaten.
+- Fork Farms «Mini Tomatoes» und frankiesgarten.de Tomaten-Seite erneut gelesen: keine Tage oder Wochen bis Blüte, Fruchtansatz oder Ernte ab Umsetzen.
+
+### Hinweise für den Lead
+
+1. Keine Quelle nennt den Fruchtansatz als eigenen Zeitpunkt. Die drei Kandidaten für `fruchtbildung_reife` messen ab Blüte bzw. Anthese und umfassen damit Blüte und Fruchtbildung; für `bluete.dauer` allein gibt es keinen Wert.
+2. Frontiers 2016 Table 3 ist eine Tabelle zur Planung der Nährlösung mit Phänologie je DAT (28 Blühbeginn erste Rispe, 117 erste Ernte); der Text nennt Erntebeginn 121 und 115 DAT für die zwei Versuche (Wintersatz Januar/Februar, Apulien).
+3. New Phytologist 2020: Umsetzen erst mit 11 sichtbaren Blättern (rund 6 Wochen ab Saat, Anzucht 2 Wochen in Topferde, dann Steinwolle); Blüte 21.4 bis 22.6 Tage ab Umsetzen, Reife 67.0 bis 71.7 Tage nach Anthese.
+4. Frontiers 2023: Umsetzen nach 15 Tagen Anzucht unter LED; erste Blüte 15.87 bis 16.80 Tage (Spalte «Time to first flower (day)», Bezug Umsetzen aus Zusammenhang).
+5. Chapingo 2012: Saat 16. März, Umsetzen 15. April 2007 (Kalenderdaten, nicht umgerechnet); Text und Cuadro 1 widersprechen sich bei 109.6 dds (JCPRV-71 im Text, JCPRV-76 in der Tabelle).
+
+### Verworfen
+
+- Scientific Reports 9 (2019) (Perlit, NFT, DFT, Murcia): nur Probenahmen 25, 50, 101 DAT, keine Phänologie.
+- Plants 2023 (PMC10097077, Blüte 20 und 27 Tage nach Umsetzen): Anbau in Erde.
+- Plants 2026 (PMC13610534, Indien, geschlossene Hydroponik, Blüte 34.33 bis 52.33 DAT): Blattdüngung mit Zink-Nanopartikeln, Kontrollwert im Text (52.33) und in der Tabelle (T1 55.67) nicht eindeutig zuordenbar.
+- PMC11375428 (2024, Micro-Tom, Pflanzenfabrik, Blüte 36.6 DAT): Steinwollwürfel 5 cm, Nährlösung im Text nicht eindeutig; genomeditierte Linien.
+- PMC7753909 (Abwasser-Hydroponik, Ernte 72 bis 106 DAT): Nährlösung aus teilgereinigtem Abwasser, kein Blühtermin.
+- PMC7961429, PMC10312241, PMC10628543: Probenahmen nach Anthese (DAA), keine Phasendauern.
+- Hydroenv «Guía de Cultivo del Jitomate» (Cloudflare-Sperre), Revista Fitotecnia Mexicana 26(4) und INIFAP (keine Datei), UNAM-Lizentiatsarbeit (Fallstudie ohne Versuch).
+- Fork Farms «support around weeks 6-8, right before fruit production»: Zeitpunkt der Stütze, keine Phasengrenze.
+
+### Lückenliste nach Runde 7
+
+| Art | Phase / Feld | Stand |
+|---|---|---|
+| Tomate | `wachstum.dauer` | nur offen: neu #3 28 DAT (Einzelwert, A), #4 21.4 bis 22.6 DAP (A), #5 15.87 bis 16.80 Tage (A), #6 42.4 bis 46.7 dds (A) |
+| Tomate | `bluete.dauer` | D: keine Hydroponik-Quelle mit Tagen Blüte bis Fruchtansatz |
+| Tomate | `fruchtbildung_reife.dauer` | nur offen: neu #2 89 Tage Blühbeginn bis erste Ernte (A), #3 67.0 bis 71.7 DAA (A), #4 96.0 bis 117.9 dds (A); alle ab Blüte, nicht ab Fruchtansatz |

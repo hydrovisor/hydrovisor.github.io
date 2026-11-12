@@ -143,3 +143,48 @@ Arten: `spinacia_oleracea` (Spinat Butterfly, Leitkultur), `beta_vulgaris_cicla`
 | beta_vulgaris_cicla | anzucht.ec | nur offen (GPN 1.5 Einzelwert) |
 | beta_vulgaris_conditiva | anzucht.dauer, wachstum.dauer (Blatt) | kein neuer Hydroponik-Wert (D bzw. nur offen) |
 | spinacia_oleracea | anzucht.ph | neu ladbar: Rise 6.0/6.5/7.0 (#1, Angabe für die ganze Kultur) |
+
+## Runde 7 (12.11.2026): Mangold anzucht.dauer, anzucht.ph, anzucht.ec; Randen anzucht.dauer, wachstum.dauer
+
+### Suchweg
+
+- frankiesgarten.de: Sitemap und Übersicht `anleitungen/gemueseanbau/` (keine Mangold-Seite); Rote-Bete-Seite erneut auf Umsetztag geprüft (nur Keimung «ca. 3 Tage» in Vermiculite und Kulturdauer 8 bis 10 Wochen, kein Umsetztag).
+- Fork Farms Help Center (`plant-guides`, `seed-varieties`, geratene Pfade `swiss-chard`, `beets` u. a. mit HTTP 404): keine Mangold- oder Randen-Seite.
+- Europe PMC (Open Access, Swiss chard/Beta vulgaris mit hydroponic/floating/NFT und rockwool/germination; beetroot/red beet mit hydroponic): PMC13230853 (Sci Rep 2026, Mangold), PMC12757539, PMC9605945, PMC10486669 gelesen.
+- Websuche «red beet baby leaf floating … days after transplanting» (Treffer Horticultura Brasileira 2014 über SciELO, Volltext gelesen); «acelga hidropônica espuma fenólica … dias após semeadura»; «Swiss chard … phenolic foam/oasis … days after sowing».
+
+### Neue Kandidaten (alle in `profilwert_offen.csv`)
+
+| Kandidat | Wert | Quelle | Grund |
+|---|---|---|---|
+| pw.beta_vulgaris_cicla.anzucht.dauer#4 | 10 Tage ab gekeimtem Sämling in Steinwollwürfel 2.5 cm bis Umsetzen in Ebbe-Flut | scirep-mangold-zno-2026 (A, Klimakammer HPS, `andere`) | Einzelwert |
+| pw.beta_vulgaris_cicla.anzucht.ph#2 | 6.0 | dieselbe | Einzelwert; Satz nennt «the nutrient solution» nach der Ebbe-Flut-Phase, Sämlinge mit «hydroponic solution» gegossen, Geltung für die Anzucht nicht ausdrücklich |
+| pw.beta_vulgaris_cicla.anzucht.ec#2 | 1.4 mS/cm, Basis unbekannt | dieselbe | wie pH |
+| pw.beta_vulgaris_conditiva.wachstum.dauer#3 | 21 Tage (Tage ab Saat 30 Ernte minus 9 Umsetzen in NFT-Kanäle, beide Zahlen aus derselben Quelle) | hortbras-randen-babyleaf-nft-2014 (A, NFT, Gewächshaus, Babyleaf) | Einzelwert |
+
+Neue Quellen: scirep-mangold-zno-2026 (peer_review, ebbe_flut), hortbras-randen-babyleaf-nft-2014 (peer_review, nft).
+
+Hinweise, nicht beauftragt: Sci Rep 2026 nennt für Mangold 14 Tage Ebbe-Flut bis Babyleaf plus 5 Tage bis Ernte und 18 h Licht (HPS). Horticultura Brasileira 2014 nennt «Four glomeruli for table beet» je Zelle (288er-Schale, Kokosfaser, 5 mL) und als Umsetzmerkmal «when the seedlings started issuing the first true leaf».
+
+### Verworfen
+
+| Quelle | Grund |
+|---|---|
+| Horticultura Brasileira 32(4) 2014 für Randen anzucht.dauer | Anzucht in Kokosfaser ohne Nährlösung («The seedling fertilization was not done»), also nicht hydroponisch; zudem 9 Tage ab Saat ohne Keimdauer |
+| Campo Digit@l 11(1) 2016 (Sorten 'Cultivada', 'Donatella', 'Folha Larga', 'Selecta') | Rucola, nicht Mangold |
+| sciforum.net Paper 28265 (Konferenzbeitrag, Mangold in Steinwolle, «seven days after sowing») | HTTP 403, Wortlaut nicht prüfbar; Saat in Vermiculite, Umsetzen ab Saat ohne Keimdauer |
+| ASHS 2010 Paper 3740 und 2012 Paper 9829 (Lincoln University, Mangold NFT) | Server HTTP 503; nur «two-week old seedlings» ab Saat |
+| NZ J Crop Hortic Sci 2016 (Mikrogrün Mangold, Floating) | Mikrogrün, keine Anzucht im Sinn der Phasen |
+| PMC10486669 (Foods 2023, Landsorten Babyleaf) | Topfkultur, nicht hydroponisch |
+| PMC12757539, PMC9605945 | keine Mangold- bzw. Randen-Dauern oder Anzuchtwerte |
+| Fork Farms, frankiesgarten.de | keine Mangold-Seite; Rote-Bete-Seite ohne Umsetztag |
+
+### Lückenliste nach Runde 7
+
+| Art | Phase | Grösse | Stand |
+|---|---|---|---|
+| beta_vulgaris_cicla | anzucht | dauer | Entwurf #1 (Runde 6) in Prüfung; neu nur offen #4 (10 Tage, Einzelwert) |
+| beta_vulgaris_cicla | anzucht | ph | nur offen #2 (6.0, Einzelwert); kein Band mit ausdrücklicher Geltung für die Anzucht (D) |
+| beta_vulgaris_cicla | anzucht | ec | nur offen #1, #2 (Einzelwerte); D für ein Band |
+| beta_vulgaris_conditiva | anzucht | dauer | Entwurf #1 (Runde 6) in Prüfung; keine weitere Hydroponik-Quelle mit Keimdauer und Umsetztag (D) |
+| beta_vulgaris_conditiva | wachstum | dauer | Entwurf #1 (Runde 6) in Prüfung; neu nur offen #3 (21 Tage, Einzelwert) |

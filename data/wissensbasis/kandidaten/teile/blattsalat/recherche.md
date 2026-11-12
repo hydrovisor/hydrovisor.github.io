@@ -180,3 +180,35 @@ Hinweis: ANR-2954 Table 2 gilt allgemein für Jungpflanzen im Gewächshaus; die 
 | Art | Phase | Grösse | Stand |
 |---|---|---|---|
 | valerianella_locusta | keimung | dauer | weiter Klasse D |
+
+## Runde 7 (12.11.2026): Nüsslisalat keimung.dauer und anzucht.dauer
+
+### Suchweg
+
+- frankiesgarten.de: Übersicht `anleitungen/gemueseanbau/` und Sitemap erneut; weiterhin keine Feldsalat-Seite.
+- Fork Farms Help Center (`farmative.forkfarms.com/help/plant-guides`, `seed-varieties`): nur Salat, Kräuter, Blüten, Mini-Gurke, -Paprika, -Tomate; kein Feldsalat.
+- Websuche «lamb's lettuce Valerianella floating system seedlings emergence days after sowing», «corn salad … germination chamber days»; Horticulture Journal 85(2) 2016 (Floating-Pilotanlage, J-STAGE Volltext).
+- Europe PMC (Volltextsuche Valerianella/lamb's lettuce/corn salad mit hydroponic/floating/soilless, Open Access): PMC8706042, PMC10818939, PMC7831921, PMC10457958, PMC12430617, PMC13523218 nach Keim- und Umsetzangaben durchsucht.
+
+### Neue Kandidaten
+
+- profilwert_offen: pw.valerianella_locusta.anzucht.dauer#2 «Fourteen-day-old plants … transferred to 5-liter pots with a nutrient solution» (Plants 10(12) 2733, 2021; Saat in Perlit mit halbstarker Nährlösung, Gewächshaus; Klasse A). Grund: Einzelwert ab Saat, Keimdauer nicht in derselben Quelle.
+- quelle: plants-valerianella-selen-2021 (peer_review; `anbaumethode = dwc` (A): Töpfe mit Nährlösung, Belüftung nicht genannt).
+- Hinweis, nicht beauftragt: dieselbe Quelle nennt pH 5.6 ± 0.1 und EC 2.1 ± 0.1 dS/m für die Topf-Phase (Wachstum) und Ernte 38, 52 und 66 Tage ab Saat.
+
+### Verworfen
+
+| Quelle | Grund |
+|---|---|
+| Plants 13(2) 165 (2024, PMC10818939, Röntgen-Priming Valerianella) | Keimung auf Filterpapier in Petrischalen (Keimtest mit 1 mm Radikula, kein Auflaufen im Hydrosystem); Keimzeit nur als Abbildung, Text nennt «100% seed germination within 12 days» für beide Arten zusammen |
+| Foods 10(1) 2021 (PMC7831921, Valerianella im Floating, Gewächshaus) | nur «Thirty days after transplanting» (Wachstum, nicht beauftragt); keine Keim- oder Anzuchtdauer |
+| Horticulture Journal 85(2) 2016 (Floating-Pilotanlage Babyleaf) | Direktsaat in Styropor-Schalen, keine Keim- oder Umsetztage für Feldsalat |
+| PMC10457958, PMC12430617, PMC13523218 | keine Keim- oder Umsetzangaben für Feldsalat im Hydrosystem |
+| Fork Farms, frankiesgarten.de | keine Feldsalat-Seite |
+
+### Lückenliste nach Runde 7
+
+| Art | Phase | Grösse | Stand |
+|---|---|---|---|
+| valerianella_locusta | keimung | dauer | weiter Klasse D (keine Hydroponik-Quelle mit Keimdauer) |
+| valerianella_locusta | anzucht | dauer | nur offen (#1 22 Tage ab Saat, #2 14 Tage ab Saat; beide ohne Keimdauer derselben Quelle) |
