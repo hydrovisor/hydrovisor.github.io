@@ -55,7 +55,7 @@ for a in ('petroselinum_crispum', 'allium_schoenoprasum'):
       '(A) Band aus den beiden Stufen derselben Tabelle (erste Blätter 0.4 bis 0.6 #1, Jungpflanze 0.6 bis 0.8 #2) wie bei Basilikum und Chili; Befund 1 aus PR #189')
 z = f'{P}beta_vulgaris_conditiva.anzucht.ec'
 E(z, f'{z}#2', {'wert_min': '0.5', 'wert_typ': '', 'wert_max': '1.2', 'kurzzitat': zitat(f'{z}#3', f'{z}#2'),
-                'fundstelle': 'Abschnitt «Anzuchtkarte: Dünger, EC und pH», Spalte «EC (mS/cm)», erste Zeile (Keimling, erste Blätter, 0,5) und Zeile Jungpflanze (0,8 bis 1,2), vor dem Umsetzen'},
+                'fundstelle': 'Abschnitt «Anzuchtkarte: Dünger, EC und pH», Spalte «EC (mS/cm)», Zeile «Anzucht (erste Blätter)» (0,5) und Zeile Jungpflanze (0,8 bis 1,2), vor dem Umsetzen'},
   '(A) Band aus den beiden Stufen derselben Anzuchtkarte (Keimling 0.5 #3, Jungpflanze 0.8 bis 1.2 #2) wie bei Basilikum und Chili; Befund 1 aus PR #189')
 
 # ---------------- Lücken der sieben Arten (nach Methoden- und Quellenprüfung Runde 7) ----------------
@@ -63,8 +63,8 @@ E(z, f'{z}#2', {'wert_min': '0.5', 'wert_typ': '', 'wert_max': '1.2', 'kurzzitat
 # #5, #6 (B2, Rise Gardens, DWC) je 7 Tage; #7 (B2) 7 bis 10 Tage ab Keimung.
 a = 'ocimum_basilicum'
 E(f'{P}{a}.anzucht.dauer', f'{P}{a}.anzucht.dauer#8', {'wert_min': '7', 'wert_typ': '18', 'wert_max': '23'},
-  'Regel D2/D3 (A): typ 18 aus #8 (A, 20 Tage ab Saat minus Keimung 2 Tage, Schwammwürfel unter LED wie die Anlage, Regel 1 und 2), '
-  'min 7 aus #5, #6 und #7 (B2, Rise Gardens), max 1.25·18 wie bei der Keimdauer Petersilie (#8 ist der grösste Quellenwert)')
+  'Regel D2/D6 (A): typ 18 aus #8 (A, 20 Tage ab Saat minus Keimung 2 Tage derselben Quelle (D5), Schwammwürfel unter LED wie die Anlage, Regel 1 und 2), '
+  'min 7 aus #5, #6 und #7 (B2, Rise Gardens), max 1.25·18 nach D6 (#8 ist der grösste Quellenwert), wie bei der Keimdauer Petersilie in #188')
 
 # Petersilie: #4 und #5 (B2, Rise Gardens, DWC) je 15 minus 8 = 7 Tage, gleicher Wert
 a = 'petroselinum_crispum'
@@ -74,20 +74,20 @@ E(f'{P}{a}.anzucht.dauer', f'{P}{a}.anzucht.dauer#4', d3(7),
 # Mangold: #1 (A, Steinwolle, danach stehende Nährlösung wie Kratky) 21 minus 5 = 16; #4 (A, Steinwolle, Ebbe-Flut, HPS) 10
 a = 'beta_vulgaris_cicla'
 E(f'{P}{a}.anzucht.dauer', f'{P}{a}.anzucht.dauer#1', {'wert_min': '10', 'wert_typ': '16', 'wert_max': '20'},
-  'Regel D2/D3 (A): typ 16 aus #1 (A, stehende Nährlösung wie Kratky, Regel 2), min 10 aus #4 (A, Ebbe-Flut), max 1.25·16 (#1 ist der grösste Quellenwert)')
+  'Regel D2/D6 (A): typ 16 aus #1 (A, stehende Nährlösung wie Kratky, Regel 2), min 10 aus #4 (A, Ebbe-Flut), max 1.25·16 nach D6 (#1 ist der grösste Quellenwert)')
 
 # Randen (Blattnutzung): Anzucht #1 (A) 14 minus 4 = 10; Wachstum #1 (A, Floss wie DWC) 17, #3 (A, NFT) 21
 a = 'beta_vulgaris_conditiva'
-E(f'{P}{a}.anzucht.dauer', f'{P}{a}.anzucht.dauer#1', d3(10), 'Regel D3 (A): 14 Tage ab Saat bis Umsetzen minus Keimkammer 4 Tage derselben Quelle')
+E(f'{P}{a}.anzucht.dauer', f'{P}{a}.anzucht.dauer#1', d3(10), 'Regel D5/D3 (A): 14 Tage ab Saat bis Umsetzen minus Keimkammer 4 Tage derselben Quelle')
 E(f'{P}{a}.wachstum.dauer', f'{P}{a}.wachstum.dauer#1', {'wert_min': '14', 'wert_typ': '17', 'wert_max': '21'},
-  'Regel D2/D3 (A): typ 17 aus #1 (A, Floating wie DWC der Anlage, Regel 2), max 21 aus #3 (A, NFT, Ernte 30 minus Umsetzen 9 Tage ab Saat), '
-  'min 0.8·17 (#1 ist der kleinste Quellenwert); #2 (frankiesgarten, 8 bis 10 Wochen) gilt der Knollenernte, nicht der Blattnutzung')
+  'Regel D2/D6 (A): typ 17 aus #1 (A, Floating wie DWC der Anlage, Regel 2), max 21 aus #3 (A, NFT, Ernte 30 minus Umsetzen 9 Tage ab Saat), '
+  'min 0.8·17 nach D6 (#1 ist der kleinste Quellenwert); #2 (frankiesgarten, 8 bis 10 Wochen) gilt der Knollenernte, nicht der Blattnutzung')
 
 # Tomate: nur Wachstum (Blüte und Fruchtbildung ohne Kandidaten mit Bezug ab Fruchtansatz, Klasse D)
 a = 'solanum_lycopersicum'
 E(f'{P}{a}.wachstum.dauer', f'{P}{a}.wachstum.dauer#3', {'wert_min': '16', 'wert_typ': '28', 'wert_max': '35'},
-  'Regel D2/D3 (A): typ 28 aus #3 (A, NFT als Wasserkultur am nächsten an DWC und Kratky, Regel 2), min 16 aus #5 (A, Kokos, 15.87 gerundet), '
-  '#4 (A, Steinwolle, 21.4 bis 22.6) liegt dazwischen; max 1.25·28 (#3 ist der grösste Quellenwert)')
+  'Regel D2/D6 (A): typ 28 aus #3 (A, NFT als Wasserkultur am nächsten an DWC und Kratky, Regel 2), min 16 aus #5 (A, Kokos, 15.87 gerundet), '
+  '#4 (A, Steinwolle, 21.4 bis 22.6) liegt dazwischen; max 1.25·28 nach D6 (#3 ist der grösste Quellenwert)')
 
 
 # ---------------- Kulturgruppen-Mindestzeilen (V13) nachführen ----------------
