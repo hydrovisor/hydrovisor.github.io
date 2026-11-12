@@ -6,7 +6,7 @@ Entscheidungsregel Konzept 9.3: (1) höhere Evidenzklasse vor tieferer, nie mitt
 
 Kandidaten aus `profilwert_offen.csv` und `saatempfehlung_offen.csv` erfüllen die Form des Validators nicht. Du kannst sie nur über «eigener Wert» übernehmen; sie stehen hier als Alternative mit Quelle und `grund`, ohne ergänzten oder gekürzten Wert. Konflikte, die nur offene Werte haben, bekommen keinen Vorschlag mit Status.
 
-Gesamtbild: 61 Konflikte über acht Arten und das Standardprofil, davon 28 «nur offener Wert». In den Arbeitsdateien steht bei 31 Konflikten der gewählte ladbare Kandidat auf `status = vorgeschlagen` (vier davon in dieser Runde, die übrigen für die nächsten Runden, Abschnitt 2). Nur die Spalte `status` wurde geändert.
+Gesamtbild: 61 Konflikte über acht Arten und das Standardprofil, davon 30 ohne ladbaren Kandidaten («nur offener Wert», einschliesslich K-petersilie-05 mit nur offenen Saatempfehlungen). In den Arbeitsdateien steht bei 31 Konflikten der gewählte ladbare Kandidat auf `status = vorgeschlagen` (vier davon in dieser Runde, die übrigen für die nächsten Runden, Abschnitt 2). Nur die Spalte `status` wurde geändert. Zwei Paare mit gleichem Wert ohne Konflikt (Chili `keimung.keimtemp` 25–26 °C, B1 vor C; Basilikum `keimung.keimart` licht, zwei Tüten) hat der Koordinator nach Annahme 8 in `docs/w0/ablauf.md` mechanisch vorgeschlagen.
 
 Auswahl dieser Runde: pH und EC der Phasen Anzucht und Wachstum haben Vorrang. Von diesen Konflikten haben nur fünf mehr als einen ladbaren Kandidaten (K-salat-08, K-pakchoi-08, K-basilikum-03, K-basilikum-04, K-tomate-06); bei K-tomate-06 ist die Schnittmenge gleich dem Kandidaten #1, der Entscheid ist deshalb kaum strittig und steht in Abschnitt 2. Die übrigen pH- und EC-Konflikte haben genau einen ladbaren Kandidaten (Vorschlag mechanisch, offene Werte als Alternative) oder gar keinen (nur «eigener Wert»).
 
@@ -193,7 +193,7 @@ Folgen, die Du kennen musst:
 8. **Anzucht-Werte sind oft keine Sollbereiche**: Tomate `anzucht.ph#1` 5.6–5.8 (ohne Konflikt, B2) beschreibt das einmalige Sättigen der Steinwollblöcke (P09); Chili `anzucht.ec` beschreibt das Tränken der Blöcke; Salat `anzucht.ec#1` gilt nur «for the first few days» (P4).
 9. **Zeitplan-Raster**: Keim- und Anzuchtdauer von Tomate und Chili (14 und 21 Tage) stammen aus einer Wochenfolie mit gleicher Spalte für beide Arten, nicht aus artspezifischen Messungen (Tomate P02, P07; Chili P17, P18).
 10. **Quellen ohne Jahr**: `cornell-cea-lettuce-handbook`, `ua-ceac-kurs-kap6`, `ua-ceac-kurs-kap10`, `alberta-sweet-bell-peppers`, `johnnys-basilikum-hydro` tragen in `quelle.csv` kein Jahr; Regel 2 (jünger vor älter) ist mit ihnen nicht anwendbar.
-11. **Koordinator-Hinweise aus den Berichten**: `q.ufl-hs1258-2015` ist `geprueft` ohne `methodenpruefung` (Salat P27); `art.capsicum_annuum.name_de#1` stammt nicht von GBIF (Chili P24); Salat `keimung.ph#1` darf nicht in die Gruppenzeilen kopiert werden (V13, P9).
+11. **Koordinator-Hinweise aus den Berichten**: `q.ufl-hs1258-2015` hatte `geprueft` ohne `methodenpruefung` (Salat P27); der Koordinator hat die Quelle auf `entwurf` zurückgesetzt, Methodenprüfung offen, davon abhängig bleibt `art.lactuca_sativa.kulturformen_erlaubt#1` auf `entwurf`; `art.capsicum_annuum.name_de#1` stammt nicht von GBIF (Chili P24); Salat `keimung.ph#1` darf nicht in die Gruppenzeilen kopiert werden (V13, P9).
 
 ---
 
@@ -208,7 +208,7 @@ Der Koordinator legt diese Zeilen in `saatempfehlung_offen.csv` an (Annahme 6 un
 - `obergrenze_samen`: Wie viele Samen je Schwamm höchstens? (Ganzzahl, mindestens 15)
 - `pflanzen_stehen_lassen`: Wie viele Pflanzen bleiben im Büschel stehen? (Ganzzahl, mindestens 1; der Fachkritiker weist darauf hin, dass `03_import_w0.md` 4.5 in der Spalte `pflanzen_stehen_lassen` «Petersilie 15» als Beispiel nennt, der Text aber von 15 Samen spricht; gilt 15 für die Samen, für die Pflanzen oder für beides?)
 - `substrat_passung`: Text zur Passung gegen den Würfel 2.2 cm.
-- Konkurrenz K-petersilie-05: Kandidat `#1` aus `isu-ph-kraeuter-2025` (Klasse B) nennt 5 Samen je Schwamm und 3 Pflanzen stehen lassen, `obergrenze_samen` fehlt. Bleibt es bei 15 Samen, oder übernimmst Du 5 / 3 über «eigener Wert»? Sobald die Klasse-D-Zeile steht, trägt sie dieselbe `konflikt_id` K-petersilie-05.
+- Konkurrenz K-petersilie-05: Kandidat `#1` aus `isu-ph-kraeuter-2025` (Klasse B) nennt 5 Samen je Schwamm und 3 Pflanzen stehen lassen, `obergrenze_samen` fehlt. Bleibt es bei 15 Samen, oder übernimmst Du 5 / 3 über «eigener Wert»? Die Klasse-D-Zeile trägt bereits dieselbe `konflikt_id` K-petersilie-05.
 
 **`se.solanum_lycopersicum.dauerkultur_frucht#1`** (Klasse D, 1 Pflanze stehen lassen, Begründung «entschieden von Tim, Konzept R12.3»)
 

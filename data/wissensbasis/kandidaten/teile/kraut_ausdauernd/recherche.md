@@ -34,7 +34,7 @@ Stand 12.11.2026 · Rechercheur kraut_ausdauernd · Arten: Petersilie (`petrosel
 | Agriculture 2023, 13(7) 1346 (Schnittlauch, EC 1 bis 5 dS/m mit H2O2-Priming) | Salzstress-Versuch, kein Sollbereich; Volltext bei MDPI gesperrt |
 | Produce Grower (pH-Optima, Nährstoffe Kräuter) | Abruf blockiert (Incapsula); Primärquelle Iowa State stattdessen verwendet |
 | ASHS 2025 Konferenz-Abstract (pH Kräuter) | nur Optimum 5.5 als Einzelwert; dieselbe Studie wie die Masterarbeit |
-| Masterarbeit Iowa State, Kapitel 1 Literaturübersicht «For parsley, a pH range of 5.5 to 6.0 is recommended» | Sekundärzitat (Morgan 2005), nicht eigene Angabe |
+| Masterarbeit Iowa State, Kapitel 1 Literaturübersicht «For parsley, a pH range of 5.5 to 6.0 is recommended» | Sekundärzitat (Arbeit von 2005), nicht eigene Angabe |
 | Oklahoma State HLA-6722, pH-Spalte Petersilie | Spaltenzuordnung im PDF-Text uneindeutig (Layout- und Rohtext ergeben 7.0 bzw. 6.0 to 6.5) |
 | CAFRE Anhang 2 (EC, pH, Lufttemperatur, Kulturzeit Schnittlauch) | nur Balkengrafik ohne Zahlen im Text, nicht wörtlich zitierbar |
 | Singapore Food Agency, Leitfaden Nährstoffe 2025 | nur asiatische Blattgemüse |
