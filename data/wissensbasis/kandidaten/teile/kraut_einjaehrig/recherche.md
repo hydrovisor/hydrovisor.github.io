@@ -153,3 +153,46 @@ Gesucht nur: `pw.ocimum_basilicum.anzucht.dauer`.
 | Art | Phase | Grösse | Stand |
 |---|---|---|---|
 | ocimum_basilicum | anzucht | dauer | nur offen: 41 und 18 Tage ab Saat, zwei Wochen ab Saat (neu), UTK 12–18 Tage; keine Tage ab Phasenbeginn |
+
+## Runde 7 (12.11.2026): Anzuchtdauer Basilikum mit Keimdauer aus derselben Quelle
+
+Gesucht nur: `pw.ocimum_basilicum.anzucht.dauer`, gezielt Quellen mit Keimdauer und Umsetztag oder mit Dauer ab Keimung.
+
+### Suchweg
+
+- Fork Farms Help Center (`/help/plant-guides`, `/help/herb-grow-guide`, `/help/seed-varieties`): keine Basilikum-Kopfdaten in Tagen; Herb Grow Guide nur «5-7 days» für Kräuter allgemein und Ernte nach Höhe.
+- frankiesgarten.de Basilikum-Hydroponik erneut: Keimdauer 5 bis 14 Tage, Zeitplanfelder der Anzuchtkarte weiterhin leer.
+- Rise Gardens: Plant library auf den Produktseiten (Shopify-Produktliste, Seiten mit curl gelesen) «Super Sweet Genovese Basil» und «Purple Basil» mit Stufen «Days 0-8 Germination», «Days 8-15 Move to Garden» bzw. 0-7 und 7-14; Blogartikel «How to Grow Hydroponic Basil» (11.2.2025) mit «typically 7-10 days after germination».
+- Europe PMC (Volltext-XML): Biology 11(7) 991 (2022, Pflanzenfabrik mit LED, Schwammwürfel 2.3 cm): Keimung «48 h», Umsetzen 20 Tage nach Saat.
+- Websuche CEA HERB (Tennessee) Keimung im Dunkeln, Taylor & Francis «Hydroponics for the Home Grower», The Growcer Knowledge Base.
+
+### Neue Kandidaten (alle offen)
+
+| zeile_id | Quelle | Wert wörtlich | grund |
+|---|---|---|---|
+| pw.ocimum_basilicum.anzucht.dauer#5 | risegardens-genovese-basilikum (B2, Indoor LED) | «Days 0-8 Germination … Days 8-15 Move to Garden» → 15 minus 8 = 7 | Einzelwert; Umsetztag im Fenster nicht eindeutig |
+| pw.ocimum_basilicum.anzucht.dauer#6 | risegardens-purpur-basilikum (B2) | «Days 0-7 Germination … Days 7-14 Move to Garden» → 14 minus 7 = 7 | Einzelwert; wie #5 |
+| pw.ocimum_basilicum.anzucht.dauer#7 | risegardens-basilikum-anleitung-2025 (B2) | «typically 7-10 days after germination» (Bezug ab Keimung, passt zur Phase) | Bereich ohne typ |
+| pw.ocimum_basilicum.anzucht.dauer#8 | biology-11-991-basilikum-pflanzenfabrik-2022 (A, Schwamm 2.3 cm, LED) | «20 °C for 48 h for germination», «At 20 days after sowing» | Einzelwert; Keimung in Stunden, nicht selbst umgerechnet (Rechnung 20 Tage minus 48 h für den Lead) |
+
+Hinweis für den Lead: #7 ist der einzige Kandidat mit Bezug ab Keimung ohne Rechnung; #5 und #6 stammen aus derselben Vorlage des Herstellers (gleiches Stufenschema für alle Kräuter). Der Blogartikel #7 verweist für die Zahl auf eine Literaturnummer [6], die auf der Seite nicht aufgelöst ist. #8 hat genau Tims Würfelgrösse (Schwamm 2.3 cm) unter LED.
+
+### Verworfen in Runde 7
+
+| Quelle | Grund |
+|---|---|
+| Europe PMC 2026 «Interactive effects of FR and UV-A … basil and parsley» (PMC13438295) | «After emergence (three weeks after sowing)», keine eigene Keimdauer; Wochen ab Saat |
+| Plants 2025 Zitronenbasilikum (PMC12251977) | andere Art (Ocimum × citriodorum), Anzucht in Kokos-Perlit, Keimdauer nicht in Tagen |
+| Frontiers 2023 «Italian Large Leaf» (PMC10332322) | Keimung in Torfwürfeln (nicht inert) |
+| Vertical Farming 2023 Salat und Basilikum (PMC10130051) | Basilikum in Vermiculit-Töpfen, keine Tage |
+| CEA HERB Part 2 und 3 (producegrower.com, greenhousemag.com) | Seiten blockiert (Bot-Schutz), Archivkopie nicht erreichbar; Zitat nicht prüfbar |
+| Taylor & Francis «Hydroponics for the Home Grower» (laut Suchausschnitt Basilikum keimt «4 to 5 days», Umsetzen «14-18 days after sowing») | nur Suchausschnitt, Kapitel gesperrt; Umsetzzahl allgemein für Blattkulturen |
+| The Growcer Knowledge Base «herbs … seedling area for 21 days» | nicht artspezifisch |
+| AeroGarden Blog «What To Expect» | HTTP 403 |
+| Johnny's Key Growing Information Basilikum | Erde/Katalog |
+
+### Lückenliste nach Runde 7
+
+| Art | Phase | Grösse | Stand |
+|---|---|---|---|
+| ocimum_basilicum | anzucht | dauer | weiterhin kein Kandidat mit `wert_min/wert_typ/wert_max`; offen neu: 7 (Rise Genovese), 7 (Rise Purple), 7–10 ab Keimung (Rise Blog), 20 Tage minus 48 h (A, Schwamm 2.3 cm) |
