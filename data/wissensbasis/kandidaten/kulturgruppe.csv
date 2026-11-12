@@ -1,0 +1,6 @@
+kandidat_id,zeile_id,kulturgruppe_id,name,leitkultur_art_id,ec_obergrenze_validator,konflikt_id,status,freigegeben_am,notiz_tim
+fruchtgemuese#1,fruchtgemuese,fruchtgemuese,Fruchtgemüse,solanum_lycopersicum,2.6,,entwurf,,
+blattsalat#1,blattsalat,blattsalat,Blattsalate,lactuca_sativa,2.0,,entwurf,,
+kohl#1,kohl,kohl,Kohlgewächse,brassica_rapa_chinensis,2.0,,entwurf,,
+kraut_einjaehrig#1,kraut_einjaehrig,kraut_einjaehrig,Einjährige Kräuter,ocimum_basilicum,2.0,,entwurf,,
+kraut_ausdauernd#1,kraut_ausdauernd,kraut_ausdauernd,Ausdauernde Kräuter,petroselinum_crispum,2.0,,entwurf,,
