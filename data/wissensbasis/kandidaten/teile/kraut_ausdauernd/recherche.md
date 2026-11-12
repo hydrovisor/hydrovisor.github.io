@@ -195,3 +195,48 @@ Gesucht nur: `pw.petroselinum_crispum.anzucht.dauer`, `pw.allium_schoenoprasum.a
 | Petersilie | anzucht | dauer | nur offen: 21 Tage ab Saat (A), drei bzw. fünf Wochen ab Saat (Runde 2); Umrechnung durch den Lead |
 | Schnittlauch | keimung | dauer | weiterhin keine hydroponische Quelle (Klasse D) |
 | Schnittlauch | anzucht | dauer | keine neue Quelle; nur offen (15 Tage, 4–6 Wochen) |
+
+## Runde 7 (12.11.2026): Anzuchtdauer Petersilie, Keim- und Anzuchtdauer Schnittlauch
+
+Gesucht nur: `pw.petroselinum_crispum.anzucht.dauer`, `pw.allium_schoenoprasum.keimung.dauer`, `pw.allium_schoenoprasum.anzucht.dauer`; gezielt Quellen mit Keimdauer und Umsetztag oder Dauer ab Keimung.
+
+### Suchweg
+
+- Fork Farms Help Center (`/help/plant-guides`, `/help/herb-grow-guide`, `/help/seed-varieties`): Petersilie und Schnittlauch nur Ernte nach Höhe («at least 6 inches»), Keimung «5-7 days» für Kräuter allgemein.
+- frankiesgarten.de: Übersicht weiterhin ohne Schnittlauch-Seite; Petersilie-Seite erneut: Keimung «1 bis 4 Wochen», Zeitplanfelder leer.
+- Rise Gardens Plant library (Produktseiten, mit curl gelesen): «Darki Parsley» und «Forest Green Parsley» mit «Days 0-8 Germination», «Days 8-15 Move to Garden»; in der Produktliste keine Schnittlauch-Sorte (nur «Red Baron Bunching», Allium fistulosum).
+- Gardyn Help Center «Chives»: «Days to Sprout: 7-21».
+- Salve Regina Digital Commons, Sammlung «hydroponic_center»: PDF «Dolores Chive» weiterhin HTTP 403; keine Basilikum- oder Petersilie-Anleitung in der Sammlung.
+- Europe PMC (Volltext-XML): Schnittlauch mit Hydroponik (Heliyon 2019, PMC6928240), Petersilie und Basilikum unter FR und UV-A (PMC13438295).
+- Websuche Schnittlauch Hydroponik Steinwolle (deutsch), Upstart Farmers Schnittlauch, AeroGarden, The Growcer.
+
+### Neue Kandidaten (alle offen)
+
+| zeile_id | Quelle | Wert wörtlich | grund |
+|---|---|---|---|
+| pw.petroselinum_crispum.anzucht.dauer#4 | risegardens-darki-petersilie (B2, Indoor LED) | «Days 0-8 Germination … Days 8-15 Move to Garden» → 15 minus 8 = 7 | Einzelwert; Umsetztag im Fenster nicht eindeutig |
+| pw.petroselinum_crispum.anzucht.dauer#5 | risegardens-forest-green-petersilie (B2) | wie #4 (0-8, 8-15) → 7 | Einzelwert; wie #4 |
+| pw.allium_schoenoprasum.keimung.dauer#2 | gardyn-schnittlauch (B2, Hydroponik auf der Seite nicht ausdrücklich) | «Days to Sprout: 7-21» | Bereich ohne typ |
+
+Hinweise für den Lead: Rise Gardens nennt für Petersilie 8 Keimtage, frankiesgarten «1 bis 4 Wochen», die Studien drei bis fünf Wochen bis zum Umsetzen; die Rise-Stufen sind ein einheitliches Schema für Kräuter und wirken knapp. Gardyn «Days to Maturity: 75-85» gleicht Johnny's Katalog; die Keimangabe stammt vermutlich ebenfalls nicht aus eigenem Versuch (Methodenprüfung).
+
+### Verworfen in Runde 7
+
+| Quelle | Grund |
+|---|---|
+| PMC13438295 (2026, Basilikum und Petersilie, Steinwolle 1.2 Zoll, Deep Flow) | «After emergence (three weeks after sowing)», Wochen ab Saat, keine eigene Keimdauer |
+| Heliyon 2019 Schnittlauch mit Beauveria (PMC6928240) | Jungpflanzen aus Gärtnerei, Töpfe mit Sand-Vermiculit-Perlit |
+| Salve Regina «Dolores Chive» (PDF) | HTTP 403, nicht prüfbar |
+| The Growcer «herbs … seedling area for 21 days» | nicht artspezifisch |
+| AeroGarden Blog (Kräuter 5-15 Tage) | HTTP 403, nicht artspezifisch |
+| Johnny's Chives 7–14 Tage, Ball Australia, Eden Brothers, gartenjournal, guterboden | Erde, Katalog oder Seiten ohne Hydroponik |
+| BrightAgrotech (Medium), agrowtronics, dripcanopy, scaleandstem, letpot | nicht abrufbar oder ohne erkennbare Quelle |
+| CEA HERB Part 2 (producegrower.com) | Bot-Schutz, Archivkopie nicht erreichbar |
+
+### Lückenliste nach Runde 7
+
+| Art | Phase | Grösse | Stand |
+|---|---|---|---|
+| Petersilie | anzucht | dauer | kein Kandidat mit `wert_min/wert_typ/wert_max`; offen neu: 7 (Rise Darki, Rise Forest Green, je Einzelwert aus Rechnung) |
+| Schnittlauch | keimung | dauer | kein Kandidat mit Typwert; offen neu: Gardyn 7–21 (Bereich ohne typ, Hydroponik nicht ausdrücklich) |
+| Schnittlauch | anzucht | dauer | keine neue Quelle (Klasse D); nur offen: Salve Regina 15 Tage, Simply Hydroponics 4–6 Wochen |

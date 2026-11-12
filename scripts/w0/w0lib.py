@@ -14,7 +14,13 @@ def lesen(pfad):
         return [], None
     with open(pfad, encoding='utf-8', newline='') as f:
         r = csv.DictReader(f)
-        return list(r), r.fieldnames
+        rows = list(r)
+    # Zeilen mit unquotiertem Komma im letzten Feld (notiz_tim) wieder zusammenfügen (Issue #190)
+    for row in rows:
+        rest = row.pop(None, None)
+        if rest:
+            row[r.fieldnames[-1]] = ','.join([row[r.fieldnames[-1]]] + rest)
+    return rows, r.fieldnames
 
 
 def schreiben(pfad, zeilen, kopf):
@@ -190,7 +196,8 @@ REGELN = {
     'D2': 'mehrere Einzelwerte: min und max = kleinster und grösster Quellenwert, typ = Wert der besten Quelle nach Regel 9.3',
     'D3': 'ein Einzelwert x: min = 0.8·x, max = 1.25·x (gerundet), typ = x',
     'D4': 'Angabe in Wochen: Tage = 7·Wochen',
-    'D5': 'Tage ab Saat: minus Keimdauer typ der Art',
+    'D5': 'Tage ab Saat: minus Keimdauer derselben Quelle, sonst minus Keimdauer typ der Art',
+    'D6': 'nur eine Grenze aus einem Quellenwert (typ ist der grösste bzw. kleinste Quellenwert): die andere nach D3 (0.8·typ bzw. 1.25·typ)',
     'E1': 'pH- oder EC-Einzelwert: Band ±0.2 um den Wert',
     'E2': 'Band über der Validatorgrenze: auf die Grenze gekürzt',
     'E3': 'EC-Basis nach der Quelle korrigiert (Methodenprüfer)',
@@ -428,7 +435,7 @@ def uebertrag(b, log):
         for r in b.alle(n):
             if r['status'] == 'freigegeben' and r.get('quelle_id'):
                 benutzt.add(r['quelle_id'])
-    gesetzt = set()
+    gesetzt = {r['quelle_id'] for r in b.alle('quelle') if r['status'] == 'freigegeben'}
     for g in GRUPPEN:
         for r in b.d[(g, 'quelle')]:
             if r['status'] == 'entwurf' and r['methodenpruefung'] == 'zugelassen' and r['quellenpruefung'] == 'bestaetigt':
