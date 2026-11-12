@@ -17,6 +17,10 @@ on:
         description: Rückfall-Probe (Rauchtest scheitert absichtlich, der Rückfall stellt letzter-guter-stand bereit)
         type: boolean
         default: false
+      seed_scharf:
+        description: Seed scharf laden (Entscheid 0017; verändert die Produktionsdatenbank, Freigabe in production nur durch Tim)
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -62,6 +66,9 @@ jobs:
             echo mig=false >> "$GITHUB_OUTPUT"
             echo "### Keine ausstehende Migration – Functions und Seed-Trockenlauf, Freigabe durch den Lead (Entscheid 0010)" >> "$GITHUB_STEP_SUMMARY"
           fi
+          if [ "${{ inputs.seed_scharf }}" = "true" ]; then
+            echo "### Seed scharf (Entscheid 0017) – schreibt in die Produktionsdatenbank, Freigabe von production nur durch Tim" >> "$GITHUB_STEP_SUMMARY"
+          fi
       - name: Rückfall-Probe nur, wenn letzter-guter-stand der laufende Stand ist (sonst ein echter Rückfall)
         if: inputs.rueckfall_probe
         run: |
@@ -72,7 +79,8 @@ jobs:
 
   migration:
     needs: vorhanden
-    if: needs.vorhanden.outputs.db == 'true'
+    # seed_scharf startet den Job auch ohne Änderung unter supabase/, data/, scripts/seed* oder src/domain/ (Entscheid 0017)
+    if: needs.vorhanden.outputs.db == 'true' || inputs.seed_scharf
     runs-on: ubuntu-latest
     environment: production
     permissions:
@@ -89,12 +97,16 @@ jobs:
           DB_URL: ${{ secrets.SUPABASE_DB_URL_POOLER }}
         # --yes: CLI 3.0.0 fragt ohne Terminal nach und bricht sonst ohne Änderung ab (Lauf 41645672298)
         run: supabase db push --yes --db-url "$DB_URL"
-      - name: Seed (Wissen, Sortenstamm, Konstanten; keine Demo-Daten) – bis zum Scharfschalten nur Trockenlauf
+      - name: Seed (Wissen, Sortenstamm, Konstanten; keine Demo-Daten) – scharf nur mit seed_scharf, sonst Trockenlauf
         env:
           SEED_DB_URL: ${{ secrets.SUPABASE_DB_URL_POOLER }}
-        # --trocken: prüfen, Skript ausführen und zurückrollen, Bericht in der Job-Zusammenfassung (Plan 10, Entscheid 0007);
-        # scharf erst nach dem ersten grünen Trockenlauf und der W0-Teilfreigabe in einem eigenen Paket
-        run: npm ci && npm run seed -- --ziel produktion --trocken
+          SCHARF: ${{ inputs.seed_scharf }}
+        # --trocken: prüfen, Skript ausführen und zurückrollen, Bericht in der Job-Zusammenfassung (Plan 10, Entscheid 0007).
+        # Scharf nur bei workflow_dispatch mit seed_scharf (Entscheid 0017): lädt, was das Repository liefert; ohne
+        # W0-Dateien nur die Seed-Konstanten. Jeder Push auf main bleibt beim Trockenlauf, damit der Lead ihn freigeben kann.
+        run: |
+          npm ci
+          if [ "$SCHARF" = "true" ]; then npm run seed -- --ziel produktion; else npm run seed -- --ziel produktion --trocken; fi
       - name: Edge Functions
         if: hashFiles('supabase/functions/**') != ''
         env:

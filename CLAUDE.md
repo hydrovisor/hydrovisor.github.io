@@ -74,7 +74,7 @@ Die Skripte stehen seit Paket I0-01 (Grundgerüst) in `package.json`; ihre Namen
 | Typen erzeugen | `supabase gen types typescript --local > src/daten/datenbank.types.ts` |
 | Edge Functions | `deno test supabase/functions` |
 | W0-Validator | `npm run w0:pruefen` (V1 bis V13 ohne Datenbank, `-- --kandidaten` für `kandidaten/`) |
-| Seed | `npm run seed -- --ziel lokal [--trocken]`; dev nur `gh workflow run dev-seed.yml -f zweig=<main\|paket/…> -f trockenlauf=true` (Entscheid 0007); Produktion nur `deploy.yml`, bis zum Scharfschalten `--trocken` |
+| Seed | `npm run seed -- --ziel lokal [--trocken]`; dev nur `gh workflow run dev-seed.yml -f zweig=<main\|paket/…> -f trockenlauf=true` (Entscheid 0007); Produktion nur `deploy.yml`: bei Push `--trocken`, scharf nur `gh workflow run deploy.yml --ref main -f seed_scharf=true` mit Tims Freigabe (Entscheid 0017) |
 | Seed-Tests [SQL] | `npm run test:seed` (Vitest gegen die lokale Datenbank nach `supabase db reset`, Bericht `reports/vitest-seed.json`) |
 | Demo-Daten | `npm run demo -- --laden` / `--loeschen` (lokal; dev nur über `gh workflow run dev-seed.yml -f demo=laden -f trockenlauf=false`; ersetzt alle Demo- und Testdaten, lädt bei leerem Wissen zuerst `tests/fixtures/wissen`) |
 | AK-Abdeckung | `node scripts/ak-abdeckung.ts --issue <nr> [--pr <nr>] --berichte reports` (ohne `--pr` warnen [Gerät] und [Eval] nur) |
@@ -127,6 +127,7 @@ Vorschau: Cloudflare Pages `hydrovisor-vorschau` baut jeden Zweig (`<zweig>.hydr
 - [0014 Planfreigabe im Chat, Wechselblock vor M2](docs/entscheide/0014-planfreigabe-im-chat-und-pool.md)
 - [0015 Karbonathärte wird nicht erfasst](docs/entscheide/0015-karbonathaerte-nicht-erfasst.md)
 - [0016 Usability-Befragung nur im Claude-Chat](docs/entscheide/0016-befragung-im-chat.md)
+- [0017 Seed-Konstanten vor W0 scharf laden](docs/entscheide/0017-seed-konstanten-vor-w0.md)
 - Übrige Entscheide vom 1.11.2026: `docs/spec/00_rueckfragen.md` (R1 bis R13, W1 bis W14, Annahmen 1 bis 16)
 
 ## Arbeitsweise in der Sitzung
