@@ -5,7 +5,7 @@ Stand 12.11.2026 · Rechercheur kraut_einjaehrig · Kulturform `dauerkultur_blat
 ## Suchweg (Stichworte)
 
 - Beratung und Universität: «hydroponic basil EC pH extension»; Oklahoma State HLA-6722 (Tabelle EC und pH je Kultur), UT/UF W 844-B (Blattkulturen in Kleinanlagen, Abschnitt Basil, Anzucht in Würfeln), FAO Technical Paper 589 (Aquaponik, Anhang 1 Basil), Ohio State Knowledge Bank (pH-Versuch Basilikum in DWC).
-- Studien: Walters/Currey 2018 (EC 0.5 bis 4.0 in NFT, kein Effekt), Ohio State und Arizona (pH 4.0 bis 5.5 in DWC), Arkansas 2020 (Umsetzzeitpunkt 14, 21, 28 Tage), Frontiers 2021 (Basilikum in Steinwollwürfel 2.5 cm, 2 Samen je Zelle).
+- Studien: HortScience-Studie 2018 (EC 0.5 bis 4.0 in NFT, kein Effekt), Ohio State und Arizona (pH 4.0 bis 5.5 in DWC), Arkansas 2020 (Umsetzzeitpunkt 14, 21, 28 Tage), Frontiers 2021 (Basilikum in Steinwollwürfel 2.5 cm, 2 Samen je Zelle).
 - Hersteller und Praxis: Johnny's Selected Seeds (Basilikum-Leitfaden Hydroponik, Artikel Anzucht), Rise Gardens (Nährstoffe für Kräuter), Grodan (nichts zu Basilikum).
 - BBCH: JKI-Monografie 2018 (Text im PDF nicht auslesbar, Schrift verschlüsselt), daher englische 2. Ausgabe 2001 (inhaltsgleich), allgemeine Skala, weil die Monografie keine Skala für Ocimum führt.
 - Tüte: Produktseiten Sämereien.ch Genoveser und Pourpre (nur Keimart und Keimtemperatur verwendet).
@@ -21,7 +21,7 @@ Stand 12.11.2026 · Rechercheur kraut_einjaehrig · Kulturform `dauerkultur_blat
 
 ## Verworfene oder nicht verwendete Quellen
 
-- Walters/Currey 2018 (HortScience 53, NFT): nur Versuchsstufen 0.5 bis 4.0 mS/cm ohne Empfehlungsband; Artikel Greenhouse Grower 2016 dazu ebenso (pH «adjusted to 6 daily», 16 h, 72 °F als Versuchseinstellung).
+- HortScience-Studie 2018 (Bd. 53, NFT): nur Versuchsstufen 0.5 bis 4.0 mS/cm ohne Empfehlungsband; Artikel Greenhouse Grower 2016 dazu ebenso (pH «adjusted to 6 daily», 16 h, 72 °F als Versuchseinstellung).
 - NC State, HortScience 2023 («recommended EC … 1.2 to 2.2 mS/cm»): Volltext nicht abrufbar (HTTP 403), kein Kurzzitat geprüft.
 - Iowa State, Masterarbeit 2025 zum pH von Kräutern (Basilikum 4.5 bis 6.5, Optimum 5.5) und Zusammenfassung producegrower.com: nicht abrufbar (403), ausserdem pH-Band ausserhalb 5.2 bis 7.0.
 - UT CEA HERB Teil 2 und 3 (greenhousemag.com, producegrower.com; laut Suchauszug Basilikum 15 bis 20 Samen je Zelle Phenolschaum, Umsetzen 14 Tage nach Saat in DWC): Seiten nicht abrufbar (Bot-Schutz), daher kein Kandidat. Wertvoll für Saatmenge (Schaum, Klasse A oder B) und Anzuchtdauer; Koordinator möge den Abruf von Hand prüfen.
