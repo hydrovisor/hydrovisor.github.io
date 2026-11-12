@@ -107,7 +107,7 @@ Umrechnung nur zur Prüfung (03_import_w0.md 6): µS/cm durch 1000, sonst mS/cm 
 | P10 | pw.spinacia_oleracea.wachstum.ph#3 | Vergleich mit der Kulturgruppe | 6.0 bis 7.0 | Mangold (`wachstum.ph#1`, cornell-gpn, B1) hat 5.5 bis 6.0, sodass sich die Bereiche nur im Punkt 6.0 berühren; Randen 6.0 bis 6.5 liegt innerhalb (V3 mit Obergrenze genau 7.0 eingehalten). |
 | P11 | pw.spinacia_oleracea.wachstum.ec#1 | V5 Bandbreite EC 0.2 bis 1.2 | 1200 µS/cm = 1.2 mS/cm | Einzelwert ohne Bereich, Bandbreite 0 liegt unter 0.2; die Gegenprobe weicht mit 0.4 genau um die Grenze ab (nicht darüber). |
 | P12 | pw.spinacia_oleracea.wachstum.ec#2 | V5 Bandbreite EC | 1300 µS/cm = 1.3 mS/cm | Einzelwert ohne Bereich, Bandbreite 0 liegt unter 0.2 (Gegenprobe Abweichung 0.3, V4 eingehalten). |
-| P13 | pw.spinacia_oleracea.wachstum.ec#2 | Artbezug des Kurzzitats | 1300 µS/cm | Die Lösung ist laut Kurzzitat die Empfehlung von Sonneveld «for lettuce production», also eine für Salat empfohlene Versuchseinstellung im Spinatversuch. |
+| P13 | pw.spinacia_oleracea.wachstum.ec#2 | Artbezug des Kurzzitats | 1300 µS/cm | Die Lösung ist laut Kurzzitat eine Empfehlung «for lettuce production», also eine für Salat empfohlene Versuchseinstellung im Spinatversuch. |
 | P14 | pw.spinacia_oleracea.wachstum.ec#3 | V4 EC 0.4 bis 2.0 | 1.8 bis 2.3 mS/cm | Obergrenze 2.3 liegt 0.3 über der Validatorgrenze 2.0 der Kulturgruppe `fuchsschwanz`. |
 | P15 | pw.spinacia_oleracea.wachstum.ec#3 | Gegenprobe Düngeplan | Bandmitte 2.05 mS/cm | Bandmitte 2.05 weicht um 0.45 vom Vergleichswert 1.6 ab (über 0.4). |
 | P16 | pw.spinacia_oleracea.wachstum.ec#5 | V4 EC 0.4 bis 2.0 | 1.8 bis 2.3 mS/cm | Obergrenze 2.3 liegt 0.3 über der Validatorgrenze 2.0. |
