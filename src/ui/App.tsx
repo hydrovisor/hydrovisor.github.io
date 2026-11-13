@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { DienstAnbieter, useNeueVersion } from './dienst.tsx';
 import { Anmeldung } from './masken/Anmeldung.tsx';
 import { Heute } from './masken/Heute.tsx';
@@ -30,19 +31,41 @@ import { Sorten } from './masken/Sorten.tsx';
 import { Notfallblatt } from './masken/Notfallblatt.tsx';
 import { Rundgang } from './masken/Rundgang.tsx';
 import { Stromausfall } from './masken/Stromausfall.tsx';
+import { Anlagen } from './masken/Anlagen.tsx';
+import { Mehr } from './masken/Mehr.tsx';
+import { Tabbar } from './bausteine/Tabbar.tsx';
 import { BuendelAnbieter } from './buendel.tsx';
-import { maskeFuer, useRoute } from './router.ts';
+import { LEISTE, leisteZiel } from './leiste.ts';
+import { LeisteAnbieter } from './leisteKontext.tsx';
+import { hashZu, maskeFuer, useRoute, weiterleiten } from './router.ts';
 import { SitzungAnbieter, useSitzung } from './sitzung.tsx';
 import { Thema } from './thema.tsx';
 
-function Masken() {
+/** Leiste unten aus den Zielen (Entscheid 0025) */
+const LEISTE_ZIELE = LEISTE.map((z) => ({
+  schluessel: z.ziel,
+  text: z.text,
+  href: hashZu(z.route),
+  symbol: z.ziel,
+}));
+
+function Masken({ imAblauf }: { imAblauf: boolean }) {
   const route = useRoute();
   const { zustand } = useSitzung();
   const { wartet } = useNeueVersion();
   const maske = maskeFuer(route, zustand);
-  // data-neue-version macht den Zustand für die E2E-Tests sichtbar (TO7), ohne ihn anzuzeigen
+  const ziel = leisteZiel(maske, zustand, imAblauf);
+  // #/sorten heisst seit Entscheid 0025 #/saatgut (Plan 212 A6)
+  useEffect(() => weiterleiten());
+  // data-neue-version macht den Zustand für die E2E-Tests sichtbar (TO7), ohne ihn anzuzeigen; data-leiste nennt das
+  // aktive Ziel der Leiste oder «keine»
   return (
-    <div data-neue-version={wartet ? 'wartet' : 'keine'} data-sitzung={zustand}>
+    <div
+      data-neue-version={wartet ? 'wartet' : 'keine'}
+      data-sitzung={zustand}
+      data-leiste={ziel ?? 'keine'}
+      className={ziel ? 'hv-rahmen-leiste' : undefined}
+    >
       {maske.name === 'info' ? (
         <Info />
       ) : maske.name === 'muster' ? (
@@ -95,6 +118,10 @@ function Masken() {
         <Anlage {...(maske.kuerzel ? { kuerzel: maske.kuerzel } : {})} />
       ) : maske.name === 'anlage-neu' ? (
         <AnlageNeu />
+      ) : maske.name === 'anlagen' ? (
+        <Anlagen {...(maske.standort ? { standort: maske.standort } : {})} />
+      ) : maske.name === 'mehr' ? (
+        <Mehr />
       ) : maske.name === 'vorlagen' ? (
         <Vorlagen />
       ) : maske.name === 'einstellungen' ? (
@@ -120,6 +147,7 @@ function Masken() {
       ) : (
         <Heute />
       )}
+      {ziel ? <Tabbar ziele={LEISTE_ZIELE} aktiv={ziel} /> : null}
     </div>
   );
 }
@@ -130,7 +158,7 @@ export function App() {
       <SitzungAnbieter>
         <BuendelAnbieter>
           <Thema />
-          <Masken />
+          <LeisteAnbieter>{(imAblauf) => <Masken imAblauf={imAblauf} />}</LeisteAnbieter>
         </BuendelAnbieter>
       </SitzungAnbieter>
     </DienstAnbieter>

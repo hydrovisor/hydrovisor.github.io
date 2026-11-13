@@ -19,6 +19,32 @@ body {
   gap: var(--space-6);
 }
 
+/* Leiste unten (Tabbar, Entscheid 0025): Der Rahmen mit Leiste gibt der Seite unten Platz, feste Füsse stehen über der
+   Leiste; der Sicherheitsabstand unten liegt in der Leiste */
+.hv-rahmen-leiste {
+  --hv-leiste-hoehe: calc(var(--size-touch-regal) + env(safe-area-inset-bottom));
+}
+
+.hv-rahmen-leiste .hv-seite {
+  padding-bottom: calc(var(--space-4) + var(--hv-leiste-hoehe));
+}
+
+.hv-rahmen-leiste .hv-heute-fuss,
+.hv-rahmen-leiste .hv-saeen-fuss {
+  bottom: var(--hv-leiste-hoehe);
+  padding-bottom: var(--space-2);
+}
+
+html:has(.hv-rahmen-leiste) {
+  scroll-padding-bottom: calc(var(--size-touch-regal) + env(safe-area-inset-bottom) + var(--space-4));
+}
+
+html:has(.hv-rahmen-leiste .hv-heute-fuss):not(:has(.hv-block)) {
+  scroll-padding-bottom: calc(
+    2 * var(--size-touch-regal) + 2 * var(--space-2) + var(--space-4) + env(safe-area-inset-bottom)
+  );
+}
+
 .hv-seite-kopf {
   display: flex;
   align-items: center;
@@ -324,21 +350,6 @@ body {
 /* Kopfzeile Heute: die Navigation bricht auf 360 dp unter das Logo um, kein waagrechtes Wischen (Plan 23, Runde 2) */
 .hv-heute-kopf {
   flex-wrap: wrap;
-}
-
-/* U-01 (B4): zwei Spalten statt drei umbrechender Zeilen, sichtbar als Tasten */
-.hv-heute-nav {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-2);
-  width: 100%;
-}
-
-.hv-heute-nav > .hv-btn {
-  min-width: 0;
-  padding: 0 var(--space-2);
-  white-space: normal;
-  text-align: center;
 }
 
 /* Heute: Gruppen je Anlage ab zwei echten Anlagen (UC1-AK5, Plan 20) */
@@ -728,4 +739,14 @@ body {
 
 .hv-saeen-kopie > .hv-btn {
   flex-shrink: 0;
+}
+
+/* Anlagen (Entscheid 0025, Plan 212): Karten je Anlage untereinander */
+.hv-anlagen-liste {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }

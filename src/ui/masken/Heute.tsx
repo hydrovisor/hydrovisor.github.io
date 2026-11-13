@@ -71,22 +71,9 @@ export function Heute() {
     : [];
   return (
     <main className="hv-seite" data-density="regal" data-ablauf={ablauf}>
+      {/* Kopf nur mit Logo: Anlagen, Säen, Saatgut und Mehr stehen in der Leiste unten (Entscheid 0025) */}
       <header className="hv-seite-kopf hv-heute-kopf">
         <Logo height={32} />
-        <nav className="hv-heute-nav" aria-label="Navigation">
-          <a className="hv-btn hv-btn-secondary hv-btn-compact" href={hashZu({ name: 'anlage' })}>
-            Anlage öffnen
-          </a>
-          <a className="hv-btn hv-btn-secondary hv-btn-compact" href={hashZu({ name: 'saeen' })}>
-            Säen
-          </a>
-          <a className="hv-btn hv-btn-secondary hv-btn-compact" href={hashZu({ name: 'info' })}>
-            Info öffnen
-          </a>
-          <a className="hv-btn hv-btn-secondary hv-btn-compact" href={hashZu({ name: 'einstellungen' })}>
-            Einstellungen öffnen
-          </a>
-        </nav>
       </header>
       <h1 className="hv-seite-titel">Heute</h1>
       <p>{DATUM.format(jetzt)}</p>

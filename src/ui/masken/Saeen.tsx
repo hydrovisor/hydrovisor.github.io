@@ -39,6 +39,7 @@ import { Notice } from '../bausteine/Notice.tsx';
 import { Stepper } from '../bausteine/Stepper.tsx';
 import { useBuendel } from '../buendel.tsx';
 import { jetzt } from '../bundeldaten.ts';
+import { useLeisteAus } from '../leisteKontext.tsx';
 import { hashZu } from '../router.ts';
 import { SaeenSortenwahl, type SortenAnsicht } from './SaeenSortenwahl.tsx';
 
@@ -70,6 +71,8 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
   const teile = buendel?.teile;
   const [begonnen] = useState(() => jetzt());
   const [schritt, setSchritt] = useState<1 | 2 | 3>(1);
+  // Leiste unten nur in Schritt 1; Schritt 2 und 3 sind Ablauf (Entscheid 0025, Plan 212 A2)
+  useLeisteAus(schritt > 1);
   const [gewaehlt, setGewaehlt] = useState<string[]>([]);
   const [kulturform, setKulturform] = useState<Record<string, string>>({});
   const [zielWahl, setZielWahl] = useState<string>();

@@ -35,9 +35,12 @@ export type Route =
   | { name: 'verschieben'; topf: string }
   | { name: 'anlage'; kuerzel?: string }
   | { name: 'anlage-neu' }
+  // Entscheid 0025 (Plan 212): Hauptseiten der Leiste unten; Standortwahl in der Adresse (A4)
+  | { name: 'anlagen'; standort?: 'outdoor' }
+  | { name: 'mehr' }
   | { name: 'vorlagen' }
   | { name: 'einstellungen' }
-  // Plan 37: Sorten (Schreibtisch)
+  // Plan 37: Sorten (Schreibtisch); seit Entscheid 0025 unter #/saatgut, #/sorten gilt weiter
   | { name: 'sorten' }
   | { name: 'sorte-neu' }
   | { name: 'sorte'; sorte: string }
@@ -155,11 +158,15 @@ export function routeAusHash(hash: string): Route {
   }
   const gefaess = /^\/gefaess\/([A-Za-z0-9.-]+)$/.exec(pfad);
   if (gefaess?.[1]) return { name: 'gefaess', code: decodeURIComponent(gefaess[1]) };
-  if (pfad === '/sorten') return { name: 'sorten' };
+  if (pfad === '/saatgut' || pfad === '/sorten') return { name: 'sorten' };
   if (pfad === '/sorten/neu') return { name: 'sorte-neu' };
   const sorte = /^\/sorten\/([^/]+)$/.exec(pfad);
   if (sorte?.[1]) return UUID.test(sorte[1]) ? { name: 'sorte', sorte: sorte[1] } : { name: 'sorten' };
   if (pfad === '/anlage/neu') return { name: 'anlage-neu' };
+  if (pfad === '/anlagen')
+    return new URLSearchParams(abfrage).get('standort') === 'outdoor'
+      ? { name: 'anlagen', standort: 'outdoor' }
+      : { name: 'anlagen' };
   if (pfad === '/anlage') {
     const kuerzel = new URLSearchParams(abfrage).get('a');
     return kuerzel && KUERZEL.test(kuerzel) ? { name: 'anlage', kuerzel } : { name: 'anlage' };
@@ -192,6 +199,8 @@ export function routeAusHash(hash: string): Route {
       return { name: 'push' };
     case '/vorlagen':
       return { name: 'vorlagen' };
+    case '/mehr':
+      return { name: 'mehr' };
     default:
       return { name: 'heute' };
   }
@@ -214,7 +223,8 @@ export function hashZu(route: Route): string {
     return `#/gefaess/${route.code}/aendern${route.teil ? `?teil=${route.teil}` : ''}`;
   if (route.name === 'pruefen') return `#/pruefen/${route.code}${route.scan ? '?scan=1' : ''}`;
   if (route.name === 'etikett') return `#/e/${route.code}`;
-  if (route.name === 'sorten') return '#/sorten';
+  if (route.name === 'sorten') return '#/saatgut';
+  if (route.name === 'anlagen') return route.standort ? `#/anlagen?standort=${route.standort}` : '#/anlagen';
   if (route.name === 'sorte-neu') return '#/sorten/neu';
   if (route.name === 'sorte') return `#/sorten/${route.sorte}`;
   if (route.name === 'keimung') return `#/keimung/${route.satz}`;
@@ -280,6 +290,20 @@ export function fortsetzenZiel(route: Route, offeneWechsel: readonly string[]): 
   if ((route.name === 'etikett' || route.name === 'ansatz') && offeneWechsel.includes(route.code))
     return { name: 'ansatz', code: route.code };
   return route;
+}
+
+/**
+ * Alte Adresse der Sorten-Liste (Entscheid 0025, Plan 212 A6): #/sorten ersetzt der Rahmen durch #/saatgut, ohne neuen
+ * Eintrag im Verlauf; sonst undefined.
+ */
+export function weiterleitung(hash: string): string | undefined {
+  return /^#\/sorten\/?(\?.*)?$/.test(hash) ? '#/saatgut' : undefined;
+}
+
+/** ersetzt eine alte Adresse ohne Eintrag im Verlauf (ausserhalb der Komponenten wie oeffnen) */
+export function weiterleiten(): void {
+  const ziel = weiterleitung(window.location.hash);
+  if (ziel) window.location.replace(ziel);
 }
 
 function abonnieren(melden: () => void): () => void {
