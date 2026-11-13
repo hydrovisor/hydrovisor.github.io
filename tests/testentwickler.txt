@@ -296,6 +296,8 @@ tests/e2e/sorten.spec.ts
 tests/e2e/tuetenfoto.spec.ts
 tests/e2e/leiste.spec.ts
 tests/unit/leiste.test.ts
+tests/unit/anlagen-belegung.test.ts
+tests/e2e/anlagen.spec.ts
 # 215 Kein Saatgut mehr (#215)
 supabase/tests/database/21_vorrat.test.sql
 tests/unit/vorrat.test.ts
