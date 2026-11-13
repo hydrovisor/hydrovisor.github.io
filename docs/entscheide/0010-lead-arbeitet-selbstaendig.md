@@ -34,6 +34,8 @@ Tims Handgriffe bündelt der Lead in **einer** Nachricht oder in **einem** Skrip
 
 Die Abweichung gilt ab sofort. Bis zur nächsten Konzeptfassung geht dieser Entscheid den genannten Stellen vor; dort wird sie als Eintrag in Anhang B.2 nachgeführt. Wie im Konzept bleiben Abnahme 2 und die Planfreigabe der Kern-Pakete.
 
+**Nachtrag 13.11.2026 (Entscheid 0024).** Punkt 2 «Produktion» gilt nur noch für den scharfen Seed, nicht additive Migrationen und fehlende Tags `letzte-migration`. Additive Migrationen, die vorher auf `hydrovisor-dev` liefen, gibt der Lead nach grünem Backup selbst frei.
+
 **Widerruf.** Ein Satz von Tim im Chat genügt. Danach gelten wieder die Konzeptstellen zu Planfreigabe, Abnahme 1 und Eskalation, und jede Freigabe in `production` liegt wieder bei Tim. Entscheid 0008 bleibt bis zu seinem eigenen Widerruf in Kraft.
 
 **Folgen.**
