@@ -623,6 +623,61 @@ body {
   font-weight: 700;
 }
 
+/* Sortenwahl nach Gemüse (Plan 205): Leiste «Gewählt», Zurück-Knopf, Kopf des Gemüses und der Sorte */
+.hv-saeen-gewaehlt {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.hv-saeen-liste {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.hv-saeen-zurueck {
+  align-self: flex-start;
+  margin-left: calc(-1 * var(--space-3));
+  padding-inline: var(--space-3);
+}
+
+.hv-saeen-gemuesekopf,
+.hv-saeen-sortekopf {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.hv-saeen-gemuesekopf h2,
+.hv-saeen-sortetitel {
+  margin: 0;
+  font-size: var(--text-title-size);
+  line-height: var(--text-title-line);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.hv-saeen-gemuesekopf p,
+.hv-saeen-sortewiss {
+  margin: 0;
+  font-size: var(--text-small-size);
+  line-height: var(--text-small-line);
+  color: var(--ink-muted);
+}
+
+.hv-saeen-sortewiss {
+  font-style: italic;
+}
+
+.hv-saeen-sortegemuese {
+  margin: 0;
+  font-size: var(--text-small-size);
+  line-height: var(--text-small-line);
+  font-weight: 600;
+  color: var(--brand);
+}
+
 .hv-saeen-fuss {
   position: sticky;
   bottom: 0;

@@ -15,7 +15,7 @@ import type { Schritt, Verstoss, Vorgang } from '../datenpfad/erfassung.ts';
 import { keimrate, keimrateArt, saatmenge, type Empfehlung, type Keimrate } from '../saatmenge/saatmenge.ts';
 import { kalendertag, tagPlus, tageZwischen, versatz, type Zeitzone } from '../zeit.ts';
 import { sortenPassung } from '../passung/kontext.ts';
-import type { Passung } from '../passung/passung.ts';
+import type { Einstufung, Passung } from '../passung/passung.ts';
 import { topfPrognose } from './belegung.ts';
 
 export type Kulturform =
@@ -48,12 +48,14 @@ interface SorteZeile {
   name: string;
   art_id: string;
   kulturtyp: Kulturtyp;
+  shop_link?: string | null;
   gueltig_bis?: string | null;
   storniert_am?: string | null;
 }
 interface ArtZeile {
   art_id: string;
   name_de?: string;
+  name_wiss?: string;
   kulturformen_erlaubt: string[];
   kulturform_vorgabe: string | null;
   umsetzen_ab_d: number | null;
@@ -73,6 +75,7 @@ interface SaatgutZeile {
   sorte_id: string;
   erfasst_am?: string;
   kaufdatum?: string;
+  bestand_korn?: number | null;
   storniert_am: string | null;
 }
 interface EmpfehlungZeile {
@@ -232,6 +235,155 @@ export function sortenAuswahl(teile: Teile): SorteWahl[] {
     ? (letzter.kulturform as Kulturform)
     : erste.vorgabe;
   return [{ ...erste, wieLetztesMal: form }, ...alle.filter((s) => s !== erste)];
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Sortenwahl nach Gemüse (Plan 205, Entscheid 0023)
+
+/** Gemüse = Art mit deutschem Namen; Kachel in Schritt 1 */
+export interface GemueseGruppe {
+  artId: string;
+  name: string;
+  sorten: SorteWahl[];
+  /** Zahl der gewählten Sorten dieses Gemüses */
+  gewaehlt: number;
+  /** beste Einstufung seiner Sorten im Zielgefäss (Plan 205 A3) */
+  stufe?: Einstufung;
+  /** kleinste Rangzahl seiner Sorten (Reihenfolge mit Zielgefäss) */
+  rang?: number;
+}
+
+const STUFE_ORDNUNG: Readonly<Record<Einstufung, number>> = { empfohlen: 0, moeglich: 1, nicht_empfohlen: 2 };
+
+/**
+ * SW1-AK1: je Art eine Gruppe, beschriftet mit `art.name_de` (sonst `art_id`, A2). Die Sorten behalten die Reihenfolge
+ * der Eingabe. Ohne Passung: das Gemüse von «Wie letztes Mal» zuerst, dann nach Name; mit Passung nach bester Rangzahl.
+ */
+export function gemueseGruppen(
+  sorten: readonly SorteWahl[],
+  gewaehlt: readonly string[],
+  passungen?: readonly { sorteId: string; rang: number; passung: { einstufung: Einstufung } }[],
+): GemueseGruppe[] {
+  const gruppen = new Map<string, GemueseGruppe>();
+  for (const s of sorten) {
+    const g = gruppen.get(s.artId) ?? { artId: s.artId, name: s.artName ?? s.artId, sorten: [], gewaehlt: 0 };
+    g.sorten.push(s);
+    if (gewaehlt.includes(s.sorteId)) g.gewaehlt += 1;
+    const p = passungen?.find((x) => x.sorteId === s.sorteId);
+    if (p) {
+      if (g.stufe === undefined || STUFE_ORDNUNG[p.passung.einstufung] < STUFE_ORDNUNG[g.stufe])
+        g.stufe = p.passung.einstufung;
+      if (g.rang === undefined || p.rang < g.rang) g.rang = p.rang;
+    }
+    gruppen.set(s.artId, g);
+  }
+  const liste = [...gruppen.values()];
+  if (passungen?.length)
+    return liste.sort(
+      (a, b) => (a.rang ?? Infinity) - (b.rang ?? Infinity) || a.name.localeCompare(b.name, 'de'),
+    );
+  const letzte = sorten.find((s) => s.wieLetztesMal)?.artId;
+  return liste.sort(
+    (a, b) => Number(b.artId === letzte) - Number(a.artId === letzte) || a.name.localeCompare(b.name, 'de'),
+  );
+}
+
+/** Ernte je Kulturform aus `art_kulturform` (R1.2) */
+export interface ErnteAngabe {
+  einmalig: boolean;
+  /** «Ernte möglich ab» in Tagen (A4: ohne Bezug angezeigt) */
+  abD?: number;
+  /** «Kulturdauer typisch» in Tagen ab Saat */
+  typischD?: number;
+}
+
+/** Kurzinfo zur Sorte für das Detail in Schritt 1 (SW1-AK3, SW1-AK4) */
+export interface SorteDetail {
+  nameWiss?: string;
+  umsetzenAbD?: number;
+  /** Saatempfehlung je Kulturform, Ebene Sorte vor Art (R12.3) */
+  saat: Partial<Record<Kulturform, Empfehlung>>;
+  ernte: Partial<Record<Kulturform, ErnteAngabe>>;
+  packung?: { kaufdatum?: string; bestandKorn?: number };
+  /** aus `v_vollstaendigkeit`; ohne Zeile unbekannt */
+  vollstaendig?: boolean;
+  fehlend?: number;
+  /** Host des Shop-Links ohne «www.» */
+  bezug?: string;
+}
+
+interface ArtKulturformZeile {
+  art_id: string;
+  kulturform: string;
+  ernteart: 'einmalig' | 'mehrfach';
+  ernte_ab_d: number | null;
+  kulturdauer_typisch_d: number | null;
+  gueltig_bis?: string | null;
+}
+interface VollstaendigZeile {
+  sorte_id: string;
+  vollstaendig: boolean | null;
+  fehlende_groessen: number | null;
+}
+
+function bezugVon(link: string | null | undefined): string | undefined {
+  if (!link) return undefined;
+  try {
+    return new URL(link).hostname.replace(/^www\./, '') || undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/** SW1-AK4: Werte für Faktenliste und Block Kulturform; fehlende Werte bleiben `undefined` («noch offen») */
+export function sorteDetail(teile: Teile, sorteId: string): SorteDetail | undefined {
+  const sorte = sorteZeile(teile, sorteId);
+  if (!sorte) return undefined;
+  const art = artZeile(teile, sorte.art_id);
+  const wahl = sorteWahl(teile, sorte);
+  const saat: SorteDetail['saat'] = {};
+  const ernte: SorteDetail['ernte'] = {};
+  const kf = gueltig(zeilen<ArtKulturformZeile>(teile, 'art_kulturform')).filter(
+    (z) => z.art_id === sorte.art_id,
+  );
+  for (const form of wahl.kulturformen) {
+    const e = empfehlungFuer(teile, sorteId, sorte.art_id, form);
+    if (e) saat[form] = e;
+    const z = kf.find((x) => x.kulturform === form);
+    if (z) {
+      const abD = zahl(z.ernte_ab_d);
+      const typischD = zahl(z.kulturdauer_typisch_d);
+      ernte[form] = {
+        einmalig: z.ernteart === 'einmalig',
+        ...(abD !== undefined ? { abD } : {}),
+        ...(typischD !== undefined ? { typischD } : {}),
+      };
+    }
+  }
+  const packungId = packungVon(teile, sorteId);
+  const p = zeilen<SaatgutZeile>(teile, 'saatgut').find((x) => x.id === packungId);
+  const bestandKorn = zahl(p?.bestand_korn);
+  const v = zeilen<VollstaendigZeile>(teile, 'v_vollstaendigkeit').find((x) => x.sorte_id === sorteId);
+  const umsetzenAbD = zahl(art?.umsetzen_ab_d);
+  const fehlend = zahl(v?.fehlende_groessen);
+  const bezug = bezugVon(sorte.shop_link);
+  return {
+    ...(art?.name_wiss ? { nameWiss: art.name_wiss } : {}),
+    ...(umsetzenAbD !== undefined ? { umsetzenAbD } : {}),
+    saat,
+    ernte,
+    ...(p
+      ? {
+          packung: {
+            ...(p.kaufdatum ? { kaufdatum: p.kaufdatum } : {}),
+            ...(bestandKorn !== undefined ? { bestandKorn } : {}),
+          },
+        }
+      : {}),
+    ...(v && v.vollstaendig !== null ? { vollstaendig: v.vollstaendig } : {}),
+    ...(fehlend !== undefined ? { fehlend } : {}),
+    ...(bezug ? { bezug } : {}),
+  };
 }
 
 // ---------------------------------------------------------------------------------------------------------------
