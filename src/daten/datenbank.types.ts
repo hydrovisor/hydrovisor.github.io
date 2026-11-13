@@ -1535,6 +1535,44 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"vorrat_ereignis": {
+                  Row: {
+                    "app_version": string,"client_id": string,"client_zeit": string | null,"erfasst_am": string,"ersetzt_id": string | null,"gilt_ab": string,"id": string,"nacherfasst": boolean | null,"saatgut_id": string | null,"sorte_id": string,"storniert_am": string | null,"storno_grund": Database["public"]['Enums']["storno_grund"] | null,"typ": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "app_version": string,"client_id": string,"client_zeit"?: string | null,"erfasst_am"?: string,"ersetzt_id"?: string | null,"gilt_ab": string,"id"?: string,"nacherfasst"?: never,"saatgut_id"?: string | null,"sorte_id": string,"storniert_am"?: string | null,"storno_grund"?: Database["public"]['Enums']["storno_grund"] | null,"typ": string
+                  }
+                  Update: {
+                    "app_version"?: string,"client_id"?: string,"client_zeit"?: string | null,"erfasst_am"?: string,"ersetzt_id"?: string | null,"gilt_ab"?: string,"id"?: string,"nacherfasst"?: never,"saatgut_id"?: string | null,"sorte_id"?: string,"storniert_am"?: string | null,"storno_grund"?: Database["public"]['Enums']["storno_grund"] | null,"typ"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "vorrat_ereignis_ersetzt_id_fkey"
+      columns: ["ersetzt_id"]
+isOneToOne: false
+      referencedRelation: "vorrat_ereignis"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vorrat_ereignis_saatgut_id_fkey"
+      columns: ["saatgut_id"]
+isOneToOne: false
+      referencedRelation: "saatgut"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vorrat_ereignis_saatgut_id_fkey"
+      columns: ["saatgut_id"]
+isOneToOne: false
+      referencedRelation: "v_keimrate"
+      referencedColumns: ["saatgut_id"]
+    },{
+      foreignKeyName: "vorrat_ereignis_sorte_id_fkey"
+      columns: ["sorte_id"]
+isOneToOne: false
+      referencedRelation: "sorte_schluessel"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"wissenseintrag": {
                   Row: {
                     "app_version": string,"art_id": string | null,"commit": string,"ebene": Database["public"]['Enums']["wissen_ebene"],"erfasst_am": string,"evidenzklasse": Database["public"]['Enums']["evidenzklasse"],"freigegeben_am": string | null,"fundstelle": string,"gueltig_ab": string,"gueltig_bis": string | null,"id": string,"kulturgruppe_id": string | null,"kurzzitat": string,"phase": Database["public"]['Enums']["phase"] | null,"quelldatei": string,"quelle_id": string,"text": string,"typ": Database["public"]['Enums']["wissenseintrag_typ"],"zeile_id": string

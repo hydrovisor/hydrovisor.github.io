@@ -106,7 +106,8 @@ test('SW1-AK3 Detail mit Platzhalter, botanischem Namen und Faktenliste, fehlend
   await expect(fakten.nth(3)).toContainText('1 Samen je Schwamm');
   await expect(fakten.nth(4)).toHaveText('ab Tag 21 nach der Saat');
   await expect(fakten.nth(5)).toContainText('gekauft 20.11.2026');
-  await expect(fakten.nth(5)).toContainText('Bestand 100 Korn');
+  // Plan 215 Abweichung 5: das Säen-Detail zeigt keinen Bestand in Korn
+  await expect(fakten.nth(5)).not.toContainText('Korn');
   // ohne Shop-Link: Text statt leerem Feld; Wissen mit Wort und Zahl der Lücken
   await expect(fakten.nth(6)).toHaveText('keine Angabe');
   await expect(fakten.nth(7)).toHaveText(/^unvollständig\s*3 Angaben fehlen noch$/);

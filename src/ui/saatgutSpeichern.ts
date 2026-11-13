@@ -74,3 +74,14 @@ export async function fotoVorgangSenden(
     };
   return { meldung: r.fehler.text, wiederholbar: true };
 }
+
+/** sendet «Kein Saatgut mehr» bzw. «Wieder vorrätig» (Plan 215); «abweichend» lässt sich nicht wiederholen */
+export async function vorratSenden(
+  vorgang: Vorgang,
+): Promise<'gespeichert' | { meldung: string; wiederholbar: boolean }> {
+  const r = await schreiben(vorgang, { jetzt: jetzt(), zeitzone: ZEITZONE });
+  if (r.status === 'gespeichert') return 'gespeichert';
+  if (r.status === 'abweichend')
+    return { meldung: 'Nicht gespeichert: Diese Angabe ist schon anders gespeichert.', wiederholbar: false };
+  return { meldung: r.fehler.text, wiederholbar: true };
+}

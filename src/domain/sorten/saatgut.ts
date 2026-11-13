@@ -1,11 +1,13 @@
 // Saatgut-Manager (Issue #211, Plan 211): Liste nach Gemüse mit Status als Wort und «ohne Foto», Filter und die Reihe
 // für «Fotos nachtragen». Rein (G1), ohne Zeit. «Ohne Foto» heisst: keine gültige Zeile tuetenfoto der Sorte, gleich
-// welche Seite (Plan 207: es gilt je Sorte und Seite die jüngste nicht stornierte Zeile).
+// welche Seite (Plan 207: es gilt je Sorte und Seite die jüngste nicht stornierte Zeile). «Aufgebraucht» rechnet
+// vorratAus() mit jetzt (Issue #215, Plan 215); ohne jetzt ohne obere Zeitgrenze (A7).
 import type { Teile } from '../teile.ts';
 import { sortenListe } from './liste.ts';
 import { aktuelleTuetenfotos, type TuetenfotoZeile } from './tuetenfoto.ts';
+import { vorratAus } from './vorrat.ts';
 
-export type SaatgutStatus = 'vollständig' | 'Recherche offen';
+export type SaatgutStatus = 'vollständig' | 'Recherche offen' | 'aufgebraucht';
 
 export interface SaatgutZeile {
   sorteId: string;
@@ -14,14 +16,19 @@ export interface SaatgutZeile {
   /** Gemüse: art.name_de, sonst art_id */
   artName: string;
   vollstaendig: boolean;
+  /** Kein Saatgut mehr (Plan 215); der Status heisst dann «aufgebraucht» */
+  aufgebraucht: boolean;
   status: SaatgutStatus;
   ohneFoto: boolean;
   /** Pfad der Vorderseite, sonst der Rückseite (Tütenbild in der Liste) */
   fotoPfad?: string;
 }
 
-/** «Vorrätig» = alle gültigen Sorten, bis N3 «aufgebraucht» bringt (Plan 211 A5) */
-export type SaatgutFilter = 'vorraetig' | 'ohne_foto';
+/** «Vorrätig» und «Ohne Foto» zeigen nur vorrätige Sorten, «Aufgebraucht» nur aufgebrauchte (Plan 215) */
+export type SaatgutFilter = 'vorraetig' | 'ohne_foto' | 'aufgebraucht';
+
+/** ohne jetzt: keine obere Zeitgrenze, damit Aufrufe ohne jetzt gültig bleiben (Plan 215 A7) */
+const OHNE_GRENZE = new Date(8.64e15);
 
 const vergleich = (a: string, b: string) => a.localeCompare(b, 'de-CH');
 
@@ -30,7 +37,7 @@ function ordnen(a: SaatgutZeile, b: SaatgutZeile): number {
   return vergleich(a.artName, b.artName) || vergleich(a.name, b.name);
 }
 
-export function saatgutListe(t: Teile): SaatgutZeile[] {
+export function saatgutListe(t: Teile, jetzt?: Date): SaatgutZeile[] {
   const fotos = (t['tuetenfoto'] ?? []) as TuetenfotoZeile[];
   const artVon = new Map(
     ((t['sorte'] ?? []) as Record<string, unknown>[])
@@ -41,13 +48,15 @@ export function saatgutListe(t: Teile): SaatgutZeile[] {
     .map((s): SaatgutZeile => {
       const aktuell = aktuelleTuetenfotos(fotos, s.sorteId);
       const fotoPfad = aktuell.vorne?.pfad ?? aktuell.hinten?.pfad;
+      const aufgebraucht = !vorratAus(t, s.sorteId, jetzt ?? OHNE_GRENZE).vorraetig;
       return {
         sorteId: s.sorteId,
         name: s.name,
         artId: artVon.get(s.sorteId) ?? '',
         artName: s.artName,
         vollstaendig: s.vollstaendig,
-        status: s.vollstaendig ? 'vollständig' : 'Recherche offen',
+        aufgebraucht,
+        status: aufgebraucht ? 'aufgebraucht' : s.vollstaendig ? 'vollständig' : 'Recherche offen',
         ohneFoto: fotoPfad === undefined,
         ...(fotoPfad !== undefined ? { fotoPfad } : {}),
       };
@@ -56,7 +65,8 @@ export function saatgutListe(t: Teile): SaatgutZeile[] {
 }
 
 function passt(z: SaatgutZeile, filter: SaatgutFilter): boolean {
-  return filter === 'ohne_foto' ? z.ohneFoto : true;
+  if (filter === 'aufgebraucht') return z.aufgebraucht;
+  return !z.aufgebraucht && (filter === 'ohne_foto' ? z.ohneFoto : true);
 }
 
 export function saatgutGruppen(
@@ -75,10 +85,15 @@ export function saatgutGruppen(
     .sort((a, b) => vergleich(a.gemuese, b.gemuese));
 }
 
-export function saatgutZahlen(liste: readonly SaatgutZeile[]): { vorraetig: number; ohneFoto: number } {
+export function saatgutZahlen(liste: readonly SaatgutZeile[]): {
+  vorraetig: number;
+  ohneFoto: number;
+  aufgebraucht: number;
+} {
   return {
     vorraetig: liste.filter((z) => passt(z, 'vorraetig')).length,
     ohneFoto: liste.filter((z) => passt(z, 'ohne_foto')).length,
+    aufgebraucht: liste.filter((z) => passt(z, 'aufgebraucht')).length,
   };
 }
 
@@ -102,11 +117,11 @@ export type NachtragPosition =
   | { fertig: false; nummer: number; gesamt: number; eintrag: NachtragEintrag }
   | { fertig: true; ergaenzt: number; uebersprungen: number };
 
-/** Sorten ohne Foto in der Reihenfolge der Liste */
+/** vorrätige Sorten ohne Foto in der Reihenfolge der Liste (Plan 215: aufgebrauchte nicht) */
 export function nachtragReihe(liste: readonly SaatgutZeile[]): NachtragEintrag[] {
   return [...liste]
     .sort(ordnen)
-    .filter((z) => z.ohneFoto)
+    .filter((z) => passt(z, 'ohne_foto'))
     .map((z) => ({ sorteId: z.sorteId, name: z.name, artName: z.artName }));
 }
 

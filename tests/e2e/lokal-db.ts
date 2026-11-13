@@ -107,7 +107,37 @@ export function datenbank() {
           from public.saatgut where sorte_id = ${sorteId}::uuid and erfasst_am >= ${ab}
          order by erfasst_am, id`;
     },
+    /**
+     * storniert die gültigen Vorrat-Ereignisse der Sorte (Plan 215 A14; die Service-Rolle löscht nicht): danach ist
+     * die Sorte wieder vorrätig, solange keine Packung fehlt
+     */
+    async vorratZuruecksetzen(sorteId: string): Promise<void> {
+      await sql`update public.vorrat_ereignis set storniert_am = now(), storno_grund = 'fehleingabe'
+                 where sorte_id = ${sorteId}::uuid and storniert_am is null`;
+    },
+    /** Zeilen vorrat_ereignis der Sorte seit `ab`, nach erfasst_am (Plan 215) */
+    async vorratZeilen(sorteId: string, ab: Date): Promise<Vorratzeile[]> {
+      return sql<Vorratzeile[]>`
+        select client_id::text, sorte_id::text, saatgut_id::text, typ, gilt_ab, storniert_am
+          from public.vorrat_ereignis where sorte_id = ${sorteId}::uuid and erfasst_am >= ${ab}
+         order by erfasst_am, id`;
+    },
+    /** Anzahl gültiger (nicht stornierter) Packungen der Sorte (Plan 215) */
+    async packungenGueltig(sorteId: string): Promise<number> {
+      const [z] = await sql<{ n: number }[]>`
+        select count(*)::int as n from public.saatgut where sorte_id = ${sorteId}::uuid and storniert_am is null`;
+      return z?.n ?? 0;
+    },
   };
+}
+
+export interface Vorratzeile {
+  client_id: string;
+  sorte_id: string;
+  saatgut_id: string | null;
+  typ: string;
+  gilt_ab: Date;
+  storniert_am: Date | null;
 }
 
 /** JPEG aus dem Canvas des Browsers (wie sorten-exif.spec.ts, ohne EXIF) */

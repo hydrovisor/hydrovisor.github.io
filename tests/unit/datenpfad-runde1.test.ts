@@ -235,10 +235,10 @@ describe('R1-2 HTTP-Status auf der Antwort, nicht im error', () => {
 });
 
 describe('R1-3 gilt_ab', () => {
-  it('R1-3 MIT_GILT_AB: die 8 Tabellen von MIT_ZEITACHSE und k_faktor', () => {
+  it('R1-3 MIT_GILT_AB: die Tabellen von MIT_ZEITACHSE und k_faktor', () => {
     expect(MIT_GILT_AB).toBeInstanceOf(Set);
     expect([...MIT_GILT_AB].sort()).toEqual([...MIT_ZEITACHSE, 'k_faktor'].sort());
-    expect(MIT_GILT_AB.size).toBe(9);
+    expect(MIT_GILT_AB.size).toBe(10);
   });
 
   it('R1-3 k_faktor ohne gilt_ab: gilt_ab = jetzt, ohne client_zeit', () => {

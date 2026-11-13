@@ -26,7 +26,8 @@ export function SaatgutEintrag({ zeile }: { zeile: SaatgutZeile }) {
   }, [pfad, versuch, schluessel]);
 
   const bild = link?.schluessel === schluessel && versuch <= 1 ? link.url : undefined;
-  const zusatz = zeile.ohneFoto ? `${zeile.status} · ohne Foto` : zeile.status;
+  // Plan 215 A6: aufgebrauchte Sorten nur mit dem Wort «aufgebraucht»
+  const zusatz = zeile.ohneFoto && !zeile.aufgebraucht ? `${zeile.status} · ohne Foto` : zeile.status;
   return (
     <Sortenzeile
       titel={zeile.name}

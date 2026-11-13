@@ -15,6 +15,7 @@ import type { Schritt, Verstoss, Vorgang } from '../datenpfad/erfassung.ts';
 import { keimrate, keimrateArt, saatmenge, type Empfehlung, type Keimrate } from '../saatmenge/saatmenge.ts';
 import { kalendertag, tagPlus, tageZwischen, versatz, type Zeitzone } from '../zeit.ts';
 import { sortenPassung } from '../passung/kontext.ts';
+import { vorratAus } from '../sorten/vorrat.ts';
 import type { Einstufung, Passung } from '../passung/passung.ts';
 import { topfPrognose } from './belegung.ts';
 
@@ -219,13 +220,16 @@ function letzterSatz(teile: Teile): SatzZeile | undefined {
     .at(0);
 }
 
-/** gültige Sorten: «Wie letztes Mal» zuerst, dann nach Name */
-export function sortenAuswahl(teile: Teile): SorteWahl[] {
+/** ohne jetzt: keine obere Zeitgrenze, damit Aufrufe ohne jetzt gültig bleiben (Plan 215 A7) */
+const OHNE_GRENZE = new Date(8.64e15);
+
+/** gültige vorrätige Sorten (Plan 215): «Wie letztes Mal» zuerst, dann nach Name */
+export function sortenAuswahl(teile: Teile, jetzt?: Date): SorteWahl[] {
   const gesehen = new Set<string>();
   const sorten = gueltig(zeilen<SorteZeile>(teile, 'sorte')).filter((s) => {
     if (gesehen.has(s.sorte_id)) return false;
     gesehen.add(s.sorte_id);
-    return true;
+    return vorratAus(teile ?? {}, s.sorte_id, jetzt ?? OHNE_GRENZE).vorraetig;
   });
   const alle = sorten.map((s) => sorteWahl(teile, s)).sort((a, b) => a.name.localeCompare(b.name, 'de'));
   const letzter = letzterSatz(teile);
@@ -751,7 +755,8 @@ function passungVon(
   zeitzone: Zeitzone,
 ): { passung?: Passung; rang?: number } {
   if (!e.zielPlatzId || !/^\d{4}-\d{2}-\d{2}$/.test(e.saatdatum)) return {};
-  const sorten = sortenAuswahl(teile).map((w) =>
+  // Plan 215 A9: Rang unter denselben vorrätigen Sorten, die Säen zeigt
+  const sorten = sortenAuswahl(teile, jetzt).map((w) =>
     w.sorteId === s.sorteId ? { ...w, kulturform: s.kulturform as Kulturform } : w,
   );
   const x = sortenPassung(teile ?? {}, sorten, e.zielPlatzId, e.saatdatum, jetzt, zeitzone).find(
