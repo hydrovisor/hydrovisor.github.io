@@ -96,8 +96,8 @@ test('UC5-AK1 6 Zieltöpfe in 2.3 mit 2 Sorten, Anzucht in A1, in höchstens 14 
   // Schritt 1: zwei Sorten
   await expect(page.getByText('Schritt 1 von 3')).toBeVisible();
   await sorteWaehlen(page, 'Salat', 'Lollo Rossa', (ziel) => tipp(m, ziel));
-  await sorteWaehlen(page, 'Salat', 'Eichblatt', (ziel) => tipp(m, ziel));
-  await tipp(m, knopf(page, 'Weiter'));
+  // Plan 205 A6: «Wählen und weiter» bei der letzten Sorte spart den Tipp auf «Weiter»
+  await sorteWaehlen(page, 'Salat', 'Eichblatt', (ziel) => tipp(m, ziel), { weiter: true });
 
   // Schritt 2: Malmodus in 2.3
   await expect(page.getByText('Schritt 2 von 3')).toBeVisible();

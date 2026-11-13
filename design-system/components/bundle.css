@@ -405,7 +405,7 @@ button.hv-tile { cursor: pointer; touch-action: manipulation; }
 
 /* Sortenwahl in Säen (Entscheid 0023): Gemüse-Kachel, Sortenzeile, Tütenfoto, Faktenliste, Kulturform */
 .hv-gemuese-raster { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
-.hv-tile-gemuese { min-height: var(--size-tile-min-height); padding: var(--space-3); justify-content: space-between; border-color: var(--line-control); }
+.hv-tile-gemuese { min-height: var(--size-tile-min-height); padding: var(--space-3); justify-content: flex-start; border-color: var(--line-control); }
 .hv-tile-gemuese-name { font-size: var(--text-text-regal-size); line-height: var(--text-text-regal-line); font-weight: 700; hyphens: auto; -webkit-hyphens: auto; }
 .hv-tile-gemuese .hv-tile-zeile { white-space: normal; font-size: var(--text-small-size); line-height: var(--text-small-line); }
 .hv-tile-gemuese-badges { display: flex; flex-wrap: wrap; gap: var(--space-1); }

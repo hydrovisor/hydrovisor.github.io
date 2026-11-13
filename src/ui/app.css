@@ -626,8 +626,23 @@ body {
 /* Sortenwahl nach Gemüse (Plan 205): Leiste «Gewählt», Zurück-Knopf, Kopf des Gemüses und der Sorte */
 .hv-saeen-gewaehlt {
   display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
+  align-items: flex-start;
+  gap: var(--space-2);
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--brand-soft);
+  font-size: var(--text-small-size);
+  line-height: var(--text-small-line);
+  font-weight: 600;
+}
+
+.hv-saeen-gewaehlt svg {
+  flex: none;
+  width: var(--size-icon-sm);
+  height: var(--size-icon-sm);
+  margin-top: 2px;
+  color: var(--brand);
 }
 
 .hv-saeen-liste {

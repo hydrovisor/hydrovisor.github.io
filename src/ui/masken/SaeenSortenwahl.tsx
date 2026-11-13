@@ -1,5 +1,5 @@
 // Säen, Schritt 1 (Plan 205, Entscheid 0023): erst das Gemüse auf einer Kachel, dann die Sorte, dann das Detail mit
-// Tütenfoto, Kulturform und Kurzinfo. Mehrfachwahl über «Sorte wählen» und die Leiste «Gewählt»; Passung, «Wie letztes
+// Tütenfoto, Kulturform und Kurzinfo. Mehrfachwahl über «Wählen» und die Zeile «Gewählt», «Wählen und weiter» führt zu Schritt 2; Passung, «Wie letztes
 // Mal» und «Nicht empfohlen» wie Plan 36. Regal-Dichte, keine Systemtastatur, keine Wischgesten.
 import { useEffect, useMemo } from 'react';
 import type { Teile } from '../../domain/anlage/teile.ts';
@@ -14,10 +14,9 @@ import {
   type Spanne,
 } from '../../domain/pflanzung/saeen.ts';
 import { Button } from '../bausteine/Button.tsx';
-import { Choice } from '../bausteine/Choice.tsx';
 import { Faktenliste } from '../bausteine/Faktenliste.tsx';
 import { Kulturform, type KulturformHerkunft } from '../bausteine/Kulturform.tsx';
-import { PfeilSymbol, Sortenzeile } from '../bausteine/Sortenzeile.tsx';
+import { HakenSymbol, PfeilSymbol, Sortenzeile } from '../bausteine/Sortenzeile.tsx';
 import { Stufe } from '../bausteine/Stufe.tsx';
 import { GemueseKachel } from '../bausteine/Tile.tsx';
 import { Tuetenfoto } from '../bausteine/Tuetenfoto.tsx';
@@ -52,12 +51,13 @@ const KULTURTYP: Readonly<Record<string, string>> = {
 const kfName = (k: string) => KULTURFORM_NAME[k] ?? k;
 const sortenWort = (n: number) => (n === 1 ? '1 Sorte' : `${String(n)} Sorten`);
 
-/** Bereich mit Halbgeviertstrich (README «Zahlen»); nur ein Wert: dieser */
+/** Bereich mit Halbgeviertstrich (README «Zahlen»), ohne Umbruch im Bereich und vor der Einheit; nur ein Wert: dieser */
 export function bereich(s: Spanne, einheit: string): string | undefined {
+  const mit = (t: string) => `${t}\u00a0${einheit}`;
   if (s.min !== undefined && s.max !== undefined)
-    return s.min === s.max ? `${String(s.min)} ${einheit}` : `${String(s.min)}–${String(s.max)} ${einheit}`;
+    return mit(s.min === s.max ? String(s.min) : `${String(s.min)}\u2060–\u2060${String(s.max)}`);
   const einer = s.typ ?? s.min ?? s.max;
-  return einer === undefined ? undefined : `${String(einer)} ${einheit}`;
+  return einer === undefined ? undefined : mit(String(einer));
 }
 
 /** Erntezeile je Kulturform (Plan 205 A4: «ab etwa Tag n» ohne Bezug) */
@@ -105,6 +105,7 @@ export function SaeenSortenwahl({
   nichtEmpfohlen,
   nichtOffen,
   setNichtOffen,
+  weiter,
 }: {
   teile: Teile;
   /** Sorten in Anzeigereihenfolge (Passung oder «Wie letztes Mal» zuerst) */
@@ -121,6 +122,8 @@ export function SaeenSortenwahl({
   nichtEmpfohlen: readonly string[];
   nichtOffen: boolean;
   setNichtOffen: (offen: boolean) => void;
+  /** zu Schritt 2 */
+  weiter: () => void;
 }) {
   const details = useMemo(() => {
     const m = new Map<string, SorteDetail | undefined>();
@@ -170,23 +173,21 @@ export function SaeenSortenwahl({
       .join(' · ');
   };
 
+  // Plan 205 A7: eine Textzeile statt Knöpfen, damit alle Kacheln ohne Scrollen sichtbar bleiben (SW1-AK6);
+  // abgewählt wird im Detail der Sorte
   const leiste =
     gewaehlt.length > 0 ? (
-      <section className="hv-saeen-gewaehlt" aria-label="Gewählte Sorten">
-        <p className="hv-saeen-zeile">Gewählt, ein Tipp entfernt die Sorte</p>
-        <Choice
-          zeile
-          label="Gewählt"
-          optionen={gewaehlt.flatMap((id) => {
-            const s = sorten.find((x) => x.sorteId === id);
-            return s
-              ? [{ wert: id, titel: s.name, zusatz: `${s.artName ?? s.artId} · ${kfName(kulturformVon(s))}` }]
-              : [];
-          })}
-          gewaehlt={gewaehlt}
-          onWahl={umschalten}
-        />
-      </section>
+      <p className="hv-saeen-gewaehlt" aria-label="Gewählte Sorten">
+        <HakenSymbol />
+        <span>
+          {`Gewählt: ${gewaehlt
+            .flatMap((id) => {
+              const s = sorten.find((x) => x.sorteId === id);
+              return s ? [`${s.name} (${kfName(kulturformVon(s))})`] : [];
+            })
+            .join(', ')}`}
+        </span>
+      </p>
     ) : null;
 
   function waehlen(s: SorteWahl, von: 'gemuese' | 'art') {
@@ -297,28 +298,28 @@ export function SaeenSortenwahl({
           ]}
         />
         <div className="hv-saeen-fuss">
+          {/* Plan 205 A6: «Wählen und weiter» spart den Tipp auf «Weiter» (UC5-AK1 höchstens 14 Berührungen) */}
           {an ? (
             <>
-              <Button
-                variant="secondary"
-                onClick={() => {
-                  umschalten(s.sorteId);
-                }}
-              >
-                Sorte abwählen
+              <Button variant="secondary" onClick={() => umschalten(s.sorteId)}>
+                Abwählen
               </Button>
-              <Button
-                onClick={() =>
-                  setAnsicht(ansicht.von === 'art' ? { typ: 'art', artId: s.artId } : { typ: 'gemuese' })
-                }
-              >
-                Zurück zur Auswahl
-              </Button>
+              <Button onClick={weiter}>Weiter</Button>
             </>
           ) : (
-            <Button block onClick={() => waehlen(s, ansicht.von)}>
-              Sorte wählen
-            </Button>
+            <>
+              <Button variant="secondary" onClick={() => waehlen(s, ansicht.von)}>
+                Wählen
+              </Button>
+              <Button
+                onClick={() => {
+                  if (!gewaehlt.includes(s.sorteId)) umschalten(s.sorteId);
+                  weiter();
+                }}
+              >
+                Wählen und weiter
+              </Button>
+            </>
           )}
         </div>
       </>

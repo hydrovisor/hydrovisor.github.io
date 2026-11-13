@@ -19,12 +19,14 @@ die Kulturform wählen soll, kam der Wunsch, die Vorgabe mit ihrer Wirkung zu ze
    Dunkelkeimer · 23–25 °C · keimt in 6–10 Tagen») und je Sorte eine Zeile mit Tütenbild oder Platzhalter.
 3. **Detail der Sorte:** Tütenfoto oder Platzhalter, Gemüse und Kulturtyp, Sortenname, botanischer Name, Block «Kulturform»,
    Faktenliste (Keimung mit Erklärung, Keimtemperatur, Keimdauer, Saatmenge zur Kulturform, Umsetzen, Packung, Bezug, Wissen),
-   unten «Sorte wählen». Nach der Wahl zurück zu den Kacheln.
+   unten «Wählen» und «Wählen und weiter». Nach «Wählen» zurück zur Sortenliste des Gemüses, wenn es weitere Sorten hat,
+   sonst zu den Kacheln; «Wählen und weiter» führt direkt zu Schritt 2 (Plan 205 A1, A6).
 4. **Kulturform als Vorgabe:** Der Block zeigt die Vorgabe der Art mit «Vorgabe» oder «geändert», was die Form heisst, und die
    Erntewerte aus `art_kulturform`. Nur bei mehreren erlaubten Formen gibt es «Kulturform ändern», das die Einzelauswahl mit
    einer Erntezeile je Form öffnet.
-5. **Mehrfachwahl bleibt:** Die Leiste «Gewählt» über den Kacheln zeigt alle gewählten Sorten, ein Tipp entfernt eine;
-   «Weiter mit n Sorten» führt zu Schritt 2. «Wie letztes Mal», Passung und «Satz duplizieren» bleiben.
+5. **Mehrfachwahl bleibt:** Die Zeile «Gewählt» über den Kacheln nennt alle gewählten Sorten mit Kulturform; abgewählt
+   wird im Detail («Abwählen»). «Weiter» führt zu Schritt 2. «Wie letztes Mal», Passung und «Satz duplizieren» bleiben
+   (Plan 205 A7).
 6. **Tütenfotos als Folgepaket (A):** Tim hat dazu nichts gesagt; der Lead folgt dem Vorschlag. Das Paket zeigt den
    Platzhalter «Noch kein Tütenfoto». Anzeige, Tabelle `tuetenfoto` und «Tütenfoto ergänzen» folgen als eigenes Paket.
 

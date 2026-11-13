@@ -86,19 +86,18 @@ test('UC5-AK13 Setzen einer Nicht-empfohlen-Sorte braucht keine zusätzliche Ber
   const aufklappen = knopf(page, 'Nicht empfohlen (1) anzeigen');
   await expect(aufklappen).toBeVisible();
 
-  // ein Tipp klappt auf, dann wie jede Sorte: Kachel, «Sorte wählen», «Weiter» ohne Rückfrage
+  // ein Tipp klappt auf, dann wie jede Sorte: Kachel, «Wählen und weiter» ohne Rückfrage
   await tipp(m, aufklappen);
   await expect(gemueseKachel(page, 'Tomate')).toContainText('Nicht empfohlen');
   await sorteOeffnen(page, 'Tomate', 'Ochsenherz', (ziel) => tipp(m, ziel));
   await expect(page.locator('.hv-saeen-sortekopf')).toContainText('Nicht empfohlen');
   await expect(page.locator('.hv-saeen-sortekopf')).toContainText('nicht für Kratky');
-  await tipp(m, knopf(page, 'Sorte wählen'));
-  await tipp(m, knopf(page, 'Weiter'));
+  await tipp(m, knopf(page, 'Wählen und weiter'));
   await expect(page.getByText('Schritt 2 von 3')).toBeVisible();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await expect(page.getByRole('alertdialog')).toHaveCount(0);
   const mitTomate = m.beruehrungen;
-  expect(mitTomate).toBe(4);
+  expect(mitTomate).toBe(3);
 
   // Direktsaat in 3.3: Reihe 1, Weiter, Speichern
   await tipp(m, reihe(page, 1));
@@ -118,16 +117,14 @@ test('UC5-AK13 Setzen einer Nicht-empfohlen-Sorte braucht keine zusätzliche Ber
   }
 
   // Vergleich: die nicht empfohlene Sorte braucht höchstens eine Berührung mehr (das Aufklappen) als eine empfohlene;
-  // Lollo Rossa braucht den Tipp auf die Sortenzeile, weil Salat zwei Sorten hat (Plan 205)
+  // Lollo Rossa braucht den Tipp auf die Sortenzeile, weil Salat zwei Sorten hat, Tomate das Aufklappen (Plan 205)
   m.beruehrungen = 0;
   await page.goto('/#/');
   await page.goto(AUS_GEFAESS_33);
   await page.reload();
   await expect(page.getByText('Schritt 1 von 3')).toBeVisible();
-  await sorteWaehlen(page, 'Salat', 'Lollo Rossa', (ziel) => tipp(m, ziel));
-  await tipp(m, knopf(page, 'Weiter'));
-  await expect(page.getByText('Schritt 2 von 3')).toBeVisible();
-  expect(m.beruehrungen).toBe(4);
+  await sorteWaehlen(page, 'Salat', 'Lollo Rossa', (ziel) => tipp(m, ziel), { weiter: true });
+  expect(m.beruehrungen).toBe(3);
   expect(mitTomate - m.beruehrungen).toBeLessThanOrEqual(1);
 });
 

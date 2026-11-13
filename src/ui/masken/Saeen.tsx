@@ -421,6 +421,7 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
             nichtEmpfohlen={nichtEmpfohlen}
             nichtOffen={nichtOffen}
             setNichtOffen={setNichtOffen}
+            weiter={() => setSchritt(2)}
           />
         ) : null}
         {/* Plan 25 A15: unter der Sortenwahl, damit die Sortenwahl zuerst kommt */}

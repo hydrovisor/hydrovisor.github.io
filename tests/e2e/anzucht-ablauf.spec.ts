@@ -101,8 +101,8 @@ test('Anzucht-AK1 6 Zieltöpfe, 2 Sorten, 1 Schwamm ohne Keimling, 5 umgesetzt: 
   // 1. Säen am 7.1.
   await oeffnen(page, m, SAEEN, '/#/saeen?box=R-A1', 'Säen');
   await sorteWaehlen(page, 'Salat', 'Lollo Rossa', (ziel) => tipp(m, ziel));
-  await sorteWaehlen(page, 'Salat', 'Eichblatt', (ziel) => tipp(m, ziel));
-  await tipp(m, knopf(page, 'Weiter'));
+  // Plan 205 A6: «Wählen und weiter» bei der letzten Sorte spart den Tipp auf «Weiter»
+  await sorteWaehlen(page, 'Salat', 'Eichblatt', (ziel) => tipp(m, ziel), { weiter: true });
   await tipp(m, zielgefaess(page, '2.3'));
   await tipp(m, sortenleiste(page, 'Lollo Rossa'));
   await tipp(m, reihe(page, 1));

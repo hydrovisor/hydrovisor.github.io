@@ -87,9 +87,10 @@ test('SW1-AK3 Detail mit Platzhalter, botanischem Namen und Faktenliste, fehlend
   // ohne Shop-Link und ohne Vollständigkeit: Text statt leerem Feld
   await expect(fakten.nth(6)).toHaveText('keine Angabe');
   await expect(fakten.nth(7)).toHaveText('nicht bekannt');
-  // kein Weiter im Detail, nur «Sorte wählen»
+  // im Detail kein «Weiter», sondern «Wählen» und «Wählen und weiter»
   await expect(knopf(page, 'Weiter')).toHaveCount(0);
-  await expect(knopf(page, 'Sorte wählen')).toBeVisible();
+  await expect(knopf(page, 'Wählen')).toBeVisible();
+  await expect(knopf(page, 'Wählen und weiter')).toBeVisible();
 });
 
 test('SW1-AK4 Kulturform als Vorgabe, «Kulturform ändern» nur bei mehreren Formen, Wahl ändert die Saatmenge und den Satz', async ({
@@ -115,8 +116,9 @@ test('SW1-AK4 Kulturform als Vorgabe, «Kulturform ändern» nur bei mehreren Fo
   await expect(page.getByRole('definition').nth(3)).toContainText('3 Samen je Schwamm');
   await expect(page.getByRole('definition').nth(3)).toContainText('für Schnitt');
 
-  await knopf(page, 'Sorte wählen').click();
+  await knopf(page, 'Wählen').click();
   await expect(sortenZeile(page, 'Lollo Rossa')).toContainText('gewählt · Schnitt');
+  await expect(page.getByLabel('Gewählte Sorten')).toHaveText('Gewählt: Lollo Rossa (Schnitt)');
   await knopf(page, 'Weiter').click();
   await knopf(page, 'Ziel später').click();
   await expect(page.getByText('Lollo Rossa · Schnitt · Ziel später')).toBeVisible();
@@ -126,7 +128,9 @@ test('SW1-AK4 Kulturform als Vorgabe, «Kulturform ändern» nur bei mehreren Fo
   expect(satz[0]?.['kulturform']).toBe('schnitt');
 });
 
-test('SW1-AK5 Leiste «Gewählt» entfernt per Tipp, «Weiter» führt zu Schritt 2', async ({ page }) => {
+test('SW1-AK5 Zeile «Gewählt» nennt alle gewählten Sorten, «Abwählen» im Detail entfernt eine, «Weiter» führt zu Schritt 2', async ({
+  page,
+}) => {
   await oeffnen(page);
   await expect(knopf(page, 'Weiter')).toBeDisabled();
   await sorteWaehlen(page, 'Salat', 'Lollo Rossa');
@@ -137,15 +141,23 @@ test('SW1-AK5 Leiste «Gewählt» entfernt per Tipp, «Weiter» führt zu Schrit
   // Chili hat eine Sorte: zurück zu den Kacheln, die Kachel zeigt «1 gewählt»
   await expect(gemueseKachel(page, 'Chili')).toContainText('1 gewählt');
   await expect(gemueseKachel(page, 'Salat')).toContainText('2 gewählt');
+  const zeile = page.getByLabel('Gewählte Sorten');
+  await expect(zeile).toHaveText(
+    'Gewählt: Lollo Rossa (Kopf), Eichblatt (Kopf), Cayenne (Dauerkultur Frucht)',
+  );
+  // alle Kacheln bleiben ohne Scrollen sichtbar (360 × 640)
+  for (const k of await page.getByRole('group', { name: 'Gemüse' }).getByRole('button').all())
+    expect(((await k.boundingBox())?.y ?? 999) + ((await k.boundingBox())?.height ?? 0)).toBeLessThanOrEqual(
+      640 - 84,
+    );
 
-  const leiste = page.getByRole('group', { name: 'Gewählt' }).getByRole('button');
-  await expect(leiste).toHaveCount(3);
-  for (const b of await leiste.all()) await expect(b).toHaveAttribute('aria-pressed', 'true');
-  await page
-    .getByRole('group', { name: 'Gewählt' })
-    .getByRole('button', { name: /^Eichblatt/ })
-    .click();
-  await expect(leiste).toHaveCount(2);
+  // im Detail abwählen
+  await sorteOeffnen(page, 'Salat', 'Eichblatt');
+  await knopf(page, 'Abwählen').click();
+  await expect(knopf(page, 'Wählen')).toBeVisible();
+  await knopf(page, 'Zurück zu Salat').click();
+  await expect(zeile).toHaveText('Gewählt: Lollo Rossa (Kopf), Cayenne (Dauerkultur Frucht)');
+  await knopf(page, 'Alle Gemüse').click();
   await expect(gemueseKachel(page, 'Salat')).toContainText('1 gewählt');
 
   await knopf(page, 'Weiter').click();

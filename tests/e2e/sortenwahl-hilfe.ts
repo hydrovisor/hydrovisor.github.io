@@ -1,4 +1,4 @@
-// Sortenwahl in Säen, Schritt 1 (Plan 205): Gemüse-Kachel, Sorte, «Sorte wählen». Für alle Säen-Abläufe, damit die
+// Sortenwahl in Säen, Schritt 1 (Plan 205): Gemüse-Kachel, Sorte, «Wählen» oder «Wählen und weiter». Für alle Säen-Abläufe, damit die
 // Tests die Bedienung genau so zählen, wie Tim sie am Regal ausführt.
 import { expect, type Locator, type Page } from '@playwright/test';
 
@@ -32,14 +32,19 @@ export async function sorteOeffnen(
   await expect(titel).toHaveText(sorte);
 }
 
-/** Sorte wählen: Kachel, Sorte, «Sorte wählen» (bei weiteren Sorten bleibt die Sortenliste offen, Plan 205 A1) */
+/**
+ * Sorte wählen: Kachel, Sorte, «Wählen» (bei weiteren Sorten bleibt die Sortenliste offen, Plan 205 A1); mit
+ * `weiter` «Wählen und weiter» direkt zu Schritt 2 (A6)
+ */
 export async function sorteWaehlen(
   page: Page,
   gemuese: string,
   sorte: string,
   tipp: Tipp = klick,
+  { weiter = false }: { weiter?: boolean } = {},
 ): Promise<void> {
   await sorteOeffnen(page, gemuese, sorte, tipp);
-  await tipp(page.getByRole('button', { name: 'Sorte wählen', exact: true }));
-  await expect(page.locator('.hv-saeen-sortetitel')).toHaveCount(0);
+  await tipp(page.getByRole('button', { name: weiter ? 'Wählen und weiter' : 'Wählen', exact: true }));
+  if (weiter) await expect(page.getByText('Schritt 2 von 3')).toBeVisible();
+  else await expect(page.locator('.hv-saeen-sortetitel')).toHaveCount(0);
 }
