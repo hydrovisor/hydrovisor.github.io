@@ -373,6 +373,7 @@ export function SaeenSortenwahl({
             key={g.artId}
             name={g.name}
             sorten={g.sorten.length}
+            sortenGesamt={sorten.filter((s) => s.artId === g.artId).length}
             gewaehlt={g.gewaehlt}
             {...(g.stufe ? { stufe: g.stufe } : {})}
             onClick={() => {

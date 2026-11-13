@@ -19,5 +19,5 @@ Kachel für einen Messwert in der Messmaske oder für einen Ort in der Anlagenü
 ## Variante «Gemüse» (Säen, Schritt 1; Entscheid 0023)
 
 - `hv-tile hv-tile-gemuese` als `button`, zwei Kacheln nebeneinander im Raster `hv-gemuese-raster` (Abstand `space-2`), Höhe mindestens `size-tile-min-height`, Innenabstand `space-3`, Rand `line-control`, damit die Kachel als Tippfläche erkennbar ist.
-- Inhalt: Name des Gemüses (`hv-tile-gemuese-name`, Stil `text-regal`, fett, Silbentrennung mit `lang="de"`), darunter «4 Sorten» (`hv-tile-zeile`) und, wenn Sorten gewählt sind, ein Badge `info` mit Haken und «1 gewählt» (`hv-tile-gemuese-badges`). Mit Zielgefäss steht zusätzlich die beste `Stufe` seiner Sorten auf der Kachel.
+- Inhalt: Name des Gemüses (`hv-tile-gemuese-name`, Stil `text-regal`, fett, Silbentrennung mit `lang="de"`), darunter «4 Sorten» (`hv-tile-zeile`; sind «Nicht empfohlen»-Sorten eingeklappt: «1 von 3 Sorten») und, wenn Sorten gewählt sind, ein Badge `info` mit Haken und «1 gewählt» (`hv-tile-gemuese-badges`). Mit Zielgefäss steht zusätzlich die beste `Stufe` seiner Sorten auf der Kachel.
 - Gewählt: `hv-tile-aktiv` (Rand `brand`) und Fläche `brand-soft`; der Zustand steht immer auch als Wort im Badge und im zugänglichen Namen (`aria-label` «Salat, 4 Sorten, 1 gewählt, Empfohlen»).

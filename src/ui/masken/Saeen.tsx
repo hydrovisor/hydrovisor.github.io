@@ -584,7 +584,14 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
           </>
         ) : null}
         <div className="hv-saeen-fuss">
-          <Button variant="secondary" onClick={() => setSchritt(1)}>
+          <Button
+            variant="secondary"
+            onClick={() => {
+              // Plan 205: zurück zu den Kacheln, nicht ins Detail der zuletzt gewählten Sorte (Runde 1 Befund 7)
+              setAnsicht({ typ: 'gemuese' });
+              setSchritt(1);
+            }}
+          >
             Zurück
           </Button>
           <Button

@@ -109,17 +109,25 @@ export function OrtKachel({ kennung, zeilen, badge, onClick, messstelle }: OrtPr
 export function GemueseKachel({
   name,
   sorten,
+  sortenGesamt,
   gewaehlt,
   stufe,
   onClick,
 }: {
   name: string;
   sorten: number;
+  /** alle Sorten des Gemüses, auch eingeklappte «Nicht empfohlen» (Runde 1 Befund 8) */
+  sortenGesamt?: number;
   gewaehlt: number;
   stufe?: Einstufung;
   onClick: () => void;
 }) {
-  const anzahl = sorten === 1 ? '1 Sorte' : `${String(sorten)} Sorten`;
+  const anzahl =
+    sortenGesamt !== undefined && sortenGesamt > sorten
+      ? `${String(sorten)} von ${String(sortenGesamt)} Sorten`
+      : sorten === 1
+        ? '1 Sorte'
+        : `${String(sorten)} Sorten`;
   const teile = [
     name,
     anzahl,
