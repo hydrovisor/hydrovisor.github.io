@@ -2,6 +2,7 @@
 // Referenzen, Suche, einmal-Zeilen, SQL-Quoting und alle Fixtures unter tests/fixtures/demo. Routine: Tests vom Lead.
 import { describe, expect, it } from 'vitest';
 import {
+  benoetigteSorten,
   clientIdFuer,
   demoSkript,
   idFuer,
@@ -15,6 +16,10 @@ import {
 } from '../../scripts/demo/regeln.ts';
 import { md5 } from '../../scripts/demo/md5.ts';
 import { DECKEL_VORSCHLAEGE } from '../../src/domain/vorlagen/deckel-vorschlaege.ts';
+import { artAuswahl } from '../../src/domain/w0/auswahl.ts';
+import { seedKonstanten } from '../../src/domain/w0/konstanten.ts';
+import { repository } from './w0-fixture.ts';
+import { PFAD, tabelle } from './w0-hilfen.ts';
 
 const ZONE = 'Europe/Zurich';
 const uhr = (iso: string): Uhr => ({ jetzt: new Date(iso), zeitzone: ZONE });
@@ -336,5 +341,103 @@ describe('Fixtures S1 bis S9 und Y', () => {
     const text = JSON.stringify(alle);
     expect(text).not.toMatch(/@[a-z0-9.-]+\.[a-z]{2,}/i);
     expect(text).not.toMatch(/\+?\d{2,3}[ /]\d{3}[ /]\d{2}[ /]\d{2}/);
+  });
+});
+
+// Issue #199, Plan 199 (Testentwickler): Fixtures auf echte, voll geladene Sorten aus W0 (RR15).
+describe('W199 Demo auf echten Sorten', () => {
+  const PRAEFIX = '?sorte_schluessel.sorte_key=';
+  /** Satzzeilen der Fixtures mit Sortenbezug: Datei, ref, sorte_key, Kulturform */
+  const saetze = alle.flatMap((f) =>
+    f.zeilen
+      .filter((z) => typeof z.felder['sorte_id'] === 'string' && z.felder['sorte_id'].startsWith(PRAEFIX))
+      .map((z) => ({
+        datei: f.name,
+        ref: z.ref,
+        sorteKey: (z.felder['sorte_id'] as string).slice(PRAEFIX.length),
+        kulturform: z.felder['kulturform'] as string | undefined,
+      })),
+  );
+
+  it('W199-AK2 jede Fixture-Sorte steht im echten Sortenstamm, ihre Art ist voll geladen, die Kulturform erlaubt', () => {
+    const d = repository();
+    const sorten = tabelle(d, PFAD.sorten).zeilen;
+    const art = tabelle(d, PFAD.art).zeilen;
+    const merkmal = (feld: string) =>
+      new Map(
+        art
+          .filter((z) => z['feld'] === feld && !z['kulturform'])
+          .map((z) => [z['art_id'] ?? '', z['wert'] ?? '']),
+      );
+    const artIdNachName = new Map([...merkmal('name_de')].map(([id, name]) => [name, id]));
+    const erlaubt = merkmal('kulturformen_erlaubt');
+    const { voll } = artAuswahl(
+      d as unknown as Parameters<typeof artAuswahl>[0],
+      seedKonstanten.pflichtgroessen,
+    );
+
+    expect(saetze.length).toBeGreaterThanOrEqual(20); // S2 2, S6 2, S8 1, S9 16
+    const befunde: string[] = [];
+    for (const s of saetze) {
+      const sorte = sorten.find((z) => z['zeile_id'] === s.sorteKey);
+      if (!sorte) {
+        befunde.push(`${s.datei} ${s.ref}: ${s.sorteKey} fehlt in data/stammdaten/sorten.csv`);
+        continue;
+      }
+      const artId = artIdNachName.get(sorte['art'] ?? '');
+      if (!artId) {
+        befunde.push(`${s.datei} ${s.ref}: Art ${String(sorte['art'])} fehlt in art.csv`);
+        continue;
+      }
+      if (!voll.has(artId)) befunde.push(`${s.datei} ${s.ref}: Art ${artId} nicht voll geladen`);
+      const formen = (erlaubt.get(artId) ?? '').split(';');
+      if (!s.kulturform || !formen.includes(s.kulturform))
+        befunde.push(`${s.datei} ${s.ref}: Kulturform ${String(s.kulturform)} nicht erlaubt für ${artId}`);
+    }
+    expect(befunde).toEqual([]);
+  });
+
+  it('W199-AK2 keine Fixture nutzt sorte-test-*', () => {
+    const treffer = alle.flatMap((f) =>
+      (JSON.stringify(f.zeilen).match(/sorte-test-[a-z-]+/g) ?? []).map((t) => `${f.name}: ${t}`),
+    );
+    expect([...new Set(treffer)]).toEqual([]);
+  });
+
+  it('W199-AK2 Zuordnung nach Plan 199: S8 Chili Sweet Pickle als Dauerkultur Frucht, S6 Lattughino Verde Kopf und Spinat Butterfly Babyleaf', () => {
+    const key = (ref: string) => saetze.find((s) => s.ref === ref);
+    expect(key('X-s8-satz')).toMatchObject({
+      sorteKey: 'sorte-chili-sweet-pickle',
+      kulturform: 'dauerkultur_frucht',
+    });
+    expect(key('X-s6-nuessli')).toMatchObject({
+      sorteKey: 'sorte-salat-lattughino-verde',
+      kulturform: 'kopf',
+    });
+    expect(key('X-s6-spinat')).toMatchObject({ sorteKey: 'sorte-spinat-butterfly', kulturform: 'babyleaf' });
+  });
+
+  it('W199-AK2 benoetigteSorten liefert die Schlüssel der Fixtures ohne Doppel', () => {
+    const probe = fixture([
+      { tabelle: 'satz', ref: 'S1', felder: { sorte_id: `${PRAEFIX}sorte-a`, kulturform: 'schnitt' } },
+      { tabelle: 'satz', ref: 'S2', felder: { sorte_id: `${PRAEFIX}sorte-b`, kulturform: 'kopf' } },
+      { tabelle: 'satz', ref: 'S3', felder: { sorte_id: `${PRAEFIX}sorte-a`, kulturform: 'kopf' } },
+      { tabelle: 'messung', ref: 'M', felder: { messgeraet_id: '?messgeraet' } },
+    ]);
+    const zweite = fixture([{ tabelle: 'satz', ref: 'S4', felder: { sorte_id: `${PRAEFIX}sorte-b` } }]);
+    const ergebnis = benoetigteSorten([probe, zweite]);
+    expect([...ergebnis].sort()).toEqual(['sorte-a', 'sorte-b']);
+    expect(benoetigteSorten([fixture([{ tabelle: 'anlage', ref: 'A', felder: {} }])])).toEqual([]);
+
+    expect([...benoetigteSorten(alle)].sort()).toEqual([
+      'sorte-basilikum-genoveser',
+      'sorte-chili-sweet-pickle',
+      'sorte-petersilie-glatt',
+      'sorte-salat-babyleaf-mischung',
+      'sorte-salat-lattughino-verde',
+      'sorte-salat-lollo-rossa-loka',
+      'sorte-salat-roxette',
+      'sorte-spinat-butterfly',
+    ]);
   });
 });

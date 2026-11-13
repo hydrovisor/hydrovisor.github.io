@@ -1,7 +1,8 @@
 // AK «Demo löschen» [SQL] (Issue #15, Plan 15; 06_tests.md Abschnitte 9 und 10; Konzept 8.5) gegen die lokale
 // Datenbank (supabase start). Jeder Test läuft in einer äusseren Transaktion und endet mit rollback: zuerst der
 // Test-Wissensstand (Sorten, Messgerät) mit dem kern des Seeds, dann echte Vergleichszeilen, dann der kern der Demo.
-import { join } from 'node:path';
+// Issue #199 (Plan 199, W199-AK1): der Wissensstand ist das echte W0 aus der Repository-Wurzel
+// (data/wissensbasis/freigegeben/, data/stammdaten/sorten.csv), nicht mehr tests/fixtures/wissen.
 import { fileURLToPath } from 'node:url';
 import postgres from 'postgres';
 import { afterAll, describe, expect, it } from 'vitest';
@@ -40,7 +41,8 @@ async function inTransaktion(f: (tx: Db) => Promise<void>): Promise<void> {
 }
 
 async function wissenLaden(tx: Db): Promise<void> {
-  const { dateien, verstoesse } = dateienLesen(join(WURZEL, 'tests', 'fixtures', 'wissen'));
+  // W199-AK1: echtes W0 aus der Repository-Wurzel
+  const { dateien, verstoesse } = dateienLesen(WURZEL);
   expect(verstoesse).toEqual([]);
   const plan = ladeplan(dateien, artAuswahl(dateien, seedKonstanten.pflichtgroessen), seedKonstanten);
   const skript = ladeskript(plan, {
@@ -130,7 +132,7 @@ describe('npm run demo gegen die lokale Datenbank', () => {
   for (const z of fixtures.flatMap((f) => f.zeilen))
     if (!z.einmal) erwartet[z.tabelle] = (erwartet[z.tabelle] ?? 0) + 1;
 
-  it('Demo löschen (`06_tests.md` Abschnitt 9): lädt S1 bis S9 und Y vollständig, löscht sie mit datenart_loeschen() auf 0 Zeilen, echte Zeilen bleiben', async () => {
+  it('W199-AK1 Demo löschen (`06_tests.md` Abschnitt 9) mit echtem W0: lädt S1 bis S9 und Y vollständig, löscht sie mit datenart_loeschen() auf 0 Zeilen, echte Zeilen bleiben', async () => {
     await inTransaktion(async (tx) => {
       await wissenLaden(tx);
       await echteZeilen(tx);
@@ -172,7 +174,7 @@ describe('npm run demo gegen die lokale Datenbank', () => {
     });
   });
 
-  it('Demo löschen (`06_tests.md` Abschnitt 9): zweimal laden ergibt dieselben Zeilenzahlen in allen Tabellen', async () => {
+  it('W199-AK1 Demo löschen (`06_tests.md` Abschnitt 9) mit echtem W0: zweimal laden ergibt dieselben Zeilenzahlen in allen Tabellen', async () => {
     await inTransaktion(async (tx) => {
       await wissenLaden(tx);
       await tx.unsafe(skript.kern);
@@ -183,7 +185,7 @@ describe('npm run demo gegen die lokale Datenbank', () => {
     });
   });
 
-  it('Sichten nach dem Laden: Füllzustand, Prüfstatus, Phasen und Reservierungen wie in den Szenarien', async () => {
+  it('W199-AK1 Sichten nach dem Laden mit echtem W0: Füllzustand, Prüfstatus, Phasen und Reservierungen wie in den Szenarien', async () => {
     await inTransaktion(async (tx) => {
       await wissenLaden(tx);
       await tx.unsafe(skript.kern);
@@ -217,12 +219,44 @@ describe('npm run demo gegen die lokale Datenbank', () => {
 
       const [s8] =
         await tx`select saatdatum::text as saatdatum from public.satz where id = ${ort('X-s8-satz')}::uuid`;
-      expect(s8?.['saatdatum']).toBe('2026-11-19'); // Saat vor 5 Tagen
+      expect(s8?.['saatdatum']).toBe('2026-11-17'); // Saat vor 7 Tagen (Plan 199 A3: Chili Keimdauer 7-8-10)
 
       const reserviert = await tx<{ id: string }[]>`select id::text from public.v_reservierung_aktiv`;
       expect(reserviert.map((r) => r.id).sort()).toEqual(
         ['X-s6-rs1', 'X-s6-rs2', 'Z-reservierung-3.1', 'Z-reservierung-3.2'].map(ort).sort(),
-      ); // S6 Spinat auf belegte Töpfe von Nüsslisalat, S9 Kratky-Direktsaat heute
+      ); // S6 Spinat auf belegte Töpfe von Salat (Plan 199 A4), S9 Kratky-Direktsaat heute
+    });
+  });
+  it('W199-AK1 TZ S9 Spitzentag mit echtem W0: 14 Sätze in Z-A1 mit Saat + typische Keimdauer = heute, drei Arten je Saatdatum', async () => {
+    await inTransaktion(async (tx) => {
+      await wissenLaden(tx);
+      await tx.unsafe(skript.kern);
+      const heute = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Zurich' }).format(JETZT);
+      expect(heute).toBe('2026-11-24');
+      const saetze = await tx<{ id: string; saatdatum: string; typ: number | null; art_id: string }[]>`
+        select s.id::text as id, s.saatdatum::text as saatdatum, v.wert_typ::int as typ, so.art_id
+          from public.satz s
+          join public.sorte so on so.sorte_id = s.sorte_id and so.gueltig_bis is null
+          left join public.v_sollwert v on v.sorte_id = s.sorte_id and v.phase = 'keimung' and v.groesse = 'dauer'
+         where s.anzuchtort_platz_id = ${idFuer('Z-A1')}::uuid and s.storniert_am is null
+         order by s.id`;
+      expect(saetze).toHaveLength(14);
+      const plusTage = (tag: string, n: number) => {
+        const d = new Date(`${tag}T12:00:00Z`);
+        d.setUTCDate(d.getUTCDate() + n);
+        return d.toISOString().slice(0, 10);
+      };
+      const abweichend = saetze.filter((z) => z.typ === null || plusTage(z.saatdatum, z.typ) !== heute);
+      expect(abweichend).toEqual([]);
+      // drei Arten (Salat, Basilikum, Petersilie), je Art ein eigenes Saatdatum (R1.5: drei Karten nach der Bündelung)
+      const jeArt = new Map<string, Set<string>>();
+      for (const z of saetze) jeArt.set(z.art_id, (jeArt.get(z.art_id) ?? new Set()).add(z.saatdatum));
+      expect([...jeArt.keys()].sort()).toEqual([
+        'lactuca_sativa',
+        'ocimum_basilicum',
+        'petroselinum_crispum',
+      ]);
+      expect([...jeArt.values()].map((t) => t.size)).toEqual([1, 1, 1]);
     });
   });
 });
