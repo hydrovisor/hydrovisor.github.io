@@ -34,6 +34,8 @@ import { jetzt } from '../bundeldaten.ts';
 import { hashZu, oeffnen } from '../router.ts';
 import { vorlagenAusTeilen } from '../../domain/vorlagen/bestand.ts';
 import { BoxFormular, DeckelFormular } from './Vorlagen.tsx';
+import { DeckelWahl } from './DeckelWahl.tsx';
+import { deckelAuswahl, deckelBeschreibung, deckelVorwahl } from '../../domain/vorlagen/deckelpassung.ts';
 
 const BETRIEBSARTEN: { wert: Betriebsart; text: string }[] = [
   { wert: 'dwc', text: 'DWC' },
@@ -118,7 +120,7 @@ export function GefaessNeu({ kuerzel, rolle: startRolle }: { kuerzel?: string; r
   // #185: Box und Deckel lassen sich im Assistenten selbst erfassen; gibt es genau eine Vorlage (etwa die eben
   // erfasste), ist sie gewählt, damit «Weiter» ohne weiteren Tipp frei ist
   const modellId = modellWahl ?? (modelle.length === 1 ? modelle[0]?.id : undefined);
-  const deckelId = deckelWahl ?? (deckel.length === 1 ? deckel[0]?.id : undefined);
+  const box = modelle.find((m) => m.id === modellId);
   const [vorlageOffen, setVorlageOffen] = useState(false);
   const [vorlageMeldung, setVorlageMeldung] = useState<string>();
   const vorlageFertig = (text: string) => {
@@ -131,6 +133,7 @@ export function GefaessNeu({ kuerzel, rolle: startRolle }: { kuerzel?: string; r
     vorlageFertig(text);
     setModellId(undefined);
     setVolumen(undefined);
+    setDeckelId(undefined);
   };
   const deckelFertig = (text: string) => {
     vorlageFertig(text);
@@ -146,17 +149,21 @@ export function GefaessNeu({ kuerzel, rolle: startRolle }: { kuerzel?: string; r
   /** wohin nach dem Speichern; «Erneut senden» wiederholt dasselbe Ziel */
   const nachRef = useRef<Nach>('maske');
 
-  const vorschlag = anlage
-    ? erfassenVorschlag(teile, anlage.id, {
-        rolle,
-        ...(bereichId ? { bereichId } : {}),
-        ...(position !== undefined ? { position } : {}),
-        ...(betriebsart ? { betriebsart } : {}),
-        ...(modellId ? { gefaessmodellId: modellId } : {}),
-        ...(deckelId ? { deckeltypId: deckelId } : {}),
-        festeDosis,
-      })
-    : undefined;
+  const teil = {
+    rolle,
+    ...(bereichId ? { bereichId } : {}),
+    ...(position !== undefined ? { position } : {}),
+    ...(betriebsart ? { betriebsart } : {}),
+    ...(modellId ? { gefaessmodellId: modellId } : {}),
+    festeDosis,
+  };
+  // Entscheid 0021: nur Deckel, die zur Box passen; ohne Tipp gewählt ist der einzige passende oder der für die
+  // Kennung vorgesehene (Konzept 5.4). Die Kennung hängt nicht vom Deckel ab, nur die Töpfe.
+  const ohneDeckel = anlage ? erfassenVorschlag(teile, anlage.id, teil) : undefined;
+  const kennung = rolle === 'gefaess' ? ohneDeckel?.kennung : undefined;
+  const deckelId = deckelWahl ?? deckelVorwahl(deckelAuswahl(deckel, box, kennung));
+  const vorschlag =
+    anlage && deckelId ? erfassenVorschlag(teile, anlage.id, { ...teil, deckeltypId: deckelId }) : ohneDeckel;
   const art = betriebsart ?? vorschlag?.betriebsart ?? 'dwc';
   const pos = position ?? (typeof vorschlag?.position === 'number' ? vorschlag.position : undefined);
   const iv = intervalle ?? vorschlag?.intervalle ?? INTERVALLE[art];
@@ -400,6 +407,8 @@ export function GefaessNeu({ kuerzel, rolle: startRolle }: { kuerzel?: string; r
               setzen={(w) => {
                 setModellId(w);
                 setVolumen(undefined);
+                // Entscheid 0021: die Deckel hängen von der Box ab
+                setDeckelId(undefined);
               }}
             />
           )}
@@ -432,13 +441,7 @@ export function GefaessNeu({ kuerzel, rolle: startRolle }: { kuerzel?: string; r
           {deckel.length === 0 ? (
             <Notice title="Noch kein Deckel: hier erfassen, er gilt danach für alle Gefässe" />
           ) : (
-            <Wahl
-              titel="Deckel oder Platte"
-              name="deckel"
-              werte={deckel.map((d) => ({ wert: d.id, text: d.name }))}
-              wert={deckelId}
-              setzen={setDeckelId}
-            />
+            <DeckelWahl deckel={deckel} box={box} kennung={kennung} wert={deckelId} setzen={setDeckelId} />
           )}
           {gewaehlterDeckel ? (
             <>
@@ -485,7 +488,11 @@ export function GefaessNeu({ kuerzel, rolle: startRolle }: { kuerzel?: string; r
                 <dt>Box</dt>
                 <dd>{modelle.find((m) => m.id === modellId)?.name ?? '–'}</dd>
                 <dt>Deckel</dt>
-                <dd>{gewaehlterDeckel?.name ?? '–'}</dd>
+                <dd>
+                  {gewaehlterDeckel
+                    ? `${gewaehlterDeckel.name} (${deckelBeschreibung(gewaehlterDeckel)})`
+                    : '–'}
+                </dd>
                 <dt>Volumen</dt>
                 <dd>{(Math.round(zahl(volumenText) * 100) / 100).toString()} l</dd>
                 <dt>Töpfe</dt>

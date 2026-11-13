@@ -17,6 +17,7 @@ import type { Verstoss, Vorgang } from '../../domain/datenpfad/erfassung.ts';
 import { ortAufloesen } from '../../domain/ort.ts';
 import { ZEITZONE } from '../../domain/zeit.ts';
 import { Button } from '../bausteine/Button.tsx';
+import { DeckelWahl } from './DeckelWahl.tsx';
 import { Notice } from '../bausteine/Notice.tsx';
 import { TextField } from '../bausteine/TextField.tsx';
 import { useBuendel } from '../buendel.tsx';
@@ -258,27 +259,20 @@ export function GefaessAendern({ code, teil }: { code: string; teil?: 'deckel' }
             </label>
           ))}
         </fieldset>
-        <fieldset
-          className="hv-anlage-feldgruppe"
-          id="deckel"
-          ref={(el) => {
-            if (el && teil === 'deckel') el.scrollIntoView();
+        <DeckelWahl
+          deckel={deckel}
+          box={modelle.find((m) => m.id === wert('modell', alt.gefaessmodell_id))}
+          kennung={ort.kennung}
+          wert={wert('deckel', alt.deckeltyp_id ?? '')}
+          setzen={(id) => setzen('deckel', id)}
+          kopf={{
+            id: 'deckel',
+            ref: (el) => {
+              if (el && teil === 'deckel') el.scrollIntoView();
+            },
           }}
-        >
-          <legend>Deckel oder Platte</legend>
-          {deckel.map((d) => (
-            <label key={d.id} className="hv-anlage-wahlfeld">
-              <input
-                type="radio"
-                name="deckel"
-                checked={wert('deckel', alt.deckeltyp_id ?? '') === d.id}
-                onChange={() => setzen('deckel', d.id)}
-              />
-              {d.name}
-            </label>
-          ))}
-          {fehlerZu('deckel') ? <Notice tone="danger" title={fehlerZu('deckel') ?? ''} /> : null}
-        </fieldset>
+          nachher={fehlerZu('deckel') ? <Notice tone="danger" title={fehlerZu('deckel') ?? ''} /> : null}
+        />
       </form>
       {schreibfehler ? (
         <Notice
