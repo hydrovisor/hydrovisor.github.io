@@ -281,3 +281,49 @@ Kein neuer Kandidat, keine neue Quelle.
 |---|---|---|---|
 | valerianella_locusta | keimung | dauer | weiter Klasse D (keine Hydroponik-Quelle mit Keim- oder Auflaufdauer) |
 | valerianella_locusta | anzucht | dauer | unverändert: kein Kandidat in Validatorform; offen #1 bis #3 (Einzelwerte, ab Saat bzw. ab Keimung) |
+
+## Runde 10 (13.11.2026)
+
+Nur `pw.valerianella_locusta.keimung.dauer` und `pw.valerianella_locusta.keimung.keimart` nach Entscheid 0022 (Anbauquellen zugelassen, höchstens Klasse C, `anbaumethode = keine`, `system_quelle = keine`, `umgebung_quelle = andere`).
+
+### Suchweg
+
+- Websuche deutsch «Feldsalat Dunkelkeimer Keimdauer Tage Aussaat Kulturanleitung», «Bingenheimer Saatgut Feldsalat Keimdauer», «Sativa Feldsalat Aussaat Keimung», «Dürr Samen Feldsalat Dunkelgrüner vollherziger», «Nüsslisalat Dunkelkeimer», «Feldsalat ist ein Dunkelkeimer» mit Kiepenkerl, Sperli, Zollinger, Hild, Bingenheimer, Reinsaat, Arche Noah, Samen Mauser.
+- Websuche englisch «corn salad mache days to emergence Johnny's», «Valerianella locusta seedling emergence mean emergence time», «Valerianella germination light dark», «lamb's lettuce darkness germinate».
+- Gelesen: Johnny's Grower's Library (Mâche), Kiepenkerl-Aussaat-Ratgeber (PDF über Hornbach), ProSpecieRara «Angaben zur Pflanzenanzucht» (PDF), Hornbach-Produktseite Dürr Samen «Dunkelgrüner vollherziger» (gleiche Sorte wie im Auftrag), West Coast Seeds, Gartenjournal.net (Feldsalat), Arche-Noah-Keimtabelle (nach ISTA), Heistinger «Handbuch Samengärtnerei» (Löwenzahn, Auszug), LWG Bayern Merkblatt 2103, Alltron (Samen Mauser Nüsslisalat), Garden Betty.
+
+### Ergebnis
+
+- `profilwert.csv`: `keimart#1` = `dunkel` (Gartenjournal.net 2026, C). Einzige Quelle mit ausdrücklicher Keimart; Saatgutfirmen nennen nur «leicht bedecken» bzw. 1 bis 2 cm Saattiefe. Die Seite nennt keine Literatur (Redaktionsprozess vorhanden); Entscheid beim Lead.
+- `profilwert_offen.csv`: `keimung.dauer#1` bis `#7`, alle ohne typischen Wert, daher keine Zeile in Validatorform:
+  - #1 Johnny's 10–14 Tage (Saat bei 5–20 °C)
+  - #2 Kiepenkerl 8–14 Tage bei 10–15 °C
+  - #3 ProSpecieRara 8–14 Tage, optimal 15–18 °C
+  - #4 Dürr Samen (Sorte Dunkelgrüner vollherziger) «etwa eine Woche», Einzelwert, nicht in Tage umgerechnet
+  - #5 West Coast Seeds 7–21 Tage
+  - #6 Gartenjournal.net 8–14 Tage bei 16–18 °C
+  - #7 Arche Noah Keimtest auf Papier, Erst 7 und End 28 Tage bei 20 bzw. 15 °C
+- Drei unabhängige Quellen (#2, #3, #6) nennen übereinstimmend 8–14 Tage bei kühler Keimtemperatur (10–18 °C). Einen typischen Wert nennt keine; der Lead kann nach Entscheid 0018 einen «eigenen Wert» festlegen.
+- Neue Quellen in `quelle.csv`: johnnys-mache-key-growing-information, kiepenkerl-aussaat-ratgeber, prospecierara-pflanzenanzucht-2022, duerr-feldsalat-dunkelgruener-vollherziger, westcoastseeds-grow-corn-salad, gartenjournal-feldsalat-2026, arche-noah-keimtabelle (alle `anbaumethode = keine`).
+
+### Verworfen
+
+| Quelle | Grund |
+|---|---|
+| Hochschule Bochum THALES «Aussaatanleitung – Feldsalat» | nennt weder Keimdauer noch Keimart (nur «ab ca. 25 Grad Celsius bleibt die Keimung aus») |
+| Heistinger, Handbuch Samengärtnerei (Auszug Feldsalat) | nur Keimruhe frischer Samen (1–2 Monate), keine Keimdauer, keine Keimart |
+| LWG Bayern Merkblatt 2103 (Gemüsesorten) | nur Sortenwahl |
+| Alltron (Samen Mauser, Nüsslisalat dunkelgrüner) | nur Aussaatzeit |
+| Garden Betty (Licht- und Dunkelkeimer) | Feldsalat nicht genannt; nur Pauschalsatz «alle Gemüse indifferent» |
+| Promesse de Fleurs (Ronde Maraîchère), Sativa (Vit), Kaufland, Bauhaus (Sperli) | Seite ohne Angaben im abrufbaren Text, 404 bzw. 403; Werte aus Suchauszügen nicht wörtlich prüfbar |
+| Bingenheimer Hauptkatalog, Preisliste | im Suchauszug keine Keimangaben; nicht weiter verfolgt (Zeitbudget) |
+| Plants 13(2) 165 (PMC10818939), scaleandstem.pages.dev | schon in Runde 7 bzw. 6 aus anderen Gründen verworfen (Keimzeit nur als Abbildung bzw. ohne Quelle), nicht wiederholt |
+| test-vergleiche.com (15–25 Tage für Dunkelgrüner vollherziger) | Vergleichsportal ohne erkennbare Herkunft |
+
+### Lückenliste nach Runde 10
+
+| Art | Phase | Grösse | Stand |
+|---|---|---|---|
+| valerianella_locusta | keimung | dauer | kein Kandidat in Validatorform; offen #1 bis #7 (Bereiche ohne typ, ein Einzelwert in Wochen); Lead entscheidet nach Entscheid 0018 und 0022 |
+| valerianella_locusta | keimung | keimart | ein Kandidat (#1 dunkel, Klasse C, Gartenbau-Ratgeber); keine Saatgutfirma mit ausdrücklicher Keimart gefunden |
+| valerianella_locusta | anzucht | dauer | bildet der Lead aus `anzucht.dauer#1` minus Keimdauer (nicht gesucht) |
