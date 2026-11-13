@@ -22,4 +22,4 @@ Die Kurzzusammenfassung, was der Merge auslöst, schreibt der Lead weiterhin in 
 
 **Folgen.** Angepasst sind CLAUDE.md Regel 1, der Paketablauf in CLAUDE.md, der Skill `/umsetzen` Schritt 7.5 und die Pull-Request-Vorlage. Die Sperren bleiben unverändert: kein Push auf `main`, kein Force-Push, kein `supabase db push` und kein `supabase link`.
 
-**Nachtrag 4.11.2026.** Nach Entscheid 0010 gibt der Lead Deploys ohne Produktions-Migration selbst in `production` frei (Tim: «Ja, ohne Migration»). Bei Tim bleibt die Freigabe nur, wenn der Deploy eine Produktions-Migration enthält.
+**Nachtrag 4.11.2026.** Nach Entscheid 0010 gibt der Lead Deploys ohne Produktions-Migration selbst in `production` frei (Tim: «Ja, ohne Migration»). Bei Tim bleibt die Freigabe nur, wenn der Deploy eine Produktions-Migration enthält. **Nachtrag 13.11.2026:** Seit Entscheid 0024 gibt der Lead auch additive Migrationen frei; bei Tim bleiben scharfer Seed und nicht additive Migrationen.

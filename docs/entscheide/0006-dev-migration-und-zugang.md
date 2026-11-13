@@ -20,4 +20,4 @@ Datum 3.11.2026 · Entscheid des Lead im Auftrag von Tim (Chat: «Löse das Prob
 
 **Umsetzung.** Pull Request zu #9 mit Workflow, Migration, pgTAP `08_zugang_migration.test.sql` und Nachführung von `CLAUDE.md`.
 
-**Nachtrag 4.11.2026.** Teilweise abgelöst: Den Satz zum Merge ersetzt Entscheid 0008. Die Freigabe von `deploy.yml` in `production` gibt der Lead nach Entscheid 0010 selbst, wenn der Deploy keine Produktions-Migration enthält; mit Migration bleibt sie bei Tim. Alles Übrige gilt weiter.
+**Nachtrag 4.11.2026.** Teilweise abgelöst: Den Satz zum Merge ersetzt Entscheid 0008. Die Freigabe von `deploy.yml` in `production` gibt der Lead nach Entscheid 0010 selbst, wenn der Deploy keine Produktions-Migration enthält; mit Migration bleibt sie bei Tim. Alles Übrige gilt weiter. **Nachtrag 13.11.2026:** Seit Entscheid 0024 gibt der Lead auch additive Migrationen frei, die vorher mit `dev-migration.yml` auf `hydrovisor-dev` liefen.
