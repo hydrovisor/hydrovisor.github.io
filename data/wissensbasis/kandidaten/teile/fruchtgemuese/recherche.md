@@ -366,3 +366,47 @@ Nur `pw.solanum_lycopersicum.bluete.dauer` (offene Blüte, BBCH 60/61, bis Fruch
 | Art | Phase / Feld | Stand |
 |---|---|---|
 | Tomate | `bluete.dauer` | unverändert D für gültige Form: keine Hydroponik-Quelle mit Tagen Blühbeginn bis Fruchtansatz; offen nur #1 (UA CEAC, verworfen) und #2 (UNALM 2019, verworfen) |
+
+## Runde 10 (13.11.2026): Blütedauer Tomate nach Entscheid 0022
+
+Nur `pw.solanum_lycopersicum.bluete.dauer` (offene Blüte, BBCH 60/61, bis Fruchtansatz, BBCH 71), Ebene Art. Nach Entscheid 0022 auch Anbauquellen (Erde, Gewächshaus, Beratung, Hersteller) mit höchstens Klasse C. Vier neue Kandidaten `#3` bis `#6`, alle in `profilwert_offen.csv` (Einzelwerte bzw. zwei Zeitpunkte ohne Bereich), `status = entwurf`. Vier neue Quellen.
+
+### Suchweg
+
+- Bisherige Verwerfungen geprüft: #1 (UA CEAC) und #2 (UNALM 2019) wurden nicht wegen fehlender Hydroponik verworfen, also nicht wiederholt. PMC6403137 (Runde 8, nur wegen Erde verworfen) nennt nur Kalenderdaten; nicht wieder aufgenommen, weil der Lead dann Daten statt Tagen umrechnen müsste. Plants 2023 PMC10097077 (Runde 7) nennt nur Tage bis Blüte, keinen Fruchtansatz.
+- Websuche englisch: «fruit set» «days after anthesis», «days to first flowering» «days to first fruit set» (cherry, polyhouse, cocopeat, fertigation), «flowering truss» «setting truss», BBCH 61/71 tomato days after transplanting.
+- Websuche deutsch («Tage nach der Blüte» Fruchtansatz) und spanisch («días a floración» «días al cuajado» invernadero cherry).
+- Gelesen: Rev. Colomb. Cienc. Hortic. 2018 (PDF), Resumen-Folien Tesis La Molina (Tomate miniatura, Valle de Mala, PDF), Vegetos 2024 (Abstract-Seite), Haifa Crop Guide Tomate (curl), AHDB Knowledge Library «Tomato flower structure and fertilisation».
+
+### Neue Kandidaten (alle offen)
+
+| kandidat_id | Wert | Quelle | Klasse | grund |
+|---|---|---|---|---|
+| `bluete.dauer#3` | 30 Tage «De flor a fruto de tamaño típico» (BBCH 601 bei 44 ddt bis 701 bei 74 ddt) | Rev. Colomb. Cienc. Hortic. 2018, Figuras 1 bis 3 | C | Einzelwert; Bezug BBCH 61 bis 71 passt genau zum Wechselmerkmal; Medium nicht genannt |
+| `bluete.dauer#4` | Blüte 42.3 DDT, Fruchtansatz 57.2 DDT (Mittel 11 Cherry-Cultivare) | Tesis La Molina, Valle de Mala (Folien) | C | zwei Einzelwerte, Dezimal; Erde; Differenz bildet der Lead |
+| `bluete.dauer#5` | erste Blüte 20.00 Tage, erster Fruchtansatz 24.37 Tage (beste Behandlung) | Vegetos 2024 (Abstract) | C | zwei Einzelwerte, Dezimal; Zählbeginn nicht genannt; nur Abstract |
+| `bluete.dauer#6` | Stufe «flowering» 10 Tage (Schätzung) | Haifa Crop Guide Tomate, Düngeplan Israel | C | Einzelwert; Stufe nicht als Blüte bis Fruchtansatz definiert; Erde |
+
+### Hinweise für den Lead
+
+1. `#3` ist die einzige Quelle, die die Phase nach der BBCH-Skala für Solanaceen abgrenzt (601 Floración, 701 Formación del fruto) und die Dauer selbst nennt («30 d» für alle drei Genotypen). Einschränkung: Blütenstände zwischen 22 und 36 ddt wurden entfernt, die Blüte bei 44 ddt betrifft also nicht den ersten angelegten Blütenstand; Gewächshaus Bogotá 14 bis 30 °C (kühl).
+2. `#4` und `#5` liefern je zwei Zeitpunkte derselben Quelle; die Differenzen (nicht eingetragen) liegen weit auseinander. In `#4` ist der PDF-Text spaltenverschoben, nur die Zeile PROMEDIO ist eindeutig.
+3. `#6` ist schwach (Düngeplan-Stufe, Schätzung); aufgenommen nur als weitere Quelle.
+
+### Verworfen
+
+| Quelle | Grund |
+|---|---|
+| AHDB Knowledge Library «Tomato flower structure and fertilisation» | nur Narbenempfängnis, Pollenschlauch und Befruchtung in Stunden; kein Fruchtansatz in Tagen |
+| Agronomy 14(3):556 (2024, Cherry-Tomate Gewächshaus, Stadien Anthese bis Fruchtansatz je Blütenstand) | MDPI und DOAJ liefern 403, Europe PMC ohne Eintrag; nicht gelesen |
+| SARE «tomato hydroponics» (PDF) | Link liefert HTML statt PDF |
+| Frontiers 2023 (Tsukuba, Bestäubung), Springer-Kapitel «Fruit Set and Temperature Stress» | nur Stunden nach Bestäubung bzw. empfindliche Tage vor Anthese |
+| SKUAST-K Cherry-Genotypen 2018, IJCMAS 2018, Madras Agric. J. 2017 | laut Auszug nur Tage bis Blüte, kein Fruchtansatz in Tagen |
+| Blogs und Ratgeber (tomatodirt, freshroot, scaleandstem, mundohuerto, gardeningknowhow) | keine Gartenbau-, Beratungs- oder Herstellerquelle im Sinn von Entscheid 0022 |
+| Guaymasí et al. 2018 (Horticultura Argentina, Tage und Wärmesumme bis Blüte und Fruchtbildung) | nicht mehr abgerufen (Zeitbudget); Kandidat für eine weitere Runde |
+
+### Lückenliste nach Runde 10
+
+| Art | Phase / Feld | Stand |
+|---|---|---|
+| Tomate | `bluete.dauer` | kein Kandidat in Validatorform; offen neu #3 (30 Tage, BBCH 61 bis 71), #4 (42.3 und 57.2 DDT), #5 (20.00 und 24.37 Tage), #6 (10 Tage); Entscheid durch den Lead nach 0018 und 0022 (eigener Wert) |
