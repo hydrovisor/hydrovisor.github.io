@@ -281,6 +281,10 @@ button.hv-tile { cursor: pointer; touch-action: manipulation; }
 .hv-deckel-kante { margin: 0; text-align: center; font-size: var(--text-caption-size); color: var(--ink-muted); }
 /* Marke Service-Öffnung an der Vorderkante: Text, nicht nur Form */
 .hv-deckel-service { align-self: flex-start; padding: 0 var(--space-2); border: 2px dashed var(--line-control); border-radius: var(--radius-sm); font-size: var(--text-caption-size); color: var(--ink-muted); }
+/* Vorschau (Entscheid 0021): kleines Lochbild in Wahllisten, nur Anzeige; Löcher als Ringe, Grösse nach Topfdurchmesser */
+.hv-deckel-vorschau { flex: none; display: block; }
+.hv-deckel-vorschau-flaeche { fill: var(--surface-sunken); stroke: var(--line-control); stroke-width: 1; }
+.hv-deckel-vorschau-loch { fill: var(--surface-raised); stroke: var(--ink-muted); stroke-width: 1.5; }
 
 /* Echo des Ziffernblocks nimmt ohne Inhalt keinen Platz ein (Messmaske ohne Scrollen, Plan 12) */
 .hv-numpad-echo:empty { display: none; }

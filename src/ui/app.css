@@ -378,6 +378,38 @@ body {
   min-height: var(--size-touch);
 }
 
+/* Deckelwahl (Entscheid 0021): Radio, Vorschau des Lochbilds und zwei Textzeilen; der Text bricht um, nie die Seite */
+.hv-deckelwahl-option {
+  align-items: center;
+  padding: var(--space-1) 0;
+}
+
+.hv-deckelwahl-bild {
+  display: flex;
+  flex: none;
+  justify-content: center;
+  /* Spalte für die Vorschau: so breit wie ein Loch plus Abstand, damit die Texte bündig stehen */
+  min-width: calc(var(--size-loch) + var(--space-3));
+}
+
+.hv-deckelwahl-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.hv-deckelwahl-name {
+  font-weight: var(--text-heading-weight);
+}
+
+.hv-deckelwahl-zusatz,
+.hv-deckelwahl-info {
+  margin: 0;
+  font-size: var(--text-small-size);
+  line-height: var(--text-small-line);
+  color: var(--ink-muted);
+}
+
 /* minmax(0, 1fr): Die Spalte darf schmaler werden als die Standardbreite des Eingabefelds (#121, Honor 360 dp) */
 .hv-anlage-zweispaltig {
   display: grid;
