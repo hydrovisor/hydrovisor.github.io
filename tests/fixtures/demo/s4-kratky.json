@@ -1,8 +1,8 @@
 {
-  "kommentar": "S4 Kratky belüftet: 3.1 mit Füllstand unter einem Drittel und EC über dem Band (UC7-AK8)",
+  "kommentar": "S4 Kratky belüftet: 3.1 mit Füllstand unter einem Drittel und EC über dem Band (UC7-AK8); Band der Anzucht von Salat aus W0; Neuansatz am Tag der Direktsaat aus S6, pH 6.9 ausserhalb (R10.2)",
   "zeilen": [
-    {"tabelle":"naehrloesungsansatz","ref":"X-s4-ansatz","felder":{"platz_id":"@X-3.1","typ":"neuansatz","status":"abgeschlossen","begonnen_am":"jetzt-20d 18:00","abgeschlossen_am":"jetzt-20d 18:00","volumen_l":30,"gilt_ab":"jetzt-20d 18:00"}},
-    {"tabelle":"messung","ref":"X-s4-messung-1","felder":{"platz_id":"@X-3.1","messgeraet_id":"?messgeraet","messart":"rundgang","ph":6.3,"ec":1.62,"temperatur":18.9,"schnappschuss":{"betriebsart":"kratky_belueftet","zielbereich":{"ph_min":5.8,"ph_max":6.5,"ec_min":1.2,"ec_max":1.8,"temp_min":16,"temp_max":22}},"gilt_ab":"jetzt-8d 08:00","fuellstand":"ueber_drittel","bewertung_ph":"gruen","bewertung_ec":"gruen"}},
-    {"tabelle":"messung","ref":"X-s4-messung-2","felder":{"platz_id":"@X-3.1","messgeraet_id":"?messgeraet","messart":"rundgang","ph":6.7,"ec":2.35,"temperatur":19.2,"schnappschuss":{"betriebsart":"kratky_belueftet","zielbereich":{"ph_min":5.8,"ph_max":6.5,"ec_min":1.2,"ec_max":1.8,"temp_min":16,"temp_max":22}},"gilt_ab":"jetzt-1d 08:00","fuellstand":"unter_drittel","bewertung_ph":"ausserhalb","bewertung_ec":"ausserhalb"}}
+    {"tabelle":"naehrloesungsansatz","ref":"X-s4-ansatz","felder":{"platz_id":"@X-3.1","typ":"neuansatz","status":"abgeschlossen","begonnen_am":"jetzt-12d 18:00","abgeschlossen_am":"jetzt-12d 18:00","volumen_l":30,"gilt_ab":"jetzt-12d 18:00"}},
+    {"tabelle":"messung","ref":"X-s4-messung-1","felder":{"platz_id":"@X-3.1","messgeraet_id":"?messgeraet","messart":"rundgang","ph":6.3,"ec":0.9,"temperatur":18.9,"schnappschuss":{"betriebsart":"kratky_belueftet","zielbereich":{"ph_min":5.5,"ph_max":6.5,"ec_min":0.5,"ec_max":1,"temp_min":16,"temp_max":22}},"gilt_ab":"jetzt-8d 08:00","fuellstand":"ueber_drittel","bewertung_ph":"gruen","bewertung_ec":"gruen"}},
+    {"tabelle":"messung","ref":"X-s4-messung-2","felder":{"platz_id":"@X-3.1","messgeraet_id":"?messgeraet","messart":"rundgang","ph":6.9,"ec":2.35,"temperatur":19.2,"schnappschuss":{"betriebsart":"kratky_belueftet","zielbereich":{"ph_min":5.5,"ph_max":6.5,"ec_min":0.5,"ec_max":1,"temp_min":16,"temp_max":22}},"gilt_ab":"jetzt-1d 08:00","fuellstand":"unter_drittel","bewertung_ph":"ausserhalb","bewertung_ec":"ausserhalb"}}
   ]
 }

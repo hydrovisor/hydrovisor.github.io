@@ -273,3 +273,7 @@ tests/e2e/saeen-passung.spec.ts
 tests/unit/wechselblock.test.ts
 tests/fixtures/wechselblock.ts
 tests/e2e/wechselblock.spec.ts
+# 199 Demo auf echte Sorten
+tests/unit/demo-regeln.test.ts
+tests/seed/demo.test.ts
+tests/e2e/demo-echt.spec.ts

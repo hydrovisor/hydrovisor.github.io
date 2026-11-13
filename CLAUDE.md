@@ -77,7 +77,7 @@ Die Skripte stehen seit Paket I0-01 (Grundgerüst) in `package.json`; ihre Namen
 | W0-Validator | `npm run w0:pruefen` (V1 bis V13 ohne Datenbank, `-- --kandidaten` für `kandidaten/`) |
 | Seed | `npm run seed -- --ziel lokal [--trocken]`; dev nur `gh workflow run dev-seed.yml -f zweig=<main\|paket/…> -f trockenlauf=true` (Entscheid 0007); Produktion nur `deploy.yml`: bei Push `--trocken`, scharf nur `gh workflow run deploy.yml --ref main -f seed_scharf=true` mit Tims Freigabe (Entscheid 0017) |
 | Seed-Tests [SQL] | `npm run test:seed` (Vitest gegen die lokale Datenbank nach `supabase db reset`, Bericht `reports/vitest-seed.json`) |
-| Demo-Daten | `npm run demo -- --laden` / `--loeschen` (lokal; dev nur über `gh workflow run dev-seed.yml -f demo=laden -f trockenlauf=false`; ersetzt alle Demo- und Testdaten, lädt bei leerem Wissen zuerst `tests/fixtures/wissen`) |
+| Demo-Daten | `npm run demo -- --laden` / `--loeschen` (lokal; dev nur über `gh workflow run dev-seed.yml -f demo=laden -f trockenlauf=false`; ersetzt alle Demo- und Testdaten, lädt lokal bei leerem Wissen zuerst W0, echte Sorten seit #199; in dev nur nach scharfem W0-Seed) |
 | AK-Abdeckung | `node scripts/ak-abdeckung.ts --issue <nr> [--pr <nr>] --berichte reports` (ohne `--pr` warnen [Gerät] und [Eval] nur) |
 | Rauchtest | `BASIS_URL=<adresse> ERWARTETER_COMMIT=<sha> npx playwright test -c playwright.rauchtest.config.ts` (in `deploy.yml` nach jedem Deploy; Rückfall-Probe: `deploy.yml` auf `main` mit `rueckfall_probe=true`, nur wenn `letzter-guter-stand` auf `main` zeigt) |
 | Entwurf Datenmodell prüfen | `bash docs/spec/pruefung/lauf.sh` (Docker, PostgreSQL 17) |
@@ -131,6 +131,7 @@ Vorschau: Cloudflare Pages `hydrovisor-vorschau` baut jeden Zweig (`<zweig>.hydr
 - [0017 Seed-Konstanten vor W0 scharf laden](docs/entscheide/0017-seed-konstanten-vor-w0.md)
 - [0018 W0-Freigabe durch den Lead, frankiesgarten.de, alle Arten](docs/entscheide/0018-w0-freigabe-durch-lead.md)
 - [0019 Nacht-Freigabe vom 12.11.2026 bis 13.11. 07:00](docs/entscheide/0019-nacht-freigabe-12-11.md)
+- [0020 Demo auf echten Sorten: S6 mit Salat, S8 sät vor 7 Tagen](docs/entscheide/0020-demo-auf-echten-sorten.md)
 - Übrige Entscheide vom 1.11.2026: `docs/spec/00_rueckfragen.md` (R1 bis R13, W1 bis W14, Annahmen 1 bis 16)
 
 ## Arbeitsweise in der Sitzung

@@ -242,3 +242,16 @@ export function demoSkript(fixtures: Fixture[], uhr: Uhr): DemoSkript {
 export function loeschSkript(): string {
   return `begin;\n${LOESCHEN}\ncommit;\n${BERICHT}`;
 }
+
+const SORTE_SUCHE = '?sorte_schluessel.sorte_key=';
+
+/** Sortenschlüssel, die die Fixtures über «?sorte_schluessel.sorte_key=…» verlangen, ohne Doppel (Plan 199) */
+export function benoetigteSorten(fixtures: Fixture[]): string[] {
+  const schluessel = new Set<string>();
+  for (const f of fixtures)
+    for (const z of f.zeilen)
+      for (const wert of Object.values(z.felder))
+        if (typeof wert === 'string' && wert.startsWith(SORTE_SUCHE))
+          schluessel.add(wert.slice(SORTE_SUCHE.length));
+  return [...schluessel];
+}
