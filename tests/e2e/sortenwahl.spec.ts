@@ -2,7 +2,7 @@
 // Eichblatt; Kulturformen Babyleaf, Schnitt, Kopf, Vorgabe Kopf), Tomate (Ochsenherz), Chili (Cayenne), Petersilie
 // (Mooskrause), Rucola. Ohne Satz in 2.3, damit keine Sorte «Wie letztes Mal» trägt. Feste Uhr 7.1.2027, 360 × 640.
 import { expect, test, type Page } from '@playwright/test';
-import { saatTeile } from '../fixtures/saeen.ts';
+import { saatTeile, SORTE } from '../fixtures/saeen.ts';
 import { zeileAufnehmen } from '../fixtures/sichten.ts';
 import type { Teile } from '../fixtures/regal.ts';
 import { authNachbilden, sitzungSpeichern } from './hilfen.ts';
@@ -11,8 +11,12 @@ import { gemueseKachel, sorteOeffnen, sortenZeile, sorteWaehlen } from './sorten
 
 const JETZT = new Date('2027-01-07T08:00:00Z');
 
-async function oeffnen(page: Page): Promise<[string, Record<string, unknown>][]> {
+async function oeffnen(
+  page: Page,
+  anpassen?: (t: Teile) => void,
+): Promise<[string, Record<string, unknown>][]> {
   const daten: Teile = structuredClone(saatTeile(JETZT, { ohneSatzIn23: true }));
+  anpassen?.(daten);
   const geschrieben: [string, Record<string, unknown>][] = [];
   await sitzungSpeichern(page);
   await authNachbilden(page);
@@ -34,6 +38,22 @@ async function oeffnen(page: Page): Promise<[string, Record<string, unknown>][]>
 }
 
 const knopf = (page: Page, name: string) => page.getByRole('button', { name, exact: true });
+
+/** Salat mit botanischem Namen, Vollständigkeit und Erntewerten Kopf (nur in diesem Test, die Fixture bleibt) */
+function salatMitWissen(t: Teile): void {
+  for (const a of t['art'] ?? []) if (a['art_id'] === 'lactuca_sativa') a['name_wiss'] = 'Lactuca sativa L.';
+  t['v_vollstaendigkeit'] = [{ sorte_id: SORTE.lollo, vollstaendig: false, fehlende_groessen: 3 }];
+  t['art_kulturform'] = [
+    {
+      art_id: 'lactuca_sativa',
+      kulturform: 'kopf',
+      ernteart: 'einmalig',
+      ernte_ab_d: 24,
+      kulturdauer_typisch_d: 35,
+      gueltig_bis: null,
+    },
+  ];
+}
 
 test('SW1-AK2 Kacheln je Gemüse, Sorten mit gemeinsamen Angaben und «Alle Gemüse», eine Sorte öffnet direkt das Detail', async ({
   page,
@@ -59,13 +79,14 @@ test('SW1-AK2 Kacheln je Gemüse, Sorten mit gemeinsamen Angaben und «Alle Gem�
   await expect(kacheln).toHaveCount(5);
 });
 
-test('SW1-AK3 Detail mit Platzhalter, botanischem Namen und Faktenliste, fehlende Werte «noch offen»', async ({
+test('SW1-AK3 Detail mit Platzhalter, botanischem Namen und Faktenliste, fehlende Werte als Text statt leerem Feld', async ({
   page,
 }) => {
-  await oeffnen(page);
+  await oeffnen(page, salatMitWissen);
   await sorteOeffnen(page, 'Salat', 'Lollo Rossa');
   await expect(page.getByRole('img', { name: 'Noch kein Tütenfoto' })).toBeVisible();
   await expect(page.getByText('Salat · Blattkultur')).toBeVisible();
+  await expect(page.getByText('Lactuca sativa L.')).toBeVisible();
   const fakten = page.getByRole('definition');
   const begriffe = page.getByRole('term');
   await expect(begriffe).toHaveText([
@@ -80,23 +101,31 @@ test('SW1-AK3 Detail mit Platzhalter, botanischem Namen und Faktenliste, fehlend
   ]);
   // Fachbegriff nie allein: Lichtkeimer mit Erklärung
   await expect(fakten.nth(0)).toHaveText(/^Lichtkeimer.*braucht Licht zum Keimen/);
+  await expect(fakten.nth(1)).toHaveText(/^15\u2060–\u206020\s°C\s*meist 18\s°C$/);
+  await expect(fakten.nth(2)).toHaveText(/^2\u2060–\u20607\sTage\s*meist 4 Tage$/);
   await expect(fakten.nth(3)).toContainText('1 Samen je Schwamm');
   await expect(fakten.nth(4)).toHaveText('ab Tag 21 nach der Saat');
   await expect(fakten.nth(5)).toContainText('gekauft 20.11.2026');
   await expect(fakten.nth(5)).toContainText('Bestand 100 Korn');
-  // ohne Shop-Link und ohne Vollständigkeit: Text statt leerem Feld
+  // ohne Shop-Link: Text statt leerem Feld; Wissen mit Wort und Zahl der Lücken
   await expect(fakten.nth(6)).toHaveText('keine Angabe');
-  await expect(fakten.nth(7)).toHaveText('nicht bekannt');
+  await expect(fakten.nth(7)).toHaveText(/^unvollständig\s*3 Angaben fehlen noch$/);
   // im Detail kein «Weiter», sondern «Wählen» und «Wählen und weiter»
   await expect(knopf(page, 'Weiter')).toHaveCount(0);
   await expect(knopf(page, 'Wählen')).toBeVisible();
   await expect(knopf(page, 'Wählen und weiter')).toBeVisible();
+
+  // Eichblatt ohne Zeile in v_vollstaendigkeit: «nicht bekannt» statt leerem Feld
+  await knopf(page, 'Zurück zu Salat').click();
+  await sorteOeffnen(page, 'Salat', 'Eichblatt');
+  await expect(fakten.nth(7)).toHaveText('nicht bekannt');
+  await expect(page.locator('.hv-fakten-offen')).not.toHaveCount(0);
 });
 
 test('SW1-AK4 Kulturform als Vorgabe, «Kulturform ändern» nur bei mehreren Formen, Wahl ändert die Saatmenge und den Satz', async ({
   page,
 }) => {
-  const geschrieben = await oeffnen(page);
+  const geschrieben = await oeffnen(page, salatMitWissen);
   await sorteOeffnen(page, 'Tomate', 'Ochsenherz');
   const block = page.locator('.hv-kulturform');
   await expect(block).toContainText('Dauerkultur Frucht');
@@ -107,6 +136,8 @@ test('SW1-AK4 Kulturform als Vorgabe, «Kulturform ändern» nur bei mehreren Fo
   await sorteOeffnen(page, 'Salat', 'Lollo Rossa');
   await expect(block.locator('.hv-kulturform-titel')).toHaveText('Kopf Vorgabe');
   await expect(block).toContainText('die ganze Pflanze wächst aus und wird einmal geerntet');
+  // Erntewerte aus art_kulturform
+  await expect(block).toContainText('einmal ernten, erste Ernte ab etwa Tag 24, fertig nach etwa 35 Tagen');
   await knopf(page, 'Kulturform ändern').click();
   const formen = page.getByRole('group', { name: 'Kulturform wählen' }).getByRole('button');
   await expect(formen).toHaveCount(3);
@@ -162,4 +193,10 @@ test('SW1-AK5 Zeile «Gewählt» nennt alle gewählten Sorten, «Abwählen» im 
 
   await knopf(page, 'Weiter').click();
   await expect(page.getByText('Schritt 2 von 3')).toBeVisible();
+  // «Zurück» aus Schritt 2 zeigt wieder die Kacheln, nicht das Detail der letzten Sorte (Runde 1 Befund 7)
+  await knopf(page, 'Zurück').click();
+  await expect(gemueseKachel(page, 'Salat')).toContainText('1 gewählt');
+  await expect(page.getByLabel('Gewählte Sorten')).toHaveText(
+    'Gewählt: Lollo Rossa (Kopf), Cayenne (Dauerkultur Frucht)',
+  );
 });
