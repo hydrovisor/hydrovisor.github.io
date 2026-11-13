@@ -24,6 +24,7 @@ import {
 } from '../fixtures/sichten.ts';
 import { authNachbilden, sitzungSpeichern } from './hilfen.ts';
 import { restNachbilden } from './rest.ts';
+import { sorteWaehlen } from './sortenwahl-hilfe.ts';
 
 const SAEEN = new Date('2027-01-07T08:00:00Z');
 const KEIMEN = new Date('2027-01-11T08:00:00Z');
@@ -45,8 +46,6 @@ async function tipp(m: Mitschnitt, ziel: Locator): Promise<void> {
 
 const knopf = (ort: Page | Locator, name: string) =>
   ort.getByRole('link', { name, exact: true }).or(ort.getByRole('button', { name, exact: true }));
-const sorteWahl = (page: Page, name: string) =>
-  page.getByRole('button', { name: new RegExp(`^${name}`) }).first();
 const sortenleiste = (page: Page, name: string) =>
   page.getByRole('button', { name: new RegExp(`^(?!Loch ).*${name}`) }).first();
 const zielgefaess = (page: Page, kennung: string) =>
@@ -101,8 +100,8 @@ test('Anzucht-AK1 6 Zieltöpfe, 2 Sorten, 1 Schwamm ohne Keimling, 5 umgesetzt: 
 
   // 1. Säen am 7.1.
   await oeffnen(page, m, SAEEN, '/#/saeen?box=R-A1', 'Säen');
-  await tipp(m, sorteWahl(page, 'Lollo Rossa'));
-  await tipp(m, sorteWahl(page, 'Eichblatt'));
+  await sorteWaehlen(page, 'Salat', 'Lollo Rossa', (ziel) => tipp(m, ziel));
+  await sorteWaehlen(page, 'Salat', 'Eichblatt', (ziel) => tipp(m, ziel));
   await tipp(m, knopf(page, 'Weiter'));
   await tipp(m, zielgefaess(page, '2.3'));
   await tipp(m, sortenleiste(page, 'Lollo Rossa'));

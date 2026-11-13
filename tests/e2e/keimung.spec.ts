@@ -29,6 +29,7 @@ import {
   zeileAufnehmen,
 } from '../fixtures/sichten.ts';
 import { authNachbilden, sitzungSpeichern } from './hilfen.ts';
+import { sorteWaehlen } from './sortenwahl-hilfe.ts';
 import { REST, restNachbilden } from './rest.ts';
 
 const JETZT = KEIM_JETZT;
@@ -108,10 +109,7 @@ async function deckel23(page: Page): Promise<void> {
   await page.goto('/#/saeen?ziel=R-2.3');
   await page.reload();
   await expect(page.getByRole('heading', { name: 'Säen', level: 1 })).toBeVisible();
-  await page
-    .getByRole('button', { name: /^Lollo Rossa/ })
-    .first()
-    .click();
+  await sorteWaehlen(page, 'Salat', 'Lollo Rossa');
   await knopf(page, 'Weiter').click();
   await expect(page.getByText('Schritt 2 von 3')).toBeVisible();
 }
