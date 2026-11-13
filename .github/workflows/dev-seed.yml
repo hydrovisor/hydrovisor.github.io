@@ -2,6 +2,7 @@
 # Ziel fest hydrovisor-dev; die Produktion lädt weiterhin nur deploy.yml.
 # Eingabe zweig: Zweig, dessen data/ geladen wird (für Abnahme 1 mit W0-Daten vor dem Merge).
 # Eingabe demo: danach Demo-Szenarien laden oder löschen (npm run demo, Plan 15); Fixtures immer aus main.
+# Die Demo nutzt echte Sorten aus W0 (#199): laden nur, wenn W0 in hydrovisor-dev scharf geladen ist (trockenlauf=false).
 # Skripte, src/ und Konfiguration kommen immer aus main; aus dem Zweig nur data/.
 # Aktionen per Commit angeheftet (Version im Kommentar).
 name: dev-seed

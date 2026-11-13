@@ -157,16 +157,16 @@ Dieselben Fixtures dienen E2E und Abnahme 1 (Konzept 8.5). Ablage `tests/fixture
 | Szenario | Inhalt | deckt |
 |---|---|---|
 | S1 Regal komplett | 13 Gefässe (5 Stationen) mit je einem Ereignis `gefaess_erfasst`, 4 Anzuchtboxen, W, 7 Deckel- und Plattentypen nach 3D-Modell | UC1-AK1, UC2-AK5, UC14 |
-| S2 DWC normal | 2.3 mit 2 Salatsorten, Messungen 14 Tage, letzter Wechsel vor 12 Tagen | Heute, Wechsel in 2 Tagen, Rechner |
+| S2 DWC normal | 2.3 mit 2 Salatsorten (Lollo Rossa Loka, Roxette), Messungen 14 Tage, letzter Wechsel vor 12 Tagen | Heute, Wechsel in 2 Tagen, Rechner |
 | S3 veraltet | 1.1 mit Nachfüllen nach der letzten Messung | UC7-AK10 |
 | S4 Kratky belüftet | 3.1 Füllstand unter ⅓, EC über Band | UC7-AK8, Rundgang |
 | S5 unsicher | Demo-Kalibrierung vor 31 Tagen | UC8-AK6, UC9-AK6 |
-| S6 Konflikt | 3.1 mit Nüsslisalat, Spinat reserviert | UC5-AK2 |
+| S6 Konflikt | 3.1 mit Salat Lattughino Verde (statt Nüsslisalat, Entscheid 0020), Spinat Butterfly reserviert | UC5-AK2 |
 | S7 leer | 2.2 ohne Pflanzung, Füllzustand leer | R2.2, R5.4, RF7 |
-| S8 Keimung | Satz mit 6 Schwämmen in A3, Saat vor 5 Tagen | UC6-AK2 |
-| S9 Spitzentag | 4 DWC-Wechsel, 2 Kratky-Ansätze, 14 Phasenfragen am selben Tag | R5.6, Bündelung, Push-Titel |
+| S8 Keimung | Satz Chili Sweet Pickle mit 6 Schwämmen in A3, Saat vor 7 Tagen (Entscheid 0020) | UC6-AK2 |
+| S9 Spitzentag | 4 DWC-Wechsel, 2 Kratky-Ansätze, 14 Phasenfragen am selben Tag (Salat, Basilikum, Petersilie, je vor ihrer typischen Keimdauer gesät) | R5.6, Bündelung, Push-Titel |
 
-Die Demo-Sorten und -Sollwerte stammen aus einem kleinen Test-Wissensstand `tests/fixtures/wissen/` (vier Arten mit erfundenen, plausiblen Werten, Quelle `test-fixture`), nicht aus W0, damit E2E unabhängig von der Freigabe läuft (A).
+Die Demo-Sorten und -Sollwerte stammen seit #199 aus W0 (`data/wissensbasis/freigegeben/`, `data/stammdaten/sorten.csv`), nur aus voll geladenen Arten (Entscheid 0020). `npm run demo -- --laden` lädt bei leerem Wissen lokal zuerst W0 und bricht ab, wenn eine Sorte der Fixtures fehlt; in `hydrovisor-dev` braucht die Demo den scharfen W0-Seed. Der Test-Wissensstand `tests/fixtures/wissen/` (vier Arten mit erfundenen Werten, Quelle `test-fixture`) dient nur noch den Seed- und W0-Tests.
 
 ## 11 Gerät und Eval
 

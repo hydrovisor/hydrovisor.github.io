@@ -7,7 +7,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { ZEITZONE } from '../src/domain/zeit.ts';
 import { DEV_PROJEKT } from './seed/ausfuehren.ts';
-import { demoSkript, loeschSkript, type Fixture, type Zeile } from './demo/regeln.ts';
+import { benoetigteSorten, demoSkript, loeschSkript, type Fixture, type Zeile } from './demo/regeln.ts';
 
 const argumente = process.argv.slice(2);
 const option = (name: string): string | undefined => {
@@ -19,7 +19,6 @@ const laden = argumente.includes('--laden');
 const loeschen = argumente.includes('--loeschen');
 const repository = fileURLToPath(new URL('..', import.meta.url));
 export const FIXTURES = join(repository, 'tests', 'fixtures', 'demo');
-const WISSEN = join('tests', 'fixtures', 'wissen');
 
 function befehl(programm: string, args: string[], erben = false): string {
   return execFileSync(programm, args, {
@@ -95,21 +94,47 @@ function abfrageDev(): { abfrage: Abfrage; schliessen: () => Promise<void> } {
   };
 }
 
-const WISSEN_STAND =
-  'select (select count(*)::int from public.sorte where gueltig_bis is null) as aktiv,' +
-  ' (select count(*)::int from public.sorte s join public.sorte_schluessel k on k.id = s.sorte_id' +
-  "   where s.gueltig_bis is null and k.sorte_key like 'sorte-test-%') as test;";
+/** aktive Sorten (gueltig_bis is null) unter den verlangten Schlüsseln */
+function aktiveSortenSkript(schluessel: string[]): string {
+  const liste = schluessel.map((s) => `'${s.replaceAll("'", "''")}'`).join(', ');
+  return (
+    'select (select count(*)::int from public.sorte where gueltig_bis is null) as aktiv,' +
+    ' coalesce((select array_agg(distinct k.sorte_key) from public.sorte s' +
+    '   join public.sorte_schluessel k on k.id = s.sorte_id' +
+    `   where s.gueltig_bis is null and k.sorte_key in (${liste})), '{}') as vorhanden;`
+  );
+}
 
-/** Test-Wissensstand laden, wenn das Wissen leer ist (A1); bestehendes anderes Wissen nie überschreiben */
-async function wissenSichern(abfrage: Abfrage): Promise<void> {
-  const [stand] = (await abfrage(WISSEN_STAND)) as { aktiv: number; test: number }[];
-  if ((stand?.test ?? 0) >= 4) return;
-  if ((stand?.aktiv ?? 0) > 0)
-    throw new Error(
-      'Demo braucht die Test-Sorten aus tests/fixtures/wissen; das Wissen enthält andere Sorten. Abbruch, damit es nicht überschrieben wird.',
-    );
-  console.log(`Wissen leer: lade zuerst den Test-Wissensstand (${WISSEN})`);
-  befehl('npm', ['run', 'seed', '--', '--ziel', ziel, '--wurzel', WISSEN], true);
+/**
+ * Echtes Wissen (W0) sichern (Plan 199, A6): fehlen Sorten der Fixtures und ist das Wissen lokal leer, lädt
+ * «npm run seed -- --ziel lokal» das W0 aus der Repository-Wurzel; sonst Abbruch mit den fehlenden Schlüsseln.
+ * Vorhandenes Wissen wird nie überschrieben; in dev lädt die Demo nie selbst Wissen.
+ */
+async function wissenSichern(abfrage: Abfrage, fixtures: Fixture[]): Promise<void> {
+  const schluessel = benoetigteSorten(fixtures);
+  if (schluessel.length === 0) return;
+  const fehlend = async (): Promise<{ aktiv: number; fehlt: string[] }> => {
+    const [stand] = (await abfrage(aktiveSortenSkript(schluessel))) as {
+      aktiv: number;
+      vorhanden: string[];
+    }[];
+    const vorhanden = new Set(stand?.vorhanden ?? []);
+    return { aktiv: stand?.aktiv ?? 0, fehlt: schluessel.filter((s) => !vorhanden.has(s)) };
+  };
+  let stand = await fehlend();
+  if (stand.fehlt.length === 0) return;
+  if (stand.aktiv === 0 && ziel === 'lokal') {
+    console.log('Wissen leer: lade zuerst das W0 (npm run seed -- --ziel lokal)');
+    befehl('npm', ['run', 'seed', '--', '--ziel', 'lokal'], true);
+    stand = await fehlend();
+    if (stand.fehlt.length === 0) return;
+  }
+  throw new Error(
+    `Demo braucht diese Sorten aus W0, sie fehlen oder sind geschlossen: ${stand.fehlt.join(', ')}. ` +
+      (ziel === 'lokal'
+        ? 'Zuerst «npm run seed -- --ziel lokal» ausführen.'
+        : 'Zuerst W0 scharf laden: gh workflow run dev-seed.yml -f zweig=main -f trockenlauf=false.'),
+  );
 }
 
 async function hauptprogramm(): Promise<void> {
@@ -119,8 +144,9 @@ async function hauptprogramm(): Promise<void> {
   try {
     let skript = loeschSkript();
     if (laden) {
-      await wissenSichern(abfrage);
-      const demo = demoSkript(fixturesLesen(), { jetzt: new Date(), zeitzone: ZEITZONE });
+      const fixtures = fixturesLesen();
+      await wissenSichern(abfrage, fixtures);
+      const demo = demoSkript(fixtures, { jetzt: new Date(), zeitzone: ZEITZONE });
       console.log(`${demo.zeilen} Zeilen aus ${FIXTURES}`);
       skript = demo.vollstaendig;
     }

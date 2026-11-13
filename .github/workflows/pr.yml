@@ -154,11 +154,8 @@ jobs:
       - name: Seed-Zähltest mit Demo-Daten
         if: needs.vorhanden.outputs.app == 'true'
         run: |
-          # W0 aus freigegeben/ scharf lokal laden (Ladetest mit Zähltest, #188), danach zurücksetzen
-          npm run seed -- --ziel lokal
-          supabase db reset
-          # Demo-Szenarien brauchen den Test-Wissensstand statt W0
-          npm run seed -- --ziel lokal --wurzel tests/fixtures/wissen && npm run demo -- --laden
+          # W0 aus freigegeben/ scharf lokal laden (Ladetest mit Zähltest, #188), darauf die Demo-Szenarien (#199)
+          npm run seed -- --ziel lokal && npm run demo -- --laden
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with: { name: bericht-db, path: reports/, if-no-files-found: ignore }
@@ -196,8 +193,8 @@ jobs:
         run: |
           supabase start
           supabase db reset
-          # Test-Wissensstand statt W0 aus freigegeben/: die Demo-Szenarien brauchen die Test-Sorten (#188)
-          npm run seed -- --ziel lokal --wurzel tests/fixtures/wissen
+          # W0 aus freigegeben/: die Demo-Szenarien nutzen echte Sorten (#199)
+          npm run seed -- --ziel lokal
           npm run demo -- --laden
           supabase status -o env > /tmp/status.env
           url=$(grep '^API_URL=' /tmp/status.env | cut -d= -f2- | tr -d '"')
