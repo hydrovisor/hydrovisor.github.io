@@ -1503,6 +1503,38 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"tuetenfoto": {
+                  Row: {
+                    "app_version": string,"client_id": string,"erfasst_am": string,"id": string,"pfad": string,"saatgut_id": string | null,"seite": string,"sorte_id": string,"storniert_am": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "app_version": string,"client_id": string,"erfasst_am"?: string,"id"?: string,"pfad": string,"saatgut_id"?: string | null,"seite": string,"sorte_id": string,"storniert_am"?: string | null
+                  }
+                  Update: {
+                    "app_version"?: string,"client_id"?: string,"erfasst_am"?: string,"id"?: string,"pfad"?: string,"saatgut_id"?: string | null,"seite"?: string,"sorte_id"?: string,"storniert_am"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "tuetenfoto_saatgut_id_fkey"
+      columns: ["saatgut_id"]
+isOneToOne: false
+      referencedRelation: "saatgut"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "tuetenfoto_saatgut_id_fkey"
+      columns: ["saatgut_id"]
+isOneToOne: false
+      referencedRelation: "v_keimrate"
+      referencedColumns: ["saatgut_id"]
+    },{
+      foreignKeyName: "tuetenfoto_sorte_id_fkey"
+      columns: ["sorte_id"]
+isOneToOne: false
+      referencedRelation: "sorte_schluessel"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"wissenseintrag": {
                   Row: {
                     "app_version": string,"art_id": string | null,"commit": string,"ebene": Database["public"]['Enums']["wissen_ebene"],"erfasst_am": string,"evidenzklasse": Database["public"]['Enums']["evidenzklasse"],"freigegeben_am": string | null,"fundstelle": string,"gueltig_ab": string,"gueltig_bis": string | null,"id": string,"kulturgruppe_id": string | null,"kurzzitat": string,"phase": Database["public"]['Enums']["phase"] | null,"quelldatei": string,"quelle_id": string,"text": string,"typ": Database["public"]['Enums']["wissenseintrag_typ"],"zeile_id": string
