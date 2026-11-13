@@ -15,7 +15,7 @@ export const LEISTE: readonly { ziel: LeisteZiel; text: string; route: Route }[]
 
 /**
  * Aktives Ziel der Leiste oder undefined, wenn keine Leiste erscheint. `imAblauf` meldet eine Maske, die innerhalb ihrer
- * Route in einen Ablauf wechselt (Säen ab Schritt 2).
+ * Route in einen Ablauf wechselt (Säen ab Schritt 2; Saatgut: Tüte erfassen, Fotos nachtragen).
  */
 export function leisteZiel(route: Route, sitzung: Sitzungszustand, imAblauf = false): LeisteZiel | undefined {
   if (sitzung !== 'angemeldet') return undefined;
@@ -27,7 +27,8 @@ export function leisteZiel(route: Route, sitzung: Sitzungszustand, imAblauf = fa
     case 'saeen':
       return imAblauf ? undefined : 'saeen';
     case 'sorten':
-      return 'saatgut';
+      // Tüte erfassen und Fotos nachtragen sind Abläufe innerhalb der Saatgut-Maske (Plan 211 A1)
+      return imAblauf ? undefined : 'saatgut';
     case 'mehr':
       return 'mehr';
     default:
