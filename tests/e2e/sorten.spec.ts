@@ -245,7 +245,9 @@ test('UC4-AK9 Neue Sorte aus Tütentext: KI-Vorschlag, Art bestätigen, Packung,
   const zeile = salat.getByRole('link', { name: /^Testsorte Rot/ });
   await expect(zeile).toBeVisible();
   await expect(zeile).toContainText('Recherche offen');
-  const lollo = salat.getByRole('link', { name: /^Lollo Rossa/ });
+  // zwei Sorten «Lollo Rossa» im Bündel (regalTeile ohne Vollständigkeit, wissen() vollständig): die aus wissen()
+  const lollo = salat.locator(`a[href$="#/sorten/${LOLLO}"]`);
+  await expect(lollo).toHaveAccessibleName(/^Lollo Rossa/);
   await expect(lollo).toContainText(/(^|[^n])vollständig/);
   await expect(lollo).not.toContainText('Recherche offen');
   await ohneWaagrechtesScrollen(page);
