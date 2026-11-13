@@ -1,6 +1,6 @@
 // Maske «Saatgut» (Saatgut-Manager, Issue #211, Plan 211; bisher «Sorten», UC4; Schreibtisch, Standarddichte): Liste
-// nach Gemüse mit Tütenbild und Status als Wort, Filter «Vorrätig» und «Ohne Foto»; die Abläufe «Tüte erfassen» und
-// «Fotos nachtragen» sind Ansichten dieser Maske ohne eigene Route (Plan 211 A1).
+// nach Gemüse mit Tütenbild und Status als Wort, Filter «Vorrätig», «Ohne Foto» und «Aufgebraucht» (Plan 215); die
+// Abläufe «Tüte erfassen» und «Fotos nachtragen» sind Ansichten dieser Maske ohne eigene Route (Plan 211 A1).
 import { useState } from 'react';
 import {
   nachtragStarten,
@@ -12,6 +12,7 @@ import {
 } from '../../domain/sorten/saatgut.ts';
 import { Button } from '../bausteine/Button.tsx';
 import { Choice } from '../bausteine/Choice.tsx';
+import { jetzt } from '../bundeldaten.ts';
 import { useBuendel } from '../buendel.tsx';
 import { useLeisteAus } from '../leisteKontext.tsx';
 import { hashZu } from '../router.ts';
@@ -26,7 +27,7 @@ export function Sorten() {
   const { buendel, liest } = useBuendel();
   const [ansicht, setAnsicht] = useState<Ansicht>({ art: 'liste' });
   const [filter, setFilter] = useState<SaatgutFilter>('vorraetig');
-  const liste = buendel ? saatgutListe(buendel.teile) : [];
+  const liste = buendel ? saatgutListe(buendel.teile, jetzt()) : [];
   // in den Abläufen ohne Leiste unten (Entscheid 0025, wie Säen ab Schritt 2)
   useLeisteAus(ansicht.art !== 'liste');
   const zurListe = () => {
@@ -70,9 +71,10 @@ export function Sorten() {
           optionen={[
             { wert: 'vorraetig', titel: `Vorrätig · ${zahlen.vorraetig}` },
             { wert: 'ohne_foto', titel: `Ohne Foto · ${zahlen.ohneFoto}` },
+            { wert: 'aufgebraucht', titel: `Aufgebraucht · ${zahlen.aufgebraucht}` },
           ]}
           gewaehlt={[filter]}
-          onWahl={(w) => setFilter(w === 'ohne_foto' ? 'ohne_foto' : 'vorraetig')}
+          onWahl={(w) => setFilter(w === 'ohne_foto' || w === 'aufgebraucht' ? w : 'vorraetig')}
         />
       ) : null}
       {liste.length > 0 && gruppen.length === 0 ? <p>Keine Sorte in diesem Filter.</p> : null}

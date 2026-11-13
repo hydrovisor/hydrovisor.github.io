@@ -278,11 +278,8 @@ export function SaeenSortenwahl({
             d?.packung
               ? {
                   begriff: 'Packung',
+                  // Plan 215 A10: kein Bestand in Korn mehr (Tims Wunsch, Entscheid 0025)
                   wert: d.packung.kaufdatum ? `gekauft ${datumCh(d.packung.kaufdatum)}` : 'erfasst',
-                  erklaerung:
-                    d.packung.bestandKorn !== undefined
-                      ? `Bestand ${String(d.packung.bestandKorn)} Korn`
-                      : 'Bestand nicht erfasst',
                 }
               : { begriff: 'Packung', offen: 'keine Packung erfasst' },
             d?.bezug ? { begriff: 'Bezug', wert: d.bezug } : { begriff: 'Bezug', offen: 'keine Angabe' },

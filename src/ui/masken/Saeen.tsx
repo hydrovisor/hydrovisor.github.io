@@ -113,7 +113,11 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
     return (ausPlatz ?? anlagenAus(teile)[0])?.id;
   }, [teile, scanBox?.platzId, zielOrt?.platzId]);
 
-  const sorten = useMemo(() => (teile ? sortenAuswahl(teile) : []), [teile]);
+  // Plan 215: nur vorrätige Sorten; aufgebrauchte holt «Wieder vorrätig» unter Saatgut zurück
+  const sorten = useMemo(() => (teile ? sortenAuswahl(teile, jetzt()) : []), [teile]);
+  const alleAufgebraucht =
+    sorten.length === 0 &&
+    ((teile?.['sorte'] ?? []) as { gueltig_bis?: string | null }[]).some((z) => !z.gueltig_bis);
   const ziele = useMemo(() => (teile && anlageId ? zielgefaesse(teile, anlageId) : []), [teile, anlageId]);
   const zielPlatzId = zielWahl ?? ziele.find((z) => z.platzId === zielOrt?.platzId)?.platzId;
   const zielG = ziele.find((z) => z.platzId === zielPlatzId);
@@ -396,7 +400,19 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
           <p className="hv-saeen-zeile">Für {zielG.kennung} · gerechnet am Umsetztag der Sorte</p>
         ) : null}
         {/* #174: ohne Sorten (Seed ohne W0) nicht nur eine leere Liste mit gesperrtem «Weiter» */}
-        {teile && sorten.length === 0 ? (
+        {teile && alleAufgebraucht ? (
+          <Notice
+            title="Alle Sorten aufgebraucht"
+            action={
+              <a className="hv-btn hv-btn-secondary hv-btn-compact" href={hashZu({ name: 'sorten' })}>
+                Zum Saatgut
+              </a>
+            }
+          >
+            Unter Saatgut holst du eine Sorte mit «Wieder vorrätig» zurück.
+          </Notice>
+        ) : null}
+        {teile && sorten.length === 0 && !alleAufgebraucht ? (
           <Notice
             title="Noch keine Sorten"
             action={

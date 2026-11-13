@@ -1,6 +1,7 @@
 // Detail einer Sorte (UC4; Konzept 11.3 «Tim sieht jeden ergänzten Wert mit Herkunft», R1.3, R12.3; Plan 37).
 // Werte je anwendbarer Phase mit Herkunft und Verlässlichkeit, Saatempfehlungen, Packungen; «Recherche starten»,
-// solange die Sorte unvollständig ist.
+// solange die Sorte unvollständig ist. Karte «Vorrat» mit «Kein Saatgut mehr» und «Wieder vorrätig» (Issue #215,
+// Plan 215 A11).
 import { useState } from 'react';
 import { rechercheStarten } from '../../daten/ki.ts';
 import { neueClientId } from '../../daten/schreiben.ts';
@@ -14,6 +15,14 @@ import {
   type TuetenfotoSeite,
   type TuetenfotoZeile,
 } from '../../domain/sorten/tuetenfoto.ts';
+import {
+  vorratAus,
+  vorratVerlauf,
+  vorratVorgang,
+  type VorratEreignisZeile,
+  type VorratTyp,
+} from '../../domain/sorten/vorrat.ts';
+import { kalendertag, ZEITZONE } from '../../domain/zeit.ts';
 import { APP_VERSION } from '../../konstanten.ts';
 import { Button } from '../bausteine/Button.tsx';
 import { Card } from '../bausteine/Card.tsx';
@@ -23,7 +32,7 @@ import { StatusBadge } from '../bausteine/StatusBadge.tsx';
 import { useBuendel } from '../buendel.tsx';
 import { RechercheHinweis } from '../RechercheHinweis.tsx';
 import { hashZu } from '../router.ts';
-import { fotoVorgangSenden, tuetenfotoHochladen } from '../saatgutSpeichern.ts';
+import { fotoVorgangSenden, tuetenfotoHochladen, vorratSenden } from '../saatgutSpeichern.ts';
 import { TuetenfotoAnzeige } from '../TuetenfotoAnzeige.tsx';
 import '../sorten.css';
 
@@ -147,6 +156,103 @@ function TuetenfotoKarte({ sorteId }: { sorteId: string }) {
   );
 }
 
+/** Uhr der Oberfläche (G2: Date.now() nur hier) */
+const jetzt = () => new Date(Date.now());
+
+/** Kalendertag in Zürich als «TT.MM.JJJJ» (G2) */
+function tagAnzeige(zeitpunkt: string): string {
+  const [j, m, t] = kalendertag(new Date(zeitpunkt), ZEITZONE).split('-');
+  return `${t ?? ''}.${m ?? ''}.${j ?? ''}`;
+}
+
+const VORRAT_TEXT: Record<VorratTyp, string> = {
+  aufgebraucht: 'Kein Saatgut mehr',
+  vorraetig: 'Wieder vorrätig',
+};
+
+/**
+ * Card «Vorrat» (Plan 215): Status als Wort, «Kein Saatgut mehr» bzw. «Wieder vorrätig» schreibt sofort ein Ereignis
+ * über schreiben() (umkehrbar, ohne Rückfrage). Der Knopf bleibt gesperrt, bis das Bündel die neue Zeile zeigt, damit
+ * kein doppeltes Ereignis entsteht; scheitert das Schreiben, sendet «Speichern wiederholen» denselben Vorgang (TO2).
+ */
+function VorratKarte({ sorteId }: { sorteId: string }) {
+  const { buendel } = useBuendel();
+  const teile = buendel?.teile ?? {};
+  const ereignisse = (teile['vorrat_ereignis'] ?? []) as VorratEreignisZeile[];
+  const nun = jetzt();
+  const stand = vorratAus(teile, sorteId, nun);
+  const verlauf = vorratVerlauf(ereignisse, sorteId, nun);
+  const [laeuft, setLaeuft] = useState(false);
+  const [meldung, setMeldung] = useState<string>();
+  const [offen, setOffen] = useState<Vorgang>();
+  const [erwartet, setErwartet] = useState<string>();
+  const wartetAufBuendel = erwartet !== undefined && !ereignisse.some((e) => e.client_id === erwartet);
+  const gesperrt = laeuft || wartetAufBuendel;
+
+  async function senden(vorgang: Vorgang, clientId: string) {
+    setLaeuft(true);
+    setMeldung(undefined);
+    try {
+      const r = await vorratSenden(vorgang);
+      if (r === 'gespeichert') {
+        setOffen(undefined);
+        setErwartet(clientId);
+        return;
+      }
+      setOffen(r.wiederholbar ? vorgang : undefined);
+      setMeldung(r.meldung);
+    } finally {
+      setLaeuft(false);
+    }
+  }
+
+  function erfassen(typ: VorratTyp) {
+    const clientId = neueClientId();
+    void senden(vorratVorgang({ sorteId, typ, clientId, jetzt: jetzt() }), clientId);
+  }
+
+  function wiederholen() {
+    const schritt = offen?.[0];
+    if (!offen || schritt?.art !== 'neu') return;
+    void senden(offen, schritt.felder.client_id);
+  }
+
+  return (
+    <Card title="Vorrat">
+      <p>
+        <StatusBadge tone={stand.vorraetig ? 'info' : 'neutral'}>
+          {stand.vorraetig ? 'Vorrätig' : 'Aufgebraucht'}
+        </StatusBadge>
+      </p>
+      {!stand.vorraetig ? (
+        <p>Säen zeigt diese Sorte nicht. Eine neue Packung macht sie wieder vorrätig.</p>
+      ) : null}
+      <Button
+        variant="secondary"
+        block
+        disabled={gesperrt}
+        onClick={() => erfassen(stand.vorraetig ? 'aufgebraucht' : 'vorraetig')}
+      >
+        {stand.vorraetig ? 'Kein Saatgut mehr' : 'Wieder vorrätig'}
+      </Button>
+      {gesperrt ? <p role="status">Wird gespeichert</p> : null}
+      {meldung ? <Notice tone="danger">{meldung}</Notice> : null}
+      {offen && !laeuft ? (
+        <Button variant="secondary" onClick={wiederholen}>
+          Speichern wiederholen
+        </Button>
+      ) : null}
+      {verlauf.length > 0 ? (
+        <ul className="hv-sorte-werte" aria-label="Verlauf">
+          {verlauf.map((v, i) => (
+            <li key={`${v.giltAb}-${String(i)}`}>{`${tagAnzeige(v.giltAb)} · ${VORRAT_TEXT[v.typ]}`}</li>
+          ))}
+        </ul>
+      ) : null}
+    </Card>
+  );
+}
+
 export function Sorte({ sorte }: { sorte: string }) {
   const { buendel } = useBuendel();
   const [recherche, setRecherche] = useState<RechercheErgebnis | 'laeuft'>();
@@ -180,6 +286,7 @@ export function Sorte({ sorte }: { sorte: string }) {
             </StatusBadge>{' '}
             {d.zeile.pruefauftraege} {d.zeile.pruefauftraege === 1 ? 'Prüfauftrag' : 'Prüfaufträge'}
           </p>
+          <VorratKarte sorteId={sorte} />
           <TuetenfotoKarte sorteId={sorte} />
           {!d.zeile.vollstaendig ? (
             <Button

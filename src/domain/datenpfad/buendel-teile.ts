@@ -66,6 +66,8 @@ export const BUENDEL_TEILE: readonly Buendelteil[] = [
   tabelle('quelle'),
   // Plan 207: Tütenfotos je Sorte und Seite (Anzeige über signierte Links)
   tabelle('tuetenfoto', { ohneStorno: true }),
+  // Plan 215: Vorrat-Ereignisse (Kein Saatgut mehr, Wieder vorrätig); stornierte Zeilen braucht der Stand nicht
+  tabelle('vorrat_ereignis', { ohneStorno: true }),
   // Betrieb
   tabelle('satz', { ohneStorno: true }),
   tabelle('pflanzung', { ohneStorno: true }),

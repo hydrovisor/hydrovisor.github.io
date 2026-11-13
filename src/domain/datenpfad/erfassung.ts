@@ -22,6 +22,7 @@ export type Erfassungstabelle =
   | 'eigene_aufgabe'
   | 'ki_feldprotokoll'
   | 'tuetenfoto'
+  | 'vorrat_ereignis'
   | 'etikett_aufruf'
   | 'anlage'
   | 'bereich'
@@ -44,6 +45,8 @@ export const MIT_ZEITACHSE: ReadonlySet<Erfassungstabelle> = new Set<Erfassungst
   'pflanzung',
   'reservierung',
   'aufschub',
+  // Plan 215 A2: Erfassungstabelle mit Zeitachse nach 8.1 Regel 3
+  'vorrat_ereignis',
 ]);
 
 /** Tabellen mit gilt_ab: die mit Zeitachse und k_faktor (ohne client_zeit; Runde 1, Befund 3) */
