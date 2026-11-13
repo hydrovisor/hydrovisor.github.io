@@ -108,6 +108,18 @@ async function saatgutOeffnen(page: Page): Promise<void> {
 
 const schrittAktiv = (page: Page) => page.locator('ol[aria-label="Schritte"] [aria-current="step"]');
 
+// Leiste unten wie tests/e2e/leiste.spec.ts: nav «Hauptnavigation», Rahmen mit data-leiste (Plan 211 A1, #212)
+const leiste = (page: Page) => page.getByRole('navigation', { name: 'Hauptnavigation' });
+const rahmen = (page: Page) => page.locator('[data-leiste]');
+async function ohneLeiste(page: Page): Promise<void> {
+  await expect(rahmen(page)).toHaveAttribute('data-leiste', 'keine');
+  await expect(leiste(page)).toHaveCount(0);
+}
+async function mitLeisteSaatgut(page: Page): Promise<void> {
+  await expect(rahmen(page)).toHaveAttribute('data-leiste', 'saatgut');
+  await expect(leiste(page)).toBeVisible();
+}
+
 /** Vorderseite einer W0-Sorte im Detail ergänzen (Weg aus TF1-AK4) */
 async function vorderseiteImDetail(page: Page, sorteId: string): Promise<void> {
   await page.goto(`/#/sorten/${sorteId}`);
@@ -135,6 +147,7 @@ test('SG1-AK4 Saatgut zeigt Titel, Tüte erfassen, Fotos nachtragen, Filter, Gru
 
     await saatgutOeffnen(page);
     await expect(knopf(page, 'Tüte erfassen')).toBeVisible();
+    await mitLeisteSaatgut(page);
     await expect(nachtragenKnopf(page)).toBeVisible();
     await expect(page.getByRole('link', { name: 'Von Hand erfassen', exact: true })).toBeVisible();
     await expect(filter(page, VORRAETIG)).toHaveAttribute('aria-pressed', 'true');
@@ -243,6 +256,7 @@ test('SG1-AK5 Tüte erfassen mit Vorder- und Rückseite, unbekannte Sorte: Name 
 
     await knopf(page, 'Tüte erfassen').click();
     await expect(page.getByRole('heading', { name: 'Tüte erfassen', level: 1 })).toBeVisible();
+    await ohneLeiste(page);
     await expect(schrittAktiv(page)).toContainText('Vorderseite');
     await expect(knopf(page, 'Abbrechen')).toBeVisible();
     await bildschirm(page, testInfo, 'tuete-schritt-1');
@@ -397,6 +411,7 @@ test('SG1-AK7 Fotos nachtragen: 1 von n, Vorderseite gespeichert, Überspringen 
     await nachtragenKnopf(page).click();
     await expect(page.getByRole('heading', { name: 'Fotos nachtragen', level: 1 })).toBeVisible();
     await expect(zaehler(page, `1 von ${n}: ${genoveser.name}`)).toBeVisible();
+    await ohneLeiste(page);
     await expect(page.getByText(genoveser.nameDe, { exact: true })).toBeVisible();
     await expect(knopf(page, 'Überspringen')).toBeVisible();
     await ohneWaagrechtesScrollen(page);
@@ -415,6 +430,7 @@ test('SG1-AK7 Fotos nachtragen: 1 von n, Vorderseite gespeichert, Überspringen 
     await knopf(page, 'Beenden').click();
 
     await expect(page.getByRole('heading', { name: 'Saatgut', level: 1 })).toBeVisible();
+    await mitLeisteSaatgut(page);
     await expect(
       page.getByRole('button', { name: `Fotos nachtragen · ${n - 1} ohne Foto`, exact: true }),
     ).toBeVisible({
@@ -454,6 +470,7 @@ test('SG1-AK7 Rückseite optional und Ende «Fertig: 1 ergänzt, n−1 überspru
     expect(n).toBeGreaterThanOrEqual(2);
     await nachtragenKnopf(page).click();
     await expect(zaehler(page, `1 von ${n}: ${genoveser.name}`)).toBeVisible();
+    await ohneLeiste(page);
     await fotoWaehlen(page, 'Vorderseite', await testbild(page, '#558b2f', 'Vorne'));
     await expect(page.getByText('Vorderseite gespeichert')).toBeVisible({ timeout: 15_000 });
     await fotoWaehlen(page, 'Rückseite', await testbild(page, '#00838f', 'Hinten'));
