@@ -146,7 +146,12 @@ test('UC1-AK5 zweite echte Anlage T anlegen: R unverändert, Heute gruppiert ers
   // eine echte Anlage mit Demo X und Test Y: keine Gruppen
   await expect(page.getByRole('heading', { level: 2, name: /^Anlage / })).toHaveCount(0);
 
-  await page.getByRole('link', { name: 'Anlage öffnen' }).click();
+  // seit N1 (Entscheid 0025) über die Leiste unten: «Anlagen», dann die Anlage-Maske von R
+  await page
+    .getByRole('navigation', { name: 'Hauptnavigation' })
+    .getByRole('link', { name: 'Anlagen', exact: true })
+    .click();
+  await page.getByRole('link', { name: 'Anlage R öffnen', exact: true }).click();
   await page.getByRole('link', { name: 'Anlage anlegen' }).click();
   await expect(page.getByRole('heading', { name: 'Anlage anlegen', level: 1 })).toBeVisible();
   await page.getByLabel('Name', { exact: true }).fill('Zweites Regal');
