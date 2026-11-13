@@ -99,12 +99,15 @@ export function SaatgutErfassen({ onSchliessen }: { onSchliessen: () => void }) 
   const artId = artVonHand ? f.artId : (f.artId ?? artVorschlagen(arten, kiArt));
   const kulturtyp = f.kulturtyp ?? kulturtypVorschlagen(sorten, artId);
   const name = (f.tuete.name ?? '').trim();
+  // die eigene, eben angelegte Sorte ist keine «vorhandene» (Prüferbefund 1, Runde 1): sonst verdrängt «Packung zu …»
+  // nach einem Teilerfolg das Fortsetzen von «Sorte speichern»
+  const andere = sorten.filter((s) => s.sorte_id !== ids.sorteId);
   const erkanntId = artVonHand
     ? artId && name
-      ? vorhandeneSorte(sorten, name, artId)
+      ? vorhandeneSorte(andere, name, artId)
       : undefined
-    : sorteErkennen(sorten, arten, { name, art: kiArt })?.sorteId;
-  const erkannt = sorten.find((s) => s.sorte_id === erkanntId && s.gueltig_bis === null);
+    : sorteErkennen(andere, arten, { name, art: kiArt })?.sorteId;
+  const erkannt = andere.find((s) => s.sorte_id === erkanntId && s.gueltig_bis === null);
   const erkanntGemuese = arten.find((a) => a.art_id === erkannt?.art_id)?.name_de;
   const formular: SortenFormular = { ...f, artId, kulturtyp };
   const fehlerZu = (feld: string) => fehler.find((x) => x.feld === feld)?.text;
@@ -247,7 +250,7 @@ export function SaatgutErfassen({ onSchliessen }: { onSchliessen: () => void }) 
     <main className="hv-seite">
       <header className="hv-seite-kopf">
         <h1 className="hv-seite-titel">Tüte erfassen</h1>
-        <Button variant="ghost" size="compact" onClick={onSchliessen}>
+        <Button variant="ghost" size="compact" disabled={sendet || liest} onClick={onSchliessen}>
           {schritt === 'fertig' ? 'Schliessen' : 'Abbrechen'}
         </Button>
       </header>

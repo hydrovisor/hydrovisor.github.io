@@ -95,14 +95,17 @@ export function SaatgutNachtragen({
     if (!offen) return;
     setLaeuft(true);
     setMeldung(undefined);
-    await senden(offen);
-    setLaeuft(false);
+    try {
+      await senden(offen);
+    } finally {
+      setLaeuft(false);
+    }
   }
 
   const kopf = (
     <header className="hv-seite-kopf">
       <h1 className="hv-seite-titel">Fotos nachtragen</h1>
-      <Button variant="ghost" size="compact" onClick={onSchliessen}>
+      <Button variant="ghost" size="compact" disabled={laeuft} onClick={onSchliessen}>
         Beenden
       </Button>
     </header>

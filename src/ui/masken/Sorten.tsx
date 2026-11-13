@@ -84,7 +84,7 @@ export function Sorten() {
           <ul className="hv-sorten-liste">
             {g.sorten.map((s) => (
               <li key={s.sorteId}>
-                <SaatgutEintrag zeile={s} />
+                <SaatgutEintrag key={s.fotoPfad ?? 'ohne'} zeile={s} />
               </li>
             ))}
           </ul>

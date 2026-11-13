@@ -420,7 +420,7 @@ button.hv-tile { cursor: pointer; touch-action: manipulation; }
 .hv-sortenzeile-bild svg { width: var(--size-icon); height: var(--size-icon); }
 .hv-sortenzeile-bild-foto { border-style: solid; border-color: var(--line); background: var(--surface-raised); }
 .hv-sortenzeile-bild img { display: block; width: 100%; height: 100%; object-fit: cover; }
-a.hv-sortenzeile { text-decoration: none; }
+a.hv-sortenzeile, a.hv-sortenzeile:hover { color: var(--ink); text-decoration: none; }
 .hv-sortenzeile-text { display: flex; flex: 1 1 auto; flex-direction: column; gap: 2px; min-width: 0; }
 .hv-sortenzeile-titel { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); font-weight: 600; overflow-wrap: anywhere; }
 .hv-sortenzeile-zusatz { display: flex; align-items: center; gap: var(--space-1); font-size: var(--text-small-size); line-height: var(--text-small-line); color: var(--ink-muted); }
