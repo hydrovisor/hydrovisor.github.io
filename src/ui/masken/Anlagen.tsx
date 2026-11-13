@@ -1,6 +1,16 @@
-// Anlagen (Entscheid 0025, Plan 212): Hauptseite der Leiste unten mit Wahl Indoor oder Outdoor und je Anlage einer Karte
-// mit «Anlage <Kürzel> öffnen». Die Belegung je Ebene und Box folgt mit Paket N4 (Plan A3).
-import { anlagenAus, plaetzeAus, type AnlageZeile, type Teile } from '../../domain/anlage/teile.ts';
+// Anlagen (Entscheid 0025, Plan 212 und 216): Hauptseite der Leiste unten mit Wahl Indoor oder Outdoor; je Anlage eine
+// Karte mit den Ebenen und ihren Gefässen (belegte, reservierte und freie Töpfe), den Anzuchtboxen mit Inhalt und der
+// Messstelle. Ein Tipp öffnet Gefäss oder Box, W die Messmaske; der Fuss öffnet das Regalbild der Anlage.
+import { useMemo, type ReactNode } from 'react';
+import {
+  anlagenBelegung,
+  type BoxBelegung,
+  type GefaessBelegung,
+  type SortenAnzahl,
+  type TopfZahlen,
+} from '../../domain/anlage/belegung.ts';
+import { anlagenAus, type AnlageZeile, type Teile } from '../../domain/anlage/teile.ts';
+import { Belegungszeile } from '../bausteine/Belegungszeile.tsx';
 import { Card } from '../bausteine/Card.tsx';
 import { Choice } from '../bausteine/Choice.tsx';
 import { useBuendel } from '../buendel.tsx';
@@ -15,19 +25,111 @@ function standortVon(a: AnlageZeile): Standort {
   return a.standort === 'outdoor' ? 'outdoor' : 'indoor';
 }
 
-/** «13 Gefässe · 4 Anzuchtorte · Messstelle W» aus den aktiven Plätzen */
-function inhalt(teile: Teile, anlageId: string): string {
-  const plaetze = plaetzeAus(teile, anlageId);
-  const zahl = (rolle: string) => plaetze.filter((p) => p.rolle === rolle).length;
-  const g = zahl('gefaess');
-  const a = zahl('anzuchtort');
-  const w = plaetze.filter((p) => p.rolle === 'messstelle').map((p) => p.kennung);
-  const teileText = [
-    `${String(g)} ${g === 1 ? 'Gefäss' : 'Gefässe'}`,
-    `${String(a)} ${a === 1 ? 'Anzuchtort' : 'Anzuchtorte'}`,
-    ...w.map((k) => `Messstelle ${k}`),
-  ];
-  return teileText.join(' · ');
+/** «3 belegt · 1 reserviert · 5 frei», Teile mit 0 entfallen; alles 0: «0 frei» */
+function topfText(z: TopfZahlen): string {
+  const teile = [
+    z.belegt > 0 ? `${String(z.belegt)} belegt` : '',
+    z.reserviert > 0 ? `${String(z.reserviert)} reserviert` : '',
+    z.frei > 0 ? `${String(z.frei)} frei` : '',
+  ].filter(Boolean);
+  return teile.length > 0 ? teile.join(' · ') : '0 frei';
+}
+
+const sortenText = (s: readonly SortenAnzahl[]) =>
+  s.length > 0 ? s.map((x) => `${x.sorte} ${String(x.anzahl)}`).join(' · ') : undefined;
+
+function gefaessZeile(g: GefaessBelegung): string {
+  if (g.ohneGefaess) return 'kein Gefäss';
+  if (g.loecher === 0) return `${String(g.pflanzen)} ${g.pflanzen === 1 ? 'Pflanze' : 'Pflanzen'}`;
+  return topfText(g);
+}
+
+function boxZeile(b: BoxBelegung): string {
+  return `Anzucht ${b.typ} · ${b.belegt > 0 ? `${String(b.belegt)} von ${String(b.platzzahl)}` : 'leer'}`;
+}
+
+function AnlageKarte({ anlage, teile }: { anlage: AnlageZeile; teile: Teile }) {
+  const b = useMemo(() => anlagenBelegung(teile, anlage.id), [teile, anlage.id]);
+  const gruppe = (titel: string, summe: string | undefined, kinder: ReactNode) => (
+    <section className="hv-anlagen-gruppe" key={titel}>
+      <div className="hv-anlagen-gruppe-kopf">
+        <h4>{titel}</h4>
+        {summe ? <span className="hv-anlagen-gruppe-summe">{summe}</span> : null}
+      </div>
+      <ul aria-label={titel}>{kinder}</ul>
+    </section>
+  );
+  return (
+    <Card
+      title={`${anlage.kuerzel} · ${anlage.name}`}
+      {...(DATENART[anlage.datenart] ? { meta: DATENART[anlage.datenart] } : {})}
+      footer={
+        <a
+          className="hv-btn hv-btn-secondary hv-btn-block"
+          href={hashZu({ name: 'anlage', kuerzel: anlage.kuerzel })}
+        >
+          {`Anlage ${anlage.kuerzel} öffnen`}
+        </a>
+      }
+    >
+      <p className="hv-anlagen-summe">{`Töpfe: ${topfText(b)}`}</p>
+      {b.ebenen.map((e) =>
+        gruppe(
+          e.titel,
+          topfText(e),
+          e.gefaesse.map((g) => {
+            const zusatz = sortenText(g.sorten);
+            return (
+              <li key={g.code}>
+                <Belegungszeile
+                  kennung={g.kennung}
+                  zeile={gefaessZeile(g)}
+                  punkte={g.punkte}
+                  href={hashZu({ name: 'gefaess', code: g.code })}
+                  {...(zusatz ? { zusatz } : {})}
+                  {...(g.badge ? { badge: g.badge } : {})}
+                />
+              </li>
+            );
+          }),
+        ),
+      )}
+      {b.boxen.length > 0
+        ? gruppe(
+            'Anzuchtboxen',
+            undefined,
+            b.boxen.map((x) => {
+              const zusatz = sortenText(x.sorten);
+              return (
+                <li key={x.code}>
+                  <Belegungszeile
+                    kennung={x.kennung}
+                    zeile={boxZeile(x)}
+                    href={hashZu({ name: 'gefaess', code: x.code })}
+                    {...(zusatz ? { zusatz } : {})}
+                  />
+                </li>
+              );
+            }),
+          )
+        : null}
+      {b.messstellen.length > 0
+        ? gruppe(
+            'Messstelle',
+            undefined,
+            b.messstellen.map((w) => (
+              <li key={w.code}>
+                <Belegungszeile
+                  kennung={w.kennung}
+                  zeile="Leitungswasser"
+                  href={hashZu({ name: 'messen', code: w.code })}
+                />
+              </li>
+            )),
+          )
+        : null}
+    </Card>
+  );
 }
 
 export function Anlagen({ standort = 'indoor' }: { standort?: Standort }) {
@@ -73,20 +175,7 @@ export function Anlagen({ standort = 'indoor' }: { standort?: Standort }) {
         <ul className="hv-anlagen-liste" aria-label={standort === 'outdoor' ? 'Outdoor' : 'Indoor'}>
           {anlagen.map((a) => (
             <li key={a.id}>
-              <Card
-                title={`${a.kuerzel} · ${a.name}`}
-                {...(DATENART[a.datenart] ? { meta: DATENART[a.datenart] } : {})}
-                footer={
-                  <a
-                    className="hv-btn hv-btn-secondary hv-btn-block"
-                    href={hashZu({ name: 'anlage', kuerzel: a.kuerzel })}
-                  >
-                    {`Anlage ${a.kuerzel} öffnen`}
-                  </a>
-                }
-              >
-                {teile ? <p>{inhalt(teile, a.id)}</p> : null}
-              </Card>
+              <AnlageKarte anlage={a} teile={teile} />
             </li>
           ))}
         </ul>
