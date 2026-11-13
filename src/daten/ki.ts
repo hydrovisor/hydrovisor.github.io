@@ -25,6 +25,19 @@ export async function fotoHochladen(
   }
 }
 
+/** Gültigkeit eines signierten Links für die Anzeige eines Tütenfotos (Konzept 11.3, Plan 207) */
+export const FOTO_LINK_SEKUNDEN = 60;
+
+/** signierter Link (60 s) auf ein Tütenfoto im privaten Bucket; ohne Verbindung oder bei Fehler undefined (A7) */
+export async function fotoLink(pfad: string): Promise<string | undefined> {
+  try {
+    const { data, error } = await supabase.storage.from(BUCKET).createSignedUrl(pfad, FOTO_LINK_SEKUNDEN);
+    return error || !data?.signedUrl ? undefined : data.signedUrl;
+  } catch {
+    return undefined;
+  }
+}
+
 async function mitFrist<T>(ms: number, lauf: (signal: AbortSignal) => Promise<T>): Promise<T | 'zeit'> {
   const steuerung = new AbortController();
   let uhr: ReturnType<typeof setTimeout> | undefined;

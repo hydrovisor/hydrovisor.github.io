@@ -64,6 +64,8 @@ export const BUENDEL_TEILE: readonly Buendelteil[] = [
   // Plan 37: Maske Sorten (Vollständigkeit je Sorte, Quellen der Werte mit Herkunft)
   sicht('v_vollstaendigkeit', ['sorte_id']),
   tabelle('quelle'),
+  // Plan 207: Tütenfotos je Sorte und Seite (Anzeige über signierte Links)
+  tabelle('tuetenfoto', { ohneStorno: true }),
   // Betrieb
   tabelle('satz', { ohneStorno: true }),
   tabelle('pflanzung', { ohneStorno: true }),

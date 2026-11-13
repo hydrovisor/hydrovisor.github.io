@@ -19,7 +19,7 @@ import { Kulturform, type KulturformHerkunft } from '../bausteine/Kulturform.tsx
 import { HakenSymbol, PfeilSymbol, Sortenzeile } from '../bausteine/Sortenzeile.tsx';
 import { Stufe } from '../bausteine/Stufe.tsx';
 import { GemueseKachel } from '../bausteine/Tile.tsx';
-import { Tuetenfoto } from '../bausteine/Tuetenfoto.tsx';
+import { TuetenfotoAnzeige } from '../TuetenfotoAnzeige.tsx';
 
 export type SortenAnsicht =
   | { typ: 'gemuese' }
@@ -224,7 +224,7 @@ export function SaeenSortenwahl({
           <PfeilSymbol richtung="links" className="hv-btn-icon" />
           {zurueck}
         </Button>
-        <Tuetenfoto />
+        <TuetenfotoAnzeige sorteId={s.sorteId} />
         <div className="hv-saeen-sortekopf">
           <p className="hv-saeen-sortegemuese">
             {s.artName ?? s.artId} · {KULTURTYP[s.kulturtyp] ?? s.kulturtyp}
