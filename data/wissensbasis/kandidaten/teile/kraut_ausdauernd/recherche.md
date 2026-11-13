@@ -313,3 +313,58 @@ Gesucht nur: `pw.allium_schoenoprasum.keimung.dauer`, `pw.allium_schoenoprasum.a
 |---|---|---|---|
 | Schnittlauch | keimung | dauer | unverändert: kein Kandidat in Validatorform; offen Salve Regina 8 (Einzelwert) |
 | Schnittlauch | anzucht | dauer | unverändert: kein Kandidat in Validatorform; offen Salve Regina 7 (Einzelwert); Tower Garden «about two weeks after sprouting» nicht prüfbar (Cloudflare) |
+
+## Runde 10 (13.11.2026)
+
+Gesucht nur: `pw.allium_schoenoprasum.keimung.dauer`, `pw.allium_schoenoprasum.anzucht.dauer`, nach Entscheid 0022 auch aus Anbauquellen (Tüte, Katalog, Kulturanleitung, Beratung, Erde oder Substrat), Klasse höchstens C. Alle neuen Zeilen in `profilwert_offen.csv` (keine Quelle nennt einen typischen Wert neben dem Bereich), neue Quellen in `quelle.csv` mit `anbaumethode = keine`.
+
+### Suchweg
+
+- Websuche deutsch: «Schnittlauch Aussaat Keimdauer Tage Pflanzung Wochen nach Aussaat Kulturanleitung», «Schnittlauch Twiggy Saatgut Keimdauer», Bingenheimer, Sativa, Zollinger, «Topfkräuter Schnittlauch Kulturdauer … LWG».
+- Websuche englisch: «chives transplants weeks from seeding to transplant days to emergence extension», «chives culture sheet plug crop time weeks germination days», «chives seedlings ready to transplant weeks after sowing extension».
+- Gelesen (curl und pdftotext bzw. WebFetch): DLR Rheinhessen-Nahe-Hunsrück Merkblatt Schnittlauch 2024/2025 (PDF), Saatgutbibliothek Hohenheim «Schnittlauch fertig» (PDF), Ball «Vegetable & Herb Plug Growing Chart» (PDF 2009, Zeile Chives mit `-raw` gelesen, Fussnoten Stage 1 bis 4), Ball Australia GrowerFacts «Chives Onion» (PDF 2020), Johnny's «Chives – Key Growing Information», Fruition Seeds «Organic Chives», PlantVillage (Penn State) «Chives», Hornbach Schweiz Kiepenkerl «Staro», Sativa «Polyvit», Simply Hydroponics (Absatz «Propagation» erneut gelesen, Zitat ergänzt bis «small pots»).
+
+### Neue Kandidaten (alle `profilwert_offen.csv`, Klasse C)
+
+| zeile_id | Quelle | Wert wörtlich | grund |
+|---|---|---|---|
+| keimung.dauer#4 | simplyhydro-schnittlauch | «usually within eight to ten days» | Bereich ohne typ (früher #1, nur wegen Hydroponik verworfen) |
+| keimung.dauer#5 | gardyn-schnittlauch | «Days to Sprout: 7-21» | Bereich ohne typ (früher #2, verworfen wegen fehlender Hydroponik und Katalogähnlichkeit, beides nach 0022 zulässig) |
+| keimung.dauer#6 | dlr-rnh-schnittlauch-2024 | «Keimdauer 10-25 Tage» | Bereich ohne typ |
+| keimung.dauer#7 | hohenheim-saatgutbibliothek-schnittlauch | «Die Keimung dauert in der Regel 10–20 Tage» | Bereich ohne typ |
+| keimung.dauer#8 | johnnys-schnittlauch-key-growing (katalog) | «7-14 days at 65–70°F» | Bereich ohne typ |
+| keimung.dauer#9 | kiepenkerl-staro-hornbach (katalog) | «Keimdauer 14 Tage - 21 Tage» | Bereich ohne typ |
+| keimung.dauer#10 | fruition-schnittlauch (katalog) | «Days to Germination: 7-14» | Bereich ohne typ |
+| keimung.dauer#11 | plantvillage-psu-schnittlauch | «emerging after about 7 days» | Einzelwert |
+| keimung.dauer#12 | ball-growerfacts-schnittlauch-2020 | «After Stem and cotyledon emergence (7 days)» | Einzelwert |
+| keimung.dauer#13 | ball-plugchart-2009 (Tray 2-2.5 cm) | Stage 1 «4-8», Stage 2 «5-7» Tage | Stufen nicht deckungsgleich mit Auflaufen |
+| anzucht.dauer#4 | simplyhydro-schnittlauch | «eight to ten days» … «After four to six weeks the young plants» | Wochen ab Saat und Keimdauer je ohne typ |
+| anzucht.dauer#5 | dlr-rnh-schnittlauch-2024 | ET Aussaat 15.01. Pflanzung 20.03. «64» Tage, 15.02./15.04. «59» Tage; Keimdauer 10-25 | Tage ab Saat (Winteranzucht), Keimdauer ohne typ |
+| anzucht.dauer#6 | dlr-rnh-schnittlauch-2024 | «Dauer 4-8 Wochen» (Erdpresstopf) | Wochen ab Saat, ohne typ |
+| anzucht.dauer#7 | ball-plugchart-2009 | Stage 3 «21-35», Stage 4 «7» Tage, Total «7-8» Wochen | Stufensumme bzw. Wochen ab Saat, ohne typ |
+| anzucht.dauer#8 | plantvillage-psu-schnittlauch | «emerging after about 7 days» … «about 4 weeks old» | Einzelwerte |
+| anzucht.dauer#9 | fruition-schnittlauch | «Indoors, ~4 weeks before last frost» | Bezug Frosttermin, Keimdauer 7-14 |
+| anzucht.dauer#10 | johnnys-schnittlauch-key-growing | «Start seeds in flats 6-8 weeks before the last frost» | Bezug Frosttermin, Keimdauer 7-14 |
+
+Hinweise für den Lead: Die Keimangaben liegen zwischen 7 und 25 Tagen; die meisten Kataloge nennen 7-14 oder 14-21 Tage. Für die Anzucht nennen Ball (Tray 2-2.5 cm, also Würfelgrösse) 7-8 Wochen ab Saat, Simply Hydroponics 4-6 Wochen, PlantVillage etwa 4 Wochen, DLR 4-8 Wochen bzw. 59-64 Tage (Winter). Die Differenz zur Keimdauer derselben Quelle bildet der Lead. Die Quellenzeile `gardyn-schnittlauch` in `quelle.csv` steht noch auf `verworfen` (zweimal vorhanden); der Koordinator muss sie für #5 neu prüfen lassen.
+
+### Verworfen in Runde 10
+
+| Quelle | Grund |
+|---|---|
+| gartenjournal.net «Schnittlauch säen» («nach etwa 14 Tagen») | Ratgeberseite ohne erkennbare Quelle, schon in Runde 7 verworfen |
+| Sativa «Schnittlauch Polyvit» | nur Monatsbalken (Anzucht, Pflanzung), keine Tage |
+| Bingenheimer Saatgut (Schnittlauch-Seite) | Bot-Schutz (Anubis, «Access Denied») |
+| Renee's Garden über gertens.com («14 – 21 days» laut Suchauszug) | HTTP 403, nicht prüfbar |
+| Lettuce Grow «Purly Chives» | verkauft Jungpflanzen, keine Keim- oder Anzuchtdauer auf der Seite |
+| UMass «seedcropchart_ball-ua» | Datei ist HTML statt PDF, nicht lesbar |
+| Harvest to Table, The Garden Shop (Irland), NParks Singapur (nur Suchauszüge) | Ratgeberseiten ohne erkennbare Quelle bzw. Umsetzen nur nach Höhe |
+| Salve Regina, Tower Garden | nicht prüfbar (Quellenprüfung «nicht_gefunden» bzw. Cloudflare), nicht wiederholt |
+| Zollinger, Hild | keine Schnittlauch-Kulturangaben gefunden |
+
+### Lückenliste nach Runde 10
+
+| Art | Phase | Grösse | Stand |
+|---|---|---|---|
+| Schnittlauch | keimung | dauer | kein Kandidat in Validatorform (keine Quelle mit typischem Wert); 10 neue offene Kandidaten (7-25 Tage) für den Entscheid des Lead nach 0018 und 0022 |
+| Schnittlauch | anzucht | dauer | kein Kandidat in Validatorform; 7 neue offene Kandidaten (Wochen oder Tage ab Saat mit Keimdauer derselben Quelle) |
