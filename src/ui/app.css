@@ -36,12 +36,12 @@ body {
 }
 
 html:has(.hv-rahmen-leiste) {
-  scroll-padding-bottom: calc(var(--size-touch-regal) + env(safe-area-inset-bottom) + var(--space-4));
+  scroll-padding-bottom: calc(var(--size-touch-regal) + 1px + env(safe-area-inset-bottom) + var(--space-4));
 }
 
 html:has(.hv-rahmen-leiste .hv-heute-fuss):not(:has(.hv-block)) {
   scroll-padding-bottom: calc(
-    2 * var(--size-touch-regal) + 2 * var(--space-2) + var(--space-4) + env(safe-area-inset-bottom)
+    2 * var(--size-touch-regal) + 1px + 2 * var(--space-2) + var(--space-4) + env(safe-area-inset-bottom)
   );
 }
 
