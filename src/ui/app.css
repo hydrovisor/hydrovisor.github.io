@@ -20,9 +20,9 @@ body {
 }
 
 /* Leiste unten (Tabbar, Entscheid 0025): Der Rahmen mit Leiste gibt der Seite unten Platz, feste Füsse stehen über der
-   Leiste; der Sicherheitsabstand unten liegt in der Leiste */
+   Leiste; der Sicherheitsabstand unten liegt in der Leiste, 1px ist ihre Linie oben */
 .hv-rahmen-leiste {
-  --hv-leiste-hoehe: calc(var(--size-touch-regal) + env(safe-area-inset-bottom));
+  --hv-leiste-hoehe: calc(var(--size-touch-regal) + 1px + env(safe-area-inset-bottom));
 }
 
 .hv-rahmen-leiste .hv-seite {
