@@ -13,6 +13,7 @@ import {
 import { Button } from '../bausteine/Button.tsx';
 import { Choice } from '../bausteine/Choice.tsx';
 import { useBuendel } from '../buendel.tsx';
+import { useLeisteAus } from '../leisteKontext.tsx';
 import { hashZu } from '../router.ts';
 import { SaatgutEintrag } from '../SaatgutEintrag.tsx';
 import '../sorten.css';
@@ -26,6 +27,8 @@ export function Sorten() {
   const [ansicht, setAnsicht] = useState<Ansicht>({ art: 'liste' });
   const [filter, setFilter] = useState<SaatgutFilter>('vorraetig');
   const liste = buendel ? saatgutListe(buendel.teile) : [];
+  // in den Abläufen ohne Leiste unten (Entscheid 0025, wie Säen ab Schritt 2)
+  useLeisteAus(ansicht.art !== 'liste');
   const zurListe = () => {
     setAnsicht({ art: 'liste' });
     if (typeof window !== 'undefined') window.scrollTo(0, 0);
@@ -41,9 +44,6 @@ export function Sorten() {
     <main className="hv-seite">
       <header className="hv-seite-kopf">
         <h1 className="hv-seite-titel">Saatgut</h1>
-        <a className="hv-btn hv-btn-ghost hv-btn-compact" href={hashZu({ name: 'einstellungen' })}>
-          Zu den Einstellungen
-        </a>
       </header>
       <Button block onClick={() => setAnsicht({ art: 'erfassen' })}>
         Tüte erfassen
