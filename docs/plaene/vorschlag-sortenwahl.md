@@ -26,7 +26,7 @@ erscheint unter einer gewählten Sorte. `sortenAuswahl()` in `src/domain/pflanzu
 ## Varianten
 
 Die Detailansicht der Sorte ist in allen drei Varianten gleich: Zurück-Knopf, Tütenfoto (Vorder- und Rückseite), Gemüse
-und Kulturtyp, Sortenname, botanischer Name, Kulturform-Wahl (wenn mehrere erlaubt), dann eine Faktenliste mit Keimung
+und Kulturtyp, Sortenname, botanischer Name, der Block Kulturform (siehe unten), dann eine Faktenliste mit Keimung
 (Fachbegriff plus Erklärung, zum Beispiel «Dunkelkeimer: keimt ohne Licht, kommt in die Box für Dunkelkeimer»),
 Keimtemperatur, Keimdauer, Saatmenge zur gewählten Kulturform, Umsetzen, Packung, Bezug und Vollständigkeit des Wissens.
 Unten «Sorte wählen», bei gewählter Sorte «Sorte abwählen» und «Zurück zur Auswahl». Eine Leiste «Gewählt» über der Liste
@@ -38,6 +38,30 @@ zeigt alle gewählten Sorten (Mehrfachwahl bleibt), ein Tipp entfernt eine; «We
 | Weg zur Sorte | Gemüse aufklappen, Sorte antippen | Kachel, dann Sorte; bei 6 Gemüsen mit nur einer Sorte öffnet die Kachel direkt die Sorte | Sorte antippen (nach Scrollen) |
 | Stärken | eine Maske, nah am heutigen Code | Tims Reihenfolge, grösste Tippflächen, alles auf einen Blick | kein Zwischenschritt, einfachste Umsetzung |
 | Schwächen | offene Tomate schiebt den Rest nach unten | ein Schritt zurück je weiteres Gemüse; ab etwa 14 Gemüsen scrollt das Raster | rund 2’000 dp Liste; Sprungleiste ginge nur mit Wischen, am Regal ausgeschlossen |
+
+### Kulturform in der Detailansicht (Tims Rückmeldung vom 13.11.2026)
+
+Tim fragte, warum er bei Butterfly zwischen Babyleaf, Kopf und Schnitt wählen soll und was das bewirkt. Die Kulturform legt
+fest, wie geerntet wird (einmal oder mehrfach), und steuert damit Saatmenge (R12.3), Erntetermine und Kulturende (R1.2),
+die Belegung der Töpfe für «Satz duplizieren» (R11.1), die Leitkultur und damit das Stadium der Nährlösung (R2.3) sowie die
+Passung (Licht- und Höhenregel nehmen Babyleaf aus, R3). Sie ist mit der Vorgabe der Art schon gewählt, eine Wahl gibt es nur
+bei Basilikum, Salat, Schnittlauch und Spinat (8 von 22 Sorten).
+
+Darum zeigt die Detailansicht neu:
+
+- einen Block «Kulturform» mit der gewählten Form, dem Wort «Vorgabe» oder «geändert» und einer Zeile, was die Form heisst
+  («junge Blätter, die Pflanze wird einmal geerntet»), darunter die Erntewerte aus `art_kulturform` («einmal ernten, erste
+  Ernte ab etwa Tag 14, fertig nach etwa 16 Tagen»);
+- nur bei mehreren erlaubten Formen den Knopf «Kulturform ändern»; erst er öffnet die Einzelauswahl, jede Option mit ihrer
+  Erntezeile. Ein Tipp wählt und schliesst die Auswahl.
+
+Datenlücke dazu: In `art_kulturform` fehlen bei Schnitt (Salat, Spinat, Mangold, Randen), Babyleaf-Salat und den
+Dauerkulturen Ernte ab und Kulturdauer; dort steht «Termine noch offen». Tomate, Nüsslisalat und Schnittlauch haben noch keine
+Zeile (W0 Runde 10). Prüfpunkt für W0 (A): Spinat Babyleaf hat «Ernte ab 14» und «Kulturdauer typisch 16»; zählt «Ernte ab»
+ab dem Umsetzen (Konzept R1.2), passt das mit «Umsetzen ab Tag 9» nicht zusammen. Die Oberfläche schreibt deshalb neutral «ab
+etwa Tag 14».
+
+Zusätzlicher Baustein: `Kulturform` (Block mit Vorgabe, Wirkung und «Kulturform ändern»), in `design-system/components/`.
 
 ## Empfehlung
 
@@ -98,7 +122,8 @@ Für die Tütenfotos zwei Wege:
 | `design-system/components/Tuetenfoto.md` (neu) | Anzeige des Fotos, Platzhalter, Wechsel Vorder- und Rückseite (Aufnahme bleibt `PhotoField`) |
 | `design-system/components/Faktenliste.md` (neu) | Begriff und Wert mit Erklärzeile, Zustand «noch offen» |
 | `src/ui/bausteine/` | `Sortenzeile.tsx`, `Tuetenfoto.tsx`, `Faktenliste.tsx`, `Tile.tsx` (Variante) |
-| `src/domain/pflanzung/saeen.ts` | `gemueseGruppen()` (nach `artName`, Zählung gewählt und empfohlen), `sorteDetail()` (Saatmenge je Kulturform, Umsetzen, Packung, Vollständigkeit, Bezug) |
+| `design-system/components/Kulturform.md` (neu) | Block mit Vorgabe, Wirkung, Erntezeile und «Kulturform ändern» |
+| `src/domain/pflanzung/saeen.ts` | `gemueseGruppen()` (nach `artName`, Zählung gewählt und empfohlen), `sorteDetail()` (Saatmenge und Erntewerte je Kulturform aus `art_kulturform`, Umsetzen, Packung, Vollständigkeit, Bezug) |
 | `src/ui/masken/Saeen.tsx`, `src/ui/app.css` | Schritt 1 in drei Ansichten (Kacheln, Sorten des Gemüses, Detail), Leiste «Gewählt», Kulturform im Detail; Sortenleiste in Schritt 2 mit Gemüse vor dem Namen |
 | `src/daten/` | signierter Link für das Foto (nur mit Weg 2 bzw. 1) |
 | `supabase/migrations/` | nur mit Weg 2: `tuetenfoto` |
@@ -109,12 +134,12 @@ Für die Tütenfotos zwei Wege:
 
 | Teil | PT |
 |---|---|
-| Design System: drei Bausteine und Tile-Variante | 0.3 |
+| Design System: vier Bausteine und Tile-Variante | 0.35 |
 | Domäne: Gruppierung und Detailwerte mit Unit-Tests | 0.3 |
 | Maske Säen Schritt 1 (B) und Schritt 2 Sortenleiste | 0.5 |
 | E2E-Tests anpassen | 0.3 |
 | Tütenfoto: Tabelle, Anzeige, «Tütenfoto ergänzen» | 0.5 |
-| **Summe** | **1.9** (ohne Tütenfoto 1.4) |
+| **Summe** | **2.0** (ohne Tütenfoto 1.5) |
 
 Variante A kostet etwa 0.1 PT weniger, C etwa 0.3 PT weniger. Vorschlag: Tütenfoto als eigenes, kleines Folgepaket, damit
 die neue Sortenwahl schon mit Platzhalter am Regal ist, bevor die 22 Tüten fotografiert sind.
