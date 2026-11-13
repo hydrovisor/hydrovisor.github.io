@@ -1,5 +1,5 @@
 {
-  "kommentar": "S6 Konflikt: 3.1 mit Salat Lattughino Verde (Kopf, Direktsaat; statt Nüsslisalat nach Entscheid 0020), Spinat Butterfly (Babyleaf) auf dieselben Töpfe reserviert (UC5-AK2)",
+  "kommentar": "S6 Konflikt: 3.1 mit Salat Lattughino Verde (Kopf, Direktsaat; statt Nüsslisalat nach Entscheid 0020), Spinat Butterfly (Babyleaf; Dunkelkeimer bewusst in A1 statt A3/A4, damit S6 keine zusätzliche Aufgabe «Deckel öffnen» erhält, A) auf dieselben Töpfe reserviert (UC5-AK2)",
   "zeilen": [
     {"tabelle":"netztopf","ref":"X-topf-3.1.1","felder":{"anlage_id":"@X","kennung":"3.1.1","groesse_mm":50,"heim_platz_id":"@X-3.1","heim_loch_nr":1}},
     {"tabelle":"netztopf","ref":"X-topf-3.1.2","felder":{"anlage_id":"@X","kennung":"3.1.2","groesse_mm":50,"heim_platz_id":"@X-3.1","heim_loch_nr":2}},
@@ -13,8 +13,8 @@
     {"tabelle":"ereignis","ref":"X-s6-nuessli-anzucht","felder":{"typ":"phase_antwort","satz_id":"@X-s6-nuessli","daten":{"phase":"anzucht","antwort":"ja","erwartet_am":"heute-9"},"gilt_ab":"jetzt-9d 08:00"}},
     {"tabelle":"satz","ref":"X-s6-spinat","felder":{"sorte_id":"?sorte_schluessel.sorte_key=sorte-spinat-butterfly","kulturform":"babyleaf","anzuchtort_platz_id":"@X-A1","anzahl_schwaemme":2,"samen_je_schwamm":1,"saatdatum":"heute-9","gilt_ab":"jetzt-9d 19:00"}},
     {"tabelle":"pflanzung","ref":"X-s6-s1","felder":{"satz_id":"@X-s6-spinat","gilt_ab":"jetzt-9d 19:00"}},
-    {"tabelle":"reservierung","ref":"X-s6-rs1","felder":{"pflanzung_id":"@X-s6-s1","netztopf_id":"@X-topf-3.1.1","umsetzen_vorgabe_am":"heute+2","umsetzen_geplant_am":"heute+2","gilt_ab":"jetzt-9d 19:00"}},
+    {"tabelle":"reservierung","ref":"X-s6-rs1","felder":{"pflanzung_id":"@X-s6-s1","netztopf_id":"@X-topf-3.1.1","umsetzen_vorgabe_am":"heute","umsetzen_geplant_am":"heute+2","gilt_ab":"jetzt-9d 19:00"}},
     {"tabelle":"pflanzung","ref":"X-s6-s2","felder":{"satz_id":"@X-s6-spinat","gilt_ab":"jetzt-9d 19:00"}},
-    {"tabelle":"reservierung","ref":"X-s6-rs2","felder":{"pflanzung_id":"@X-s6-s2","netztopf_id":"@X-topf-3.1.2","umsetzen_vorgabe_am":"heute+2","umsetzen_geplant_am":"heute+2","gilt_ab":"jetzt-9d 19:00"}}
+    {"tabelle":"reservierung","ref":"X-s6-rs2","felder":{"pflanzung_id":"@X-s6-s2","netztopf_id":"@X-topf-3.1.2","umsetzen_vorgabe_am":"heute","umsetzen_geplant_am":"heute+2","gilt_ab":"jetzt-9d 19:00"}}
   ]
 }
