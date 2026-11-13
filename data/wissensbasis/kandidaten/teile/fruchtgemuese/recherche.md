@@ -403,7 +403,7 @@ Nur `pw.solanum_lycopersicum.bluete.dauer` (offene Blüte, BBCH 60/61, bis Fruch
 | Frontiers 2023 (Tsukuba, Bestäubung), Springer-Kapitel «Fruit Set and Temperature Stress» | nur Stunden nach Bestäubung bzw. empfindliche Tage vor Anthese |
 | SKUAST-K Cherry-Genotypen 2018, IJCMAS 2018, Madras Agric. J. 2017 | laut Auszug nur Tage bis Blüte, kein Fruchtansatz in Tagen |
 | Blogs und Ratgeber (tomatodirt, freshroot, scaleandstem, mundohuerto, gardeningknowhow) | keine Gartenbau-, Beratungs- oder Herstellerquelle im Sinn von Entscheid 0022 |
-| Guaymasí et al. 2018 (Horticultura Argentina, Tage und Wärmesumme bis Blüte und Fruchtbildung) | nicht mehr abgerufen (Zeitbudget); Kandidat für eine weitere Runde |
+| Artikel 2018 zur Phänologie von Cherrytomaten (Horticultura Argentina, Tage und Wärmesumme bis Blüte und Fruchtbildung) | nicht mehr abgerufen (Zeitbudget); Kandidat für eine weitere Runde |
 
 ### Lückenliste nach Runde 10
 
