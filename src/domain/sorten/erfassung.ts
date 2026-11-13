@@ -6,6 +6,7 @@ import type { Kulturform } from '../phasen/profil.ts';
 import { KI_FELDER, feldTexte, type KiFeld } from '../ki/schema.ts';
 import { feldStatus, kiUebernehmen, type KiErgebnis } from '../ki/uebernahme.ts';
 import { KULTURFORMEN_JE_TYP, type Kulturtyp } from '../wissen/luecken.ts';
+import type { TuetenfotoSeite } from './tuetenfoto.ts';
 
 export type { Kulturtyp };
 
@@ -224,7 +225,13 @@ export function artIdVon(f: SortenFormular): string | undefined {
 
 export function erfassungBauen(
   f: SortenFormular,
-  ids: { sorteId: string; saatgutId: string; clientIds: () => string },
+  ids: {
+    sorteId: string;
+    saatgutId: string;
+    clientIds: () => string;
+    /** hochgeladene Tütenfotos; je Foto eine Zeile tuetenfoto nach dem Saatgut (Plan 207) */
+    fotos?: readonly { seite: TuetenfotoSeite; pfad: string }[];
+  },
   ki: KiLauf | undefined,
   kontext: { jetzt: Date; zeitzone: string; appVersion: string },
 ): { wissen: WissenAufruf[]; vorgang: Vorgang } {
@@ -315,6 +322,18 @@ export function erfassungBauen(
       keimfaehigkeit_packung: keim === undefined ? null : Math.round(keim) / 100,
     },
   });
+  for (const foto of ids.fotos ?? [])
+    vorgang.push({
+      art: 'neu',
+      tabelle: 'tuetenfoto',
+      felder: {
+        client_id: ids.clientIds(),
+        sorte_id: ids.sorteId,
+        saatgut_id: ids.saatgutId,
+        seite: foto.seite,
+        pfad: foto.pfad,
+      },
+    });
   if (ki)
     vorgang.push(
       ...feldprotokoll(ki, f.tuete, { sorteId: ids.sorteId, saatgutId: ids.saatgutId }, ids.clientIds),

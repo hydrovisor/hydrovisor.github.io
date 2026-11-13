@@ -122,3 +122,4 @@ Stand 1.11.2026 · Auftrag 2 «Spezifikation». Bedeutungen stehen in Konzept v1
 | Deckel-Hilfen und Typen (Plan 33) | – | `lochText()`, `lochArt()`, `lochName()`, `deckelReihen()`, `istStation()`, `UmsetzEingabe`, `Saemling` |
 | Hydroponik-Recherche (Plan 37, E8) | `ki_aufruf.zweck`, Vermerk `recherche`, `wissen_app_schreiben('recherche_wert' \| 'recherche_saatempfehlung')` | `rechercheLuecken()`, `wertPruefen()`, `saatPruefen()`, `recherchieren()`, `RechercheErgebnis` |
 | Sortenerfassung (Plan 37) | `sorte`, `saatgut`, `ki_feldprotokoll`, `v_vollstaendigkeit` | `SortenFormular`, `formularNachKi()`, `erfassungBauen()`, `sortenListe()`, `sortenDetail()` |
+| Tütenfoto (Vorder- oder Rückseite der Saattüte, Plan 207) | `tuetenfoto` | `TuetenfotoZeile`, `aktuelleTuetenfotos()`, `tuetenfotoVorgang()`, `fotoLink()`, `TuetenfotoAnzeige`, Baustein `Tuetenfoto` |

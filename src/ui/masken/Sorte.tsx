@@ -2,17 +2,29 @@
 // Werte je anwendbarer Phase mit Herkunft und Verlässlichkeit, Saatempfehlungen, Packungen; «Recherche starten»,
 // solange die Sorte unvollständig ist.
 import { useState } from 'react';
-import { rechercheStarten } from '../../daten/ki.ts';
+import { fotoHochladen, rechercheStarten } from '../../daten/ki.ts';
+import { neueClientId, schreiben } from '../../daten/schreiben.ts';
 import { wissenSchreiben } from '../../daten/wissen.ts';
 import type { RechercheErgebnis } from '../../domain/ki/recherche.ts';
+import type { Vorgang } from '../../domain/datenpfad/erfassung.ts';
 import { sortenDetail } from '../../domain/sorten/liste.ts';
+import {
+  aktuelleTuetenfotos,
+  tuetenfotoVorgang,
+  type TuetenfotoSeite,
+  type TuetenfotoZeile,
+} from '../../domain/sorten/tuetenfoto.ts';
+import { ZEITZONE } from '../../domain/zeit.ts';
 import { APP_VERSION } from '../../konstanten.ts';
 import { Button } from '../bausteine/Button.tsx';
 import { Card } from '../bausteine/Card.tsx';
 import { Notice } from '../bausteine/Notice.tsx';
+import { PhotoField } from '../bausteine/PhotoField.tsx';
 import { StatusBadge } from '../bausteine/StatusBadge.tsx';
 import { useBuendel } from '../buendel.tsx';
 import { hashZu } from '../router.ts';
+import { tuetenbildVerkleinern } from '../tuetenbild.ts';
+import { TuetenfotoAnzeige } from '../TuetenfotoAnzeige.tsx';
 import '../sorten.css';
 
 const KEIMART: Record<string, string> = {
@@ -34,6 +46,119 @@ const KULTURFORM_NAME: Record<string, string> = {
   dauerkultur_blatt: 'Dauerkultur Blatt',
   dauerkultur_frucht: 'Dauerkultur Frucht',
 };
+
+/** Uhr der Oberfläche (G2: Date.now() nur hier) */
+const jetzt = () => new Date(Date.now());
+
+const SEITE_LABEL: Record<TuetenfotoSeite, string> = { vorne: 'Vorderseite', hinten: 'Rückseite' };
+
+/** offener Vorgang für «Speichern wiederholen» und die client_id, die das Bündel danach zeigen muss */
+interface Offen {
+  vorgang: Vorgang;
+  seite: TuetenfotoSeite;
+  clientId: string;
+}
+
+/**
+ * Card «Tütenfoto» am Schreibtisch (Plan 207): Anzeige über signierte Links, je Seite «Tütenfoto ergänzen» oder «Foto
+ * ersetzen». Wahl → verkleinern → hochladen → Storno der alten Zeile plus neue Zeile über schreiben(); scheitert das
+ * Schreiben, sendet «Speichern wiederholen» denselben Vorgang (A12). Die Fotofelder bleiben gesperrt, bis das Bündel die
+ * neue Zeile zeigt, damit kein zweites Ersetzen die alte Zeile übersieht (A11).
+ */
+function TuetenfotoKarte({ sorteId }: { sorteId: string }) {
+  const { buendel } = useBuendel();
+  const zeilen = (buendel?.teile['tuetenfoto'] ?? []) as TuetenfotoZeile[];
+  const aktuell = aktuelleTuetenfotos(zeilen, sorteId);
+  const [laeuft, setLaeuft] = useState(false);
+  const [meldung, setMeldung] = useState<string>();
+  const [offen, setOffen] = useState<Offen>();
+  const [erwartet, setErwartet] = useState<{ seite: TuetenfotoSeite; clientId: string }>();
+  const wartetAufBuendel = erwartet !== undefined && aktuell[erwartet.seite]?.clientId !== erwartet.clientId;
+  const gesperrt = laeuft || wartetAufBuendel;
+
+  async function senden(o: Offen) {
+    const r = await schreiben(o.vorgang, { jetzt: jetzt(), zeitzone: ZEITZONE });
+    if (r.status === 'gespeichert') {
+      setOffen(undefined);
+      setErwartet({ seite: o.seite, clientId: o.clientId });
+      return;
+    }
+    if (r.status === 'abweichend') {
+      // dasselbe Senden ergäbe wieder «abweichend»: kein Wiederholen anbieten
+      setOffen(undefined);
+      setMeldung(
+        'Foto nicht gespeichert: Es ist schon mit anderen Angaben gespeichert. Wähle das Foto erneut.',
+      );
+      return;
+    }
+    setOffen(o);
+    setMeldung(r.fehler.text);
+  }
+
+  async function waehlen(seite: TuetenfotoSeite, datei: File) {
+    setLaeuft(true);
+    setMeldung(undefined);
+    setOffen(undefined);
+    try {
+      let bild: Blob;
+      try {
+        bild = await tuetenbildVerkleinern(datei);
+      } catch {
+        setMeldung('Foto nicht gespeichert: Das Foto ist nicht lesbar. Wähle ein anderes Foto.');
+        return;
+      }
+      const hoch = await fotoHochladen(sorteId, bild);
+      if ('fehler' in hoch) {
+        setMeldung('Foto nicht gespeichert. Prüf die Verbindung und wähle es erneut.');
+        return;
+      }
+      const clientId = neueClientId();
+      await senden({
+        seite,
+        clientId,
+        vorgang: tuetenfotoVorgang({
+          sorteId,
+          seite,
+          pfad: hoch.pfad,
+          clientId,
+          ersetzt: aktuell[seite]?.clientId,
+        }),
+      });
+    } finally {
+      setLaeuft(false);
+    }
+  }
+
+  async function wiederholen() {
+    if (!offen) return;
+    setLaeuft(true);
+    setMeldung(undefined);
+    await senden(offen);
+    setLaeuft(false);
+  }
+
+  return (
+    <Card title="Tütenfoto">
+      <TuetenfotoAnzeige sorteId={sorteId} leerText="Wähle unten ein Foto der Vorder- oder Rückseite." />
+      {(['vorne', 'hinten'] as const).map((seite) => (
+        <PhotoField
+          key={seite}
+          label={SEITE_LABEL[seite]}
+          knopf={aktuell[seite] ? 'Foto ersetzen' : 'Tütenfoto ergänzen'}
+          deaktiviert={gesperrt}
+          onWahl={(datei) => void waehlen(seite, datei)}
+        />
+      ))}
+      {gesperrt ? <p role="status">Foto wird gespeichert</p> : null}
+      {meldung ? <Notice tone="danger">{meldung}</Notice> : null}
+      {offen && !laeuft ? (
+        <Button variant="secondary" onClick={() => void wiederholen()}>
+          Speichern wiederholen
+        </Button>
+      ) : null}
+    </Card>
+  );
+}
 
 export function Sorte({ sorte }: { sorte: string }) {
   const { buendel } = useBuendel();
@@ -68,6 +193,7 @@ export function Sorte({ sorte }: { sorte: string }) {
             </StatusBadge>{' '}
             {d.zeile.pruefauftraege} {d.zeile.pruefauftraege === 1 ? 'Prüfauftrag' : 'Prüfaufträge'}
           </p>
+          <TuetenfotoKarte sorteId={sorte} />
           {!d.zeile.vollstaendig ? (
             <Button
               variant="secondary"

@@ -30,6 +30,7 @@ import {
 } from '../../domain/sorten/erfassung.ts';
 import type { Vorgang } from '../../domain/datenpfad/erfassung.ts';
 import { KULTURFORMEN_JE_TYP } from '../../domain/wissen/luecken.ts';
+import type { TuetenfotoSeite } from '../../domain/sorten/tuetenfoto.ts';
 import { ZEITZONE } from '../../domain/zeit.ts';
 import { APP_VERSION } from '../../konstanten.ts';
 import { Button } from '../bausteine/Button.tsx';
@@ -76,6 +77,11 @@ interface Foto {
   datei: File;
   url: string;
 }
+/** hochgeladenes Foto je Seite; gilt nur, solange dieselbe Datei gewählt ist (Plan 207) */
+interface Hochgeladen {
+  datei: File;
+  pfad: string;
+}
 interface Speicherstand {
   schluessel: string;
   wissen: WissenAufruf[];
@@ -119,6 +125,7 @@ export function SorteNeu() {
   const [text, setText] = useState('');
   const [vorne, setVorne] = useState<Foto>();
   const [hinten, setHinten] = useState<Foto>();
+  const [hochgeladen, setHochgeladen] = useState<Partial<Record<TuetenfotoSeite, Hochgeladen>>>({});
   const [ki, setKi] = useState<KiLauf>();
   const [hinweis, setHinweis] = useState<string>();
   const [liest, setLiest] = useState(false);
@@ -128,6 +135,13 @@ export function SorteNeu() {
   const [sendet, setSendet] = useState(false);
   const [stand, setStand] = useState<Speicherstand>();
   const [recherche, setRecherche] = useState<RechercheErgebnis | 'laeuft'>();
+  const [artNachholen, setArtNachholen] = useState<string>();
+  // Zustand beim Rendern angleichen statt im Effekt: der KI-Vorschlag für die Art wartet auf das Bündel
+  if (artNachholen !== undefined && arten.length > 0) {
+    setArtNachholen(undefined);
+    const v = f.artId || f.neueArt ? undefined : artVorschlagen(arten, artNachholen);
+    if (v) setF((alt) => (alt.artId || alt.neueArt ? alt : { ...alt, artId: v }));
+  }
 
   const aendern = (teil: Partial<SortenFormular>) => {
     setF((alt) => ({ ...alt, ...teil }));
@@ -143,30 +157,65 @@ export function SorteNeu() {
   const keimartAbweichung = keimartHinweis(f.tuete.keimart, keimartDerArt(sollwerte, sorten, f.artId));
   const zielSorte = nurPackung ?? ids.sorteId;
 
+  function gewaehlteFotos(): { seite: TuetenfotoSeite; foto: Foto }[] {
+    const liste: { seite: TuetenfotoSeite; foto: Foto }[] = [];
+    if (vorne) liste.push({ seite: 'vorne', foto: vorne });
+    if (hinten) liste.push({ seite: 'hinten', foto: hinten });
+    return liste;
+  }
+
+  /**
+   * lädt jedes gewählte, noch nicht hochgeladene Foto hoch (Ordner ist die beim Öffnen erzeugte sorte_id, Plan 37
+   * A16) und merkt den Pfad je Seite, unabhängig vom Ergebnis der KI (Plan 207 A13)
+   */
+  async function fotosHochladen(): Promise<
+    { fotos: { seite: TuetenfotoSeite; pfad: string }[] } | { fehler: 'lesbar' | 'hochladen' }
+  > {
+    const fotos: { seite: TuetenfotoSeite; pfad: string }[] = [];
+    const neu: Partial<Record<TuetenfotoSeite, Hochgeladen>> = { ...hochgeladen };
+    for (const { seite, foto } of gewaehlteFotos()) {
+      const schon = neu[seite];
+      if (schon && schon.datei === foto.datei) {
+        fotos.push({ seite, pfad: schon.pfad });
+        continue;
+      }
+      let bild: Blob;
+      try {
+        bild = await tuetenbildVerkleinern(foto.datei);
+      } catch {
+        setHochgeladen(neu);
+        return { fehler: 'lesbar' };
+      }
+      const r = await fotoHochladen(ids.sorteId, bild);
+      if ('fehler' in r) {
+        setHochgeladen(neu);
+        return { fehler: 'hochladen' };
+      }
+      neu[seite] = { datei: foto.datei, pfad: r.pfad };
+      fotos.push({ seite, pfad: r.pfad });
+    }
+    setHochgeladen(neu);
+    return { fotos };
+  }
+
   async function lesen() {
     setLiest(true);
     setHinweis(undefined);
     let anfrage: { fotopfade: string[] } | { text: string };
     const fotopfade: string[] = [];
-    const fotos = [vorne, hinten].filter((x): x is Foto => x !== undefined);
+    const fotos = gewaehlteFotos();
     if (fotos.length > 0) {
-      for (const foto of fotos) {
-        let bild: Blob;
-        try {
-          bild = await tuetenbildVerkleinern(foto.datei);
-        } catch {
-          setLiest(false);
-          setHinweis('Das Foto ist nicht lesbar. Wähle ein anderes Foto oder trag die Werte von Hand ein.');
-          return;
-        }
-        const r = await fotoHochladen(ids.sorteId, bild);
-        if ('fehler' in r) {
-          setLiest(false);
-          setHinweis(hinweisVonHand('fehler'));
-          return;
-        }
-        fotopfade.push(r.pfad);
+      const r = await fotosHochladen();
+      if ('fehler' in r) {
+        setLiest(false);
+        setHinweis(
+          r.fehler === 'lesbar'
+            ? 'Das Foto ist nicht lesbar. Wähle ein anderes Foto oder trag die Werte von Hand ein.'
+            : hinweisVonHand('fehler'),
+        );
+        return;
       }
+      fotopfade.push(...r.fotos.map((x) => x.pfad));
       anfrage = { fotopfade };
     } else if (text.trim() !== '') {
       anfrage = { text };
@@ -184,6 +233,9 @@ export function SorteNeu() {
     }
     const vorschlag = f.artId || f.neueArt ? undefined : artVorschlagen(arten, ergebnis.felder.art);
     setF(vorschlag ? { ...r.formular, artId: vorschlag } : r.formular);
+    // Bündel noch nicht geladen: den Vorschlag nachholen, sobald die Arten da sind (Plan 207, Befund aus TF1-AK6)
+    if (!vorschlag && !f.artId && !f.neueArt && arten.length === 0 && ergebnis.felder.art)
+      setArtNachholen(ergebnis.felder.art);
     setKi({ ...ergebnis, fotopfade });
     setSchritt('sorte');
   }
@@ -215,12 +267,26 @@ export function SorteNeu() {
       setMeldung('Prüf die markierten Angaben, auch in den früheren Schritten.');
       return;
     }
-    const schluessel = JSON.stringify({ f, nurPackung, ki: ki?.dauerMs });
+    // gewählte Fotos, auch bei «Ohne KI weiter», vor dem Schreiben hochladen (Plan 207 A13)
+    setSendet(true);
+    setMeldung(undefined);
+    const hoch = await fotosHochladen();
+    if ('fehler' in hoch) {
+      setSendet(false);
+      setMeldung(
+        hoch.fehler === 'lesbar'
+          ? 'Nicht gespeichert: Das Foto ist nicht lesbar. Wähle ein anderes Foto.'
+          : 'Nicht gespeichert: Das Foto ist nicht hochgeladen. Prüf die Verbindung und speichere erneut.',
+      );
+      return;
+    }
+    const fotos = hoch.fotos;
+    const schluessel = JSON.stringify({ f, nurPackung, ki: ki?.dauerMs, fotos });
     let aktuell = stand?.schluessel === schluessel ? stand : undefined;
     if (!aktuell) {
       const e = erfassungBauen(
         f,
-        { sorteId: zielSorte, saatgutId: ids.saatgutId, clientIds: neueClientId },
+        { sorteId: zielSorte, saatgutId: ids.saatgutId, clientIds: neueClientId, fotos },
         ki,
         {
           jetzt: jetzt(),
