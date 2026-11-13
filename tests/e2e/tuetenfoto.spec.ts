@@ -16,182 +16,43 @@
 //   (/storage/v1/object/sign/saattueten/<pfad>?token=…); beide Seiten da: Gruppe «Seite der Tüte» mit «Vorderseite»
 //   und «Rückseite» (Choice), Start mit der Vorderseite. Platzhalter role=img «Noch kein Tütenfoto» bzw. «Foto nur mit
 //   Verbindung».
-// - #/sorten/neu wie Plan 37; nach dem Speichern der Link «Sorte öffnen».
-import { execSync } from 'node:child_process';
+// - #/sorten/neu wie Plan 37, ohne Feld «Bestand in Korn» (Plan 211 Abweichung 1); nach dem Speichern der Link
+//   «Sorte öffnen». Gemeinsame Hilfen in lokal-db.ts (Plan 211 A21).
 import { randomUUID } from 'node:crypto';
-import { type Locator, type Page, type Route } from '@playwright/test';
-import postgres from 'postgres';
+import { type Page, type Route } from '@playwright/test';
 import { saatTeile, SORTE } from '../fixtures/saeen.ts';
 import { zeileAufnehmen } from '../fixtures/sichten.ts';
 import { uid, type Teile } from '../fixtures/regal.ts';
 import { authNachbilden, sitzungSpeichern } from './hilfen.ts';
 import { expect, test } from './konto.ts';
+import {
+  bildHinten,
+  bildVorne,
+  datenbank,
+  fotoFeld,
+  fotoWaehlen,
+  FUNKTIONEN,
+  geladen,
+  kiOk,
+  knopf,
+  NICHT_EINGERICHTET,
+  pfadAus,
+  SIGNIEREN,
+  SIGNIERTER_LINK,
+  testbild,
+} from './lokal-db.ts';
 import { restNachbilden } from './rest.ts';
 import { sorteOeffnen } from './sortenwahl-hilfe.ts';
 
-const FUNKTIONEN = 'http://127.0.0.1:54321/functions/v1';
-const SIGNIEREN = /\/storage\/v1\/object\/sign\/saattueten\//;
-const SIGNIERTER_LINK =
-  /\/storage\/v1\/object\/sign\/saattueten\/[0-9a-f-]{36}\/[0-9a-f-]{36}\.jpg\?.*token=/;
-const LOKALE_HOSTS = new Set(['127.0.0.1', 'localhost']);
-
 // ---------------------------------------------------------------------
-// Hilfen
+// Hilfen (gemeinsame in lokal-db.ts, Plan 211 A21)
 // ---------------------------------------------------------------------
 
-interface Fotozeile {
-  client_id: string;
-  sorte_id: string;
-  saatgut_id: string | null;
-  seite: string;
-  pfad: string;
-  storniert_am: Date | null;
-}
-
-/** Verbindung zur lokalen Datenbank (nur 127.0.0.1 oder localhost) */
-function datenbank() {
-  let ausgabe: string;
-  try {
-    ausgabe = execSync('supabase status -o env', { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
-  } catch {
-    ausgabe = execSync('npx --yes supabase@3.0.0 status -o env', {
-      encoding: 'utf8',
-      stdio: ['ignore', 'pipe', 'pipe'],
-    });
-  }
-  const dbUrl = /^DB_URL="?([^"\r\n]+)"?$/m.exec(ausgabe)?.[1];
-  if (!dbUrl) throw new Error('Lokale Datenbank nicht gefunden: zuerst supabase start');
-  if (!LOKALE_HOSTS.has(new URL(dbUrl).hostname)) throw new Error('E2E nur gegen die lokale Datenbank');
-  const sql = postgres(dbUrl, { max: 1, onnotice: () => undefined });
-  return {
-    sql,
-    /** gültige W0-Sorte nach sorte_key; fehlt sie, scheitert der Test sichtbar (Seed fehlt) */
-    async sorte(sorteKey: string): Promise<{ id: string; name: string }> {
-      const [z] = await sql<{ id: string; name: string }[]>`
-        select s.sorte_id::text as id, s.name from public.sorte s
-          join public.sorte_schluessel k on k.id = s.sorte_id
-         where k.sorte_key = ${sorteKey} and s.gueltig_bis is null`;
-      if (!z) throw new Error(`W0-Sorte ${sorteKey} fehlt: zuerst npm run seed -- --ziel lokal`);
-      return z;
-    },
-    async sorteNachName(name: string): Promise<string | undefined> {
-      const [z] = await sql<{ id: string }[]>`
-        select sorte_id::text as id from public.sorte where name = ${name} and gueltig_bis is null`;
-      return z?.id;
-    },
-    /** storniert die gültigen Fotos der Sorte (A14; die Service-Rolle löscht nicht) */
-    async fotosStornieren(sorteId: string): Promise<void> {
-      await sql`update public.tuetenfoto set storniert_am = now()
-                 where sorte_id = ${sorteId}::uuid and storniert_am is null`;
-    },
-    async jetzt(): Promise<Date> {
-      const [z] = await sql<{ t: Date }[]>`select clock_timestamp() as t`;
-      if (!z) throw new Error('keine Uhrzeit aus der Datenbank');
-      return z.t;
-    },
-    /** Zeilen tuetenfoto der Sorte seit `ab`, nach erfasst_am */
-    async fotos(sorteId: string, ab: Date): Promise<Fotozeile[]> {
-      return sql<Fotozeile[]>`
-        select client_id::text, sorte_id::text, saatgut_id::text, seite, pfad, storniert_am
-          from public.tuetenfoto where sorte_id = ${sorteId}::uuid and erfasst_am >= ${ab}
-         order by erfasst_am, id`;
-    },
-    async packungen(sorteId: string, ab: Date): Promise<string[]> {
-      const z = await sql<{ id: string }[]>`
-        select id::text from public.saatgut where sorte_id = ${sorteId}::uuid and erfasst_am >= ${ab}`;
-      return z.map((r) => r.id);
-    },
-  };
-}
-
-/** JPEG aus dem Canvas des Browsers (wie sorten-exif.spec.ts, ohne EXIF) */
-async function testbild(page: Page, farbe: string, text: string): Promise<Buffer> {
-  const base64 = await page.evaluate(
-    ({ farbe, text }) => {
-      const c = document.createElement('canvas');
-      c.width = 900;
-      c.height = 600;
-      const g = c.getContext('2d');
-      if (!g) throw new Error('kein Canvas');
-      g.fillStyle = farbe;
-      g.fillRect(0, 0, 900, 600);
-      g.fillStyle = '#ffffff';
-      g.font = '96px sans-serif';
-      g.fillText(text, 80, 330);
-      return c.toDataURL('image/jpeg', 0.9).split(',')[1] ?? '';
-    },
-    { farbe, text },
-  );
-  return Buffer.from(base64, 'base64');
-}
-
-const dateiFeld = (page: Page, label: 'Vorderseite' | 'Rückseite') =>
-  page.locator(`input[type=file][aria-label="${label}"]`);
-const fotoFeld = (page: Page, label: 'Vorderseite' | 'Rückseite') =>
-  page.locator('.hv-photo').filter({ has: dateiFeld(page, label) });
 const seitenwahl = (page: Page, seite: 'Vorderseite' | 'Rückseite') => {
   const gruppe = page.getByRole('group', { name: 'Seite der Tüte' });
   return gruppe
     .getByRole('button', { name: seite, exact: true })
     .or(gruppe.getByRole('radio', { name: seite, exact: true }));
-};
-const bildVorne = (page: Page) => page.getByRole('img', { name: 'Tütenfoto Vorderseite', exact: true });
-const bildHinten = (page: Page) => page.getByRole('img', { name: 'Tütenfoto Rückseite', exact: true });
-
-/** Pfad im Bucket aus dem signierten Link */
-function pfadAus(src: string | null): string {
-  const treffer = /\/object\/sign\/saattueten\/([^?]+)/.exec(src ?? '');
-  return treffer?.[1] ? decodeURIComponent(treffer[1]) : '';
-}
-
-/** das Bild ist wirklich geladen (Link gültig, Inhalt ein Bild) */
-async function geladen(bild: Locator): Promise<void> {
-  await expect
-    .poll(
-      () => bild.evaluate((b) => (b as HTMLImageElement).complete && (b as HTMLImageElement).naturalWidth),
-      {
-        timeout: 15_000,
-      },
-    )
-    .toBeGreaterThan(0);
-}
-
-async function fotoWaehlen(page: Page, label: 'Vorderseite' | 'Rückseite', bild: Buffer): Promise<void> {
-  await dateiFeld(page, label).setInputFiles({ name: `${label}.jpg`, mimeType: 'image/jpeg', buffer: bild });
-}
-
-const knopf = (page: Page, name: string) =>
-  page.getByRole('button', { name, exact: true }).or(page.getByRole('link', { name, exact: true }));
-
-function kiOk(name: string, art: string) {
-  return {
-    ergebnis: 'ok',
-    modell: 'claude-haiku-5-5',
-    felder: {
-      name,
-      art,
-      keimart: 'licht',
-      keimtemperatur_min_c: 15,
-      keimtemperatur_max_c: 20,
-      keimdauer_min_d: 7,
-      keimdauer_max_d: 14,
-      kulturdauer_min_d: 50,
-      kulturdauer_max_d: 70,
-      aussaat_von_monat: 3,
-      aussaat_bis_monat: 8,
-      hersteller: 'Beispiel Saaten',
-    },
-    verworfen: [],
-    dauerMs: 1200,
-    ausweichmodell: false,
-  };
-}
-
-const NICHT_EINGERICHTET = {
-  ergebnis: 'abgebrochen',
-  grund: 'nicht_eingerichtet',
-  hinweis: 'Die Recherche ist noch nicht eingerichtet. Lege die Saatempfehlung von Hand an.',
-  dauerMs: 0,
 };
 
 /** ki-tuete und ki-recherche über page.route; liefert die Anfragen an ki-tuete */
@@ -432,7 +293,6 @@ test('TF1-AK6 Neue Sorte mit Fotos schreibt tuetenfoto, das Foto erscheint im De
     await knopf(page, 'Weiter').click();
     await page.getByRole('radio', { name: 'Blatt', exact: true }).check();
     await knopf(page, 'Weiter').click();
-    await page.getByLabel('Bestand in Korn').fill('120');
     await knopf(page, 'Sorte speichern').click();
     await expect(page.getByText(`Gespeichert: ${name} mit Packung`)).toBeVisible({ timeout: 15_000 });
 
@@ -483,7 +343,6 @@ test('TF1-AK6 «Ohne KI weiter» mit gewählten Fotos lädt sie beim Speichern h
     await knopf(page, 'Weiter').click();
     await page.getByRole('radio', { name: 'Blatt', exact: true }).check();
     await knopf(page, 'Weiter').click();
-    await page.getByLabel('Bestand in Korn').fill('80');
     await knopf(page, 'Sorte speichern').click();
     await expect(page.getByText(`Gespeichert: ${name} mit Packung`)).toBeVisible({ timeout: 15_000 });
     // die KI wurde nicht gerufen
@@ -523,7 +382,6 @@ test('TF1-AK6 Packung zu … schreibt tuetenfoto der bestehenden Sorte', async (
     const fotopfade = (tuete[0]?.['fotopfade'] ?? []) as string[];
     expect(fotopfade).toHaveLength(1);
     await knopf(page, `Packung zu ${sorte.name} erfassen`).click();
-    await page.getByLabel('Bestand in Korn').fill('60');
     await knopf(page, 'Packung speichern').click();
     await expect(page.getByText(`Gespeichert: Packung zu ${sorte.name}`)).toBeVisible({ timeout: 15_000 });
 

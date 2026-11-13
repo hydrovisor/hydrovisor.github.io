@@ -4,11 +4,13 @@
 // Konfiguration, Uhr mit page.clock.setFixedTime(). Erfundene Sorten, keine Personendaten.
 //
 // Erwartete Oberfläche (Plan 37 Maskenablauf; wo der Plan offen ist, vom Testentwickler festgelegt, A):
-// - #/sorten: h1 «Sorten», Knopf oder Link «Neue Sorte erfassen»; je Sorte ein Link mit «<Name> · <Art>» und dem
-//   Status als Wort «vollständig» oder «unvollständig»; kein waagrechtes Scrollen.
+// - #/sorten (Plan 211): h1 «Saatgut», Link «Von Hand erfassen»; je Gemüse eine region mit dem Namen der Art, darin je
+//   Sorte ein Link, der mit dem Sortennamen beginnt, und dem Status als Wort «vollständig» oder «Recherche offen»; kein
+//   waagrechtes Scrollen.
 // - #/sorten/neu Schritt «Tüte»: mehrzeiliges Feld «Text der Tüte einfügen», Knöpfe «Tüte lesen» und «Ohne KI weiter».
 //   Schritt «Sorte und Art»: Feld «Name», Auswahl «Art» (option value = art_id). Schritt «Merkmale»: Radio «Blatt».
-//   Schritt «Packung»: Felder «Kaufdatum», «Keimfähigkeit in %», «Bestand in Korn», Knopf «Sorte speichern».
+//   Schritt «Packung»: Felder «Kaufdatum», «Keimfähigkeit in %» (ohne «Bestand in Korn», Plan 211 Abweichung 1),
+//   Knopf «Sorte speichern».
 //   Zwischen den Schritten der Knopf «Weiter» (A).
 // - Nach dem Speichern «Gespeichert: <Name> mit Packung», danach der Hinweis der Recherche («noch nicht eingerichtet»).
 // - Gleiche Sorte und Art: Hinweis «<Name> gibt es schon» mit «Packung zu <Name> erfassen».
@@ -185,8 +187,8 @@ async function ohneWaagrechtesScrollen(page: Page): Promise<void> {
 
 async function tuetentextLesen(page: Page, text: string): Promise<void> {
   await page.goto('/#/sorten');
-  await expect(page.getByRole('heading', { name: 'Sorten', level: 1 })).toBeVisible();
-  await knopf(page, 'Neue Sorte erfassen').click();
+  await expect(page.getByRole('heading', { name: 'Saatgut', level: 1 })).toBeVisible();
+  await knopf(page, 'Von Hand erfassen').click();
   await expect(page).toHaveURL(/#\/sorten\/neu$/);
   await page.getByLabel('Text der Tüte einfügen').fill(text);
   await knopf(page, 'Tüte lesen').click();
@@ -195,7 +197,7 @@ async function tuetentextLesen(page: Page, text: string): Promise<void> {
 const TUETENTEXT =
   'Testsorte Rot\nLactuca sativa L.\nLichtkeimer, 15 bis 20 °C, Keimung 7 bis 14 Tage\nBeispiel Saaten';
 
-test('UC4-AK9 Neue Sorte aus Tütentext: KI-Vorschlag, Art bestätigen, Packung, Speichern, Recherche «noch nicht eingerichtet», Liste zeigt «unvollständig» als Wort, ohne waagrechtes Scrollen auf 360 × 640', async ({
+test('UC4-AK9 Neue Sorte aus Tütentext: KI-Vorschlag, Art bestätigen, Packung, Speichern, Recherche «noch nicht eingerichtet», Liste zeigt «Recherche offen» als Wort, ohne waagrechtes Scrollen auf 360 × 640', async ({
   page,
 }) => {
   const m = await mitDaten(page);
@@ -213,7 +215,7 @@ test('UC4-AK9 Neue Sorte aus Tütentext: KI-Vorschlag, Art bestätigen, Packung,
 
   await page.getByLabel('Kaufdatum').fill('2027-01-10');
   await page.getByLabel('Keimfähigkeit in %').fill('85');
-  await page.getByLabel('Bestand in Korn').fill('180');
+  await expect(page.getByLabel('Bestand in Korn')).toHaveCount(0);
   await ohneWaagrechtesScrollen(page);
   await knopf(page, 'Sorte speichern').click();
 
@@ -233,18 +235,19 @@ test('UC4-AK9 Neue Sorte aus Tütentext: KI-Vorschlag, Art bestätigen, Packung,
   );
   const saatgut = m.geschrieben.filter(([t]) => t === 'saatgut').map(([, z]) => z);
   expect(saatgut).toHaveLength(1);
-  expect(saatgut[0]).toMatchObject({ sorte_id: sorteId, bestand_korn: 180, keimfaehigkeit_packung: 0.85 });
+  expect(saatgut[0]).toMatchObject({ sorte_id: sorteId, bestand_korn: null, keimfaehigkeit_packung: 0.85 });
   expect(m.geschrieben.filter(([t]) => t === 'ki_feldprotokoll')).toHaveLength(8);
   expect(m.recherche).toHaveLength(1);
   expect(m.recherche[0]?.['sorte_id']).toBe(sorteId);
 
   await page.goto('/#/sorten');
-  const zeile = page.getByRole('link', { name: /Testsorte Rot · Salat/ });
+  const salat = page.getByRole('region', { name: 'Salat' });
+  const zeile = salat.getByRole('link', { name: /^Testsorte Rot/ });
   await expect(zeile).toBeVisible();
-  await expect(zeile.getByText('unvollständig', { exact: true })).toBeVisible();
-  await expect(
-    page.getByRole('link', { name: /Lollo Rossa · Salat/ }).getByText('vollständig', { exact: true }),
-  ).toBeVisible();
+  await expect(zeile).toContainText('Recherche offen');
+  const lollo = salat.getByRole('link', { name: /^Lollo Rossa/ });
+  await expect(lollo).toContainText(/(^|[^n])vollständig/);
+  await expect(lollo).not.toContainText('Recherche offen');
   await ohneWaagrechtesScrollen(page);
 });
 
@@ -255,14 +258,13 @@ test('UC4 Sorte gibt es schon → Packung erfassen schreibt nur saatgut und Feld
   await tuetentextLesen(page, 'Lollo Rossa\nLactuca sativa\nBeispiel Saaten');
   await expect(page.getByText(/Lollo Rossa gibt es schon/i)).toBeVisible();
   await knopf(page, 'Packung zu Lollo Rossa erfassen').click();
-  await page.getByLabel('Bestand in Korn').fill('250');
   await knopf(page, 'Sorte speichern').or(knopf(page, 'Packung speichern')).first().click();
   await expect(page.getByText(/Gespeichert/)).toBeVisible();
 
   expect(m.wissen.filter((a) => ['sorte_neu', 'art_neu', 'tuetenwert'].includes(a.aktion))).toEqual([]);
   const saatgut = m.geschrieben.filter(([t]) => t === 'saatgut').map(([, z]) => z);
   expect(saatgut).toHaveLength(1);
-  expect(saatgut[0]).toMatchObject({ sorte_id: LOLLO, bestand_korn: 250 });
+  expect(saatgut[0]).toMatchObject({ sorte_id: LOLLO, bestand_korn: null });
   const protokoll = m.geschrieben.filter(([t]) => t === 'ki_feldprotokoll').map(([, z]) => z);
   expect(protokoll).toHaveLength(8);
   for (const z of protokoll) expect(z['sorte_id']).toBe(LOLLO);
@@ -296,11 +298,11 @@ test('TO8 Speichern ohne Netz → «Kein Netz, nicht gespeichert, erneut senden�
   await knopf(page, 'Weiter').click();
   await page.getByRole('radio', { name: 'Blatt', exact: true }).check();
   await knopf(page, 'Weiter').click();
-  await page.getByLabel('Bestand in Korn').fill('180');
+  await page.getByLabel('Keimfähigkeit in %').fill('85');
   ohneNetz = true;
   await page.context().setOffline(true);
   await knopf(page, 'Sorte speichern').click();
   await expect(page.getByText('Kein Netz, nicht gespeichert, erneut senden')).toBeVisible();
-  await expect(page.getByLabel('Bestand in Korn')).toHaveValue('180');
+  await expect(page.getByLabel('Keimfähigkeit in %')).toHaveValue('85');
   await page.context().setOffline(false);
 });
