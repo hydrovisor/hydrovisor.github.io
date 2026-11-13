@@ -14,6 +14,7 @@ import { JETZT as RUNDGANG_JETZT, rundgangTeile } from '../fixtures/rundgang.ts'
 import { saatTeile, SORTE } from '../fixtures/saeen.ts';
 import { sichtenNachrechnen, stornoAufnehmen, zeileAufnehmen } from '../fixtures/sichten.ts';
 import { authNachbilden, sitzungSpeichern } from './hilfen.ts';
+import { sorteWaehlen } from './sortenwahl-hilfe.ts';
 import { restNachbilden } from './rest.ts';
 
 test.use({ viewport: { width: 360, height: 780 }, isMobile: true, hasTouch: true, deviceScaleFactor: 3.5 });
@@ -136,13 +137,13 @@ test('U04-AK2 Einzelauswahl (E-Mail-Rückfall, Thema) mit rundem Punkt, kurze Op
 test('U04-AK2 Mehrfachauswahl (Sorten in Säen) behält das eckige Häkchen', async ({ page }) => {
   const saat = new Date('2027-01-07T08:00:00Z');
   await oeffnen(page, saatTeile(saat, { ohneSatzIn23: true }), '/#/saeen?box=R-A1', saat);
-  const lollo = page.getByRole('button', { name: /^Lollo Rossa/ }).first();
-  await lollo.click();
-  await expect(lollo).toHaveAttribute('aria-pressed', 'true');
-  expect(await lollo.locator('.hv-choice-check').evaluate((e) => getComputedStyle(e).borderRadius)).not.toBe(
-    '50%',
-  );
-  await expect(lollo.locator('.hv-choice-check svg')).toHaveCount(1);
+  // Plan 205: Mehrfachwahl über «Wählen»; die gewählte Sorte trägt das Häkchen, keinen runden Punkt
+  await sorteWaehlen(page, 'Salat', 'Lollo Rossa');
+  const lollo = page.locator('.hv-sortenzeile-gewaehlt').filter({ hasText: 'Lollo Rossa' });
+  await expect(lollo).toContainText('gewählt');
+  await expect(lollo.locator('.hv-sortenzeile-zusatz svg')).toHaveCount(1);
+  await expect(page.getByLabel('Gewählte Sorten').locator('svg')).toHaveCount(1);
+  await expect(page.locator('.hv-choice-einzeln')).toHaveCount(0);
 });
 
 test('U04-AK3 Kurzprüfung als Frage: «Licht an? ja», nach Tipp «nein»; Ort «1.1 Pumpe sprudelt? ja»; Symbol 32 dp', async ({

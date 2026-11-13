@@ -15,6 +15,7 @@ import { DECKELTYPEN, leeresRegal, type Teile } from '../fixtures/regal.ts';
 import { netztopfPlatz, saatWissen } from '../fixtures/saeen.ts';
 import { sichtenNachrechnen, stornoAufnehmen, zeileAufnehmen } from '../fixtures/sichten.ts';
 import { authNachbilden, sitzungSpeichern } from './hilfen.ts';
+import { sorteWaehlen } from './sortenwahl-hilfe.ts';
 import { restNachbilden } from './rest.ts';
 
 type Zeile = Record<string, unknown>;
@@ -270,10 +271,7 @@ test('IB-AK2 nach dem Seed führt die Checkliste Punkt für Punkt durch die Inbe
   // Punkt 9: erste Aussaat Lollo Rossa in A1 mit Ziel 2.3, Reihe 1
   await knopf(liste(page), 'Aussaat erfassen').click();
   await expect(page.getByRole('heading', { name: 'Säen', level: 1 })).toBeVisible();
-  await page
-    .getByRole('button', { name: /^Lollo Rossa/ })
-    .first()
-    .click();
+  await sorteWaehlen(page, 'Salat', 'Lollo Rossa');
   await knopf(page, 'Weiter').click();
   await expect(page.getByText('Schritt 2 von 3')).toBeVisible();
   await page

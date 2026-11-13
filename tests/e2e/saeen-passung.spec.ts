@@ -21,6 +21,7 @@ import { saatWissen } from '../fixtures/saeen.ts';
 import { zeileAufnehmen } from '../fixtures/sichten.ts';
 import { authNachbilden, sitzungSpeichern } from './hilfen.ts';
 import { restNachbilden } from './rest.ts';
+import { gemueseKachel, sorteOeffnen, sortenZeile, sorteWaehlen } from './sortenwahl-hilfe.ts';
 
 const JETZT = ZB_JETZT;
 const AUS_GEFAESS_33 = '/#/saeen?ziel=R-3.3&von=gefaess';
@@ -60,8 +61,6 @@ async function tipp(m: Mitschnitt, ziel: Locator): Promise<void> {
 const zeilenVon = (m: Mitschnitt, tabelle: string) =>
   m.geschrieben.filter(([t]) => t === tabelle).map(([, z]) => z);
 
-const sorteWahl = (page: Page, name: string) =>
-  page.getByRole('button', { name: new RegExp(`^${name}`) }).first();
 const zielgefaess = (page: Page, kennung: string) =>
   page.getByRole('button', { name: new RegExp(`^${kennung.replace('.', '\\.')}(?![.\\d])`) }).first();
 const knopf = (page: Page, name: string) => page.getByRole('button', { name, exact: true });
@@ -81,20 +80,19 @@ test('UC5-AK13 Setzen einer Nicht-empfohlen-Sorte braucht keine zusätzliche Ber
   const m = await mitDaten(page, regal(), AUS_GEFAESS_33);
   await expect(page.getByText('Schritt 1 von 3')).toBeVisible();
 
-  // Empfohlen offen, Nicht empfohlen eingeklappt
-  await expect(sorteWahl(page, 'Lollo Rossa')).toContainText('Empfohlen');
-  await expect(page.getByRole('button', { name: /^Ochsenherz/ })).toHaveCount(0);
+  // Empfohlen offen, Nicht empfohlen eingeklappt (Plan 205: Kacheln je Gemüse; Tomate hat nur Ochsenherz)
+  await expect(gemueseKachel(page, 'Salat')).toContainText('Empfohlen');
+  await expect(gemueseKachel(page, 'Tomate')).toHaveCount(0);
   const aufklappen = knopf(page, 'Nicht empfohlen (1) anzeigen');
   await expect(aufklappen).toBeVisible();
 
-  // ein Tipp klappt auf, ein Tipp wählt, «Weiter» ohne Rückfrage
+  // ein Tipp klappt auf, dann wie jede Sorte: Kachel, «Wählen und weiter» ohne Rückfrage
   await tipp(m, aufklappen);
-  const tomate = sorteWahl(page, 'Ochsenherz');
-  await expect(tomate).toBeVisible();
-  await expect(tomate).toContainText('Nicht empfohlen');
-  await expect(tomate).toContainText('nicht für Kratky');
-  await tipp(m, tomate);
-  await tipp(m, knopf(page, 'Weiter'));
+  await expect(gemueseKachel(page, 'Tomate')).toContainText('Nicht empfohlen');
+  await sorteOeffnen(page, 'Tomate', 'Ochsenherz', (ziel) => tipp(m, ziel));
+  await expect(page.locator('.hv-saeen-sortekopf')).toContainText('Nicht empfohlen');
+  await expect(page.locator('.hv-saeen-sortekopf')).toContainText('nicht für Kratky');
+  await tipp(m, knopf(page, 'Wählen und weiter'));
   await expect(page.getByText('Schritt 2 von 3')).toBeVisible();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await expect(page.getByRole('alertdialog')).toHaveCount(0);
@@ -118,16 +116,16 @@ test('UC5-AK13 Setzen einer Nicht-empfohlen-Sorte braucht keine zusätzliche Ber
     expect(typeof p['rang']).toBe('number');
   }
 
-  // Vergleich: eine empfohlene Sorte braucht genau eine Berührung weniger bis Schritt 2
+  // Vergleich: die nicht empfohlene Sorte braucht höchstens eine Berührung mehr (das Aufklappen) als eine empfohlene;
+  // Lollo Rossa braucht den Tipp auf die Sortenzeile, weil Salat zwei Sorten hat, Tomate das Aufklappen (Plan 205)
   m.beruehrungen = 0;
   await page.goto('/#/');
   await page.goto(AUS_GEFAESS_33);
   await page.reload();
   await expect(page.getByText('Schritt 1 von 3')).toBeVisible();
-  await tipp(m, sorteWahl(page, 'Lollo Rossa'));
-  await tipp(m, knopf(page, 'Weiter'));
-  await expect(page.getByText('Schritt 2 von 3')).toBeVisible();
-  expect(m.beruehrungen).toBe(mitTomate - 1);
+  await sorteWaehlen(page, 'Salat', 'Lollo Rossa', (ziel) => tipp(m, ziel), { weiter: true });
+  expect(m.beruehrungen).toBe(3);
+  expect(mitTomate - m.beruehrungen).toBeLessThanOrEqual(1);
 });
 
 test('UC5 Schritt 2: nach der Wahl des Zielgefässes steht je gewählte Sorte eine Zeile mit Einstufung und Gründen (auch ohne Netz)', async ({
@@ -135,8 +133,8 @@ test('UC5 Schritt 2: nach der Wahl des Zielgefässes steht je gewählte Sorte ei
   context,
 }) => {
   const m = await mitDaten(page, regal(), '/#/saeen?box=R-A1');
-  await tipp(m, sorteWahl(page, 'Lollo Rossa'));
-  await tipp(m, sorteWahl(page, 'Ochsenherz'));
+  await sorteWaehlen(page, 'Salat', 'Lollo Rossa', (ziel) => tipp(m, ziel));
+  await sorteWaehlen(page, 'Tomate', 'Ochsenherz', (ziel) => tipp(m, ziel));
   await tipp(m, knopf(page, 'Weiter'));
   await expect(page.getByText('Schritt 2 von 3')).toBeVisible();
   // vor der Gefässwahl keine Einstufung
@@ -160,30 +158,32 @@ test('UC5 Schritt 2: nach der Wahl des Zielgefässes steht je gewählte Sorte ei
 test('UC5 ohne Zielgefäss zeigt Schritt 1 keine Einstufung', async ({ page }) => {
   await mitDaten(page, regal(), '/#/saeen?box=R-A1');
   await expect(page.getByText('Schritt 1 von 3')).toBeVisible();
-  for (const name of [
-    'Lollo Rossa',
-    'Eichblatt',
-    'Ochsenherz',
-    'Genoveser',
-    'Rucola',
-    'Matador',
-    'Rhubarb Chard',
-  ])
-    await expect(sorteWahl(page, name)).toBeVisible();
+  // Plan 205: alle Gemüse als Kacheln, keine Stufe, nichts eingeklappt
+  for (const name of ['Basilikum', 'Mangold', 'Rucola', 'Salat', 'Spinat', 'Tomate'])
+    await expect(gemueseKachel(page, name)).toBeVisible();
   await expect(page.getByText(STUFE)).toHaveCount(0);
   await expect(page.getByRole('button', { name: /anzeigen$/ })).toHaveCount(0);
+  await gemueseKachel(page, 'Salat').click();
+  await expect(sortenZeile(page, 'Lollo Rossa')).toBeVisible();
+  await expect(sortenZeile(page, 'Eichblatt')).toBeVisible();
+  await expect(page.getByText(STUFE)).toHaveCount(0);
   await expect(page.getByText(/nicht für Kratky/)).toHaveCount(0);
 });
 
 test('UC5 Status nie nur über Farbe: Badge trägt das Wort', async ({ page }) => {
   const m = await mitDaten(page, regal(), AUS_GEFAESS_33);
   await expect(page.getByText('Schritt 1 von 3')).toBeVisible();
-  for (const name of ['Lollo Rossa', 'Eichblatt', 'Genoveser', 'Rucola', 'Matador', 'Rhubarb Chard'])
-    await expect(sorteWahl(page, name)).toContainText(/Empfohlen/);
+  // Plan 205: jede Gemüse-Kachel trägt die beste Stufe ihrer Sorten als Wort
+  for (const name of ['Basilikum', 'Mangold', 'Rucola', 'Salat', 'Spinat'])
+    await expect(gemueseKachel(page, name)).toContainText(/Empfohlen/);
   await tipp(m, knopf(page, 'Nicht empfohlen (1) anzeigen'));
-  await expect(sorteWahl(page, 'Ochsenherz')).toContainText('Nicht empfohlen');
+  await expect(gemueseKachel(page, 'Tomate')).toContainText('Nicht empfohlen');
   // jedes Stufen-Badge ist ein Wort, nicht nur eine Farbe
   const badges = page.getByText(STUFE);
-  expect(await badges.count()).toBeGreaterThanOrEqual(7);
+  expect(await badges.count()).toBeGreaterThanOrEqual(6);
   for (const b of await badges.all()) expect((await b.innerText()).trim()).toMatch(STUFE);
+  // auch in der Sortenliste je Sorte
+  await tipp(m, gemueseKachel(page, 'Salat'));
+  for (const name of ['Lollo Rossa', 'Eichblatt'])
+    await expect(sortenZeile(page, name)).toContainText(/Empfohlen/);
 });

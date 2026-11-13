@@ -23,6 +23,7 @@ import { aufStation, saatTeile, SORTE, STATION_5CM } from '../fixtures/saeen.ts'
 import { zeileAufnehmen } from '../fixtures/sichten.ts';
 import { authNachbilden, sitzungSpeichern } from './hilfen.ts';
 import { restNachbilden } from './rest.ts';
+import { sorteWaehlen } from './sortenwahl-hilfe.ts';
 
 const JETZT = new Date('2027-01-07T08:00:00Z');
 
@@ -65,8 +66,6 @@ async function tipp(m: Mitschnitt, ziel: Locator): Promise<void> {
 const zeilenVon = (m: Mitschnitt, tabelle: string) =>
   m.geschrieben.filter(([t]) => t === tabelle).map(([, z]) => z);
 
-const sorteWahl = (page: Page, name: string) =>
-  page.getByRole('button', { name: new RegExp(`^${name}`) }).first();
 const sortenleiste = (page: Page, name: string) =>
   page.getByRole('button', { name: new RegExp(`^(?!Loch ).*${name}`) }).first();
 const zielgefaess = (page: Page, kennung: string) =>
@@ -96,9 +95,9 @@ test('UC5-AK1 6 Zieltöpfe in 2.3 mit 2 Sorten, Anzucht in A1, in höchstens 14 
 
   // Schritt 1: zwei Sorten
   await expect(page.getByText('Schritt 1 von 3')).toBeVisible();
-  await tipp(m, sorteWahl(page, 'Lollo Rossa'));
-  await tipp(m, sorteWahl(page, 'Eichblatt'));
-  await tipp(m, knopf(page, 'Weiter'));
+  await sorteWaehlen(page, 'Salat', 'Lollo Rossa', (ziel) => tipp(m, ziel));
+  // Plan 205 A6: «Wählen und weiter» bei der letzten Sorte spart den Tipp auf «Weiter»
+  await sorteWaehlen(page, 'Salat', 'Eichblatt', (ziel) => tipp(m, ziel), { weiter: true });
 
   // Schritt 2: Malmodus in 2.3
   await expect(page.getByText('Schritt 2 von 3')).toBeVisible();
@@ -154,7 +153,7 @@ test('R6.1 Stationsvorschau und Warnung ohne Sperre, Speichern bleibt möglich',
     loecher: STATION_5CM.slice(0, 30),
   });
   const m = await mitDaten(page, t, '/#/saeen?box=R-A1');
-  await tipp(m, sorteWahl(page, 'Lollo Rossa'));
+  await sorteWaehlen(page, 'Salat', 'Lollo Rossa', (ziel) => tipp(m, ziel));
   await tipp(m, knopf(page, 'Weiter'));
   await tipp(m, zielgefaess(page, '2.3'));
   await tipp(m, reihe(page, 1));
@@ -173,7 +172,7 @@ test('R6.1 Stationsvorschau und Warnung ohne Sperre, Speichern bleibt möglich',
 
 test('UC5 Ziel später speichert ohne Reservierung', async ({ page }) => {
   const m = await mitDaten(page, regal(), '/#/saeen?box=R-A1');
-  await tipp(m, sorteWahl(page, 'Eichblatt'));
+  await sorteWaehlen(page, 'Salat', 'Eichblatt', (ziel) => tipp(m, ziel));
   await tipp(m, knopf(page, 'Weiter'));
   await expect(page.getByText('Schritt 2 von 3')).toBeVisible();
   await tipp(m, knopf(page, 'Ziel später'));
@@ -188,7 +187,7 @@ test('UC5 Ziel später speichert ohne Reservierung', async ({ page }) => {
 
 test('UC5 Rückgängig sendet Storno für alle Zeilen', async ({ page }) => {
   const m = await mitDaten(page, regal(), '/#/saeen?box=R-A1');
-  await tipp(m, sorteWahl(page, 'Lollo Rossa'));
+  await sorteWaehlen(page, 'Salat', 'Lollo Rossa', (ziel) => tipp(m, ziel));
   await tipp(m, knopf(page, 'Weiter'));
   await tipp(m, zielgefaess(page, '2.3'));
   await tipp(m, reihe(page, 1));
@@ -209,7 +208,7 @@ test('UC5 Maske ohne Systemtastatur (kein input mit Tastatur)', async ({ page })
   const m = await mitDaten(page, regal(), '/#/saeen?box=R-A1');
   await expect(page.getByText('Schritt 1 von 3')).toBeVisible();
   await ohneTastatur(page);
-  await tipp(m, sorteWahl(page, 'Lollo Rossa'));
+  await sorteWaehlen(page, 'Salat', 'Lollo Rossa', (ziel) => tipp(m, ziel));
   await tipp(m, knopf(page, 'Weiter'));
   await expect(page.getByText('Schritt 2 von 3')).toBeVisible();
   await tipp(m, zielgefaess(page, '2.3'));
@@ -243,7 +242,7 @@ test('TO8 Säen ohne Netz: «nicht gespeichert», Schritt 3 mit Eingaben bleibt,
     return route.fallback();
   });
 
-  await tipp(m, sorteWahl(page, 'Lollo Rossa'));
+  await sorteWaehlen(page, 'Salat', 'Lollo Rossa', (ziel) => tipp(m, ziel));
   await tipp(m, knopf(page, 'Weiter'));
   await tipp(m, zielgefaess(page, '2.3'));
   await tipp(m, reihe(page, 1));

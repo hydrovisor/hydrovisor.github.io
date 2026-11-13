@@ -133,6 +133,7 @@ Vorschau: Cloudflare Pages `hydrovisor-vorschau` baut jeden Zweig (`<zweig>.hydr
 - [0019 Nacht-Freigabe vom 12.11.2026 bis 13.11. 07:00](docs/entscheide/0019-nacht-freigabe-12-11.md)
 - [0020 Demo auf echten Sorten: S6 mit Salat, S8 sät vor 7 Tagen](docs/entscheide/0020-demo-auf-echten-sorten.md)
 - [0021 Deckelwahl mit Lochbild und nach Box gefiltert](docs/entscheide/0021-deckelwahl-nach-box.md)
+- [0023 Sortenwahl beim Säen nach Gemüse (Variante B)](docs/entscheide/0023-sortenwahl-nach-gemuese.md)
 - Übrige Entscheide vom 1.11.2026: `docs/spec/00_rueckfragen.md` (R1 bis R13, W1 bis W14, Annahmen 1 bis 16)
 
 ## Arbeitsweise in der Sitzung

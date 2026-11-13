@@ -1,7 +1,9 @@
 // Baustein Tile (design-system/components/Tile.md): Kachel für Messwert und Ort
 import { useEffect, useState, type ReactNode } from 'react';
 import { Button } from './Button.tsx';
+import { EINSTUFUNG_NAME, type Einstufung } from '../../domain/passung/passung.ts';
 import { StatusIcon } from './StatusIcon.tsx';
+import { Stufe } from './Stufe.tsx';
 
 type Bewertung = 'ok' | 'warn' | 'danger';
 
@@ -99,6 +101,68 @@ export function OrtKachel({ kennung, zeilen, badge, onClick, messstelle }: OrtPr
         </span>
       ))}
       {badge}
+    </button>
+  );
+}
+
+/** Variante «Gemüse» (Tile.md, Plan 205): Name, Zahl der Sorten, «n gewählt», beste Stufe; Name als ein Satz */
+export function GemueseKachel({
+  name,
+  sorten,
+  sortenGesamt,
+  gewaehlt,
+  stufe,
+  onClick,
+}: {
+  name: string;
+  sorten: number;
+  /** alle Sorten des Gemüses, auch eingeklappte «Nicht empfohlen» (Runde 1 Befund 8) */
+  sortenGesamt?: number;
+  gewaehlt: number;
+  stufe?: Einstufung;
+  onClick: () => void;
+}) {
+  const anzahl =
+    sortenGesamt !== undefined && sortenGesamt > sorten
+      ? `${String(sorten)} von ${String(sortenGesamt)} Sorten`
+      : sorten === 1
+        ? '1 Sorte'
+        : `${String(sorten)} Sorten`;
+  const teile = [
+    name,
+    anzahl,
+    gewaehlt > 0 ? `${String(gewaehlt)} gewählt` : '',
+    stufe ? EINSTUFUNG_NAME[stufe] : '',
+  ];
+  return (
+    <button
+      type="button"
+      className={gewaehlt > 0 ? 'hv-tile hv-tile-gemuese hv-tile-aktiv' : 'hv-tile hv-tile-gemuese'}
+      aria-label={teile.filter(Boolean).join(', ')}
+      onClick={onClick}
+    >
+      <span className="hv-tile-gemuese-name">{name}</span>
+      <span className="hv-tile-zeile">{anzahl}</span>
+      {gewaehlt > 0 || stufe ? (
+        <span className="hv-tile-gemuese-badges">
+          {gewaehlt > 0 ? (
+            <span className="hv-badge hv-badge-info">
+              <svg
+                className="hv-status-icon"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={3}
+              >
+                <path d="M5 12.5l4.5 4.5L19 7" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              {`${String(gewaehlt)} gewählt`}
+            </span>
+          ) : null}
+          {stufe ? <Stufe einstufung={stufe} /> : null}
+        </span>
+      ) : null}
     </button>
   );
 }

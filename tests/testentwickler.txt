@@ -277,3 +277,7 @@ tests/e2e/wechselblock.spec.ts
 tests/unit/demo-regeln.test.ts
 tests/seed/demo.test.ts
 tests/e2e/demo-echt.spec.ts
+# 205 Sortenwahl nach Gemüse (#205)
+tests/unit/sortenwahl.test.ts
+tests/e2e/sortenwahl.spec.ts
+tests/e2e/sortenwahl-hilfe.ts

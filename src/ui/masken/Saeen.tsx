@@ -40,6 +40,7 @@ import { Stepper } from '../bausteine/Stepper.tsx';
 import { useBuendel } from '../buendel.tsx';
 import { jetzt } from '../bundeldaten.ts';
 import { hashZu } from '../router.ts';
+import { SaeenSortenwahl, type SortenAnsicht } from './SaeenSortenwahl.tsx';
 
 const KEIMART: Record<string, string> = {
   licht: 'Lichtkeimer',
@@ -82,6 +83,8 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
   const [fehler, setFehler] = useState<string[]>([]);
   // Plan 36: Gruppe «Nicht empfohlen» in Schritt 1 aufgeklappt
   const [nichtOffen, setNichtOffen] = useState(false);
+  // Plan 205: Ansicht in Schritt 1 (Kacheln je Gemüse, Sorten eines Gemüses, Detail der Sorte)
+  const [ansicht, setAnsicht] = useState<SortenAnsicht>({ typ: 'gemuese' });
   // Teil des Vorgangs schon gespeichert: Eingabe fest, nur derselbe Vorgang erneut (Prüfer Runde 1, Befund 8)
   const [teilweise, setTeilweise] = useState(false);
   const [fertig, setFertig] = useState<{ vorgang: Vorgang; text: string; zurueck?: boolean }>();
@@ -376,12 +379,12 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
     const kopien = duplizierbareSaetze(teile, anlageId);
     // ohne Gefäss am Zielplatz liefert sortenPassung() nichts: dann alle Sorten ohne Stufe (Sicherheit Runde 1 Befund 6)
     const reihenfolge = passungen?.length ? nachStufe(passungen) : sorten;
-    const nichtEmpfohlen = passungen?.filter((p) => p.passung.einstufung === 'nicht_empfohlen') ?? [];
-    // gewählte Nicht-empfohlen-Sorten bleiben sichtbar (UC5-AK13: kein zweiter Tipp nötig)
-    const nichtSichtbar = nichtOffen || nichtEmpfohlen.some((p) => gewaehlt.includes(p.sorteId));
-    const sichtbar = reihenfolge.filter(
-      (s) => nichtSichtbar || !nichtEmpfohlen.some((p) => p.sorteId === s.sorteId),
-    );
+    const nichtEmpfohlen = (passungen ?? [])
+      .filter((p) => p.passung.einstufung === 'nicht_empfohlen')
+      .map((p) => p.sorteId);
+    const passungVon = (id: string) => passungen?.find((p) => p.sorteId === id)?.passung;
+    // Plan 205: im Detail der Sorte keine Leiste «Weiter» und kein «Satz duplizieren»
+    const imDetail = ansicht.typ === 'sorte';
     return (
       <main className="hv-seite hv-saeen" data-density="regal">
         {kopf}
@@ -403,48 +406,26 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
             selbst.
           </Notice>
         ) : null}
-        <div className="hv-choice" role="group" aria-label="Sorten">
-          {sichtbar.map((s) => (
-            <div key={s.sorteId} className="hv-saeen-sorte">
-              <Choice
-                label={s.name}
-                optionen={[
-                  {
-                    wert: s.sorteId,
-                    titel: s.name,
-                    ...stufeVon(passungen?.find((p) => p.sorteId === s.sorteId)?.passung),
-                    zusatz: [
-                      passungZusatz(passungen?.find((p) => p.sorteId === s.sorteId)?.passung),
-                      s.wieLetztesMal ? `Wie letztes Mal: ${KULTURFORM_NAME[s.wieLetztesMal]}` : '',
-                      s.keimart ? KEIMART[s.keimart] : '',
-                    ]
-                      .filter(Boolean)
-                      .join(' · '),
-                  },
-                ]}
-                gewaehlt={gewaehlt}
-                onWahl={sorteUmschalten}
-              />
-              {gewaehlt.includes(s.sorteId) && s.kulturformen.length > 1 ? (
-                <Choice
-                  einzeln
-                  label={`Kulturform ${s.name}`}
-                  zeile
-                  optionen={s.kulturformen.map((k) => ({ wert: k, titel: KULTURFORM_NAME[k] ?? k }))}
-                  gewaehlt={[kulturform[s.sorteId] ?? s.wieLetztesMal ?? s.vorgabe]}
-                  onWahl={(k) => setKulturform((alt) => ({ ...alt, [s.sorteId]: k }))}
-                />
-              ) : null}
-            </div>
-          ))}
-        </div>
-        {nichtEmpfohlen.length > 0 && !nichtSichtbar ? (
-          <Button variant="secondary" block onClick={() => setNichtOffen(true)}>
-            {`Nicht empfohlen (${String(nichtEmpfohlen.length)}) anzeigen`}
-          </Button>
+        {teile ? (
+          <SaeenSortenwahl
+            teile={teile}
+            sorten={reihenfolge}
+            ansicht={ansicht}
+            setAnsicht={setAnsicht}
+            gewaehlt={gewaehlt}
+            umschalten={sorteUmschalten}
+            kulturformVon={(s) => kulturform[s.sorteId] ?? s.wieLetztesMal ?? s.vorgabe}
+            setKulturform={(id, k) => setKulturform((alt) => ({ ...alt, [id]: k }))}
+            stufe={(id) => passungVon(id)?.einstufung}
+            passungText={(id) => passungZusatz(passungVon(id))}
+            nichtEmpfohlen={nichtEmpfohlen}
+            nichtOffen={nichtOffen}
+            setNichtOffen={setNichtOffen}
+            weiter={() => setSchritt(2)}
+          />
         ) : null}
-        {/* Plan 25 A15: unter der Sortenliste, damit die Sortenwahl zuerst kommt */}
-        {kopien.length > 0 ? (
+        {/* Plan 25 A15: unter der Sortenwahl, damit die Sortenwahl zuerst kommt */}
+        {kopien.length > 0 && ansicht.typ === 'gemuese' ? (
           <section className="hv-saeen-satz" aria-label="Satz duplizieren">
             <h2 className="hv-saeen-satz-titel">Satz duplizieren</h2>
             {kopien.map((k) => (
@@ -461,11 +442,13 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
             ))}
           </section>
         ) : null}
-        <div className="hv-saeen-fuss">
-          <Button block disabled={gewaehlt.length === 0} onClick={() => setSchritt(2)}>
-            Weiter
-          </Button>
-        </div>
+        {imDetail ? null : (
+          <div className="hv-saeen-fuss">
+            <Button block disabled={gewaehlt.length === 0} onClick={() => setSchritt(2)}>
+              Weiter
+            </Button>
+          </div>
+        )}
       </main>
     );
   }
@@ -601,7 +584,14 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
           </>
         ) : null}
         <div className="hv-saeen-fuss">
-          <Button variant="secondary" onClick={() => setSchritt(1)}>
+          <Button
+            variant="secondary"
+            onClick={() => {
+              // Plan 205: zurück zu den Kacheln, nicht ins Detail der zuletzt gewählten Sorte (Runde 1 Befund 7)
+              setAnsicht({ typ: 'gemuese' });
+              setSchritt(1);
+            }}
+          >
             Zurück
           </Button>
           <Button
@@ -728,10 +718,6 @@ const GEPRUEFT_NAME: Readonly<Record<GrundCode, string>> = {
   P10: 'EC-Mitte',
   P11: 'Liter',
 };
-
-function stufeVon(p: Passung | undefined): { stufe?: Einstufung } {
-  return p ? { stufe: p.einstufung } : {};
-}
 
 function passungZusatz(p: Passung | undefined): string {
   if (!p) return '';
