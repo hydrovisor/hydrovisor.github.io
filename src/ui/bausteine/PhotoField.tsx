@@ -7,9 +7,13 @@ interface PhotoFieldProps {
   hint?: string | undefined;
   error?: string | undefined;
   onWahl: (datei: File) => void;
+  /** Text des Knopfs statt «Foto wählen» und «Foto ersetzen» (Plan 207) */
+  knopf?: string | undefined;
+  /** gesperrt, z. B. während des Hochladens */
+  deaktiviert?: boolean | undefined;
 }
 
-export function PhotoField({ label, vorschau, hint, error, onWahl }: PhotoFieldProps) {
+export function PhotoField({ label, vorschau, hint, error, onWahl, knopf, deaktiviert }: PhotoFieldProps) {
   const id = useId();
   const meldung = error ?? (vorschau ? 'Foto gewählt' : hint);
   return (
@@ -22,14 +26,19 @@ export function PhotoField({ label, vorschau, hint, error, onWahl }: PhotoFieldP
           type="file"
           accept="image/*"
           aria-label={label}
+          disabled={deaktiviert}
           onChange={(ev) => {
             const datei = ev.target.files?.[0];
             if (datei) onWahl(datei);
             ev.target.value = '';
           }}
         />
-        <label htmlFor={id} className="hv-btn hv-btn-secondary">
-          {vorschau ? 'Foto ersetzen' : 'Foto wählen'}
+        <label
+          htmlFor={id}
+          className="hv-btn hv-btn-secondary"
+          aria-disabled={deaktiviert ? true : undefined}
+        >
+          {knopf ?? (vorschau ? 'Foto ersetzen' : 'Foto wählen')}
         </label>
         {vorschau ? <img className="hv-photo-preview" src={vorschau} alt={`Foto ${label}`} /> : null}
       </div>

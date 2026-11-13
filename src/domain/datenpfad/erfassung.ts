@@ -21,6 +21,7 @@ export type Erfassungstabelle =
   | 'saatgut'
   | 'eigene_aufgabe'
   | 'ki_feldprotokoll'
+  | 'tuetenfoto'
   | 'etikett_aufruf'
   | 'anlage'
   | 'bereich'
