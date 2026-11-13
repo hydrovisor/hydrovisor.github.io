@@ -48,6 +48,15 @@ function ablaufLesen(page: Page): Promise<unknown> {
   );
 }
 
+/** Info über die Leiste unten: «Mehr», dann «Info und Version» (seit N1, Entscheid 0025) */
+async function infoOeffnen(page: Page): Promise<void> {
+  await page
+    .getByRole('navigation', { name: 'Hauptnavigation' })
+    .getByRole('link', { name: 'Mehr', exact: true })
+    .click();
+  await page.locator('main').getByRole('link', { name: 'Info und Version', exact: true }).click();
+}
+
 const wartenderDienst = (page: Page) =>
   page.evaluate(async () => Boolean((await navigator.serviceWorker.getRegistration())?.waiting));
 const ohneNeuladen = (page: Page) =>
@@ -70,7 +79,7 @@ test('TO7 neue Version während Ablauf: Hinweis nur in Heute ohne Ablauf, nichts
     await expect(page.locator('main[data-ablauf="keiner"]')).toBeVisible();
 
     // Ein Ablauf läuft (Schrittstand in IndexedDB), Tim ist ausserhalb von Heute
-    await page.getByRole('link', { name: 'Info öffnen' }).click();
+    await infoOeffnen(page);
     await ablaufSetzen(page, ABLAUF);
     await page.evaluate(() => ((window as unknown as { ohneNeuladen: boolean }).ohneNeuladen = true));
 
@@ -90,7 +99,7 @@ test('TO7 neue Version während Ablauf: Hinweis nur in Heute ohne Ablauf, nichts
 
     // Ablauf beendet: der Hinweis erscheint in Heute
     await ablaufSetzen(page, null);
-    await page.getByRole('link', { name: 'Info öffnen' }).click();
+    await infoOeffnen(page);
     await expect(hinweis).toHaveCount(0);
     await page.getByRole('link', { name: 'Heute öffnen' }).click();
     await expect(page.locator('main[data-ablauf="keiner"]')).toBeVisible();

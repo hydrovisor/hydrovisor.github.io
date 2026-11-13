@@ -449,3 +449,33 @@ a.hv-sortenzeile, a.hv-sortenzeile:hover { color: var(--ink); text-decoration: n
 .hv-kulturform > .hv-btn { align-self: flex-start; }
 .hv-kulturform .hv-choice-item { align-items: flex-start; }
 .hv-kulturform .hv-choice-zusatz { font-size: var(--text-small-size); line-height: var(--text-small-line); }
+
+/* Leiste unten (Tabbar, components/Tabbar.md; Entscheid 0025): fest unten, Ziele 68 dp, aktives Ziel mit Balken, Pille und
+   fetter Schrift, nie nur Farbe */
+.hv-tabbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
+  padding: 0 max(0px, calc((100% - var(--size-content)) / 2)) env(safe-area-inset-bottom); background: var(--surface-raised);
+  border-top: 1px solid var(--line); box-shadow: var(--shadow-sm); }
+.hv-tabbar-ziel { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-width: 0;
+  min-height: var(--size-touch-regal); padding: var(--space-1) 2px; color: var(--ink-muted); text-decoration: none; font-size: 13px; line-height: 16px;
+  font-weight: 600; -webkit-tap-highlight-color: transparent; }
+.hv-tabbar-ziel:hover { color: var(--ink); }
+.hv-tabbar-ziel:active { background: var(--surface-sunken); }
+.hv-tabbar-symbol { position: relative; display: grid; place-items: center; width: 52px; height: 28px; border-radius: var(--radius-full); }
+.hv-tabbar-symbol svg { width: 24px; height: 24px; }
+.hv-tabbar-wort { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hv-tabbar-ziel[aria-current="page"] { color: var(--ink); font-weight: 800; }
+.hv-tabbar-ziel[aria-current="page"]::before { content: ""; position: absolute; top: 0; left: 20%; right: 20%; height: 4px; border-radius: 0 0 4px 4px; background: var(--brand); }
+.hv-tabbar-ziel[aria-current="page"] .hv-tabbar-symbol { background: var(--brand-soft); }
+.hv-tabbar-zahl { position: absolute; top: -4px; left: calc(50% + 6px); min-width: 18px; height: 18px; padding: 0 5px; border-radius: var(--radius-full);
+  background: var(--status-warn); color: var(--surface-raised); font-size: 11px; line-height: 18px; font-weight: 700; text-align: center; }
+@media print { .hv-tabbar { display: none; } }
+
+/* Navigationsliste (Tabbar.md): Unterseiten einer Hauptseite, etwa «Mehr»; Zeilen 68 dp mit Pfeil */
+.hv-navliste { display: flex; flex-direction: column; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.hv-navliste-zeile { display: flex; align-items: center; gap: var(--space-3); min-height: var(--size-touch-regal); padding: var(--space-2) var(--space-4);
+  background: var(--surface-raised); border: 1px solid var(--line); border-radius: var(--radius-lg); color: var(--ink); text-decoration: none;
+  -webkit-tap-highlight-color: transparent; }
+.hv-navliste-zeile:hover { color: var(--ink); border-color: var(--line-control); }
+.hv-navliste-zeile:active { background: var(--surface-sunken); }
+.hv-navliste-titel { flex: 1 1 auto; min-width: 0; font-weight: 700; }
+.hv-navliste-pfeil { flex: none; color: var(--ink-muted); font-size: 24px; line-height: 1; }

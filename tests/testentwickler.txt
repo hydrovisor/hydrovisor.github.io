@@ -285,6 +285,9 @@ tests/e2e/sortenwahl-hilfe.ts
 supabase/tests/database/20_tuetenfoto.test.sql
 tests/unit/tuetenfoto.test.ts
 tests/e2e/tuetenfoto.spec.ts
+# N1 Leiste unten (#212)
+tests/unit/leiste.test.ts
+tests/e2e/leiste.spec.ts
 # 211 Saatgut-Manager (#211)
 tests/unit/saatgut.test.ts
 tests/e2e/saatgut.spec.ts
