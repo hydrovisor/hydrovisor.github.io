@@ -281,3 +281,7 @@ tests/e2e/demo-echt.spec.ts
 tests/unit/sortenwahl.test.ts
 tests/e2e/sortenwahl.spec.ts
 tests/e2e/sortenwahl-hilfe.ts
+# 207 Tütenfotos (#207)
+supabase/tests/database/20_tuetenfoto.test.sql
+tests/unit/tuetenfoto.test.ts
+tests/e2e/tuetenfoto.spec.ts
