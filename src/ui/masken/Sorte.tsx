@@ -52,10 +52,18 @@ const jetzt = () => new Date(Date.now());
 
 const SEITE_LABEL: Record<TuetenfotoSeite, string> = { vorne: 'Vorderseite', hinten: 'Rückseite' };
 
+/** offener Vorgang für «Speichern wiederholen» und die client_id, die das Bündel danach zeigen muss */
+interface Offen {
+  vorgang: Vorgang;
+  seite: TuetenfotoSeite;
+  clientId: string;
+}
+
 /**
  * Card «Tütenfoto» am Schreibtisch (Plan 207): Anzeige über signierte Links, je Seite «Tütenfoto ergänzen» oder «Foto
  * ersetzen». Wahl → verkleinern → hochladen → Storno der alten Zeile plus neue Zeile über schreiben(); scheitert das
- * Schreiben, sendet «Erneut speichern» denselben Vorgang (A12).
+ * Schreiben, sendet «Speichern wiederholen» denselben Vorgang (A12). Die Fotofelder bleiben gesperrt, bis das Bündel die
+ * neue Zeile zeigt, damit kein zweites Ersetzen die alte Zeile übersieht (A11).
  */
 function TuetenfotoKarte({ sorteId }: { sorteId: string }) {
   const { buendel } = useBuendel();
@@ -63,20 +71,28 @@ function TuetenfotoKarte({ sorteId }: { sorteId: string }) {
   const aktuell = aktuelleTuetenfotos(zeilen, sorteId);
   const [laeuft, setLaeuft] = useState(false);
   const [meldung, setMeldung] = useState<string>();
-  const [offen, setOffen] = useState<Vorgang>();
+  const [offen, setOffen] = useState<Offen>();
+  const [erwartet, setErwartet] = useState<{ seite: TuetenfotoSeite; clientId: string }>();
+  const wartetAufBuendel = erwartet !== undefined && aktuell[erwartet.seite]?.clientId !== erwartet.clientId;
+  const gesperrt = laeuft || wartetAufBuendel;
 
-  async function senden(vorgang: Vorgang) {
-    const r = await schreiben(vorgang, { jetzt: jetzt(), zeitzone: ZEITZONE });
+  async function senden(o: Offen) {
+    const r = await schreiben(o.vorgang, { jetzt: jetzt(), zeitzone: ZEITZONE });
     if (r.status === 'gespeichert') {
       setOffen(undefined);
+      setErwartet({ seite: o.seite, clientId: o.clientId });
       return;
     }
-    setOffen(vorgang);
-    setMeldung(
-      r.status === 'abweichend'
-        ? 'Nicht gespeichert: Dieses Foto ist schon mit anderen Angaben gespeichert.'
-        : r.fehler.text,
-    );
+    if (r.status === 'abweichend') {
+      // dasselbe Senden ergäbe wieder «abweichend»: kein Wiederholen anbieten
+      setOffen(undefined);
+      setMeldung(
+        'Foto nicht gespeichert: Es ist schon mit anderen Angaben gespeichert. Wähle das Foto erneut.',
+      );
+      return;
+    }
+    setOffen(o);
+    setMeldung(r.fehler.text);
   }
 
   async function waehlen(seite: TuetenfotoSeite, datei: File) {
@@ -88,29 +104,32 @@ function TuetenfotoKarte({ sorteId }: { sorteId: string }) {
       try {
         bild = await tuetenbildVerkleinern(datei);
       } catch {
-        setMeldung('Das Foto ist nicht lesbar. Wähl ein anderes Foto.');
+        setMeldung('Foto nicht gespeichert: Das Foto ist nicht lesbar. Wähle ein anderes Foto.');
         return;
       }
       const hoch = await fotoHochladen(sorteId, bild);
       if ('fehler' in hoch) {
-        setMeldung('Das Foto ist nicht hochgeladen. Prüf die Verbindung und wähl das Foto noch einmal.');
+        setMeldung('Foto nicht gespeichert. Prüf die Verbindung und wähle es erneut.');
         return;
       }
-      await senden(
-        tuetenfotoVorgang({
+      const clientId = neueClientId();
+      await senden({
+        seite,
+        clientId,
+        vorgang: tuetenfotoVorgang({
           sorteId,
           seite,
           pfad: hoch.pfad,
-          clientId: neueClientId(),
+          clientId,
           ersetzt: aktuell[seite]?.clientId,
         }),
-      );
+      });
     } finally {
       setLaeuft(false);
     }
   }
 
-  async function erneut() {
+  async function wiederholen() {
     if (!offen) return;
     setLaeuft(true);
     setMeldung(undefined);
@@ -120,21 +139,21 @@ function TuetenfotoKarte({ sorteId }: { sorteId: string }) {
 
   return (
     <Card title="Tütenfoto">
-      <TuetenfotoAnzeige sorteId={sorteId} leerText="Wähl unten ein Foto der Vorder- oder Rückseite." />
+      <TuetenfotoAnzeige sorteId={sorteId} leerText="Wähle unten ein Foto der Vorder- oder Rückseite." />
       {(['vorne', 'hinten'] as const).map((seite) => (
         <PhotoField
           key={seite}
           label={SEITE_LABEL[seite]}
           knopf={aktuell[seite] ? 'Foto ersetzen' : 'Tütenfoto ergänzen'}
-          deaktiviert={laeuft}
+          deaktiviert={gesperrt}
           onWahl={(datei) => void waehlen(seite, datei)}
         />
       ))}
-      {laeuft ? <p role="status">Foto wird gespeichert</p> : null}
+      {gesperrt ? <p role="status">Foto wird gespeichert</p> : null}
       {meldung ? <Notice tone="danger">{meldung}</Notice> : null}
       {offen && !laeuft ? (
-        <Button variant="secondary" onClick={() => void erneut()}>
-          Erneut speichern
+        <Button variant="secondary" onClick={() => void wiederholen()}>
+          Speichern wiederholen
         </Button>
       ) : null}
     </Card>

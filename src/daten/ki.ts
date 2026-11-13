@@ -27,12 +27,20 @@ export async function fotoHochladen(
 
 /** Gültigkeit eines signierten Links für die Anzeige eines Tütenfotos (Konzept 11.3, Plan 207) */
 export const FOTO_LINK_SEKUNDEN = 60;
+/** Frist für das Signieren; danach gilt «Foto nur mit Verbindung» (Plan 207 A7, schwaches WLAN am Regal) */
+const FRIST_FOTO_LINK_MS = 8_000;
 
-/** signierter Link (60 s) auf ein Tütenfoto im privaten Bucket; ohne Verbindung oder bei Fehler undefined (A7) */
+/**
+ * signierter Link (60 s) auf ein Tütenfoto im privaten Bucket; ohne Verbindung, nach der Frist oder bei Fehler
+ * undefined (A7)
+ */
 export async function fotoLink(pfad: string): Promise<string | undefined> {
   try {
-    const { data, error } = await supabase.storage.from(BUCKET).createSignedUrl(pfad, FOTO_LINK_SEKUNDEN);
-    return error || !data?.signedUrl ? undefined : data.signedUrl;
+    const r = await mitFrist(FRIST_FOTO_LINK_MS, () =>
+      supabase.storage.from(BUCKET).createSignedUrl(pfad, FOTO_LINK_SEKUNDEN),
+    );
+    if (r === 'zeit') return undefined;
+    return r.error || !r.data?.signedUrl ? undefined : r.data.signedUrl;
   } catch {
     return undefined;
   }

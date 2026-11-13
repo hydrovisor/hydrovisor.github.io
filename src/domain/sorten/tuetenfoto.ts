@@ -26,11 +26,20 @@ export type AktuelleTuetenfotos = Partial<Record<TuetenfotoSeite, Tuetenfoto>>;
 
 const SEITEN: readonly TuetenfotoSeite[] = ['vorne', 'hinten'];
 
-/** b jünger als a: nach erfasst_am als Zeitpunkt, bei Gleichstand die grössere id (Plan 207 A6) */
+/** Mikrosekunden innerhalb der Millisekunde («.123456» → 456); Date.parse schneidet sie ab (Prüferbefund B8) */
+function mikro(zeitpunkt: string): number {
+  const bruch = /\.(\d+)/.exec(zeitpunkt)?.[1] ?? '';
+  return Number(bruch.padEnd(6, '0').slice(3, 6));
+}
+
+/** b jünger als a: nach erfasst_am als Zeitpunkt auf die Mikrosekunde, bei Gleichstand die grössere id (A6) */
 function juenger(b: TuetenfotoZeile, a: TuetenfotoZeile): boolean {
   const zb = Date.parse(b.erfasst_am);
   const za = Date.parse(a.erfasst_am);
   if (zb !== za) return zb > za;
+  const mb = mikro(b.erfasst_am);
+  const ma = mikro(a.erfasst_am);
+  if (mb !== ma) return mb > ma;
   return b.id > a.id;
 }
 

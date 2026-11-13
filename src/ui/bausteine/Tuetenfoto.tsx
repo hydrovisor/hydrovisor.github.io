@@ -28,6 +28,7 @@ export function Tuetenfoto({
   hinweis,
   leerText,
   alt,
+  onFehler,
 }: {
   /** Vorderseite (URL) */
   bild?: string | undefined;
@@ -39,17 +40,25 @@ export function Tuetenfoto({
   leerText?: string | undefined;
   /** Alternativtext statt «Tütenfoto Vorderseite» */
   alt?: string | undefined;
+  /** das Bild einer Seite lädt nicht (z. B. Link abgelaufen); die Maske signiert neu oder zeigt «offline» */
+  onFehler?: ((seite: Seite) => void) | undefined;
 }) {
   const [gewaehlt, setGewaehlt] = useState<Seite>('vorne');
   if (hinweis === 'offline')
     return (
-      <Platzhalter
-        titel="Foto nur mit Verbindung"
-        text="Das Tütenfoto lädt, sobald das Gerät wieder online ist."
-      />
+      <Platzhalter titel="Foto nur mit Verbindung" text="Das Foto lädt, sobald du wieder online bist." />
     );
   if (hinweis === 'laedt')
-    return <div className="hv-tuetenfoto" role="img" aria-label="Tütenfoto wird geladen" aria-busy="true" />;
+    return (
+      <div
+        className="hv-tuetenfoto hv-tuetenfoto-leer"
+        role="img"
+        aria-label="Tütenfoto wird geladen"
+        aria-busy="true"
+      >
+        <span>Foto wird geladen</span>
+      </div>
+    );
   const urls: Partial<Record<Seite, string>> = {};
   if (bild) urls.vorne = bild;
   if (rueckseite) urls.hinten = rueckseite;
@@ -72,7 +81,12 @@ export function Tuetenfoto({
   return (
     <div className="hv-tuetenfoto-block">
       <div className="hv-tuetenfoto">
-        <img key={seite} src={urls[seite]} alt={alt ?? `Tütenfoto ${SEITE_NAME[seite]}`} />
+        <img
+          key={seite}
+          src={urls[seite]}
+          alt={alt ?? `Tütenfoto ${SEITE_NAME[seite]}`}
+          onError={() => onFehler?.(seite)}
+        />
       </div>
       {beide ? (
         <Choice
