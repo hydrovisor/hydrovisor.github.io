@@ -2,8 +2,8 @@
 // Werte je anwendbarer Phase mit Herkunft und Verlässlichkeit, Saatempfehlungen, Packungen; «Recherche starten»,
 // solange die Sorte unvollständig ist.
 import { useState } from 'react';
-import { fotoHochladen, rechercheStarten } from '../../daten/ki.ts';
-import { neueClientId, schreiben } from '../../daten/schreiben.ts';
+import { rechercheStarten } from '../../daten/ki.ts';
+import { neueClientId } from '../../daten/schreiben.ts';
 import { wissenSchreiben } from '../../daten/wissen.ts';
 import type { RechercheErgebnis } from '../../domain/ki/recherche.ts';
 import type { Vorgang } from '../../domain/datenpfad/erfassung.ts';
@@ -14,7 +14,6 @@ import {
   type TuetenfotoSeite,
   type TuetenfotoZeile,
 } from '../../domain/sorten/tuetenfoto.ts';
-import { ZEITZONE } from '../../domain/zeit.ts';
 import { APP_VERSION } from '../../konstanten.ts';
 import { Button } from '../bausteine/Button.tsx';
 import { Card } from '../bausteine/Card.tsx';
@@ -22,8 +21,9 @@ import { Notice } from '../bausteine/Notice.tsx';
 import { PhotoField } from '../bausteine/PhotoField.tsx';
 import { StatusBadge } from '../bausteine/StatusBadge.tsx';
 import { useBuendel } from '../buendel.tsx';
+import { RechercheHinweis } from '../RechercheHinweis.tsx';
 import { hashZu } from '../router.ts';
-import { tuetenbildVerkleinern } from '../tuetenbild.ts';
+import { fotoVorgangSenden, tuetenfotoHochladen } from '../saatgutSpeichern.ts';
 import { TuetenfotoAnzeige } from '../TuetenfotoAnzeige.tsx';
 import '../sorten.css';
 
@@ -46,9 +46,6 @@ const KULTURFORM_NAME: Record<string, string> = {
   dauerkultur_blatt: 'Dauerkultur Blatt',
   dauerkultur_frucht: 'Dauerkultur Frucht',
 };
-
-/** Uhr der Oberfläche (G2: Date.now() nur hier) */
-const jetzt = () => new Date(Date.now());
 
 const SEITE_LABEL: Record<TuetenfotoSeite, string> = { vorne: 'Vorderseite', hinten: 'Rückseite' };
 
@@ -77,22 +74,15 @@ function TuetenfotoKarte({ sorteId }: { sorteId: string }) {
   const gesperrt = laeuft || wartetAufBuendel;
 
   async function senden(o: Offen) {
-    const r = await schreiben(o.vorgang, { jetzt: jetzt(), zeitzone: ZEITZONE });
-    if (r.status === 'gespeichert') {
+    const r = await fotoVorgangSenden(o.vorgang);
+    if (r === 'gespeichert') {
       setOffen(undefined);
       setErwartet({ seite: o.seite, clientId: o.clientId });
       return;
     }
-    if (r.status === 'abweichend') {
-      // dasselbe Senden ergäbe wieder «abweichend»: kein Wiederholen anbieten
-      setOffen(undefined);
-      setMeldung(
-        'Foto nicht gespeichert: Es ist schon mit anderen Angaben gespeichert. Wähle das Foto erneut.',
-      );
-      return;
-    }
-    setOffen(o);
-    setMeldung(r.fehler.text);
+    // «abweichend»: dasselbe Senden ergäbe wieder «abweichend», kein Wiederholen anbieten
+    setOffen(r.wiederholbar ? o : undefined);
+    setMeldung(r.meldung);
   }
 
   async function waehlen(seite: TuetenfotoSeite, datei: File) {
@@ -100,16 +90,13 @@ function TuetenfotoKarte({ sorteId }: { sorteId: string }) {
     setMeldung(undefined);
     setOffen(undefined);
     try {
-      let bild: Blob;
-      try {
-        bild = await tuetenbildVerkleinern(datei);
-      } catch {
-        setMeldung('Foto nicht gespeichert: Das Foto ist nicht lesbar. Wähle ein anderes Foto.');
-        return;
-      }
-      const hoch = await fotoHochladen(sorteId, bild);
+      const hoch = await tuetenfotoHochladen(sorteId, datei);
       if ('fehler' in hoch) {
-        setMeldung('Foto nicht gespeichert. Prüf die Verbindung und wähle es erneut.');
+        setMeldung(
+          hoch.fehler === 'lesbar'
+            ? 'Foto nicht gespeichert: Das Foto ist nicht lesbar. Wähle ein anderes Foto.'
+            : 'Foto nicht gespeichert. Prüf die Verbindung und wähle es erneut.',
+        );
         return;
       }
       const clientId = neueClientId();
@@ -179,7 +166,7 @@ export function Sorte({ sorte }: { sorte: string }) {
       <header className="hv-seite-kopf">
         <h1 className="hv-seite-titel">{d ? d.zeile.name : 'Sorte'}</h1>
         <a className="hv-btn hv-btn-ghost hv-btn-compact" href={hashZu({ name: 'sorten' })}>
-          Zu den Sorten
+          Zum Saatgut
         </a>
       </header>
       {!d ? (
@@ -206,15 +193,7 @@ export function Sorte({ sorte }: { sorte: string }) {
               Recherche starten
             </Button>
           ) : null}
-          {recherche === 'laeuft' ? (
-            <Notice tone="info">Recherche läuft. Du kannst die Seite verlassen.</Notice>
-          ) : recherche?.ergebnis === 'ok' ? (
-            <Notice tone="info">
-              {`Ergänzt: ${recherche.werte} ${recherche.werte === 1 ? 'Wert' : 'Werte'} und ${recherche.saat} ${recherche.saat === 1 ? 'Saatempfehlung' : 'Saatempfehlungen'}. Offen: ${recherche.offen.length + recherche.offenSaat.length} ${recherche.offen.length + recherche.offenSaat.length === 1 ? 'Prüfauftrag' : 'Prüfaufträge'}.`}
-            </Notice>
-          ) : recherche ? (
-            <Notice tone="warn">{recherche.hinweis}</Notice>
-          ) : null}
+          <RechercheHinweis recherche={recherche} />
           {meldung ? <Notice tone="danger">{meldung}</Notice> : null}
           {d.phasen.map((p) => (
             <Card key={p.phase} title={p.name}>
@@ -269,8 +248,7 @@ export function Sorte({ sorte }: { sorte: string }) {
             <ul className="hv-sorte-werte">
               {d.packungen.map((p) => (
                 <li key={p.id}>
-                  {p.kaufdatum ? `Gekauft ${datum(p.kaufdatum)}` : 'Kaufdatum offen'} · Bestand{' '}
-                  {p.bestandKorn ?? '–'} Korn
+                  {p.kaufdatum ? `Gekauft ${datum(p.kaufdatum)}` : 'Kaufdatum offen'}
                   {p.keimfaehigkeit !== null
                     ? ` · Keimfähigkeit ${Math.round(p.keimfaehigkeit * 100)} %`
                     : ''}

@@ -2,9 +2,8 @@
 // Vier Schritte: Tüte, Sorte und Art, Merkmale, Packung. Die KI liest nur die Tüte und füllt leere Felder; nach dem
 // Speichern ergänzt die Recherche fehlende Werte (Erratum E8). Eingaben bleiben bei jedem Fehler stehen (UC4-AK2, TO8).
 import { useId, useState, type SelectHTMLAttributes } from 'react';
-import { fotoHochladen, rechercheStarten, tueteLesen } from '../../daten/ki.ts';
-import { neueClientId, schreiben } from '../../daten/schreiben.ts';
-import { wissenSchreiben } from '../../daten/wissen.ts';
+import { rechercheStarten, tueteLesen } from '../../daten/ki.ts';
+import { neueClientId } from '../../daten/schreiben.ts';
 import type { RechercheErgebnis } from '../../domain/ki/recherche.ts';
 import type { KiFeld } from '../../domain/ki/schema.ts';
 import { hinweisVonHand } from '../../domain/ki/uebernahme.ts';
@@ -26,9 +25,7 @@ import {
   type Kulturtyp,
   type SorteZeile,
   type SortenFormular,
-  type WissenAufruf,
 } from '../../domain/sorten/erfassung.ts';
-import type { Vorgang } from '../../domain/datenpfad/erfassung.ts';
 import { KULTURFORMEN_JE_TYP } from '../../domain/wissen/luecken.ts';
 import type { TuetenfotoSeite } from '../../domain/sorten/tuetenfoto.ts';
 import { ZEITZONE } from '../../domain/zeit.ts';
@@ -39,8 +36,9 @@ import { PhotoField } from '../bausteine/PhotoField.tsx';
 import { TextField } from '../bausteine/TextField.tsx';
 import { useBuendel } from '../buendel.tsx';
 import { hashZu } from '../router.ts';
+import { RechercheHinweis } from '../RechercheHinweis.tsx';
+import { erfassungSenden, tuetenfotoHochladen, type Speicherstand } from '../saatgutSpeichern.ts';
 import '../sorten.css';
-import { tuetenbildVerkleinern } from '../tuetenbild.ts';
 
 type Schritt = 'tuete' | 'sorte' | 'merkmale' | 'packung' | 'fertig';
 const SCHRITTE: { id: Exclude<Schritt, 'fertig'>; titel: string }[] = [
@@ -71,7 +69,7 @@ const WUCHSFORM_NAME: Record<string, string> = {
 const NEUE_ART = '__neu';
 /** Uhr der Oberfläche (G2: Date.now() nur hier) */
 const jetzt = () => new Date(Date.now());
-const PACKUNG_FELDER = ['kaufdatum', 'keimfaehigkeitProzent', 'bestandKorn'];
+const PACKUNG_FELDER = ['kaufdatum', 'keimfaehigkeitProzent'];
 
 interface Foto {
   datei: File;
@@ -81,12 +79,6 @@ interface Foto {
 interface Hochgeladen {
   datei: File;
   pfad: string;
-}
-interface Speicherstand {
-  schluessel: string;
-  wissen: WissenAufruf[];
-  vorgang: Vorgang;
-  wissenErledigt: number;
 }
 
 /** Auswahl mit Beschriftung und Rahmen wie TextField (TextField.md, Abschnitt «Auswahl und Wahlgruppe») */
@@ -179,17 +171,10 @@ export function SorteNeu() {
         fotos.push({ seite, pfad: schon.pfad });
         continue;
       }
-      let bild: Blob;
-      try {
-        bild = await tuetenbildVerkleinern(foto.datei);
-      } catch {
-        setHochgeladen(neu);
-        return { fehler: 'lesbar' };
-      }
-      const r = await fotoHochladen(ids.sorteId, bild);
+      const r = await tuetenfotoHochladen(ids.sorteId, foto.datei);
       if ('fehler' in r) {
         setHochgeladen(neu);
-        return { fehler: 'hochladen' };
+        return { fehler: r.fehler };
       }
       neu[seite] = { datei: foto.datei, pfad: r.pfad };
       fotos.push({ seite, pfad: r.pfad });
@@ -299,23 +284,11 @@ export function SorteNeu() {
     setStand(aktuell);
     setSendet(true);
     setMeldung(undefined);
-    const w = await wissenSchreiben(aktuell.wissen, aktuell.wissenErledigt);
-    if (w.status === 'nicht_gespeichert') {
-      setStand({ ...aktuell, wissenErledigt: w.erledigt });
-      setSendet(false);
-      setMeldung(w.fehler.text);
-      return;
-    }
-    const fertig = { ...aktuell, wissenErledigt: aktuell.wissen.length };
-    setStand(fertig);
-    const r = await schreiben(fertig.vorgang, { jetzt: jetzt(), zeitzone: ZEITZONE });
+    const r = await erfassungSenden(aktuell);
+    setStand(r.stand);
     setSendet(false);
     if (r.status === 'nicht_gespeichert') {
-      setMeldung(r.fehler.text);
-      return;
-    }
-    if (r.status === 'abweichend') {
-      setMeldung('Nicht gespeichert: Diese Packung ist schon mit anderen Angaben gespeichert.');
+      setMeldung(r.meldung);
       return;
     }
     setSchritt('fertig');
@@ -346,7 +319,7 @@ export function SorteNeu() {
       <header className="hv-seite-kopf">
         <h1 className="hv-seite-titel">Neue Sorte</h1>
         <a className="hv-btn hv-btn-ghost hv-btn-compact" href={hashZu({ name: 'sorten' })}>
-          Zu den Sorten
+          Zum Saatgut
         </a>
       </header>
       {schritt !== 'fertig' ? (
@@ -609,13 +582,6 @@ export function SorteNeu() {
             error={fehlerZu('keimfaehigkeitProzent')}
             onChange={(ev) => aendern({ keimfaehigkeitProzent: ev.target.value })}
           />
-          <TextField
-            label="Bestand in Korn"
-            inputMode="numeric"
-            value={f.bestandKorn}
-            error={fehlerZu('bestandKorn')}
-            onChange={(ev) => aendern({ bestandKorn: ev.target.value })}
-          />
           {!nurPackung && saatFormen.length > 0 ? (
             <div className="hv-sorte-saat">
               <p className="hv-field-label">Saatempfehlung</p>
@@ -717,20 +683,12 @@ export function SorteNeu() {
               ? `Gespeichert: Packung zu ${vorhandenName ?? name}`
               : `Gespeichert: ${name} mit Packung`}
           </Notice>
-          {recherche === 'laeuft' ? (
-            <Notice tone="info">Recherche läuft. Du kannst die Seite verlassen.</Notice>
-          ) : recherche?.ergebnis === 'ok' ? (
-            <Notice tone="info">
-              {`Ergänzt: ${recherche.werte} ${recherche.werte === 1 ? 'Wert' : 'Werte'} und ${recherche.saat} ${recherche.saat === 1 ? 'Saatempfehlung' : 'Saatempfehlungen'}. Offen: ${recherche.offen.length + recherche.offenSaat.length} ${recherche.offen.length + recherche.offenSaat.length === 1 ? 'Prüfauftrag' : 'Prüfaufträge'}.`}
-            </Notice>
-          ) : recherche ? (
-            <Notice tone="warn">{recherche.hinweis}</Notice>
-          ) : null}
+          <RechercheHinweis recherche={recherche} />
           <a className="hv-btn hv-btn-secondary" href={hashZu({ name: 'sorte', sorte: zielSorte })}>
             Sorte öffnen
           </a>
           <a className="hv-btn hv-btn-ghost" href={hashZu({ name: 'sorten' })}>
-            Zu den Sorten
+            Zum Saatgut
           </a>
         </section>
       ) : null}

@@ -75,7 +75,7 @@ export function Tuetenfoto({
     return (
       <Platzhalter
         titel="Noch kein Tütenfoto"
-        text={leerText ?? 'Das Foto ergänzt du am Schreibtisch unter Sorten.'}
+        text={leerText ?? 'Das Foto ergänzt du am Schreibtisch unter Saatgut.'}
       />
     );
   return (

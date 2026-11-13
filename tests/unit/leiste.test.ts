@@ -91,6 +91,14 @@ describe('Leiste: Ziele und aktives Ziel', () => {
     expect(leisteZiel(r({ name: 'saeen' }), 'angemeldet', false)).toBe('saeen');
   });
 
+  it('SG1-AK5 SG1-AK7 Saatgut in «Tüte erfassen» und «Fotos nachtragen» (im Ablauf) ohne Leiste, in der Liste mit', async () => {
+    const { leisteZiel } = await leiste();
+    expect(leisteZiel(r({ name: 'sorten' }), 'angemeldet', true)).toBeUndefined();
+    expect(leisteZiel(r({ name: 'sorten' }), 'angemeldet', false)).toBe('saatgut');
+    expect(leisteZiel(r({ name: 'sorten' }), 'angemeldet')).toBe('saatgut');
+    expect(leisteZiel(r({ name: 'sorten' }), 'abgemeldet', true)).toBeUndefined();
+  });
+
   it('NV1-AK1 Abläufe und Unterseiten ohne Leiste: Messen, Ansatz, Neue Sorte, Gefäss erfassen, Anlage, Einstellungen usw.', async () => {
     const { leisteZiel } = await leiste();
     for (const route of UNTERSEITEN) {

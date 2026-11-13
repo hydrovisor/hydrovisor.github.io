@@ -50,22 +50,31 @@ export function Sortenzeile({
   zusatz,
   gewaehlt,
   stufe,
+  bild,
+  onBildFehler,
+  href,
   onClick,
 }: {
   titel: string;
   zusatz?: string;
   gewaehlt?: boolean;
   stufe?: Einstufung;
-  onClick: () => void;
+  /** URL des Tütenbilds (Plan 211); ohne URL das Kamerasymbol */
+  bild?: string | undefined;
+  /** das Bild lädt nicht (z. B. Link abgelaufen) */
+  onBildFehler?: (() => void) | undefined;
+  /** Link-Variante (Plan 211) statt Knopf */
+  href?: string | undefined;
+  onClick?: () => void;
 }) {
-  return (
-    <button
-      type="button"
-      className={gewaehlt ? 'hv-sortenzeile hv-sortenzeile-gewaehlt' : 'hv-sortenzeile'}
-      onClick={onClick}
-    >
-      <span className="hv-sortenzeile-bild" aria-hidden="true">
-        <KameraSymbol />
+  const klasse = gewaehlt ? 'hv-sortenzeile hv-sortenzeile-gewaehlt' : 'hv-sortenzeile';
+  const inhalt = (
+    <>
+      <span
+        className={bild ? 'hv-sortenzeile-bild hv-sortenzeile-bild-foto' : 'hv-sortenzeile-bild'}
+        aria-hidden="true"
+      >
+        {bild ? <img src={bild} alt="" onError={onBildFehler} /> : <KameraSymbol />}
       </span>
       <span className="hv-sortenzeile-text">
         <span className="hv-sortenzeile-titel">
@@ -84,6 +93,17 @@ export function Sortenzeile({
         ) : null}
       </span>
       <PfeilSymbol richtung="rechts" className="hv-sortenzeile-pfeil" />
+    </>
+  );
+  if (href)
+    return (
+      <a className={klasse} href={href} onClick={onClick}>
+        {inhalt}
+      </a>
+    );
+  return (
+    <button type="button" className={klasse} onClick={onClick}>
+      {inhalt}
     </button>
   );
 }
