@@ -46,6 +46,8 @@ export interface SorteZeile {
   name: string;
   art_id: string;
   gueltig_bis: string | null;
+  /** Spalte aus dem Bündel sorte (Vorschlag des Kulturtyps, Plan 211) */
+  kulturtyp?: string | null;
 }
 
 export type WissenAufruf = { aktion: string; daten: Record<string, unknown> };
@@ -100,13 +102,61 @@ export function artVorschlagen(
   return treffer?.art_id;
 }
 
+/**
+ * Sortenname für den Vergleich (Plan 211 A12): Kleinbuchstaben, Anführungszeichen und Apostrophe entfallen ersatzlos,
+ * übrige Satzzeichen werden zu Leerzeichen, Leerraum zusammengefasst; Umlaute bleiben.
+ */
+export function sortennameNormalisieren(name: string): string {
+  return name
+    .toLocaleLowerCase('de-CH')
+    .replace(/['"«»‹›„“”‘’‚`]/g, '')
+    .replace(/[.,;:!?()[\]/\-–—]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 export function vorhandeneSorte(
   sorten: readonly SorteZeile[],
   name: string,
   artId: string,
 ): string | undefined {
-  const n = norm(name);
-  return sorten.find((s) => s.gueltig_bis === null && s.art_id === artId && norm(s.name) === n)?.sorte_id;
+  const n = sortennameNormalisieren(name);
+  if (n === '') return undefined;
+  return sorten.find(
+    (s) => s.gueltig_bis === null && s.art_id === artId && sortennameNormalisieren(s.name) === n,
+  )?.sorte_id;
+}
+
+/** vorhandene gültige Sorte derselben Art aus den Feldern der KI; ohne Art oder Name keine Erkennung (Plan 211) */
+export function sorteErkennen(
+  sorten: readonly SorteZeile[],
+  arten: readonly ArtZeile[],
+  felder: { name?: string | null | undefined; art?: string | null | undefined },
+): { sorteId: string; artId: string } | undefined {
+  const artId = artVorschlagen(arten, felder.art);
+  const name = felder.name?.trim();
+  if (!artId || !name) return undefined;
+  const sorteId = vorhandeneSorte(sorten, name, artId);
+  return sorteId ? { sorteId, artId } : undefined;
+}
+
+const KULTURTYP_FOLGE: readonly Kulturtyp[] = ['blatt', 'knolle', 'frucht'];
+
+/** häufigster Kulturtyp gültiger Sorten derselben Art; Gleichstand Blatt vor Knolle vor Frucht (Plan 211 A13) */
+export function kulturtypVorschlagen(
+  sorten: readonly SorteZeile[],
+  artId: string | undefined,
+): Kulturtyp | undefined {
+  if (!artId) return undefined;
+  const zahl = new Map<Kulturtyp, number>();
+  for (const s of sorten) {
+    if (s.gueltig_bis !== null || s.art_id !== artId) continue;
+    const k = KULTURTYP_FOLGE.find((t) => t === s.kulturtyp);
+    if (k) zahl.set(k, (zahl.get(k) ?? 0) + 1);
+  }
+  let beste: Kulturtyp | undefined;
+  for (const k of KULTURTYP_FOLGE) if ((zahl.get(k) ?? 0) > (beste ? (zahl.get(beste) ?? 0) : 0)) beste = k;
+  return beste;
 }
 
 /** art_id einer neuen Art aus dem wissenschaftlichen Namen (A18) */
