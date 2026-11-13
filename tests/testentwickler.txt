@@ -294,3 +294,4 @@ tests/e2e/saatgut.spec.ts
 tests/e2e/lokal-db.ts
 tests/e2e/sorten.spec.ts
 tests/e2e/tuetenfoto.spec.ts
+tests/e2e/leiste.spec.ts

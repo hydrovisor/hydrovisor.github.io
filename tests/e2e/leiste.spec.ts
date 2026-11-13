@@ -169,7 +169,7 @@ test('NV1-AK4 jedes Ziel öffnet seine Seite und ist dort aktiv: Anlagen, Säen 
 
   await ziel(page, 'Saatgut').click();
   await expect(page).toHaveURL(/#\/saatgut$/);
-  await expect(page.getByRole('heading', { name: 'Sorten', level: 1 })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Saatgut', level: 1 })).toBeVisible();
   await aktiv(page, 'Saatgut', 'saatgut');
 
   await ziel(page, 'Mehr').click();
@@ -314,7 +314,7 @@ test('NV1-AK7 Gefäss erfassen ohne Leiste', async ({ page }) => {
   await ohneLeiste(page);
 });
 
-test('NV1-AK8 #/sorten leitet auf #/saatgut weiter, zeigt die Sorten-Liste, «Saatgut» ist aktiv', async ({
+test('NV1-AK8 #/sorten leitet auf #/saatgut weiter, zeigt die Saatgut-Liste, «Saatgut» ist aktiv', async ({
   page,
 }) => {
   await oeffnen(page, saatTeile(SAAT_JETZT, { ohneSatzIn23: true }), '/#/heute', SAAT_JETZT);
@@ -323,7 +323,7 @@ test('NV1-AK8 #/sorten leitet auf #/saatgut weiter, zeigt die Sorten-Liste, «Sa
     window.location.hash = '#/sorten';
   });
   await expect(page).toHaveURL(/#\/saatgut$/);
-  await expect(page.getByRole('heading', { name: 'Sorten', level: 1 })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Saatgut', level: 1 })).toBeVisible();
   await aktiv(page, 'Saatgut', 'saatgut');
   // ersetzt, nicht angehängt: «Zurück» führt nach Heute, nicht wieder auf #/sorten
   await page.goBack();
@@ -334,7 +334,7 @@ test('NV1-AK8 #/sorten leitet auf #/saatgut weiter, zeigt die Sorten-Liste, «Sa
 test('NV1-AK8 Direktaufruf von #/sorten landet auf #/saatgut', async ({ page }) => {
   await oeffnen(page, saatTeile(SAAT_JETZT, { ohneSatzIn23: true }), '/#/sorten', SAAT_JETZT);
   await expect(page).toHaveURL(/#\/saatgut$/, { timeout: 15_000 });
-  await expect(page.getByRole('heading', { name: 'Sorten', level: 1 })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Saatgut', level: 1 })).toBeVisible();
   await aktiv(page, 'Saatgut', 'saatgut');
 });
 
