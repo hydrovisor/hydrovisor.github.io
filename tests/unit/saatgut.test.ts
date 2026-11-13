@@ -2,13 +2,15 @@
 // (Issue #211, Plan 211 Testliste Unit; SG1-AK1 bis SG1-AK3; R1.2, R1.4; Konzept 6.1 UC4, 8.1 Regel 2; Plan 207
 // aktuelleTuetenfotos). Reine Funktionen ohne Zeit, darum ohne Uhr. Erfundene Sorten und UUIDs, keine Personendaten.
 //
-// Vorausgesetzt (Plan 211, Domäne und Datenfluss):
+// Vorausgesetzt (Plan 211, Domäne und Datenfluss; seit Plan 215 mit Vorrat, die Fixture hat kein vorrat_ereignis,
+// darum sind hier alle Sorten vorrätig; Vorrat selbst prüft tests/unit/vorrat.test.ts):
 //   src/domain/sorten/saatgut.ts
-//     type SaatgutStatus = 'vollständig' | 'Recherche offen'
-//     interface SaatgutZeile { sorteId; name; artId; artName; vollstaendig; status; ohneFoto; fotoPfad? }
-//     saatgutListe(teile) → SaatgutZeile[] je gültige Sorte, nach artName, dann name (de-CH)
-//     type SaatgutFilter = 'vorraetig' | 'ohne_foto'
-//     saatgutGruppen(liste, filter) → { gemuese; sorten }[]; saatgutZahlen(liste) → { vorraetig; ohneFoto }
+//     type SaatgutStatus = 'vollständig' | 'Recherche offen' | 'aufgebraucht'
+//     interface SaatgutZeile { sorteId; name; artId; artName; vollstaendig; status; ohneFoto; aufgebraucht; fotoPfad? }
+//     saatgutListe(teile, jetzt?) → SaatgutZeile[] je gültige Sorte, nach artName, dann name (de-CH)
+//     type SaatgutFilter = 'vorraetig' | 'ohne_foto' | 'aufgebraucht'
+//     saatgutGruppen(liste, filter) → { gemuese; sorten }[]
+//     saatgutZahlen(liste) → { vorraetig; ohneFoto; aufgebraucht }
 //     nachtragReihe(liste), nachtragStarten(liste), nachtragWeiter(stand, wie), nachtragPosition(stand)
 //   src/domain/sorten/erfassung.ts
 //     sortennameNormalisieren(name), sorteErkennen(sorten, arten, felder), kulturtypVorschlagen(sorten, artId)
@@ -232,12 +234,12 @@ describe('SG1-AK1 Saatgut-Liste', () => {
   it('SG1-AK1 saatgutZahlen: vorrätig und ohne Foto stimmen mit den gefilterten Gruppen überein', () => {
     const liste = saatgutListe(teile());
     const zahlen = saatgutZahlen(liste);
-    expect(zahlen).toEqual({ vorraetig: 6, ohneFoto: 3 });
+    expect(zahlen).toEqual({ vorraetig: 6, ohneFoto: 3, aufgebraucht: 0 });
     const anzahl = (f: 'vorraetig' | 'ohne_foto') =>
       saatgutGruppen(liste, f).reduce((n, g) => n + g.sorten.length, 0);
     expect(zahlen.vorraetig).toBe(anzahl('vorraetig'));
     expect(zahlen.ohneFoto).toBe(anzahl('ohne_foto'));
-    expect(saatgutZahlen([])).toEqual({ vorraetig: 0, ohneFoto: 0 });
+    expect(saatgutZahlen([])).toEqual({ vorraetig: 0, ohneFoto: 0, aufgebraucht: 0 });
   });
 
   it('SG1-AK1 geschlossene Sorte (gueltig_bis gesetzt) fehlt; ohne Zeile v_vollstaendigkeit «Recherche offen»; ohne Art name_de die art_id', () => {
