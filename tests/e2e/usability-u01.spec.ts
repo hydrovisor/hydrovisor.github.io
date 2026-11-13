@@ -215,15 +215,25 @@ test('U01-AK3 Messmaske auf 640 dp bleibt ohne Scrollen, Speichern in beiden Zus
   expect(await page.evaluate(() => document.documentElement.scrollHeight)).toBeLessThanOrEqual(640);
 });
 
-test('U01-AK4 Heute: Navigation im Kopf höchstens 150 dp hoch, Tasten 68 dp, Text passt', async ({
+// seit N1 (Entscheid 0025) ersetzt die Leiste unten die Navigation im Kopf: dieselbe Prüfung an der Leiste
+test('U01-AK4 Heute: Leiste unten in einer Zeile, Ziele 68 dp, Text passt, kein waagrechtes Scrollen', async ({
   page,
 }) => {
   await oeffnen(page, rundgangTeile(), '/#/heute', RUNDGANG_JETZT);
-  const nav = page.getByRole('navigation', { name: 'Navigation' });
+  const nav = page.getByRole('navigation', { name: 'Hauptnavigation' });
   await expect(nav).toBeVisible({ timeout: 15_000 });
-  expect((await box(nav)).height).toBeLessThanOrEqual(150);
-  for (const t of await nav.getByRole('link').all()) {
-    expect((await box(t)).height).toBeGreaterThanOrEqual(68);
+  await page.evaluate(async () => {
+    await document.fonts.ready;
+  });
+  const ziele = await nav.getByRole('link').all();
+  expect(ziele).toHaveLength(5);
+  const boxen = await Promise.all(ziele.map((t) => box(t)));
+  // höchstens eine Zeile: alle Ziele auf derselben Höhe, die Leiste kaum höher als ein Ziel
+  for (const b of boxen) expect(Math.abs(b.y - (boxen[0]?.y ?? 0)), 'eine Zeile').toBeLessThanOrEqual(1);
+  expect((await box(nav)).height).toBeLessThan(2 * 68);
+  for (const [i, t] of ziele.entries()) {
+    expect(boxen[i]?.height ?? 0).toBeGreaterThanOrEqual(68);
+    expect((boxen[i]?.x ?? 0) + (boxen[i]?.width ?? 0), 'rechter Rand').toBeLessThanOrEqual(360);
     await textPasst(t);
   }
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(360);

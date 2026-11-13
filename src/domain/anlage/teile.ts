@@ -9,6 +9,8 @@ export interface AnlageZeile {
   datenart: 'echt' | 'demo' | 'test';
   aktiv: boolean;
   storniert_am: string | null;
+  /** Konzept 8.2; fehlt in älteren Bündeln und Fixtures, dann gilt die Vorgabe 'indoor' (Plan 212) */
+  standort?: 'indoor' | 'outdoor';
 }
 export interface BereichZeile {
   id: string;

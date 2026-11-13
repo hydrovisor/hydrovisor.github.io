@@ -135,6 +135,7 @@ Vorschau: Cloudflare Pages `hydrovisor-vorschau` baut jeden Zweig (`<zweig>.hydr
 - [0021 Deckelwahl mit Lochbild und nach Box gefiltert](docs/entscheide/0021-deckelwahl-nach-box.md)
 - [0023 Sortenwahl beim Säen nach Gemüse (Variante B)](docs/entscheide/0023-sortenwahl-nach-gemuese.md)
 - [0024 Produktions-Migration gibt der Lead frei](docs/entscheide/0024-produktions-migration-durch-lead.md)
+- [0025 Navigation unten und Saatgut-Manager](docs/entscheide/0025-navigation-unten.md)
 - Übrige Entscheide vom 1.11.2026: `docs/spec/00_rueckfragen.md` (R1 bis R13, W1 bis W14, Annahmen 1 bis 16)
 
 ## Arbeitsweise in der Sitzung
