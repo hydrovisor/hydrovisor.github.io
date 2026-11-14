@@ -120,13 +120,17 @@ export function vorratVerlauf(
   const eigene = packungen
     .filter((p) => p.sorte_id === sorteId && p.storniert_am === null && bisJetzt(p.erfasst_am, jetzt))
     .sort((a, b) => zeitVergleich(a.erfasst_am, b.erfasst_am));
+  // jede Packung höchstens einmal (A7), auch wenn erfasst_am nicht der Ordnung nach gilt_ab folgt (Prüfer B4)
+  const benutzt = new Set<PackungZeit>();
   const verlauf: VorratVerlaufEintrag[] = [];
   liste.forEach((e, i) => {
     if (e.typ === 'aufgebraucht') {
       const naechstes = i > 0 ? liste[i - 1] : undefined;
-      const neue = eigene.find((p) => zeitVergleich(p.erfasst_am, e.erfasst_am) > 0);
-      if (neue && (!naechstes || zeitVergleich(neue.erfasst_am, naechstes.erfasst_am) < 0))
+      const neue = eigene.find((p) => !benutzt.has(p) && zeitVergleich(p.erfasst_am, e.erfasst_am) > 0);
+      if (neue && (!naechstes || zeitVergleich(neue.erfasst_am, naechstes.erfasst_am) < 0)) {
+        benutzt.add(neue);
         verlauf.push({ typ: 'neue_packung', giltAb: neue.erfasst_am });
+      }
     }
     verlauf.push({ typ: e.typ as VorratTyp, giltAb: e.gilt_ab });
   });

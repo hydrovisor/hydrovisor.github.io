@@ -19,7 +19,7 @@ export function sperreAktiv(e: {
 
 /**
  * Merkt sich nach dem Schreiben, welche Zeile das Bündel zeigen muss (`erwarten`), und meldet `wartet`, solange
- * `sperreAktiv` gilt. Ein Zeitgeber zeichnet die Karte zum Ablauf der Frist neu.
+ * `sperreAktiv` gilt. Nach Ablauf der Frist oder sobald die Zeile sichtbar ist, verwirft der Hook den gemerkten Wert.
  */
 export function useSpeichersperre<T>(
   istSichtbar: (erwartet: T) => boolean,
@@ -36,12 +36,27 @@ export function useSpeichersperre<T>(
     fristMs,
   });
 
+  // Ablauf der Frist: gemerkten Wert verwerfen, die Sperre ist gelöst, auch wenn die Uhr steht oder zurückspringt
+  // (Prüfer #219 Runde 1 B1, B2)
   useEffect(() => {
     if (!gemerkt || !wartet) return;
-    const rest = Math.max(0, gemerkt.seitMs + fristMs - Date.now());
-    const zeitgeber = setTimeout(() => setJetztMs(Date.now()), rest);
+    const ende = gemerkt.seitMs + fristMs;
+    const zeitgeber = setTimeout(
+      () => {
+        setJetztMs(Math.max(Date.now(), ende));
+        setGemerkt(undefined);
+      },
+      Math.max(0, ende - Date.now()),
+    );
     return () => clearTimeout(zeitgeber);
   }, [gemerkt, wartet, fristMs]);
+
+  // Zeile sichtbar: gemerkten Wert verwerfen, damit ein späteres Verschwinden der Zeile nicht erneut sperrt (B2)
+  useEffect(() => {
+    if (!gemerkt || !sichtbar) return;
+    const zeitgeber = setTimeout(() => setGemerkt(undefined), 0);
+    return () => clearTimeout(zeitgeber);
+  }, [gemerkt, sichtbar]);
 
   const erwarten = useCallback((erwartet: T) => {
     const nun = Date.now();

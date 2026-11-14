@@ -116,7 +116,7 @@ function tokenKopf() {
   const apikey = process.env.SUPABASE_APIKEY;
   if (!token || !apikey) throw new Error('S3_* oder STORAGE_TOKEN und SUPABASE_APIKEY fehlen');
   // Ein gültiger Token einer anderen Rolle (z. B. anon) listet still 0 Dateien. Deshalb Rolle und Ablauf vorab prüfen
-  // und mit --mindestens die Zahl der Fotos aus ki_feldprotokoll.fotopfad als Untergrenze setzen (backup.yml).
+  // und mit --mindestens die Zahl der Fotos (FOTO_ZAEHLUNG_SQL: ki_feldprotokoll und tuetenfoto) als Untergrenze setzen.
   const nutzlast = JSON.parse(Buffer.from(token.split('.')[1] ?? '', 'base64url').toString('utf8') || '{}');
   if (nutzlast.role !== 'backup_speicher_leser')
     throw new Error(`Storage-Token mit falscher Rolle: ${nutzlast.role}`);
