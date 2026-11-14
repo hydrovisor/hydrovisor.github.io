@@ -44,7 +44,8 @@ export function useSpeichersperre<T>(
     const zeitgeber = setTimeout(
       () => {
         setJetztMs(Math.max(Date.now(), ende));
-        setGemerkt(undefined);
+        // nur diesen Wert verwerfen, nicht ein inzwischen neu erwartetes (Prüfer Runde 2)
+        setGemerkt((g) => (g === gemerkt ? undefined : g));
       },
       Math.max(0, ende - Date.now()),
     );
@@ -54,7 +55,7 @@ export function useSpeichersperre<T>(
   // Zeile sichtbar: gemerkten Wert verwerfen, damit ein späteres Verschwinden der Zeile nicht erneut sperrt (B2)
   useEffect(() => {
     if (!gemerkt || !sichtbar) return;
-    const zeitgeber = setTimeout(() => setGemerkt(undefined), 0);
+    const zeitgeber = setTimeout(() => setGemerkt((g) => (g === gemerkt ? undefined : g)), 0);
     return () => clearTimeout(zeitgeber);
   }, [gemerkt, sichtbar]);
 
