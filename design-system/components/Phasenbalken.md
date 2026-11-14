@@ -18,14 +18,15 @@ rechnet die Domäne (`src/domain/phasen/kalender.ts`), der Baustein rechnet nur 
   `hv-phasenbalken-heute` (2 dp `ink`) am Beginn des heutigen Tags.
 - **Erntezeile** `hv-phasenbalken-ernte` (18 dp) unter der Spur: Marke `hv-phasenbalken-marke` mit Schere (Lucide
   `scissors`, `aria-hidden`) und Datum in `status-ok`, um ihren Tag zentriert, am Rand bündig (kein seitliches
-  Überlaufen); ein Termin nach dem Fenster als Hinweis rechts `hv-phasenbalken-spaeter` («Ernte 27.2. →»); ohne
-  Termin die gestrichelte Zeile `hv-phasenbalken-offen` («Ernte: Termine noch offen», `ink-muted`).
+  Überlaufen); ein Termin nach dem Fenster als Hinweis rechts `hv-phasenbalken-spaeter` («Ernte 27.2. →»), ein Termin
+  vor dem Fenster (erntereif) links `hv-phasenbalken-frueher` («← Ernte seit 4.3.»); nur wenn es gar keinen Erntetermin
+  gibt, die gestrichelte Zeile `hv-phasenbalken-offen` («Ernte: Termine noch offen», `ink-muted`).
 - **Kennzeichen** `hv-badge hv-badge-kennzeichen` mit Fragezeichen (Lucide `circle-help`): «Phase unbestätigt», «Termine
   noch offen». Neutral und gestrichelt wie `hv-badge-uncertain` (`StatusBadge.md`), nie farbig.
 - **Legende** `hv-phasenbalken-legende` (Liste, 12 sp, `ink-muted`): K Keimung, A Anzucht, W Wachstum, B Blüte, F Frucht,
   «voll = bestätigt», «schraffiert = Prognose», Schere «Ernte ab».
 - Props `Phasenbalken`: `tage` (56), `abschnitte` (je `phase`, `buchstabe`, `start`, `laenge` in Tagen ab Fensterbeginn,
-  `prognose`), `wochen` (Indizes), `heute` (Index), `marken` (je `tag`, `text`), `spaeter?`, `offen?`. Dazu
+  `prognose`), `wochen` (Indizes), `heute` (Index), `marken` (je `tag`, `text`), `spaeter?`, `frueher?`, `offen?`. Dazu
   `PhasenLegende` und `KalenderKennzeichen` (`text`).
 - Nachbau in `src/ui/bausteine/Phasenbalken.tsx`.
 

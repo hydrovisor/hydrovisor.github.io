@@ -57,6 +57,7 @@ export function Phasenbalken({
   heute,
   marken,
   spaeter,
+  frueher,
   offen,
 }: {
   tage: number;
@@ -68,6 +69,8 @@ export function Phasenbalken({
   marken: readonly BalkenMarke[];
   /** Hinweis rechts für einen Termin nach dem Fenster («Ernte 27.2. →») */
   spaeter?: string;
+  /** Hinweis links für einen Termin vor dem Fenster («← Ernte seit 4.3.») */
+  frueher?: string;
   /** Text, wenn kein Erntetermin bekannt ist */
   offen?: string;
 }) {
@@ -110,6 +113,7 @@ export function Phasenbalken({
             {m.text}
           </span>
         ))}
+        {frueher ? <span className="hv-phasenbalken-frueher">{frueher}</span> : null}
         {spaeter ? <span className="hv-phasenbalken-spaeter">{spaeter}</span> : null}
       </span>
     </>

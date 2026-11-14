@@ -69,7 +69,7 @@ function ernteText(z: KalenderZeile, heute: string): string {
     if (e.teilernten > 0)
       teile.push(
         e.naechsterSchnitt
-          ? `nächster Schnitt ab ${tagLang(e.naechsterSchnitt, heute)}`
+          ? `nächster Schnitt ${e.naechsterSchnitt < heute ? 'möglich seit' : 'ab'} ${tagLang(e.naechsterSchnitt, heute)}`
           : 'nächster Schnitt: Termine noch offen',
       );
     else if (!e.ernteAb) teile.push('Termine noch offen');
@@ -80,6 +80,19 @@ function ernteText(z: KalenderZeile, heute: string): string {
     teile.push('einmalig, danach frei');
   } else if (!e.ernteAb) teile.push('Termine noch offen');
   return teile.join(' · ');
+}
+
+/**
+ * Erntezeile ohne Marke im Fenster (Runde 1, Befund 1): Liegt ein Termin vor dem Fenster, steht links «← Ernte seit
+ * 4.3.»; «Ernte: Termine noch offen» nur, wenn das Erntefenster gar keinen Termin hat (Konzept 6.1 UC15, AK3).
+ */
+function randHinweis(z: KalenderZeile, fenster: KalenderFenster): { frueher?: string; offen?: string } {
+  const e = z.ernte;
+  const ernte = e.naechsterSchnitt ?? e.ernteAb;
+  const ende = e.ernteart === 'einmalig' ? undefined : e.endeAm;
+  if (ernte !== undefined && ernte < fenster.von) return { frueher: `← Ernte seit ${tagKurz(ernte)}` };
+  if (ende !== undefined && ende < fenster.von) return { frueher: `← Ende ${tagKurz(ende)}` };
+  return ernte === undefined && ende === undefined ? { offen: 'Ernte: Termine noch offen' } : {};
 }
 
 function Zeile({
@@ -129,7 +142,7 @@ function Zeile({
         {...(z.spaeter
           ? { spaeter: `${z.spaeter.art === 'ende' ? 'Ende' : 'Ernte'} ${tagKurz(z.spaeter.tag)} →` }
           : {})}
-        {...(z.marken.length === 0 && !z.spaeter ? { offen: 'Ernte: Termine noch offen' } : {})}
+        {...(z.marken.length === 0 && !z.spaeter ? randHinweis(z, fenster) : {})}
       />
       <span className="hv-kalender-kurz">{z.kurz}</span>
       {z.kennzeichen.map((k) => (
@@ -192,6 +205,12 @@ export function Erntekalender({ satz }: { satz?: string }) {
   const { buendel, liest } = useBuendel();
   const teile = buendel?.teile;
   const [geoeffnet] = useState(() => uhrJetzt());
+  // ohne Auswahl oben beginnen (Wechsel aus einer gescrollten Seite); mit Auswahl rückt der Effekt unten die Zeile
+  // über das Feld (Plan 232, A)
+  const auswahlBeimOeffnen = useRef(satz);
+  useLayoutEffect(() => {
+    if (!auswahlBeimOeffnen.current) window.scrollTo(0, 0);
+  }, []);
   const kalender = useMemo(
     () => (teile ? erntekalender(teile, geoeffnet, ZEITZONE) : undefined),
     [teile, geoeffnet],

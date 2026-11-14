@@ -244,7 +244,12 @@ function kurzText(
           : `${name} ab ${tagKurz(typisch)}`,
     );
   }
-  if (ernte.naechsterSchnitt) teile.push(`nächster Schnitt ab ${tagKurz(ernte.naechsterSchnitt)}`);
+  if (ernte.naechsterSchnitt)
+    teile.push(
+      ernte.naechsterSchnitt < heute
+        ? `nächster Schnitt möglich seit ${tagKurz(ernte.naechsterSchnitt)}`
+        : `nächster Schnitt ab ${tagKurz(ernte.naechsterSchnitt)}`,
+    );
   else if (ernte.ernteAb)
     teile.push(
       ernte.ernteAb < heute

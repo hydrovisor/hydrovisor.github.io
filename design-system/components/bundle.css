@@ -551,9 +551,10 @@ a.hv-belegung, a.hv-belegung:hover { color: var(--ink); text-decoration: none; }
 .hv-phasenbalken-woche { position: absolute; top: 0; bottom: 0; width: 0; border-left: 1px dotted var(--line-control); }
 .hv-phasenbalken-heute { position: absolute; top: 0; bottom: 0; width: 0; border-left: 2px solid var(--ink); }
 .hv-phasenbalken-ernte { position: relative; display: block; height: 18px; }
-.hv-phasenbalken-marke, .hv-phasenbalken-spaeter { position: absolute; top: 0; display: inline-flex; align-items: center; gap: 2px; font-size: 11px; line-height: 18px; font-weight: 700; color: var(--status-ok); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.hv-phasenbalken-marke, .hv-phasenbalken-spaeter, .hv-phasenbalken-frueher { position: absolute; top: 0; display: inline-flex; align-items: center; gap: 2px; font-size: 11px; line-height: 18px; font-weight: 700; color: var(--status-ok); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .hv-phasenbalken-marke svg { width: 14px; height: 14px; flex: none; }
 .hv-phasenbalken-spaeter { right: 0; }
+.hv-phasenbalken-frueher { left: 0; }
 .hv-phasenbalken-offen { position: absolute; left: 0; right: 0; top: 0; text-align: center; font-size: 11px; line-height: 16px; color: var(--ink-muted); border: 1px dashed var(--line-control); border-radius: var(--radius-sm); background: var(--surface-raised); }
 .hv-badge-kennzeichen { width: max-content; max-width: 100%; }
 .hv-badge-kennzeichen svg { width: 14px; height: 14px; flex: none; }
