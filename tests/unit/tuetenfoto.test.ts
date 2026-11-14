@@ -11,8 +11,8 @@
 //       je Seite die jüngste nicht stornierte Zeile der Sorte nach erfasst_am, bei Gleichstand die grössere id (A6);
 //       der Pfad zählt nicht für die Zuordnung (A16)
 //     tuetenfotoVorgang({ sorteId; seite; pfad; clientId; ersetzt? }) → Schritt[]
-//       ohne ersetzt: ein Schritt neu (tuetenfoto, saatgut_id null); mit ersetzt: storno (korrektur) der alten
-//       client_id, dann neu
+//       ohne ersetzt: ein Schritt neu (tuetenfoto, saatgut_id null); mit ersetzt: neu, dann storno (korrektur) der
+//       alten client_id (#219: Neu vor Storno, Plan 207 A20)
 //   src/domain/sorten/erfassung.ts erfassungBauen(f, ids: { sorteId; saatgutId; clientIds; fotos? }, ki, kontext)
 //     je Foto nach saatgut und vor dem Feldprotokoll ein Schritt neu tuetenfoto
 //   src/domain/datenpfad/buendel-teile.ts BUENDEL_TEILE mit tuetenfoto (ohneStorno)
@@ -201,8 +201,8 @@ describe('TF1-AK2 tuetenfotoVorgang', () => {
       clientId: id(402),
       ersetzt: id(399),
     });
+    // #219: Neu vor Storno (Plan 207 A20)
     expect(ersetzen).toEqual([
-      { art: 'storno', tabelle: 'tuetenfoto', clientId: id(399), grund: 'korrektur' },
       {
         art: 'neu',
         tabelle: 'tuetenfoto',
@@ -214,6 +214,7 @@ describe('TF1-AK2 tuetenfotoVorgang', () => {
           pfad: pfad(SORTE, 2),
         },
       },
+      { art: 'storno', tabelle: 'tuetenfoto', clientId: id(399), grund: 'korrektur' },
     ]);
     expect(vorgangPruefen(ersetzen)).toEqual([]);
   });
@@ -231,7 +232,8 @@ describe('TF1-AK2 tuetenfotoVorgang', () => {
       clientId: id(407),
       ersetzt: aktuell.vorne?.clientId,
     });
-    expect(v[0]).toEqual({ art: 'storno', tabelle: 'tuetenfoto', clientId: id(301), grund: 'korrektur' });
+    // #219: Neu vor Storno (Plan 207 A20)
+    expect(v[1]).toEqual({ art: 'storno', tabelle: 'tuetenfoto', clientId: id(301), grund: 'korrektur' });
     zeilen = anwenden(zeilen, v, '2027-01-15T09:30:00.000Z', 7);
     expect(aktuelleTuetenfotos(zeilen, SORTE)).toEqual({
       vorne: { pfad: pfad(SORTE, 7), clientId: id(407) },
@@ -259,7 +261,8 @@ describe('TF1-AK2 tuetenfotoVorgang', () => {
       clientId: id(403),
       ersetzt: aktuelleTuetenfotos(nachErstem, SORTE).vorne?.clientId,
     });
-    expect(v2[0]).toEqual({ art: 'storno', tabelle: 'tuetenfoto', clientId: id(402), grund: 'korrektur' });
+    // #219: Neu vor Storno (Plan 207 A20)
+    expect(v2[1]).toEqual({ art: 'storno', tabelle: 'tuetenfoto', clientId: id(402), grund: 'korrektur' });
     const nachZweitem = anwenden(nachErstem, v2, '2027-01-15T09:31:00.000Z', 3);
     expect(nachZweitem.filter((z) => z.storniert_am === null).map((z) => z.client_id)).toEqual([id(403)]);
     expect(aktuelleTuetenfotos(nachZweitem, SORTE).vorne).toEqual({
@@ -319,8 +322,9 @@ describe('TF1-AK2 tuetenfotoVorgang', () => {
       clientId: id(402),
       ersetzt: id(301),
     });
-    expect(await schreibe(vorgang, ZEIT)).toEqual({ status: 'gespeichert', clientIds: [id(301), id(402)] });
-    expect(await schreibe(vorgang, ZEIT)).toEqual({ status: 'gespeichert', clientIds: [id(301), id(402)] });
+    // #219: Neu vor Storno (Plan 207 A20)
+    expect(await schreibe(vorgang, ZEIT)).toEqual({ status: 'gespeichert', clientIds: [id(402), id(301)] });
+    expect(await schreibe(vorgang, ZEIT)).toEqual({ status: 'gespeichert', clientIds: [id(402), id(301)] });
 
     expect([...zeilen.keys()].sort()).toEqual([id(301), id(402)]);
     expect(zeilen.get(id(301))?.['storniert_am']).toBe(JETZT.toISOString());
@@ -504,5 +508,96 @@ describe('TF1-AK3 erfassungBauen', () => {
     expect(ohne.vorgang.map((s) => s.tabelle)).toEqual(['saatgut']);
     expect(leer.vorgang.map((s) => s.tabelle)).toEqual(['saatgut']);
     expect(tuetenfotoZeilen(leer.vorgang)).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------
+// NB1-AK3 Ersetzen: zuerst die neue Zeile, dann das Storno (#219, Plan 219 «Ersetzen»; Plan 207 A20)
+// ---------------------------------------------------------------------
+
+describe('NB1-AK3 tuetenfotoVorgang neu vor Storno', () => {
+  it('NB1-AK3 Ersetzen: zuerst neu, dann storno korrektur der alten Zeile', () => {
+    const v = tuetenfotoVorgang({
+      sorteId: SORTE,
+      seite: 'vorne',
+      pfad: pfad(SORTE, 8),
+      clientId: id(408),
+      ersetzt: id(301),
+    });
+    expect(v.map((s) => s.art)).toEqual(['neu', 'storno']);
+    expect(v[0]).toEqual({
+      art: 'neu',
+      tabelle: 'tuetenfoto',
+      felder: { client_id: id(408), sorte_id: SORTE, saatgut_id: null, seite: 'vorne', pfad: pfad(SORTE, 8) },
+    });
+    expect(v[1]).toEqual({ art: 'storno', tabelle: 'tuetenfoto', clientId: id(301), grund: 'korrektur' });
+    expect(vorgangPruefen(v)).toEqual([]);
+  });
+
+  it('NB1-AK3 ohne ersetzt genau eine neue Zeile', () => {
+    for (const ersetzt of [undefined, '']) {
+      const v = tuetenfotoVorgang({
+        sorteId: SORTE,
+        seite: 'hinten',
+        pfad: pfad(SORTE, 9),
+        clientId: id(409),
+        ersetzt,
+      });
+      expect(v).toHaveLength(1);
+      expect(v[0]).toMatchObject({ art: 'neu', tabelle: 'tuetenfoto', felder: { client_id: id(409) } });
+    }
+  });
+
+  it('NB1-AK3 Storno gescheitert: nur die neue Zeile angewandt, aktuelleTuetenfotos zeigt die neue', () => {
+    const start = [
+      zeile(1, 'vorne', '2027-01-10T08:00:00.000Z'),
+      zeile(2, 'hinten', '2027-01-10T08:01:00.000Z'),
+    ];
+    const v = tuetenfotoVorgang({
+      sorteId: SORTE,
+      seite: 'vorne',
+      pfad: pfad(SORTE, 7),
+      clientId: id(407),
+      ersetzt: aktuelleTuetenfotos(start, SORTE).vorne?.clientId,
+    });
+    // schreiben() bricht nach dem ersten Schritt ab: nur er erreicht die Datenbank
+    const nurErster = anwenden(start, v.slice(0, 1), '2027-01-15T09:30:00.000Z', 7);
+    expect(aktuelleTuetenfotos(nurErster, SORTE).vorne?.clientId).toBe(id(407));
+    expect(aktuelleTuetenfotos(nurErster, SORTE)).toEqual({
+      vorne: { pfad: pfad(SORTE, 7), clientId: id(407) },
+      hinten: { pfad: pfad(SORTE, 2), clientId: id(302) },
+    });
+    // die alte Zeile bleibt gültig, gilt aber nicht mehr (jüngste Zeile je Seite, Plan 207 A6)
+    expect(nurErster.filter((z) => z.storniert_am !== null)).toEqual([]);
+    // «Speichern wiederholen» sendet denselben Vorgang: danach ist die alte Zeile storniert, die neue gilt weiter
+    const wiederholt = anwenden(nurErster, v, '2027-01-15T09:31:00.000Z', 7);
+    expect(wiederholt.filter((z) => z.storniert_am !== null).map((z) => z.client_id)).toEqual([id(301)]);
+    expect(aktuelleTuetenfotos(wiederholt, SORTE).vorne?.clientId).toBe(id(407));
+  });
+});
+
+// ---------------------------------------------------------------------
+// NB1-AK7 Mikrosekunden bei gleicher Millisekunde (#219; Prüferbefund B8 aus Plan 207)
+// ---------------------------------------------------------------------
+
+describe('NB1-AK7 aktuelleTuetenfotos auf die Mikrosekunde', () => {
+  it('NB1-AK7 gleiche Millisekunde: die grössere Mikrosekunde ist das aktuelle Foto, unabhängig von id und Reihenfolge', () => {
+    // Date.parse schneidet nach der Millisekunde ab: .123456 und .123457 sind dieselbe Millisekunde
+    const frueher = zeile(1, 'vorne', '2027-01-12T08:00:00.123456+00:00', { id: id(902) });
+    const spaeter = zeile(2, 'vorne', '2027-01-12T08:00:00.123457+00:00', { id: id(901) });
+    expect(Date.parse(frueher.erfasst_am)).toBe(Date.parse(spaeter.erfasst_am));
+    // die kleinere id gewinnt, weil ihre Mikrosekunde grösser ist
+    expect(aktuelleTuetenfotos([frueher, spaeter], SORTE).vorne?.clientId).toBe(id(302));
+    expect(aktuelleTuetenfotos([spaeter, frueher], SORTE).vorne?.clientId).toBe(id(302));
+    // umgekehrt: grössere Mikrosekunde mit grösserer id
+    const a = zeile(3, 'hinten', '2027-01-12T08:00:00.999998+00:00', { id: id(903) });
+    const b = zeile(4, 'hinten', '2027-01-12T08:00:00.999999+00:00', { id: id(904) });
+    expect(aktuelleTuetenfotos([a, b], SORTE).hinten?.clientId).toBe(id(304));
+    expect(aktuelleTuetenfotos([b, a], SORTE).hinten?.clientId).toBe(id(304));
+    // weniger als sechs Stellen: .1234 ist .123400, also früher als .123401
+    const kurz = zeile(5, 'vorne', '2027-01-13T08:00:00.1234+00:00', { id: id(999) });
+    const lang = zeile(6, 'vorne', '2027-01-13T08:00:00.123401+00:00', { id: id(905) });
+    expect(aktuelleTuetenfotos([kurz, lang], SORTE).vorne?.clientId).toBe(id(306));
+    expect(aktuelleTuetenfotos([lang, kurz], SORTE).vorne?.clientId).toBe(id(306));
   });
 });

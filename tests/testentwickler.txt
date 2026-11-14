@@ -306,3 +306,15 @@ tests/e2e/lokal-db.ts
 tests/unit/saatgut.test.ts
 tests/e2e/sortenwahl.spec.ts
 tests/unit/datenpfad-runde1.test.ts
+# 219 Nachbesserungen (#219)
+tests/unit/speichersperre.test.ts
+tests/unit/anlagen-belegung-nb1.test.ts
+tests/unit/saat-rueckgaengig.test.ts
+tests/e2e/saeen-leer.spec.ts
+tests/unit/backup-regeln.test.ts
+tests/unit/tuetenfoto.test.ts
+tests/unit/vorrat.test.ts
+tests/unit/saeen-passung.test.ts
+tests/e2e/vorrat.spec.ts
+supabase/tests/database/00_zugriff.test.sql
+supabase/tests/database/11_backup.test.sql
