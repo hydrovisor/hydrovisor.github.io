@@ -101,7 +101,7 @@ create temp view definer_funktionen as
 select plan(
     3 * (select count(*)::int from tabellen)
   + (select count(*)::int from definer_funktionen)
-  + 11);
+  + 14);
 
 select pg_temp.wechsel_erlauben('backup_leser');
 select pg_temp.wechsel_erlauben('backup_speicher_leser');
@@ -155,6 +155,29 @@ exception when others then
   raise notice 'Storage-Fixture nicht angelegt: %', sqlerrm;
 end $$;
 
+-- #219 NB1-AK2: Zählung der Fotos für die Backup-Untergrenze. Die Abfrage steht wörtlich wie FOTO_ZAEHLUNG_SQL in
+-- scripts/backup-regeln.mjs (NB1-AK1 prüft das im Unit-Test). Ausgangswert als postgres vor den Fixtures, damit
+-- vorhandene Zeilen (Seed, Demo) nicht zählen.
+create temp table foto_vorher as
+  select (select count(*) from (select fotopfad as pfad from public.ki_feldprotokoll where fotopfad is not null union select pfad from public.tuetenfoto) as fotos) as n;
+
+-- Fixtures: eine Sorte, ein Feldprotokoll mit Pfad P1, zwei Tütenfotos (P1 gültig, also doppelt; P2 storniert), ein
+-- Vorrat-Ereignis. Pfade <sorte_id>/<uuid>.jpg wie im Bucket saattueten.
+insert into public.sorte_schluessel (id, sorte_key) values ('fb000000-0000-4000-8000-000000000101', 'pgtap-backup-sorte');
+insert into public.ki_feldprotokoll (client_id, sorte_id, feld, wert_ki, status, modell, fotopfad, app_version)
+  values ('fb000000-0000-4000-8000-000000000511', 'fb000000-0000-4000-8000-000000000101', 'name', 'Backupsorte',
+          'uebernommen', 'testmodell',
+          'fb000000-0000-4000-8000-000000000101/fb000000-0000-4000-8000-000000000501.jpg', 'pgtap');
+insert into public.tuetenfoto (client_id, sorte_id, seite, pfad, storniert_am, app_version) values
+  ('fb000000-0000-4000-8000-000000000521', 'fb000000-0000-4000-8000-000000000101', 'vorne',
+   'fb000000-0000-4000-8000-000000000101/fb000000-0000-4000-8000-000000000501.jpg', null, 'pgtap'),
+  ('fb000000-0000-4000-8000-000000000522', 'fb000000-0000-4000-8000-000000000101', 'hinten',
+   'fb000000-0000-4000-8000-000000000101/fb000000-0000-4000-8000-000000000502.jpg',
+   '2027-01-10 11:00 Europe/Zurich', 'pgtap');
+insert into public.vorrat_ereignis (client_id, sorte_id, typ, gilt_ab, app_version)
+  values ('fb000000-0000-4000-8000-000000000531', 'fb000000-0000-4000-8000-000000000101', 'aufgebraucht',
+          '2027-01-10 10:00 Europe/Zurich', 'pgtap');
+
 -- ---------------------------------------------------------------------
 -- Katalog: benannte Ausnahme und Modus
 -- ---------------------------------------------------------------------
@@ -199,6 +222,13 @@ begin
   end loop;
 end $$;
 select * from pg_temp.liest_vollstaendig();
+
+-- #219 NB1-AK2: dieselbe Abfrage wie backup.yml (FOTO_ZAEHLUNG_SQL) als backup_leser; P1 zählt einmal, P2 trotz Storno
+select is(
+  pg_temp.zaehle_als('backup_leser',
+    $$select count(*) from (select fotopfad as pfad from public.ki_feldprotokoll where fotopfad is not null union select pfad from public.tuetenfoto) as fotos$$),
+  ((select n from foto_vorher) + 2)::text,
+  'NB1-AK2 Foto-Zählung als backup_leser: vorher + 2 (ein Pfad doppelt, ein Tütenfoto storniert)');
 
 create function pg_temp.schreibt_nicht() returns setof text language plpgsql as $$
 declare
@@ -360,6 +390,23 @@ begin
   end loop;
 end $$;
 select * from pg_temp.rueckfall();
+
+-- #219 NB1-AK2: im Rückfall E7 liest backup_leser die Fixture-Zeilen tuetenfoto und vorrat_ereignis über backup_lesen
+create function pg_temp.rueckfall_zeile(abfrage text) returns text language plpgsql as $$
+begin
+  if not coalesce((select not rolbypassrls from pg_roles where rolname = 'backup_leser'), false) then
+    return 'Rolle backup_leser fehlt oder hat BYPASSRLS';
+  end if;
+  return pg_temp.zaehle_als('backup_leser', abfrage);
+end $$;
+select is(
+  pg_temp.rueckfall_zeile($$select count(*)::text from public.tuetenfoto
+                             where client_id = 'fb000000-0000-4000-8000-000000000521'$$),
+  '1', 'NB1-AK2 backup_leser liest die Fixture-Zeile tuetenfoto');
+select is(
+  pg_temp.rueckfall_zeile($$select count(*)::text from public.vorrat_ereignis
+                             where client_id = 'fb000000-0000-4000-8000-000000000531'$$),
+  '1', 'NB1-AK2 backup_leser liest die Fixture-Zeile vorrat_ereignis');
 
 select * from finish();
 rollback;

@@ -14,9 +14,15 @@
 //   «TT.MM.JJJJ · Wieder vorrätig», das jüngste zuerst; ohne Ereignis keine Liste.
 // - #/saeen: Kachel des Gemüses, Sortenzeilen nur vorrätiger Sorten; Säen-Detail ohne Bestand in Korn.
 // - #/sorten: Gruppe «Filter» mit «Vorrätig · n», «Ohne Foto · n», «Aufgebraucht · n»; Zusatzzeile «aufgebraucht».
+//
+// #219 NB1-AK6 (Plan 219 Testliste E2E, A12): eigene W0-Sorte Balconi Yellow (sorte-tomate-balconi-yellow), die kein
+// anderer E2E-Test für Vorrat oder Saatgut nutzt. Neue Packung über «Tüte erfassen» unter Saatgut mit nachgebildeter
+// KI wie SG1-AK6 («Packung zu <Name> hinzufügen»); die Claude API wird nie aufgerufen. Im Verlauf steht
+// «TT.MM.JJJJ · Neue Packung · wieder vorrätig» über «TT.MM.JJJJ · Kein Saatgut mehr» (Issue A5). Im finally storniert
+// der Test die neuen Packungen und Fotos und die Vorrat-Ereignisse der Sorte (die Service-Rolle löscht nicht).
 import { type Locator, type Page, type TestInfo } from '@playwright/test';
 import { expect, test } from './konto.ts';
-import { datenbank, knopf } from './lokal-db.ts';
+import { datenbank, fotoWaehlen, FUNKTIONEN, kiOk, knopf, NICHT_EINGERICHTET, testbild } from './lokal-db.ts';
 import { gemueseKachel, sorteOeffnen, sortenZeile } from './sortenwahl-hilfe.ts';
 
 // ---------------------------------------------------------------------
@@ -305,6 +311,99 @@ test('VR1-AK7 Saatgut zeigt drei Filter ohne waagrechtes Scrollen, Aufgebraucht 
   } finally {
     try {
       if (sorteId) await db.vorratZuruecksetzen(sorteId);
+    } finally {
+      await db.sql.end();
+    }
+  }
+});
+
+// ---------------------------------------------------------------------
+// NB1-AK6 Neue Packung macht wieder vorrätig, Verlauf «Neue Packung · wieder vorrätig» (#219)
+// ---------------------------------------------------------------------
+
+/** ki-tuete und ki-recherche über page.route (wie SG1-AK6); liefert die Anfragen an ki-tuete */
+async function kiNachbilden(page: Page, antwort: object): Promise<Record<string, unknown>[]> {
+  const tuete: Record<string, unknown>[] = [];
+  await page.route(`${FUNKTIONEN}/ki-tuete`, async (route) => {
+    tuete.push((route.request().postDataJSON() ?? {}) as Record<string, unknown>);
+    return route.fulfill({ json: antwort });
+  });
+  await page.route(`${FUNKTIONEN}/ki-recherche`, (route) => route.fulfill({ json: NICHT_EINGERICHTET }));
+  return tuete;
+}
+
+test('NB1-AK6 neue Packung macht die aufgebrauchte Sorte wieder vorrätig, Verlauf «Neue Packung · wieder vorrätig» über «Kein Saatgut mehr»', async ({
+  page,
+  konto,
+}, testInfo) => {
+  const db = datenbank();
+  let sorteId: string | undefined;
+  let start: Date | undefined;
+  try {
+    const sorte = await db.sorteMitArt('sorte-tomate-balconi-yellow');
+    sorteId = sorte.id;
+    await db.vorratZuruecksetzen(sorte.id);
+    const packungenVorher = await db.packungenGueltig(sorte.id);
+    start = await db.jetzt();
+    const tuete = await kiNachbilden(page, kiOk(sorte.name, sorte.nameDe));
+    await konto.anmelden(page);
+
+    // aufbrauchen
+    await detailOeffnen(page, sorte);
+    await expect(badge(page)).toHaveText('Vorrätig');
+    await keinSaatgutMehr(page);
+    const tag = tagZuerich(start);
+    await expect(verlauf(page)).toHaveText([`${tag} · Kein Saatgut mehr`]);
+
+    // neue Packung über «Tüte erfassen» unter Saatgut
+    await page.goto('/#/saatgut');
+    await expect(page.getByRole('heading', { name: 'Saatgut', level: 1 })).toBeVisible({ timeout: 15_000 });
+    await knopf(page, 'Tüte erfassen').click();
+    await expect(page.getByRole('heading', { name: 'Tüte erfassen', level: 1 })).toBeVisible();
+    await fotoWaehlen(page, 'Vorderseite', await testbild(page, '#f9a825', 'Balconi'));
+    await knopf(page, 'Ohne Rückseite lesen').click();
+    await expect(page.getByText(`${sorte.name} gibt es schon`)).toBeVisible({ timeout: 15_000 });
+    expect(tuete).toHaveLength(1);
+    await knopf(page, `Packung zu ${sorte.name} hinzufügen`).click();
+    await expect(page.getByText(`Gespeichert: Packung zu ${sorte.name}`)).toBeVisible({ timeout: 15_000 });
+
+    // zurück ins Detail: vorrätig, oberste Verlaufszeile «Neue Packung · wieder vorrätig»
+    await detailOeffnen(page, sorte);
+    await expect(badge(page)).toHaveText('Vorrätig', { timeout: 15_000 });
+    await expect(knopf(page, 'Kein Saatgut mehr')).toBeVisible();
+    await expect(knopf(page, 'Wieder vorrätig')).toHaveCount(0);
+    await expect(verlauf(page)).toHaveText([
+      `${tag} · Neue Packung · wieder vorrätig`,
+      `${tag} · Kein Saatgut mehr`,
+    ]);
+    await bildschirm(page, testInfo, 'vorrat-neue-packung');
+
+    // nach dem Neuladen derselbe Verlauf aus dem Bündel
+    await page.reload();
+    await expect(vorratKarte(page)).toBeVisible({ timeout: 15_000 });
+    await expect(badge(page)).toHaveText('Vorrätig');
+    await expect(verlauf(page)).toHaveText([
+      `${tag} · Neue Packung · wieder vorrätig`,
+      `${tag} · Kein Saatgut mehr`,
+    ]);
+
+    // Datenbank: ein Ereignis aufgebraucht, eine neue Packung; kein Ereignis «vorraetig» (die Packung holt zurück)
+    const zeilen = await db.vorratZeilen(sorte.id, start);
+    expect(zeilen.map((z) => z.typ)).toEqual(['aufgebraucht']);
+    expect(await db.packungZeilen(sorte.id, start)).toHaveLength(1);
+    expect(await db.packungenGueltig(sorte.id)).toBe(packungenVorher + 1);
+  } finally {
+    try {
+      if (sorteId) {
+        await db.vorratZuruecksetzen(sorteId);
+        if (start) {
+          // neue Packung und ihr Foto stornieren, damit ein späterer Lauf vom gleichen Stand ausgeht
+          await db.sql`update public.saatgut set storniert_am = now()
+                        where sorte_id = ${sorteId}::uuid and erfasst_am >= ${start} and storniert_am is null`;
+          await db.sql`update public.tuetenfoto set storniert_am = now()
+                        where sorte_id = ${sorteId}::uuid and erfasst_am >= ${start} and storniert_am is null`;
+        }
+      }
     } finally {
       await db.sql.end();
     }

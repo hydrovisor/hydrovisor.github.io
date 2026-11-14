@@ -3,8 +3,12 @@
 // Hilfstests ohne eigenes AK (Plan A9): Präfix «Wiederherstellungsprobe (M0)», «Backup-Storage», «Backup-Einrichtung».
 // Rückgaben werden mit await gelesen, damit synchrone und asynchrone Umsetzungen (SHA-256, PBKDF2, HMAC) gelten.
 // Keine Personendaten, keine Geheimnisse: Passwort, Salz und JWT-Geheimnis sind Testwerte ohne Bedeutung.
+// #219 NB1-AK1: FOTO_ZAEHLUNG_SQL (Untergrenze der Fotos für backup.yml) als Text geprüft, dazu backup.yml und
+// supabase/tests/database/11_backup.test.sql als Text (Plan 219 A9).
+import { readFileSync } from 'node:fs';
 import { expect, it } from 'vitest';
 import {
+  FOTO_ZAEHLUNG_SQL,
   berichtMarkdown,
   dumpBereinigen,
   listeAufloesen,
@@ -713,4 +717,57 @@ it('Wiederherstellungsprobe (M0) meldungKuerzen höchstens 300 Zeichen', async (
   expect(kurz.length).toBe(300);
   expect(kurz.startsWith('ERROR: x')).toBe(true);
   expect(await meldungKuerzen('')).toBe('');
+});
+
+// ---------------------------------------------------------------------
+// NB1-AK1 Zählung der Fotos für die Backup-Untergrenze an einer Stelle (#219, Plan 219 «Backup», A6, A9)
+// ---------------------------------------------------------------------
+
+/** Leerraum zusammenfassen, Semikolon am Ende weg: Vergleich unabhängig vom Zeilenumbruch */
+const normalisiert = (text: string) => text.replace(/\s+/g, ' ').trim().replace(/;$/, '').trim();
+
+it('NB1-AK1 FOTO_ZAEHLUNG_SQL zählt verschiedene Pfade aus ki_feldprotokoll.fotopfad und tuetenfoto.pfad ohne Filter auf storniert_am', () => {
+  expect(typeof FOTO_ZAEHLUNG_SQL).toBe('string');
+  const q = normalisiert(String(FOTO_ZAEHLUNG_SQL)).toLowerCase();
+  expect(q.startsWith('select')).toBe(true);
+  expect(q).toContain('count(');
+  // beide Quellen
+  expect(q).toMatch(/\bfotopfad\b/);
+  expect(q).toMatch(/\bki_feldprotokoll\b/);
+  expect(q).toMatch(/\btuetenfoto\b/);
+  expect(q).toMatch(/\bpfad\b/);
+  // fotopfad ohne null; doppelte Pfade zählen einmal (union ohne all)
+  expect(q).toMatch(/fotopfad is not null/);
+  expect(q).toMatch(/\bunion\b/);
+  expect(q).not.toMatch(/\bunion all\b/);
+  // auch stornierte Zeilen: die App löscht keine Datei (Issue A4, 8.1 Regel 3)
+  expect(q).not.toContain('storniert_am');
+  // Weitergabe an sql in backup.yml in einfachen Anführungszeichen (Plan 219 Risiken): ohne ', ", $, ` und \
+  expect(String(FOTO_ZAEHLUNG_SQL)).not.toMatch(/['"$`\\]/);
+});
+
+it('NB1-AK1 backup.yml liest die Zählung aus backup-regeln.mjs und enthält keine eigene Abfrage auf fotopfad', () => {
+  const yml = readFileSync('.github/workflows/backup.yml', 'utf8');
+  // eine Stelle: keine eigene Abfrage auf ki_feldprotokoll oder tuetenfoto im Workflow
+  expect(yml).not.toMatch(/fotopfad/);
+  expect(yml).not.toMatch(/from public\.ki_feldprotokoll/);
+  expect(yml).not.toMatch(/from public\.tuetenfoto/);
+  // Plan 219 A6: node --input-type=module -e lädt die Konstante aus scripts/backup-regeln.mjs (ohne npm ci)
+  const zeile = yml.split(/\r?\n/).find((z) => z.includes('FOTO_ZAEHLUNG_SQL'));
+  expect(zeile, 'backup.yml nennt FOTO_ZAEHLUNG_SQL nicht').toBeDefined();
+  expect(zeile).toContain('node --input-type=module -e');
+  expect(zeile).toMatch(/scripts\/backup-regeln\.mjs/);
+  // Ergebnis wie bisher: Prüfung auf eine Zahl, FOTOS in GITHUB_ENV, Untergrenze an backup-storage.mjs
+  expect(yml).toContain('[[ "$fotos" =~ ^[0-9]+$ ]]');
+  expect(yml).toContain('echo "FOTOS=$fotos" >> "$GITHUB_ENV"');
+  expect(yml).toContain('--mindestens "$FOTOS"');
+});
+
+it('NB1-AK1 11_backup.test.sql führt FOTO_ZAEHLUNG_SQL wörtlich aus', () => {
+  expect(typeof FOTO_ZAEHLUNG_SQL).toBe('string');
+  const sql = normalisiert(readFileSync('supabase/tests/database/11_backup.test.sql', 'utf8'));
+  const q = normalisiert(String(FOTO_ZAEHLUNG_SQL));
+  expect(q.length).toBeGreaterThan(0);
+  // Ausgangswert als postgres und Zählung als backup_leser: zweimal dieselbe Abfrage
+  expect(sql.split(q).length - 1).toBeGreaterThanOrEqual(2);
 });

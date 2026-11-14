@@ -59,7 +59,10 @@ export function aktuelleTuetenfotos(
   return ergebnis;
 }
 
-/** Ergänzen: eine neue Zeile; Ersetzen: Storno der gültigen Zeile derselben Seite, dann die neue Zeile */
+/**
+ * Ergänzen: eine neue Zeile; Ersetzen: zuerst die neue Zeile, dann das Storno der gültigen Zeile derselben Seite
+ * (#219, Plan 207 A20). Scheitert das Storno, gilt trotzdem das neue Foto, weil die jüngste Zeile zählt.
+ */
 export function tuetenfotoVorgang(eingabe: {
   sorteId: string;
   seite: TuetenfotoSeite;
@@ -68,8 +71,6 @@ export function tuetenfotoVorgang(eingabe: {
   ersetzt?: string | undefined;
 }): Schritt[] {
   const schritte: Schritt[] = [];
-  if (eingabe.ersetzt)
-    schritte.push({ art: 'storno', tabelle: 'tuetenfoto', clientId: eingabe.ersetzt, grund: 'korrektur' });
   schritte.push({
     art: 'neu',
     tabelle: 'tuetenfoto',
@@ -81,5 +82,7 @@ export function tuetenfotoVorgang(eingabe: {
       pfad: eingabe.pfad,
     },
   });
+  if (eingabe.ersetzt)
+    schritte.push({ art: 'storno', tabelle: 'tuetenfoto', clientId: eingabe.ersetzt, grund: 'korrektur' });
   return schritte;
 }

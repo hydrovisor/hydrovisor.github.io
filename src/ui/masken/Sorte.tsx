@@ -19,20 +19,24 @@ import {
   vorratAus,
   vorratVerlauf,
   vorratVorgang,
+  type PackungZeit,
   type VorratEreignisZeile,
   type VorratTyp,
+  type VorratVerlaufEintrag,
 } from '../../domain/sorten/vorrat.ts';
 import { kalendertag, ZEITZONE } from '../../domain/zeit.ts';
 import { APP_VERSION } from '../../konstanten.ts';
 import { Button } from '../bausteine/Button.tsx';
 import { Card } from '../bausteine/Card.tsx';
 import { Notice } from '../bausteine/Notice.tsx';
+import { Kamera } from '../bausteine/Kamera.tsx';
 import { PhotoField } from '../bausteine/PhotoField.tsx';
 import { StatusBadge } from '../bausteine/StatusBadge.tsx';
 import { useBuendel } from '../buendel.tsx';
 import { RechercheHinweis } from '../RechercheHinweis.tsx';
 import { hashZu } from '../router.ts';
 import { fotoVorgangSenden, tuetenfotoHochladen, vorratSenden } from '../saatgutSpeichern.ts';
+import { useSpeichersperre } from '../speichersperre.ts';
 import { TuetenfotoAnzeige } from '../TuetenfotoAnzeige.tsx';
 import '../sorten.css';
 
@@ -58,6 +62,9 @@ const KULTURFORM_NAME: Record<string, string> = {
 
 const SEITE_LABEL: Record<TuetenfotoSeite, string> = { vorne: 'Vorderseite', hinten: 'Rückseite' };
 
+/** Uhr der Oberfläche (G2: Date.now() nur hier) */
+const jetzt = () => new Date(Date.now());
+
 /** offener Vorgang für «Speichern wiederholen» und die client_id, die das Bündel danach zeigen muss */
 interface Offen {
   vorgang: Vorgang;
@@ -67,34 +74,39 @@ interface Offen {
 
 /**
  * Card «Tütenfoto» am Schreibtisch (Plan 207): Anzeige über signierte Links, je Seite «Tütenfoto ergänzen» oder «Foto
- * ersetzen». Wahl → verkleinern → hochladen → Storno der alten Zeile plus neue Zeile über schreiben(); scheitert das
+ * ersetzen». Wahl → verkleinern → hochladen → neue Zeile, dann Storno der alten über schreiben() (#219); scheitert das
  * Schreiben, sendet «Speichern wiederholen» denselben Vorgang (A12). Die Fotofelder bleiben gesperrt, bis das Bündel die
- * neue Zeile zeigt, damit kein zweites Ersetzen die alte Zeile übersieht (A11).
+ * neue Zeile zeigt, höchstens bis zur Frist von useSpeichersperre (A11, #219).
  */
-function TuetenfotoKarte({ sorteId }: { sorteId: string }) {
+function TuetenfotoKarte({ sorteId, titel }: { sorteId: string; titel: string }) {
   const { buendel } = useBuendel();
   const zeilen = (buendel?.teile['tuetenfoto'] ?? []) as TuetenfotoZeile[];
   const aktuell = aktuelleTuetenfotos(zeilen, sorteId);
   const [laeuft, setLaeuft] = useState(false);
   const [meldung, setMeldung] = useState<string>();
   const [offen, setOffen] = useState<Offen>();
-  const [erwartet, setErwartet] = useState<{ seite: TuetenfotoSeite; clientId: string }>();
-  const wartetAufBuendel = erwartet !== undefined && aktuell[erwartet.seite]?.clientId !== erwartet.clientId;
-  const gesperrt = laeuft || wartetAufBuendel;
+  const { wartet, erwarten } = useSpeichersperre<{ seite: TuetenfotoSeite; clientId: string }>(
+    (e) => aktuell[e.seite]?.clientId === e.clientId,
+  );
+  const gesperrt = laeuft || wartet;
 
-  async function senden(o: Offen) {
+  /** Kamera in der App (Plan kamera): offen mit dem schon aufgenommenen Foto der Vorderseite */
+  const [kamera, setKamera] = useState<{ vorne?: { datei: File; url: string } }>();
+
+  async function senden(o: Offen): Promise<boolean> {
     const r = await fotoVorgangSenden(o.vorgang);
     if (r === 'gespeichert') {
       setOffen(undefined);
-      setErwartet({ seite: o.seite, clientId: o.clientId });
-      return;
+      erwarten({ seite: o.seite, clientId: o.clientId });
+      return true;
     }
     // «abweichend»: dasselbe Senden ergäbe wieder «abweichend», kein Wiederholen anbieten
     setOffen(r.wiederholbar ? o : undefined);
     setMeldung(r.meldung);
+    return false;
   }
 
-  async function waehlen(seite: TuetenfotoSeite, datei: File) {
+  async function waehlen(seite: TuetenfotoSeite, datei: File): Promise<boolean> {
     setLaeuft(true);
     setMeldung(undefined);
     setOffen(undefined);
@@ -106,10 +118,10 @@ function TuetenfotoKarte({ sorteId }: { sorteId: string }) {
             ? 'Foto nicht gespeichert: Das Foto ist nicht lesbar. Wähle ein anderes Foto.'
             : 'Foto nicht gespeichert. Prüf die Verbindung und wähle es erneut.',
         );
-        return;
+        return false;
       }
       const clientId = neueClientId();
-      await senden({
+      return await senden({
         seite,
         clientId,
         vorgang: tuetenfotoVorgang({
@@ -133,9 +145,55 @@ function TuetenfotoKarte({ sorteId }: { sorteId: string }) {
     setLaeuft(false);
   }
 
+  /** Kamera geschlossen: Vorderseite, dann Rückseite speichern; scheitert die Vorderseite, bleibt ihre Meldung stehen */
+  async function reiheSpeichern(vorne: File, hinten?: File) {
+    kameraSchliessen();
+    if ((await waehlen('vorne', vorne)) && hinten) await waehlen('hinten', hinten);
+  }
+
+  /** Kamera zu, Vorschau der Vorderseite freigeben */
+  function kameraSchliessen() {
+    if (kamera?.vorne) URL.revokeObjectURL(kamera.vorne.url);
+    setKamera(undefined);
+  }
+
+  function kameraFoto(datei: File) {
+    if (!kamera?.vorne) setKamera({ vorne: { datei, url: URL.createObjectURL(datei) } });
+    else void reiheSpeichern(kamera.vorne.datei, datei);
+  }
+
+  const vorneAufgenommen = kamera?.vorne;
   return (
     <Card title="Tütenfoto">
-      <TuetenfotoAnzeige sorteId={sorteId} leerText="Wähle unten ein Foto der Vorder- oder Rückseite." />
+      <TuetenfotoAnzeige sorteId={sorteId} leerText="Nimm unten die Vorder- und die Rückseite auf." />
+      <Button block disabled={gesperrt} onClick={() => setKamera({})}>
+        Vorder- und Rückseite aufnehmen
+      </Button>
+      {kamera ? (
+        <Kamera
+          titel={titel}
+          schritt={vorneAufgenommen ? 'Rückseite' : 'Vorderseite'}
+          hinweis={
+            vorneAufgenommen
+              ? 'Dreh die Tüte um und nimm die Rückseite auf.'
+              : 'Halte die Vorderseite der Tüte formatfüllend in den Rahmen.'
+          }
+          vorschau={vorneAufgenommen?.url}
+          vorschauText={vorneAufgenommen ? 'Vorderseite aufgenommen' : undefined}
+          aktionen={
+            vorneAufgenommen
+              ? [
+                  {
+                    text: 'Ohne Rückseite speichern',
+                    onClick: () => void reiheSpeichern(vorneAufgenommen.datei),
+                  },
+                ]
+              : undefined
+          }
+          onFoto={kameraFoto}
+          onSchliessen={kameraSchliessen}
+        />
+      ) : null}
       {(['vorne', 'hinten'] as const).map((seite) => (
         <PhotoField
           key={seite}
@@ -156,18 +214,16 @@ function TuetenfotoKarte({ sorteId }: { sorteId: string }) {
   );
 }
 
-/** Uhr der Oberfläche (G2: Date.now() nur hier) */
-const jetzt = () => new Date(Date.now());
-
 /** Kalendertag in Zürich als «TT.MM.JJJJ» (G2) */
 function tagAnzeige(zeitpunkt: string): string {
   const [j, m, t] = kalendertag(new Date(zeitpunkt), ZEITZONE).split('-');
   return `${t ?? ''}.${m ?? ''}.${j ?? ''}`;
 }
 
-const VORRAT_TEXT: Record<VorratTyp, string> = {
+const VORRAT_TEXT: Record<VorratVerlaufEintrag['typ'], string> = {
   aufgebraucht: 'Kein Saatgut mehr',
   vorraetig: 'Wieder vorrätig',
+  neue_packung: 'Neue Packung · wieder vorrätig',
 };
 
 /**
@@ -181,13 +237,14 @@ function VorratKarte({ sorteId }: { sorteId: string }) {
   const ereignisse = (teile['vorrat_ereignis'] ?? []) as VorratEreignisZeile[];
   const nun = jetzt();
   const stand = vorratAus(teile, sorteId, nun);
-  const verlauf = vorratVerlauf(ereignisse, sorteId, nun);
+  const verlauf = vorratVerlauf(ereignisse, sorteId, nun, (teile['saatgut'] ?? []) as PackungZeit[]);
   const [laeuft, setLaeuft] = useState(false);
   const [meldung, setMeldung] = useState<string>();
   const [offen, setOffen] = useState<Vorgang>();
-  const [erwartet, setErwartet] = useState<string>();
-  const wartetAufBuendel = erwartet !== undefined && !ereignisse.some((e) => e.client_id === erwartet);
-  const gesperrt = laeuft || wartetAufBuendel;
+  const { wartet, erwarten } = useSpeichersperre<string>((clientId) =>
+    ereignisse.some((e) => e.client_id === clientId),
+  );
+  const gesperrt = laeuft || wartet;
 
   async function senden(vorgang: Vorgang, clientId: string) {
     setLaeuft(true);
@@ -196,7 +253,7 @@ function VorratKarte({ sorteId }: { sorteId: string }) {
       const r = await vorratSenden(vorgang);
       if (r === 'gespeichert') {
         setOffen(undefined);
-        setErwartet(clientId);
+        erwarten(clientId);
         return;
       }
       setOffen(r.wiederholbar ? vorgang : undefined);
@@ -287,7 +344,7 @@ export function Sorte({ sorte }: { sorte: string }) {
             {d.zeile.pruefauftraege} {d.zeile.pruefauftraege === 1 ? 'Prüfauftrag' : 'Prüfaufträge'}
           </p>
           <VorratKarte sorteId={sorte} />
-          <TuetenfotoKarte sorteId={sorte} />
+          <TuetenfotoKarte sorteId={sorte} titel={`${d.zeile.artName} ${d.zeile.name}`} />
           {!d.zeile.vollstaendig ? (
             <Button
               variant="secondary"

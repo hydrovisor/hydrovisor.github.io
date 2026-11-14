@@ -111,6 +111,38 @@ a:hover { color: var(--brand-strong); }
 .hv-photo-input { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .hv-photo-preview { width: 64px; height: 64px; object-fit: cover; border-radius: var(--radius-md); border: 1px solid var(--line); }
 .hv-photo-input:focus-visible + .hv-btn { outline: 2px solid var(--focus); outline-offset: 2px; }
+/* Weitere Quellen unter dem Kamera-Knopf: Galerie und Dateien (Plan kamera) */
+.hv-photo-quellen { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.hv-photo-quellen .hv-btn { padding: 0 var(--space-3); }
+
+/* Kamera (components/Kamera.md): Sucher in der App über die ganze Fläche, Markenfläche als Grund */
+.hv-kamera { position: fixed; inset: 0; z-index: 50; display: flex; flex-direction: column; gap: var(--space-2);
+  height: 100dvh; padding: var(--space-3) var(--space-4) var(--space-4); background: var(--surface-brand); color: var(--ink-on-brand); }
+.hv-kamera-kopf { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3); }
+.hv-kamera-titelblock { min-width: 0; }
+.hv-kamera-titel { margin: 0; font-size: 17px; line-height: 24px; font-weight: 700; overflow-wrap: anywhere; }
+.hv-kamera-untertitel { margin: 0; font-size: 14px; line-height: 20px; color: var(--ink-on-brand-muted); }
+.hv-kamera-sucher { position: relative; flex: 1; min-height: 0; overflow: hidden; border-radius: var(--radius-lg); }
+.hv-kamera-video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.hv-kamera-rahmen { position: absolute; inset: 8%; border: 2px dashed var(--ink-on-brand); border-radius: var(--radius-md); pointer-events: none; }
+.hv-kamera-startet, .hv-kamera-fehler { position: absolute; inset: 0; margin: 0; display: flex; align-items: center; justify-content: center; padding: var(--space-6);
+  text-align: center; font-size: 16px; line-height: 24px; color: var(--ink-on-brand); }
+.hv-kamera-anleitung { display: flex; flex-direction: column; gap: var(--space-1); }
+.hv-kamera-schritt { margin: 0; font-size: 22px; line-height: 28px; font-weight: 700; }
+.hv-kamera-hinweis { margin: 0; font-size: 15px; line-height: 20px; color: var(--ink-on-brand-muted); }
+.hv-kamera-aktionen { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-2); }
+.hv-kamera-fuss { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: var(--space-3); }
+.hv-kamera-vorschau { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-1); min-width: 0; }
+.hv-kamera-vorschau img { width: 56px; height: 56px; object-fit: cover; border-radius: var(--radius-md); border: 2px solid var(--ink-on-brand); }
+.hv-kamera-vorschau span { font-size: 12px; line-height: 16px; font-weight: 600; color: var(--ink-on-brand-muted); }
+.hv-kamera-ausloeser { display: flex; flex-direction: column; align-items: center; gap: var(--space-1); padding: 0; border: 0; background: transparent;
+  color: var(--ink-on-brand); cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.hv-kamera-ausloeser-kreis { width: var(--size-touch-regal); height: var(--size-touch-regal); border-radius: var(--radius-full);
+  background: var(--ink-on-brand); box-shadow: 0 0 0 4px var(--surface-brand), 0 0 0 7px var(--ink-on-brand); }
+.hv-kamera-ausloeser-text { font-size: 13px; line-height: 16px; font-weight: 600; }
+.hv-kamera-ausloeser:active:not(:disabled) .hv-kamera-ausloeser-kreis { transform: scale(.94); }
+.hv-kamera-ausloeser:disabled { cursor: not-allowed; color: var(--ink-on-brand-muted); }
+.hv-kamera-ausloeser:disabled .hv-kamera-ausloeser-kreis { background: var(--ink-on-brand-muted); }
 .hv-field-unit { font-size: 14px; line-height: 20px; font-weight: 500; color: var(--ink-muted); }
 .hv-field-msg { margin: 0; display: flex; gap: var(--space-1); align-items: center; font-size: 14px; line-height: 20px; color: var(--ink-muted); }
 .hv-field-error .hv-field-box { border-color: var(--status-danger); border-width: 2px; padding: 0 calc(var(--space-4) - 1px); }

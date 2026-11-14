@@ -2,6 +2,8 @@
 // («3 von 22: Genoveser»), je Sorte Vorderseite, Rückseite freiwillig, «Überspringen», «Beenden». Die Reihe ist ein
 // Schnappschuss beim Start (nachtragStarten). Speichern wie die Karte «Tütenfoto» in Sorte.tsx: hochladen, Storno der
 // gültigen Zeile derselben Seite plus neue Zeile über schreiben() (8.1 Regel 2, Plan 207 A12).
+// «Vorder- und Rückseite aufnehmen» (Plan kamera) öffnet die Kamera in der App und lässt sie über alle Sorten offen: je
+// Tüte Vorderseite, Rückseite, speichern, danach von selbst die nächste Sorte.
 import { useState } from 'react';
 import { neueClientId } from '../../daten/schreiben.ts';
 import type { Vorgang } from '../../domain/datenpfad/erfassung.ts';
@@ -14,6 +16,7 @@ import {
 } from '../../domain/sorten/tuetenfoto.ts';
 import { Button } from '../bausteine/Button.tsx';
 import { Notice } from '../bausteine/Notice.tsx';
+import { Kamera, type KameraAktion } from '../bausteine/Kamera.tsx';
 import { PhotoField } from '../bausteine/PhotoField.tsx';
 import { useBuendel } from '../buendel.tsx';
 import { fotoVorgangSenden, tuetenfotoHochladen } from '../saatgutSpeichern.ts';
@@ -43,6 +46,8 @@ export function SaatgutNachtragen({
     gespeichert: Gespeichert;
   }>();
   const position = nachtragPosition(stand);
+  /** Kamera in der App offen; vorne: schon aufgenommene Vorderseite der aktuellen Sorte; speichert: Auslöser gesperrt */
+  const [kamera, setKamera] = useState<{ vorne?: { datei: File; url: string }; speichert?: boolean }>();
 
   function weiter(wie: 'ergaenzt' | 'uebersprungen') {
     setStand((s) => nachtragWeiter(s, wie));
@@ -52,18 +57,23 @@ export function SaatgutNachtragen({
     if (typeof window !== 'undefined') window.scrollTo(0, 0);
   }
 
-  async function senden(o: { vorgang: Vorgang; seite: TuetenfotoSeite; gespeichert: Gespeichert }) {
+  async function senden(o: {
+    vorgang: Vorgang;
+    seite: TuetenfotoSeite;
+    gespeichert: Gespeichert;
+  }): Promise<boolean> {
     const r = await fotoVorgangSenden(o.vorgang);
     if (r === 'gespeichert') {
       setOffen(undefined);
       setGespeichert((g) => ({ ...g, [o.seite]: o.gespeichert }));
-      return;
+      return true;
     }
     setOffen(r.wiederholbar ? o : undefined);
     setMeldung(r.meldung);
+    return false;
   }
 
-  async function waehlen(sorteId: string, seite: TuetenfotoSeite, datei: File) {
+  async function waehlen(sorteId: string, seite: TuetenfotoSeite, datei: File): Promise<boolean> {
     setLaeuft(true);
     setMeldung(undefined);
     setOffen(undefined);
@@ -75,13 +85,13 @@ export function SaatgutNachtragen({
             ? 'Foto nicht gespeichert: Das Foto ist nicht lesbar. Wähle ein anderes Foto.'
             : 'Foto nicht gespeichert. Prüf die Verbindung und wähle es erneut.',
         );
-        return;
+        return false;
       }
       // ersetzt: die in diesem Ablauf gespeicherte Seite, sonst die gültige Zeile aus dem Bündel (8.1 Regel 2)
       const zeilen = (buendel?.teile['tuetenfoto'] ?? []) as TuetenfotoZeile[];
       const ersetzt = gespeichert[seite]?.clientId ?? aktuelleTuetenfotos(zeilen, sorteId)[seite]?.clientId;
       const clientId = neueClientId();
-      await senden({
+      return await senden({
         seite,
         gespeichert: { clientId, url: URL.createObjectURL(datei) },
         vorgang: tuetenfotoVorgang({ sorteId, seite, pfad: hoch.pfad, clientId, ersetzt }),
@@ -100,6 +110,23 @@ export function SaatgutNachtragen({
     } finally {
       setLaeuft(false);
     }
+  }
+
+  /**
+   * Fotos einer Tüte aus der Kamera speichern: Vorderseite, dann Rückseite; gelingt beides, geht es mit der nächsten
+   * Sorte weiter und die Kamera bleibt offen. Scheitert ein Foto, schliesst die Kamera und die Seite zeigt die Meldung
+   * mit «Speichern wiederholen» wie bei der Wahl über das Fotofeld.
+   */
+  async function reiheSpeichern(sorteId: string, vorne: File, hinten?: File) {
+    const vorschau = kamera?.vorne?.url;
+    setKamera((k) => k && { ...k, speichert: true });
+    const ok =
+      (await waehlen(sorteId, 'vorne', vorne)) && (!hinten || (await waehlen(sorteId, 'hinten', hinten)));
+    if (vorschau) URL.revokeObjectURL(vorschau);
+    if (ok) {
+      weiter('ergaenzt');
+      setKamera((k) => k && {});
+    } else setKamera(undefined);
   }
 
   const kopf = (
@@ -125,11 +152,45 @@ export function SaatgutNachtragen({
 
   const { eintrag } = position;
   const einFoto = gespeichert.vorne !== undefined || gespeichert.hinten !== undefined;
+  const titel = `${position.nummer} von ${position.gesamt}: ${eintrag.name}`;
+  const vorne = kamera?.vorne;
+  const kameraAktionen: KameraAktion[] = vorne
+    ? [{ text: 'Ohne Rückseite weiter', onClick: () => void reiheSpeichern(eintrag.sorteId, vorne.datei) }]
+    : [{ text: 'Sorte überspringen', onClick: () => weiter('uebersprungen') }];
   return (
     <main className="hv-seite">
       {kopf}
-      <h2 className="hv-saatgut-ablauf-titel">{`${position.nummer} von ${position.gesamt}: ${eintrag.name}`}</h2>
+      <h2 className="hv-saatgut-ablauf-titel">{titel}</h2>
       <p className="hv-saatgut-gemuese">{eintrag.artName}</p>
+      {kamera ? (
+        <Kamera
+          titel={titel}
+          untertitel={eintrag.artName}
+          schritt={vorne ? 'Rückseite' : 'Vorderseite'}
+          hinweis={
+            vorne
+              ? 'Dreh die Tüte um und nimm die Rückseite auf.'
+              : 'Halte die Vorderseite dieser Tüte formatfüllend in den Rahmen.'
+          }
+          vorschau={vorne?.url}
+          vorschauText={vorne ? 'Vorderseite aufgenommen' : undefined}
+          status={kamera.speichert || laeuft ? 'Fotos werden gespeichert' : undefined}
+          aktionen={kameraAktionen}
+          onFoto={(datei) => {
+            if (!vorne) setKamera({ vorne: { datei, url: URL.createObjectURL(datei) } });
+            else void reiheSpeichern(eintrag.sorteId, vorne.datei, datei);
+          }}
+          onSchliessen={() => {
+            if (vorne) URL.revokeObjectURL(vorne.url);
+            setKamera(undefined);
+          }}
+        />
+      ) : null}
+      {!einFoto ? (
+        <Button block disabled={laeuft} onClick={() => setKamera({})}>
+          Vorder- und Rückseite aufnehmen
+        </Button>
+      ) : null}
       <PhotoField
         key={`${eintrag.sorteId}-vorne`}
         label={SEITE_LABEL.vorne}
