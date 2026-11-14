@@ -118,9 +118,11 @@ export function SaatgutNachtragen({
    * mit «Speichern wiederholen» wie bei der Wahl über das Fotofeld.
    */
   async function reiheSpeichern(sorteId: string, vorne: File, hinten?: File) {
+    const vorschau = kamera?.vorne?.url;
     setKamera((k) => k && { ...k, speichert: true });
     const ok =
       (await waehlen(sorteId, 'vorne', vorne)) && (!hinten || (await waehlen(sorteId, 'hinten', hinten)));
+    if (vorschau) URL.revokeObjectURL(vorschau);
     if (ok) {
       weiter('ergaenzt');
       setKamera((k) => k && {});
@@ -178,7 +180,10 @@ export function SaatgutNachtragen({
             if (!vorne) setKamera({ vorne: { datei, url: URL.createObjectURL(datei) } });
             else void reiheSpeichern(eintrag.sorteId, vorne.datei, datei);
           }}
-          onSchliessen={() => setKamera(undefined)}
+          onSchliessen={() => {
+            if (vorne) URL.revokeObjectURL(vorne.url);
+            setKamera(undefined);
+          }}
         />
       ) : null}
       {!einFoto ? (

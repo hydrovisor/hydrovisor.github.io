@@ -16,9 +16,9 @@ export function kameraFehler(e: unknown): KameraFehler {
 
 export const KAMERA_FEHLER_TEXT: Record<KameraFehler, string> = {
   verweigert:
-    'Die Kamera ist für Hydrovisor nicht freigegeben. Erlaube sie in Chrome bei den Website-Einstellungen oder schliess die Kamera und nimm die Fotos einzeln auf.',
-  fehlt: 'Keine Kamera gefunden. Schliess die Kamera und wähle die Fotos aus der Galerie.',
-  unbekannt: 'Die Kamera startet nicht. Schliess die Kamera und nimm die Fotos einzeln auf.',
+    'Die Kamera ist für Hydrovisor nicht freigegeben. Erlaube sie in Chrome bei den Website-Einstellungen oder tipp auf «Beenden» und nimm die Fotos einzeln auf.',
+  fehlt: 'Keine Kamera gefunden. Tipp auf «Beenden» und wähle die Fotos aus der Galerie.',
+  unbekannt: 'Die Kamera startet nicht. Tipp auf «Beenden» und nimm die Fotos einzeln auf.',
 };
 
 /** Auflösung des Suchers; die Maske verkleinert jedes Foto danach auf BILD_KANTE_MAX (Plan kamera A3) */
@@ -82,6 +82,8 @@ export function Kamera({
   const [bereit, setBereit] = useState(false);
   const [nimmt, setNimmt] = useState(false);
   const [fehler, setFehler] = useState<KameraFehler>();
+  /** Standbild gescheitert: Meldung, Auslöser bleibt frei für den nächsten Versuch */
+  const [aufnahmeFehler, setAufnahmeFehler] = useState(false);
 
   useEffect(() => {
     let stream: MediaStream | undefined;
@@ -93,7 +95,11 @@ export function Kamera({
       }
       try {
         stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: VIDEO });
-        if (aus) return;
+        // Baustein schon weg (Beenden während der Freigabe, StrictMode): Spuren sofort stoppen
+        if (aus) {
+          for (const t of stream.getTracks()) t.stop();
+          return;
+        }
         const v = video.current;
         if (!v) return;
         v.srcObject = stream;
@@ -122,11 +128,12 @@ export function Kamera({
     const v = video.current;
     if (!v) return;
     setNimmt(true);
+    setAufnahmeFehler(false);
     try {
       const bild = await standbild(v);
       onFoto(new File([bild], `tuete-${String(Date.now())}.jpg`, { type: 'image/jpeg' }));
     } catch {
-      setFehler('unbekannt');
+      setAufnahmeFehler(true);
     } finally {
       setNimmt(false);
     }
@@ -158,6 +165,11 @@ export function Kamera({
         <p className="hv-kamera-schritt" aria-live="polite">
           {schritt}
         </p>
+        {aufnahmeFehler ? (
+          <p className="hv-kamera-hinweis" role="alert">
+            Foto nicht aufgenommen. Versuch es noch einmal.
+          </p>
+        ) : null}
         {status ? (
           <p className="hv-kamera-hinweis" role="status">
             {status}

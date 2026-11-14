@@ -298,7 +298,10 @@ export function SaatgutErfassen({ onSchliessen }: { onSchliessen: () => void }) 
             if (!kameraVorne) setKamera({ vorne: foto });
             else kameraFertig(kameraVorne, foto);
           }}
-          onSchliessen={() => setKamera(undefined)}
+          onSchliessen={() => {
+            if (kameraVorne) URL.revokeObjectURL(kameraVorne.url);
+            setKamera(undefined);
+          }}
         />
       ) : null}
 

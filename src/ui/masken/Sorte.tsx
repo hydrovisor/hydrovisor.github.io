@@ -140,8 +140,14 @@ function TuetenfotoKarte({ sorteId, titel }: { sorteId: string; titel: string })
 
   /** Kamera geschlossen: Vorderseite, dann Rückseite speichern; scheitert die Vorderseite, bleibt ihre Meldung stehen */
   async function reiheSpeichern(vorne: File, hinten?: File) {
-    setKamera(undefined);
+    kameraSchliessen();
     if ((await waehlen('vorne', vorne)) && hinten) await waehlen('hinten', hinten);
+  }
+
+  /** Kamera zu, Vorschau der Vorderseite freigeben */
+  function kameraSchliessen() {
+    if (kamera?.vorne) URL.revokeObjectURL(kamera.vorne.url);
+    setKamera(undefined);
   }
 
   function kameraFoto(datei: File) {
@@ -178,7 +184,7 @@ function TuetenfotoKarte({ sorteId, titel }: { sorteId: string; titel: string })
               : undefined
           }
           onFoto={kameraFoto}
-          onSchliessen={() => setKamera(undefined)}
+          onSchliessen={kameraSchliessen}
         />
       ) : null}
       {(['vorne', 'hinten'] as const).map((seite) => (

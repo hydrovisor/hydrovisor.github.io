@@ -205,3 +205,39 @@ test('KA1-AK5 Tüte erfassen: nach Vorder- und Rückseite liest die App die Tüt
   expect(s.hochgeladen).toHaveLength(2);
   await expect(page.getByLabel('Name', { exact: true })).toHaveValue('Kameratest', { timeout: 15_000 });
 });
+
+test('KA1-AK2 Beenden vor dem Start der Kamera stoppt ihre Spuren trotzdem (Prüferbefund 1, Runde 1)', async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const md = navigator.mediaDevices;
+    const original = md.getUserMedia.bind(md);
+    const w = window as unknown as { e2eStreams: MediaStream[] };
+    w.e2eStreams = [];
+    Object.defineProperty(md, 'getUserMedia', {
+      value: async (c: MediaStreamConstraints) => {
+        await new Promise((r) => setTimeout(r, 1_000));
+        const s = await original(c);
+        w.e2eStreams.push(s);
+        return s;
+      },
+    });
+  });
+  await appVorbereiten(page);
+  await page.goto(`/#/sorten/${SORTE.eichblatt}`);
+  await knopf(page, 'Vorder- und Rückseite aufnehmen').click();
+  await expect(kamera(page)).toContainText('Kamera startet');
+  await kamera(page).getByRole('button', { name: 'Beenden', exact: true }).click();
+  await expect(kamera(page)).toHaveCount(0);
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const w = window as unknown as { e2eStreams: MediaStream[] };
+        return (
+          w.e2eStreams.length > 0 &&
+          w.e2eStreams.every((s) => s.getTracks().every((t) => t.readyState === 'ended'))
+        );
+      }),
+    )
+    .toBe(true);
+});
