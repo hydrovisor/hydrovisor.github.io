@@ -8,7 +8,7 @@ import { keimAufgaben } from '../pflanzung/keimung.ts';
 import { KULTURFORM_NAME } from '../pflanzung/saeen.ts';
 import { tagKurz, type Zeitzone } from '../zeit.ts';
 import { endzustand, teileNach, type Endzustand } from './ende.ts';
-import { ernteStand, type ErnteStand } from './ernte.ts';
+import { ernteStand, ernteUmfang, type ErnteStand } from './ernte.ts';
 import { phasenStand, type PhasenStand } from './fragen.ts';
 import { dezimal, herkunftText, sollbereich, sollText, type Sollbereich } from './sollbereich.ts';
 
@@ -192,15 +192,7 @@ export function pflanzenAnsicht(
     (a, b) => a.am.localeCompare(b.am) || REIHENFOLGE.indexOf(a.art) - REIHENFOLGE.indexOf(b.art),
   )[0];
 
-  const umfang = aktiv
-    ? zeilen<Zustand>(teile, 'v_pflanzung_zustand')
-        .filter(
-          (x) =>
-            x.satz_id === satz.id && x.status === 'aktiv' && (x.platz_id ?? null) === (z.platz_id ?? null),
-        )
-        .map((x) => x.pflanzung_id)
-        .sort()
-    : [pflanzungId];
+  const umfang = aktiv ? ernteUmfang(teile, pflanzungId) : [pflanzungId];
   const naechstePhase = phase?.naechste?.phase;
   const wissen = ernte?.schossenHandlung ? wissenSchossen(teile, satz.sorte_id) : undefined;
   const topf = z.netztopf_id

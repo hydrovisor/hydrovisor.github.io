@@ -13,6 +13,56 @@
   border-top: 1px solid var(--line);
 }
 
+/* UX4 (Plan 226): Gruppenzeile «Sorte × n» mit den drei Antworten darunter; die Karte mit zwei Gruppen bleibt auf
+   360 × 640 unter 400 dp. Einzelzeilen eingerückt. */
+.hv-phasen-gruppen,
+.hv-phasen-gruppe,
+.hv-phasen-einzeln {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.hv-phasen-gruppen {
+  gap: var(--space-2);
+}
+
+.hv-phasen-gruppe {
+  gap: 0;
+}
+
+.hv-phasen-einzeln {
+  padding-left: var(--space-3);
+  border-left: 2px solid var(--line);
+}
+
+.hv-phasen-kopfzeile {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  column-gap: var(--space-2);
+}
+
+.hv-phasen-neben {
+  font-size: var(--text-small-size);
+  color: var(--ink-muted);
+}
+
+/* Fusszeile in einer Zeile: «Einzeln beantworten» bricht zwischen den Wörtern um, «Alle Ja» bleibt daneben */
+.hv-phasen-fuss {
+  display: flex;
+  flex: 1;
+  gap: var(--space-2);
+}
+
+.hv-phasen-fuss > .hv-btn {
+  flex: 1 1 0;
+  padding: 0 var(--space-2);
+  white-space: normal;
+  text-align: center;
+}
+
 .hv-phasen-knoepfe,
 .hv-pflanze-knoepfe {
   display: flex;

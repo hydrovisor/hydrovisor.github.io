@@ -28,6 +28,7 @@ export function Choice({
   label,
   zeile,
   einzeln,
+  segmente: fest,
 }: {
   optionen: readonly Option[];
   gewaehlt: readonly string[];
@@ -38,14 +39,18 @@ export function Choice({
   zeile?: boolean;
   /** genau eine Option gilt: runder Punkt statt Häkchen, in einer Zeile gleich breite Segmente (U-04, B7) */
   einzeln?: boolean;
+  /** mit einzeln und höchstens drei Optionen: immer eine Zeile gleich breiter Segmente, Punkt über dem Titel (UX4) */
+  segmente?: boolean;
 }) {
   // bis drei Optionen in einer Zeile: gleich breite Segmente; mehr Optionen brechen um wie bisher
-  const segmente = einzeln === true && zeile === true && optionen.length <= 3;
+  const erzwungen = fest === true && einzeln === true && optionen.length <= 3;
+  const segmente = !erzwungen && einzeln === true && zeile === true && optionen.length <= 3;
   const klasse = [
     'hv-choice',
     zeile && 'hv-choice-zeile',
     einzeln && 'hv-choice-einzeln',
     segmente && 'hv-choice-segmente',
+    erzwungen && 'hv-choice-zeile hv-choice-segmente-fest',
   ]
     .filter(Boolean)
     .join(' ');

@@ -16,6 +16,7 @@ import {
 import {
   AUSFALL_URSACHEN,
   ausfallVorgang,
+  alleAberntenVorgang,
   ernteVorgang,
   kulturEntscheidVorgang,
   schossenVorgang,
@@ -258,7 +259,11 @@ export function Pflanze({ pflanzung, von }: { pflanzung: string; von?: 'ernte' }
   const ernten = (art: 'teil' | 'ab') =>
     void senden(
       `ernte|${art}|${ziel.join(',')}`,
-      () => ernteVorgang(eff, { pflanzungIds: ziel, art }, neueClientId, uhrJetzt(), ZEITZONE),
+      () =>
+        // «Alle n im Satz» und «Abernten»: derselbe Vorgang wie «Alle n abernten» in Heute (UX4-AK5)
+        art === 'ab' && umfangAlle && mehrere
+          ? alleAberntenVorgang(eff, pflanzung, neueClientId, uhrJetzt(), ZEITZONE)
+          : ernteVorgang(eff, { pflanzungIds: ziel, art }, neueClientId, uhrJetzt(), ZEITZONE),
       art === 'teil'
         ? `Gespeichert: Teilernte${ziel.length > 1 ? ` (${String(ziel.length)} Pflanzen)` : ''}`
         : `Gespeichert: Abgeerntet${ziel.length > 1 ? ` (${String(ziel.length)} Pflanzen)` : ''}`,

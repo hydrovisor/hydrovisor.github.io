@@ -357,6 +357,12 @@ button.hv-tile { cursor: pointer; touch-action: manipulation; }
 .hv-choice-einzeln .hv-choice-check { border-radius: 50%; }
 .hv-choice-einzeln .hv-choice-item[aria-pressed="true"] .hv-choice-check { background: var(--surface-raised); box-shadow: inset 0 0 0 5px var(--surface-raised), inset 0 0 0 12px var(--brand); }
 .hv-choice-segmente > .hv-choice-item { flex: 1 1 0; min-width: max-content; justify-content: center; }
+/* UX4 (Plan 226): Segmente erzwungen: immer eine Zeile, auch auf 360 dp; die Segmente teilen die Breite nach ihrem Inhalt, der Punkt steht über dem Titel, der Titel bricht nur zwischen Wörtern */
+.hv-choice-segmente-fest { flex-wrap: nowrap; }
+.hv-choice-segmente-fest > .hv-choice-item { flex: 1 1 auto; min-width: var(--size-touch); flex-direction: column; justify-content: center; gap: var(--space-1); padding: 0; text-align: center; }
+[data-density="regal"] .hv-choice-segmente-fest > .hv-choice-item { min-width: var(--size-touch-regal); }
+.hv-choice-segmente-fest .hv-choice-text { align-items: center; }
+.hv-choice-segmente-fest .hv-choice-titel { overflow-wrap: normal; word-break: normal; hyphens: none; }
 
 /* Stepper: − Wert + ohne Systemtastatur, Grenzen deaktivieren den Knopf (Plan 23) */
 .hv-stepper { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: var(--space-2); }

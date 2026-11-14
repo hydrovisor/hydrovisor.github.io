@@ -1,6 +1,8 @@
 // Phasenfragen und «Phasen nachführen» in Heute (Plan 35; UC6-AK6, R1.5, R1.6): eine Karte je Ort, Art und Saatdatum
-// mit Ja (vorgewählt), Noch nicht, Problem je Satz und [Alle Ja]; Karte «Phasen nachführen» mit Stepper je Wechsel,
-// «Ohne letzten Wechsel» und [Alle übernehmen].
+// mit Ja (vorgewählt), Noch nicht, Problem und [Alle Ja]; Karte «Phasen nachführen» mit Stepper je Wechsel,
+// «Ohne letzten Wechsel» und [Alle übernehmen]. Seit UX4 (Plan 226): gleiche Sätze einer Karte als eine Zeile
+// «Sorte × n» mit den drei Antworten als Segmente; «Einzeln beantworten» klappt die Sätze auf. Jede Wahl ist nur
+// vorgemerkt, geschrieben wird mit [Alle Ja] (ein Vorgang je Karte, Antworten am Satz).
 import { useRef, useState } from 'react';
 import { neueClientId, schreiben } from '../../daten/schreiben.ts';
 import type { Vorgang } from '../../domain/datenpfad/erfassung.ts';
@@ -13,6 +15,14 @@ import {
   pflanzungVonSatz,
   type Fragekarte,
 } from '../../domain/phasen/fragen.ts';
+import {
+  gruppenAntworten,
+  phasenGruppen,
+  type Antwort,
+  type Fragegruppe,
+  type GruppenWahl,
+} from '../../domain/phasen/gruppen.ts';
+import { KULTURFORM_NAME } from '../../domain/pflanzung/saeen.ts';
 import { PHASE_NAME } from '../../domain/phasen/profil.ts';
 import { tagKurz, tagPlus, tageZwischen, ZEITZONE } from '../../domain/zeit.ts';
 import { Button } from '../bausteine/Button.tsx';
@@ -26,7 +36,6 @@ import { useMelden } from '../meldung.tsx';
 import { hashZu } from '../router.ts';
 import '../phasen.css';
 
-type Antwort = 'ja' | 'noch_nicht' | 'problem';
 const ANTWORTEN = [
   { wert: 'ja', titel: 'Ja' },
   { wert: 'noch_nicht', titel: 'Noch nicht' },
@@ -34,12 +43,15 @@ const ANTWORTEN = [
 ];
 const SPERRE_MS = 400;
 const uhrJetzt = () => new Date(Date.now());
+const KEINE_WAHL: GruppenWahl = { gruppe: {}, satz: {} };
 
 export function Phasenkarten({ jetzt }: { jetzt: Date }) {
   const { buendel } = useBuendel();
   const melden = useMelden();
   const teile = buendel?.teile;
-  const [wahl, setWahl] = useState<Record<string, Antwort>>({});
+  // vorgemerkte Antworten und «Einzeln beantworten» je Karte (Titel)
+  const [wahl, setWahl] = useState<Record<string, GruppenWahl>>({});
+  const [offen, setOffen] = useState<Record<string, boolean>>({});
   // Nachführen: Versatz je Wechsel in Tagen gegen den vorbelegten Tag, «Ohne letzten Wechsel» je Satz
   const [versatz, setVersatz] = useState<Record<string, number[]>>({});
   const [ohneLetzten, setOhneLetzten] = useState<Record<string, boolean>>({});
@@ -106,11 +118,8 @@ export function Phasenkarten({ jetzt }: { jetzt: Date }) {
     }
   }
 
-  function alleJa(karte: Fragekarte) {
-    const antworten = karte.zeilen.map((z) => ({
-      satzId: z.satzId,
-      antwort: wahl[z.satzId] ?? ('ja' as Antwort),
-    }));
+  function alleJa(karte: Fragekarte, gruppen: readonly Fragegruppe[]) {
+    const antworten = gruppenAntworten(gruppen, wahl[karte.titel] ?? KEINE_WAHL);
     void senden(
       `ja|${JSON.stringify(antworten)}`,
       () => antwortVorgang(teile, antworten, neueClientId, uhrJetzt(), ZEITZONE, PHASENLOGIK_AB),
@@ -173,9 +182,6 @@ export function Phasenkarten({ jetzt }: { jetzt: Date }) {
             </Button>
           }
         >
-          <Button variant="secondary" size="compact" disabled={sendet} onClick={alleUebernehmen}>
-            Alle übernehmen
-          </Button>
           {nachZeilen.map((z) => {
             const tage = tageVon(z);
             const ohne = ohneLetzten[z.satzId] === true;
@@ -222,37 +228,112 @@ export function Phasenkarten({ jetzt }: { jetzt: Date }) {
           })}
         </Card>
       ) : null}
-      {fragen.map((karte) => (
-        <Card
-          key={karte.titel}
-          title={karte.titel}
-          footer={
-            <Button disabled={sendet} onClick={() => alleJa(karte)}>
-              Alle Ja
-            </Button>
-          }
-        >
-          {karte.frage ? <p className="hv-phasen-frage">{`${karte.frage}?`.replace(/\?\?$/, '?')}</p> : null}
-          {karte.zeilen.map((z) => (
-            <div key={z.satzId} className="hv-phasen-zeile">
-              <span>
-                {sorteLink(z.satzId, z.sorte)}
-                {` · ${z.uebergang} · ${z.text}`}
-                {karte.frage ? '' : ` · ${z.frage}`}
+      {fragen.map((karte) => {
+        const gruppen = phasenGruppen(teile, karte);
+        const w = wahl[karte.titel] ?? KEINE_WAHL;
+        const istOffen = offen[karte.titel] === true;
+        const mehrfach = gruppen.some((g) => g.zeilen.length > 1);
+        // gemeinsamer Übergang einmal im Kartenkopf, damit die Gruppenzeile kurz bleibt: mit Wechselmerkmal als
+        // «Anzucht: Keimblätter offen?» (Zielphase und Frage in einer Zeile), sonst «Keimung → Anzucht» (A)
+        const uebergaenge = new Set(gruppen.map((g) => g.uebergang));
+        const [gemeinsam] = uebergaenge.size === 1 ? [...uebergaenge] : [];
+        const frage = karte.frage ? `${karte.frage}?`.replace(/\?\?$/, '?') : undefined;
+        const ziel = gemeinsam && gruppen[0] ? PHASE_NAME[gruppen[0].nach] : undefined;
+        const kopf = frage ? (ziel ? `${ziel}: ${frage}` : frage) : gemeinsam;
+        const setzen = (neu: GruppenWahl) => setWahl((alt) => ({ ...alt, [karte.titel]: neu }));
+        return (
+          <Card
+            key={karte.titel}
+            title={karte.titel}
+            footer={
+              <span className="hv-phasen-fuss">
+                {mehrfach ? (
+                  <Button
+                    variant="secondary"
+                    aria-expanded={istOffen}
+                    onClick={() => setOffen((alt) => ({ ...alt, [karte.titel]: !istOffen }))}
+                  >
+                    Einzeln beantworten
+                  </Button>
+                ) : null}
+                <Button disabled={sendet} onClick={() => alleJa(karte, gruppen)}>
+                  Alle Ja
+                </Button>
               </span>
-              {z.pruefen ? <StatusBadge tone="info">prüfen</StatusBadge> : null}
-              <Choice
-                einzeln
-                label={`${z.sorte} · ${z.uebergang}`}
-                zeile
-                optionen={ANTWORTEN}
-                gewaehlt={[wahl[z.satzId] ?? 'ja']}
-                onWahl={(w) => setWahl((alt) => ({ ...alt, [z.satzId]: w as Antwort }))}
-              />
+            }
+          >
+            <div className="hv-phasen-gruppen">
+              {kopf ? <p className="hv-phasen-frage">{kopf}</p> : null}
+              {gruppen.map((g) => {
+                const antworten = g.zeilen.map((z) => w.satz[z.satzId] ?? w.gruppe[g.schluessel] ?? 'ja');
+                const haeufig = w.gruppe[g.schluessel] ?? 'ja';
+                const abweichend = antworten.filter((x) => x !== haeufig).length;
+                // gleiche Sorte mit gleichem Übergang zweimal in der Karte: die Kulturform unterscheidet
+                const doppelt = gruppen.some(
+                  (x) => x !== g && x.sorte === g.sorte && x.uebergang === g.uebergang,
+                );
+                const form = KULTURFORM_NAME[g.kulturform] ?? g.kulturform;
+                const name = `${g.sorte} · ${g.uebergang}${doppelt ? ` · ${form}` : ''}`;
+                return (
+                  <div key={g.schluessel} className="hv-phasen-gruppe">
+                    <span className="hv-phasen-kopfzeile">
+                      <span>
+                        {sorteLink(g.zeilen[0]?.satzId ?? '', g.sorte)}
+                        {g.pflanzungen > 1 ? ` × ${String(g.pflanzungen)}` : ''}
+                        {doppelt ? ` · ${form}` : ''}
+                      </span>
+                      <span className="hv-phasen-neben">
+                        {[
+                          gemeinsam ? undefined : g.uebergang,
+                          g.text,
+                          karte.frage ? undefined : g.frage,
+                          abweichend > 0 ? `${String(abweichend)} abweichend` : undefined,
+                        ]
+                          .filter(Boolean)
+                          .join(' · ')}
+                      </span>
+                      {g.pruefen ? <StatusBadge tone="info">prüfen</StatusBadge> : null}
+                    </span>
+                    <Choice
+                      einzeln
+                      segmente
+                      label={name}
+                      optionen={ANTWORTEN}
+                      gewaehlt={abweichend > 0 ? [] : [haeufig]}
+                      onWahl={(x) => {
+                        // die Gruppenwahl gilt für alle Sätze der Gruppe: Einzelwahlen der Gruppe entfallen
+                        const eigene = new Set(g.zeilen.map((z) => z.satzId));
+                        const satz = Object.fromEntries(
+                          Object.entries(w.satz).filter(([id]) => !eigene.has(id)),
+                        );
+                        setzen({ gruppe: { ...w.gruppe, [g.schluessel]: x as Antwort }, satz });
+                      }}
+                    />
+                    {istOffen && g.zeilen.length > 1
+                      ? g.zeilen.map((z, i) => (
+                          <div key={z.satzId} className="hv-phasen-einzeln">
+                            <span className="hv-phasen-kopfzeile">
+                              <span>{sorteLink(z.satzId, `${z.sorte} ${String(i + 1)}`)}</span>
+                              <span className="hv-phasen-neben">{z.text}</span>
+                            </span>
+                            <Choice
+                              einzeln
+                              segmente
+                              label={`${z.sorte} ${String(i + 1)} · ${z.uebergang}`}
+                              optionen={ANTWORTEN}
+                              gewaehlt={[antworten[i] ?? 'ja']}
+                              onWahl={(x) => setzen({ ...w, satz: { ...w.satz, [z.satzId]: x as Antwort } })}
+                            />
+                          </div>
+                        ))
+                      : null}
+                  </div>
+                );
+              })}
             </div>
-          ))}
-        </Card>
-      ))}
+          </Card>
+        );
+      })}
     </div>
   );
 }
