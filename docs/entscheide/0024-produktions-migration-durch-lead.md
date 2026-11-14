@@ -39,3 +39,5 @@ Ein Satz von Tim im Chat genügt. Danach gibt wieder nur Tim Deploys mit Migrati
 - Nachträge in den Entscheiden 0006, 0008 und 0010 verweisen auf diesen Entscheid.
 - Für den ersten Lauf war der letzte Backup-Lauf vom 13.11.2026 10:48 grün.
 - Der erste Lauf nach dieser Regel ist 43469076407 (#207): Migration, Pages und Rauchtest grün, die Produktion zeigt `0.1.0+78dd023`.
+
+**Nachtrag 14.11.2026:** In Konzept v1.7 nachgeführt (Erratum E13, Anhang B.2), von Tim am 14.11.2026 bestätigt.

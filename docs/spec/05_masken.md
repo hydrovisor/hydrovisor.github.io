@@ -1,6 +1,6 @@
 # 05 Masken
 
-Stand 1.11.2026 · Auftrag 2 «Spezifikation» · Grundlage: Konzept v1.2 Kapitel 6 und 10, Use Cases Fassung 4 (Bedienmuster U1 bis U14), `design-system/`. (A) = Annahme dieser Spezifikation. Nachgeführt am 14.11.2026 auf Konzept v1.7 (Entwurf, gilt mit Tims Bestätigung; E12: Leiste unten, Anlagen, Mehr, Saatgut, Säen nach Gemüse, Deckelwahl nach Box; Entscheide 0021, 0023, 0025).
+Stand 1.11.2026 · Auftrag 2 «Spezifikation» · Grundlage: Konzept v1.2 Kapitel 6 und 10, Use Cases Fassung 4 (Bedienmuster U1 bis U14), `design-system/`. (A) = Annahme dieser Spezifikation. Nachgeführt am 14.11.2026 auf Konzept v1.7 (von Tim am 14.11.2026 bestätigt; E12: Leiste unten, Anlagen, Mehr, Saatgut, Säen nach Gemüse, Deckelwahl nach Box; Entscheide 0021, 0023, 0025).
 
 ## 1 Grundsätze
 

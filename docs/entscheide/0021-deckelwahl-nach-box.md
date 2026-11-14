@@ -24,3 +24,5 @@ Das Datenmodell kennt keine Masse eines Deckels (`deckeltyp`: Topfdurchmesser, L
 
 - `src/domain/vorlagen/deckelpassung.ts` hält Nennmasse und Zuordnung; ändert sich die Hardware (neues 3D-Modell), dort nachführen.
 - Konzept 5.4, `use_cases_f4.md` UC2 und U-01 bei der nächsten Fassung nachführen (Eintrag in Anhang B.2), bis dahin gilt dieser Entscheid; offener Posten in `docs/plaene/pakete.md` Abschnitt I3.
+
+**Nachtrag 14.11.2026:** In Konzept v1.7 nachgeführt (Erratum E12, Anhang B.2), von Tim am 14.11.2026 bestätigt.

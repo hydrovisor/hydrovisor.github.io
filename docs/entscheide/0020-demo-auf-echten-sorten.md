@@ -16,3 +16,5 @@ Die Demo-Szenarien S1 bis S9 nutzten die vier Test-Sorten aus `tests/fixtures/wi
 
 - `docs/spec/06_tests.md` Abschnitt 10 nennt die neuen Sorten und Daten; das Konzept 8.5 wird bei der nächsten Fassung nachgeführt (Eintrag in Anhang B.2), bis dahin gilt dieser Entscheid.
 - `npm run demo -- --laden` lädt bei leerem Wissen lokal das echte W0; in `hydrovisor-dev` braucht die Demo den scharfen W0-Seed (`dev-seed.yml` mit `trockenlauf=false`).
+
+**Nachtrag 14.11.2026:** In Konzept v1.7 nachgeführt (Erratum E14, Anhang B.2), von Tim am 14.11.2026 bestätigt.

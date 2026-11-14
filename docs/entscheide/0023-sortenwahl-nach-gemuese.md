@@ -41,3 +41,5 @@ die Kulturform wählen soll, kam der Wunsch, die Vorgabe mit ihrer Wirkung zu ze
   `Kulturform`.
 - Die E2E-Tests zu Schritt 1 wählen Sorten heute direkt per Name und werden über den Testentwickler angepasst.
 - Konzept 6.1 (UC5) und `use_cases_f4.md` UC5 bei der nächsten Fassung nachführen (Anhang B.2); bis dahin gilt dieser Entscheid.
+
+**Nachtrag 14.11.2026:** In Konzept v1.7 nachgeführt (Erratum E12, Anhang B.2), von Tim am 14.11.2026 bestätigt.
