@@ -638,7 +638,7 @@ Die Quellen aus Fassung 2 (abgerufen am 18.10.2026) und Fassung 3 (abgerufen am 
 
 # Änderungen gegenüber Fassung 3
 
-Zeilennummern beziehen sich auf das Konzept v1.0 vom 31.10.2026 (Git-Verlauf; die Fassungen ab v1.1 in `docs/input/konzept_v1.6.md` verschieben sie). Die Spalte «alt» gibt den Wortlaut von Fassung 3 verkürzt wieder und enthält deshalb überholte Begriffe. Die Zeilen 248 bis 285 stammen aus der Korrekturrunde nach der unabhängigen Prüfung vom 31.10.2026.
+Zeilennummern beziehen sich auf das Konzept v1.0 vom 31.10.2026 (Git-Verlauf; die Fassungen ab v1.1 in `docs/input/konzept_v1.7.md` verschieben sie). Die Spalte «alt» gibt den Wortlaut von Fassung 3 verkürzt wieder und enthält deshalb überholte Begriffe. Die Zeilen 248 bis 285 stammen aus der Korrekturrunde nach der unabhängigen Prüfung vom 31.10.2026.
 
 | Nr. | Stelle | alt (Fassung 3, kurz) | neu (Fassung 4, kurz) | Beleg im Konzept |
 | :---- | :---- | :---- | :---- | :---- |
