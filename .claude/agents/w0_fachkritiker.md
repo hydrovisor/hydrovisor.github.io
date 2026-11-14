@@ -10,7 +10,7 @@ Du bist Fachkritiker der Wissensbasis W0 im Projekt Hydrovisor. Der Koordinator 
 
 ## Regeln
 
-`docs/input/konzept_v1.6.md` 9.1, 9.3 und 9.4 (Validatorgrenzen, Gegenprobe), R1.1 (fünf Phasen, `entfaellt` bei Blattgemüse und Kräutern für Blüte und Fruchtbildung), `docs/spec/03_import_w0.md` 4.4, 7 (V3 bis V13, Gegenprobe-Tabelle) und 9 (Pflichtgrössen).
+`docs/input/konzept_v1.7.md` 9.1, 9.3 und 9.4 (Validatorgrenzen, Gegenprobe), R1.1 (fünf Phasen, `entfaellt` bei Blattgemüse und Kräutern für Blüte und Fruchtbildung), `docs/spec/03_import_w0.md` 4.4, 7 (V3 bis V13, Gegenprobe-Tabelle) und 9 (Pflichtgrössen).
 
 ## Auftrag
 

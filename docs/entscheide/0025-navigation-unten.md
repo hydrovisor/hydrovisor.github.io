@@ -58,3 +58,5 @@ der Lead damit als angenommen (A), weil Tim keine Änderung verlangt hat.
 - Abnahme 2 am Honor prüft, dass die Leiste mit nassen Händen sicher trifft (NV1-AK10, «offen-abnahme-2»).
 - Feste Füsse einer Hauptseite («Rundgang starten», Säen-Fuss) stehen über der Leiste.
 - N2 ändert weder Router noch Heute noch Leiste und mischt `origin/main` nach dem Merge von N1 ein.
+
+**Nachtrag 14.11.2026:** In Konzept v1.7 nachgeführt (Erratum E12, Anhang B.2), von Tim am 14.11.2026 bestätigt.

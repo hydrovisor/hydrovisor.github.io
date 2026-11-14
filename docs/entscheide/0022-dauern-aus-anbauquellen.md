@@ -23,3 +23,5 @@ Nach Runde 9 sind 8 von 11 Arten voll geladen, 15 von 22 Sorten vollständig (`v
 ## Verworfen
 
 - **Teilfreigabe je Phase** (Variante B in #202): Damit wären pH und EC sofort geladen, aber die 7 Sorten blieben unvollständig. Ausserdem müsste Konzept 9.5 geändert werden.
+
+**Nachtrag 14.11.2026:** In Konzept v1.7 nachgeführt (Erratum E14, Anhang B.2), von Tim am 14.11.2026 bestätigt.

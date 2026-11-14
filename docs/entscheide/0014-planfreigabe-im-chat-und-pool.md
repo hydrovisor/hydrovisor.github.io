@@ -13,3 +13,5 @@ Datum 7.11.2026 · Entscheid von Tim · ergänzt Entscheid 0010 (Punkt 3) und de
 **Folgen.** `CLAUDE.md` (Paketablauf Punkt 2), `.claude/skills/umsetzen/SKILL.md` (Schritte 1.4 und 2) und `docs/plaene/pakete.md` (Pool) verweisen auf diesen Entscheid. In der nächsten Konzeptfassung wird die Änderung in Anhang B.2 nachgetragen.
 
 **Widerruf.** Ein Satz von Tim im Chat genügt.
+
+**Nachtrag 14.11.2026:** In Konzept v1.7 nachgeführt (Erratum E13, Anhang B.2), von Tim am 14.11.2026 bestätigt.

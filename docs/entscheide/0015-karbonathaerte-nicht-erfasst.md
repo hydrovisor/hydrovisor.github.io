@@ -19,3 +19,5 @@ Tim: «Karbonathärte kannst du komplett löschen, können wir nicht erfassen.»
 - **Nur die Oberfläche** (gewählt): kein Eingriff in Datenmodell und Konzept; das Feld ist dort optional, der Entscheid widerspricht dem Konzept nicht.
 - **Spalte entfernen** (verworfen): bräuchte eine Migration in zwei Schritten über zwei Releases und brächte keinen Nutzen.
 - Eine neue Konzeptfassung ist nicht nötig; ob Anhang B.2 den Entscheid nennt, bestimmt Tim bei der nächsten Fassung.
+
+**Nachtrag 14.11.2026:** In Konzept v1.7 nachgeführt (Erratum E15, Anhang B.2), von Tim am 14.11.2026 bestätigt.
