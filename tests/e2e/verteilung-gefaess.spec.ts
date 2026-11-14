@@ -94,7 +94,13 @@ test('R5.6-AK7 Heute zeigt vorgezogenen Wechsel', async ({ page }) => {
   await expect(vorgezogen).toHaveCount(1);
   await expect(vorgezogen).toContainText('Lösung wechseln');
   await expect(vorgezogen).toContainText(/fällig (Mi|13\.1\.)/);
-  await expect(vorgezogen).toContainText(/R-4\.[1235]/);
+  // UX1: der Ort steht nur im Kopf der Ortskarte, nicht mehr in der Zeile
+  await expect(
+    page
+      .getByRole('region', { name: /^R-4\.[1235]$/ })
+      .getByRole('listitem')
+      .filter({ hasText: 'vorgezogen' }),
+  ).toHaveCount(1);
   // die übrigen drei bleiben am Mi: heute genau ein Wechsel
   await expect(page.getByRole('listitem').filter({ hasText: 'Lösung wechseln' })).toHaveCount(1);
   await expect(page.getByText(/Ansätze heute/)).toHaveCount(0);

@@ -6,7 +6,7 @@ import { JETZT as MESS_JETZT, messTeile } from '../fixtures/messen.ts';
 import type { Teile } from '../fixtures/regal.ts';
 import { regalTeile } from '../fixtures/regal.ts';
 import { JETZT as RUNDGANG_JETZT, rundgangTeile } from '../fixtures/rundgang.ts';
-import { authNachbilden, sitzungSpeichern } from './hilfen.ts';
+import { authNachbilden, einrichtungZeigen, sitzungSpeichern } from './hilfen.ts';
 import { restNachbilden } from './rest.ts';
 
 async function oeffnen(page: Page, teile: Teile, pfad: string, uhr: Date): Promise<void> {
@@ -256,6 +256,11 @@ test('U01-AK7 Einrichtung: die Taste im aktiven Punkt bleibt in der Textspalte u
   page,
 }) => {
   await oeffnen(page, rundgangTeile(), '/#/heute', RUNDGANG_JETZT);
+  // UX1: mit fälligen Aufgaben ist die Einrichtung eingeklappt, ein Tipper zeigt sie
+  await expect(page.getByRole('heading', { name: /^Einrichtung · \d von 9 erledigt/ })).toBeVisible({
+    timeout: 15_000,
+  });
+  await einrichtungZeigen(page);
   const punkt = page.locator('li.hv-check-row[data-zustand="aktiv"]').first();
   await expect(punkt).toBeVisible({ timeout: 15_000 });
   const taste = punkt.locator('.hv-check-aktion .hv-btn');

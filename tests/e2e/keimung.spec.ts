@@ -186,11 +186,12 @@ test('UC6 Rückgängig sendet Storno für alle Zeilen', async ({ page }) => {
 
 test('UC6 Einstieg aus Heute und aus der Maske Gefäss A1', async ({ page }) => {
   await mitDaten(page, keimTeile(), '/#/heute', 'Heute');
+  // UX1: der Ort steht nur im Kopf der Ortskarte, nicht mehr in der Zeile
   const eintrag = page
+    .getByRole('region', { name: 'R-A1', exact: true })
     .getByRole('listitem')
     .filter({ hasText: 'Keimung prüfen' })
-    .filter({ hasText: 'Lollo Rossa' })
-    .filter({ hasText: 'R-A1' });
+    .filter({ hasText: 'Lollo Rossa' });
   await expect(eintrag).toHaveCount(1);
   await knopf(eintrag, 'Prüfen').click();
   await expect(page).toHaveURL(new RegExp(`#/keimung/${KEIM_SATZ}$`));

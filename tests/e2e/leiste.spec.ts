@@ -388,7 +388,8 @@ test('NV1-AK9 Heute: «Rundgang starten» ganz sichtbar über der Leiste, nichts
       }
       return geprueft;
     });
-  expect(await pruefen()).toBeGreaterThan(0);
+  // UX1: oben stehen jetzt die Ortskarten und scrollen wie in tests/e2e/heute-fuss.spec.ts (HF-AK2) bewusst unter
+  // dem Fuss durch; geprüft wird das Seitenende
   await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
   await page.waitForTimeout(200);
   expect(await pruefen()).toBeGreaterThan(0);

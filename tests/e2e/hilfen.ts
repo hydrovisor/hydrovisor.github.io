@@ -54,3 +54,13 @@ export async function authNachbilden(
     return route.fulfill({ status: 404, json: { code: 'not_found' } });
   });
 }
+
+/**
+ * UX1 (Plan 223): stehen in Heute fällige Aufgaben, ist die Einrichtung eine eingeklappte Zeile «Einrichtung · n von 9
+ * erledigt anzeigen». Öffnet sie mit einem Tipper; ohne Aufgaben ist sie schon offen. Erst aufrufen, wenn die
+ * Überschrift «Einrichtung · n von 9 erledigt» sichtbar ist (Zeile und Überschrift erscheinen zusammen).
+ */
+export async function einrichtungZeigen(page: Page): Promise<void> {
+  const zeile = page.getByRole('button', { name: /^Einrichtung · \d von 9 erledigt anzeigen$/ });
+  if ((await zeile.count()) > 0) await zeile.click();
+}
