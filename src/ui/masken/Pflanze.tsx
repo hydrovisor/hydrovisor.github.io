@@ -65,7 +65,20 @@ interface Ergebnis {
   art: Art;
 }
 
-export function Pflanze({ pflanzung }: { pflanzung: string }) {
+/** Kopf der Pflanze; aus dem Erntekalender mit «Zurück» in den Kalender mit derselben Auswahl (Plan 232 A15) */
+function PflanzenKopf({ zurueck }: { zurueck?: string }) {
+  if (!zurueck) return <h1 className="hv-seite-titel">Pflanze</h1>;
+  return (
+    <header className="hv-seite-kopf">
+      <h1 className="hv-seite-titel">Pflanze</h1>
+      <a className="hv-btn hv-btn-ghost" href={zurueck}>
+        Zurück
+      </a>
+    </header>
+  );
+}
+
+export function Pflanze({ pflanzung, von }: { pflanzung: string; von?: 'ernte' }) {
   const { buendel, liest } = useBuendel();
   const teile = buendel?.teile;
   const [geoeffnet] = useState(() => Date.now());
@@ -100,7 +113,7 @@ export function Pflanze({ pflanzung }: { pflanzung: string }) {
   if (!a) {
     return (
       <main className="hv-seite hv-pflanze" data-density="regal">
-        <h1 className="hv-seite-titel">Pflanze</h1>
+        <PflanzenKopf {...(von === 'ernte' ? { zurueck: hashZu({ name: 'ernte' }) } : {})} />
         <p>{liest ? 'Daten werden geladen' : 'Pflanze nicht bekannt'}</p>
         <a className="hv-btn hv-btn-secondary" href={hashZu({ name: 'heute' })}>
           Zu Heute
@@ -251,7 +264,7 @@ export function Pflanze({ pflanzung }: { pflanzung: string }) {
 
   return (
     <main className="hv-seite hv-pflanze" data-density="regal">
-      <h1 className="hv-seite-titel">Pflanze</h1>
+      <PflanzenKopf {...(von === 'ernte' ? { zurueck: hashZu({ name: 'ernte', satz: a.satzId }) } : {})} />
       <p className="hv-pflanze-kopf">{a.kopf.titel}</p>
       {a.kopf.mitTopf ? (
         <p className="hv-pflanze-zeile">{`Topf ${a.kopf.ort}`}</p>

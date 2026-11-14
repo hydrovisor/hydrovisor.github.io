@@ -1,7 +1,9 @@
 # Tabbar
 
-Feste Leiste unten mit den Hauptzielen der App (Entscheid 0025, Paket N1). Ersetzt die Kopfknöpfe in Heute; jeder Ablauf
-beginnt weiter ab Heute (Konzept 6.3).
+Feste Leiste unten mit den Hauptzielen der App (Entscheid 0025, Paket N1; Ziele seit Entscheid 0026: Heute, Anlagen,
+Ernte, Saatgut, Mehr). Ersetzt die Kopfknöpfe in Heute; jeder Ablauf beginnt weiter ab Heute oder ab seiner Hauptseite
+(Konzept 6.3). «Säen» ist kein Ziel mehr: Es steht als oberste Taste (Hauptaktion) in «Saatgut», und in Säen Schritt 1
+ist «Saatgut» das aktive Ziel.
 
 - **Aufbau** (`nav.hv-tabbar`, `aria-label` «Hauptnavigation»): fest am unteren Rand, volle Breite, Fläche `surface-raised`,
   oben eine Linie `line`. Die Ziele stehen als gleich breite Spalten nebeneinander, bei breiten Bildschirmen auf
@@ -22,7 +24,8 @@ beginnt weiter ab Heute (Konzept 6.3).
   stehen mit `bottom: var(--hv-leiste-hoehe, 0px)` über der Leiste.
 - Nachbau in `src/ui/bausteine/Tabbar.tsx`: `Tabbar` mit `ziele` (je `schluessel`, `text`, `href`, `symbol`, optional
   `zahl` und `zahlText`), `aktiv` und `label`; die Symbole stehen als SVG-Pfade im Baustein (`TABBAR_SYMBOLE`: heute,
-  anlagen, saeen, saatgut, mehr; Strich 2 dp, `currentColor`).
+  anlagen, ernte, saatgut, mehr; Strich 2 dp, `currentColor`). «ernte» ist die Weizenähre (Lucide `wheat`), das Wort
+  «Ernte» passt ungekürzt in eine Spalte von 72 dp; der Seitentitel lautet «Erntekalender».
 
 ## Navigationsliste
 

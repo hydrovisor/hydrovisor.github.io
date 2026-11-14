@@ -12,10 +12,14 @@ export const TABBAR_SYMBOLE = {
     </>
   ),
   anlagen: <path d="M4 20V5M20 20V5M4 9h16M4 14h16M4 19h16" />,
-  saeen: (
+  // Weizenähre (Lucide wheat), Ziel «Ernte» (Entscheid 0026)
+  ernte: (
     <>
-      <path d="M12 20v-7" />
-      <path d="M12 13c0-4 3-6 7-6 0 4-3 6-7 6zM12 13c0-3-2-5-6-5 0 3 2 5 6 5z" />
+      <path d="M2 22 16 8" />
+      <path d="M3.47 12.53 5 11l1.53 1.53a3.5 3.5 0 0 1 0 4.94L5 19l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z" />
+      <path d="M7.47 8.53 9 7l1.53 1.53a3.5 3.5 0 0 1 0 4.94L9 15l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z" />
+      <path d="M11.47 4.53 13 3l1.53 1.53a3.5 3.5 0 0 1 0 4.94L13 11l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z" />
+      <path d="M20 2h2v2a4 4 0 0 1-4 4h-2V6a4 4 0 0 1 4-4Z" />
     </>
   ),
   saatgut: (
