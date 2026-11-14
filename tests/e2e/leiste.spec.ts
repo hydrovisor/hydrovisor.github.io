@@ -1,20 +1,23 @@
-// Leiste unten (Issue #212, Plan 212; Entscheid 0025; Konzept 6.3, 10, 17; 05_masken.md 3.1). REST nachgebildet
+// Leiste unten (Issue #212, Plan 212; Entscheid 0025; nachgeführt mit Issue #232, Plan 232, Entscheid 0026; Konzept
+// 6.3, 10, 17; 05_masken.md 3.1). REST nachgebildet
 // (tests/e2e/rest.ts), Regal R aus den Fixtures der E2E (nur Anlage R, Indoor, keine Outdoor-Anlage); 360 × 640 aus
 // der Konfiguration.
 //
 // Erwartete Oberfläche (Vertrag des Leads, Plan 212):
-// - <nav class="hv-tabbar" aria-label="Hauptnavigation"> fest unten mit fünf Links «Heute», «Anlagen», «Säen»,
-//   «Saatgut», «Mehr» (zugänglicher Name genau das Wort, Symbol aria-hidden); aktives Ziel aria-current="page",
+// - <nav class="hv-tabbar" aria-label="Hauptnavigation"> fest unten mit fünf Links «Heute», «Anlagen», «Ernte»,
+//   «Saatgut», «Mehr» (zugänglicher Name genau das Wort, Symbol aria-hidden; Entscheid 0026 ersetzt «Säen» durch
+//   «Ernte», #/ernte mit h1 «Erntekalender»); aktives Ziel aria-current="page",
 //   fette Schrift (font-weight ≥ 700) und Balken oben (::before); jedes Ziel mindestens 68 px hoch.
 // - Der Rahmen um die Maske trägt data-leiste="<ziel>" bzw. data-leiste="keine".
-// - Heute ohne «Anlage öffnen», «Säen» (Kopf), «Info öffnen», «Einstellungen öffnen» und nav «Navigation»;
+// - Heute ohne «Anlage öffnen», «Säen» (weder im Kopf noch in der Leiste, Säen liegt in Saatgut), «Info öffnen»,
+//   «Einstellungen öffnen» und nav «Navigation»;
 //   «Rundgang starten (n Orte)» in nav.hv-heute-fuss fest unten über der Leiste.
 // - #/anlagen: h1 «Anlagen», group «Standort» mit «Indoor · n» und «Outdoor · m» (aria-pressed); Karte je Anlage mit
 //   Name und Link «Anlage <K> öffnen»; Outdoor leer: «Noch keine Outdoor-Anlage», Link «Anlage anlegen».
 // - #/mehr: h1 «Mehr», Links «Einstellungen», «Etiketten», «Vorlagen», «Push-Erinnerungen», «Notfallblatt»,
 //   «Info und Version».
 // - #/sorten leitet per location.replace auf #/saatgut; Säen ab Schritt 2, Messen, Ansatz, Neue Sorte und Gefäss
-//   erfassen ohne Leiste.
+//   erfassen ohne Leiste; Säen Schritt 1 zeigt «Saatgut» als aktives Ziel (Entscheid 0026).
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import { um as ansatzUm, ansatzTeile } from '../fixtures/ansatz.ts';
 import { JETZT as MESS_JETZT, messTeile } from '../fixtures/messen.ts';
@@ -27,7 +30,7 @@ import { restNachbilden } from './rest.ts';
 import { sorteWaehlen } from './sortenwahl-hilfe.ts';
 
 const SAAT_JETZT = new Date('2027-01-07T08:00:00Z');
-const ZIELE = ['Heute', 'Anlagen', 'Säen', 'Saatgut', 'Mehr'] as const;
+const ZIELE = ['Heute', 'Anlagen', 'Ernte', 'Saatgut', 'Mehr'] as const;
 const RUNDGANG = /^Rundgang starten \(\d+ Orte?\)/;
 
 async function oeffnen(page: Page, teile: Teile, pfad: string, uhr: Date): Promise<void> {
@@ -143,13 +146,13 @@ test('NV1-AK3 Heute auf 360 × 640: Leiste unten mit fünf Zielen, je 68 dp, Sym
   for (const name of ['Anlage öffnen', 'Info öffnen', 'Einstellungen öffnen'])
     await expect(knopf(page, name), name).toHaveCount(0);
   await expect(page.getByRole('navigation', { name: 'Navigation', exact: true })).toHaveCount(0);
-  // «Säen» nur noch als Ziel der Leiste
-  await expect(knopf(page, /^Säen$/)).toHaveCount(1);
-  await expect(ziel(page, 'Säen')).toHaveCount(1);
+  // «Säen» ist weder Kopfknopf noch Ziel der Leiste (Entscheid 0026: Säen liegt in Saatgut), «Ernte» ist Ziel
+  await expect(knopf(page, /^Säen$/)).toHaveCount(0);
+  await expect(ziel(page, 'Ernte')).toHaveCount(1);
   await ohneWaagrechtesScrollen(page);
 });
 
-test('NV1-AK4 jedes Ziel öffnet seine Seite und ist dort aktiv: Anlagen, Säen (Schritt 1), Saatgut, Mehr und zurück zu Heute', async ({
+test('NV1-AK4 jedes Ziel öffnet seine Seite und ist dort aktiv: Anlagen, Ernte, Saatgut, Mehr und zurück zu Heute', async ({
   page,
 }) => {
   await oeffnen(page, saatTeile(SAAT_JETZT, { ohneSatzIn23: true }), '/#/heute', SAAT_JETZT);
@@ -161,11 +164,10 @@ test('NV1-AK4 jedes Ziel öffnet seine Seite und ist dort aktiv: Anlagen, Säen 
   await expect(page.getByRole('heading', { name: 'Anlagen', level: 1 })).toBeVisible();
   await aktiv(page, 'Anlagen', 'anlagen');
 
-  await ziel(page, 'Säen').click();
-  await expect(page).toHaveURL(/#\/saeen$/);
-  await expect(page.getByRole('heading', { name: 'Säen', level: 1 })).toBeVisible();
-  await expect(page.getByText('Schritt 1 von 3')).toBeVisible();
-  await aktiv(page, 'Säen', 'saeen');
+  await ziel(page, 'Ernte').click();
+  await expect(page).toHaveURL(/#\/ernte$/);
+  await expect(page.getByRole('heading', { name: 'Erntekalender', level: 1 })).toBeVisible();
+  await aktiv(page, 'Ernte', 'ernte');
 
   await ziel(page, 'Saatgut').click();
   await expect(page).toHaveURL(/#\/saatgut$/);
@@ -289,11 +291,11 @@ test('NV1-AK7 Ansatz (Lösung wechseln) ohne Leiste', async ({ page }) => {
   await ohneLeiste(page);
 });
 
-test('NV1-AK7 Säen: Schritt 1 mit Leiste, ab Schritt 2 ohne', async ({ page }) => {
+test('NV1-AK7 Säen: Schritt 1 mit Leiste («Saatgut» aktiv), ab Schritt 2 ohne', async ({ page }) => {
   await oeffnen(page, saatTeile(SAAT_JETZT, { ohneSatzIn23: true }), '/#/saeen', SAAT_JETZT);
   await expect(page.getByRole('heading', { name: 'Säen', level: 1 })).toBeVisible({ timeout: 15_000 });
   await expect(page.getByText('Schritt 1 von 3')).toBeVisible();
-  await aktiv(page, 'Säen', 'saeen');
+  await aktiv(page, 'Saatgut', 'saatgut');
   await sorteWaehlen(page, 'Salat', 'Lollo Rossa', undefined, { weiter: true });
   await expect(page.getByText('Schritt 2 von 3')).toBeVisible();
   await ohneLeiste(page);

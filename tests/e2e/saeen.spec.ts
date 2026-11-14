@@ -273,15 +273,26 @@ test('TO8 Säen ohne Netz: «nicht gespeichert», Schritt 3 mit Eingaben bleibt,
   for (const id of versucht) expect(geschrieben.has(id), id).toBe(true);
 });
 
-test('UC5 Heute auf 360 × 640 zeigt den Link «Säen» im Bild, ohne waagrechtes Scrollen', async ({ page }) => {
+// Seit Entscheid 0026 (Plan 232) liegt «Säen» als oberste Taste in Saatgut statt in der Leiste: Weg Heute → «Saatgut»
+// → «Säen»
+test('UC5 Saatgut auf 360 × 640 zeigt den Link «Säen» im Bild, ohne waagrechtes Scrollen (Weg ab Heute über «Saatgut»)', async ({
+  page,
+}) => {
   await sitzungSpeichern(page);
   await authNachbilden(page);
   await restNachbilden(page, () => regal());
   await page.clock.setFixedTime(JETZT);
   await page.goto('/#/heute');
   await expect(page.getByRole('heading', { name: 'Heute', level: 1 })).toBeVisible();
-  const saeen = page.getByRole('link', { name: 'Säen', exact: true });
+  await page
+    .getByRole('navigation', { name: 'Hauptnavigation' })
+    .getByRole('link', { name: 'Saatgut', exact: true })
+    .click();
+  await expect(page).toHaveURL(/#\/saatgut$/);
+  await expect(page.getByRole('heading', { name: 'Saatgut', level: 1 })).toBeVisible();
+  const saeen = page.locator('main').getByRole('link', { name: 'Säen', exact: true });
   await expect(saeen).toBeVisible();
+  await expect(saeen).toBeInViewport({ ratio: 1 });
   const box = await saeen.boundingBox();
   expect(box).not.toBeNull();
   expect(box?.x ?? -1).toBeGreaterThanOrEqual(0);

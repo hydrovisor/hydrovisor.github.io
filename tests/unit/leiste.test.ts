@@ -1,7 +1,8 @@
-// Leiste unten (Issue #212, Plan 212; Entscheid 0025). Reines TypeScript: aktives Ziel je Route und Sitzung, Routen
-// #/anlagen, #/saatgut und #/mehr. Vertrag (Plan 212, Auftrag des Leads):
-// - src/ui/leiste.ts: LEISTE in der Reihenfolge Heute, Anlagen, Säen, Saatgut, Mehr; leisteZiel(route, sitzung, imAblauf)
-//   liefert das Ziel nur auf den fünf Hauptseiten, Säen nur ausserhalb des Ablaufs, ohne Sitzung nie.
+// Leiste unten (Issue #212, Plan 212; Entscheid 0025; nachgeführt mit Issue #232, Plan 232, Entscheid 0026). Reines
+// TypeScript: aktives Ziel je Route und Sitzung, Routen #/anlagen, #/saatgut und #/mehr. Vertrag (Plan 212 und 232):
+// - src/ui/leiste.ts: LEISTE in der Reihenfolge Heute, Anlagen, Ernte, Saatgut, Mehr (Entscheid 0026 ersetzt «Säen»
+//   durch «Ernte», #/ernte); leisteZiel(route, sitzung, imAblauf) liefert das Ziel nur auf den fünf Hauptseiten und in
+//   Säen Schritt 1 (dort «saatgut», weil Säen in Saatgut liegt), ohne Sitzung nie.
 // - src/ui/router.ts: { name: 'anlagen'; standort?: 'outdoor' }, { name: 'mehr' }; #/saatgut und #/sorten ergeben die
 //   Sorten-Liste, hashZu davon ist #/saatgut; #/sorten/neu und #/sorten/<uuid> bleiben.
 // Das Modul wird je Test dynamisch geladen, damit die Router-Tests auch ohne src/ui/leiste.ts aus eigenem Grund rot sind.
@@ -50,22 +51,23 @@ const HAUPTSEITEN: [Route, string][] = [
   [r({ name: 'heute' }), 'heute'],
   [r({ name: 'anlagen' }), 'anlagen'],
   [r({ name: 'anlagen', standort: 'outdoor' }), 'anlagen'],
-  [r({ name: 'saeen' }), 'saeen'],
-  [r({ name: 'saeen', box: 'R-A1' }), 'saeen'],
+  [r({ name: 'ernte' }), 'ernte'],
+  [r({ name: 'saeen' }), 'saatgut'],
+  [r({ name: 'saeen', box: 'R-A1' }), 'saatgut'],
   [r({ name: 'sorten' }), 'saatgut'],
   [r({ name: 'mehr' }), 'mehr'],
 ];
 
 describe('Leiste: Ziele und aktives Ziel', () => {
-  it('NV1-AK1 LEISTE nennt fünf Ziele in der Reihenfolge Heute, Anlagen, Säen, Saatgut, Mehr mit ihren Routen', async () => {
+  it('NV1-AK1 UC15-AK6 LEISTE nennt fünf Ziele in der Reihenfolge Heute, Anlagen, Ernte, Saatgut, Mehr mit ihren Routen', async () => {
     const { LEISTE } = await leiste();
-    expect(LEISTE.map((z) => z.ziel)).toEqual(['heute', 'anlagen', 'saeen', 'saatgut', 'mehr']);
-    expect(LEISTE.map((z) => z.text)).toEqual(['Heute', 'Anlagen', 'Säen', 'Saatgut', 'Mehr']);
-    expect(LEISTE.map((z) => z.route.name)).toEqual(['heute', 'anlagen', 'saeen', 'sorten', 'mehr']);
+    expect(LEISTE.map((z) => z.ziel)).toEqual(['heute', 'anlagen', 'ernte', 'saatgut', 'mehr']);
+    expect(LEISTE.map((z) => z.text)).toEqual(['Heute', 'Anlagen', 'Ernte', 'Saatgut', 'Mehr']);
+    expect(LEISTE.map((z) => z.route.name)).toEqual(['heute', 'anlagen', 'ernte', 'sorten', 'mehr']);
     expect(LEISTE.map((z) => hashZu(z.route))).toEqual([
       '#/heute',
       '#/anlagen',
-      '#/saeen',
+      '#/ernte',
       '#/saatgut',
       '#/mehr',
     ]);
@@ -84,11 +86,11 @@ describe('Leiste: Ziele und aktives Ziel', () => {
     }
   });
 
-  it('NV1-AK1 Säen ab Schritt 2 (im Ablauf) ohne Leiste, in Schritt 1 mit', async () => {
+  it('NV1-AK1 UC15-AK6 Säen ab Schritt 2 (im Ablauf) ohne Leiste, in Schritt 1 mit «Saatgut» als aktivem Ziel', async () => {
     const { leisteZiel } = await leiste();
     expect(leisteZiel(r({ name: 'saeen' }), 'angemeldet', true)).toBeUndefined();
     expect(leisteZiel(r({ name: 'saeen', box: 'R-A1' }), 'angemeldet', true)).toBeUndefined();
-    expect(leisteZiel(r({ name: 'saeen' }), 'angemeldet', false)).toBe('saeen');
+    expect(leisteZiel(r({ name: 'saeen' }), 'angemeldet', false)).toBe('saatgut');
   });
 
   it('SG1-AK5 SG1-AK7 Saatgut in «Tüte erfassen» und «Fotos nachtragen» (im Ablauf) ohne Leiste, in der Liste mit', async () => {
@@ -150,6 +152,7 @@ describe('Router: Hauptseiten der Leiste', () => {
       '#/heute',
       '#/anlagen',
       '#/anlagen?standort=outdoor',
+      '#/ernte',
       '#/saeen',
       '#/saatgut',
       '#/mehr',
