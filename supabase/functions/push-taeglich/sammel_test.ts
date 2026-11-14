@@ -359,7 +359,8 @@ Deno.test(
 Deno.test('TP7 Kurzprüfung an allen echten Orten erfasst: keine Push um 20:00', async () => {
   const { daten, sender } = await abends((t) => {
     kurzpruefungDazu(t, 'R-1.1', zh('2027-01-12', '18:00'), 'pumpe');
-    kurzpruefungDazu(t, 'R-3.3', zh('2027-01-12', '18:05'), 'wurzeln');
+    // seit UX3 (#225, Plan 225 Nachtrag 1) zählt der Hauptpunkt des Orts, eine einzelne Wurzelprüfung nicht mehr
+    kurzpruefungDazu(t, 'R-3.3', zh('2027-01-12', '18:05'), 'luftzone');
   });
   await lauf(jetztAm('2027-01-12', '20:00'), daten, sender);
   await lauf(jetztAm('2027-01-12', '20:05'), daten, sender);
