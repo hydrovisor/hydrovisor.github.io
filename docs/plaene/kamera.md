@@ -21,6 +21,7 @@ Tim fotografiert seine rund 22 Saatguttüten am Honor, ohne die App zu verlassen
 | `src/ui/masken/SaatgutErfassen.tsx` | geändert | nach beiden Fotos liest die App die Tüte ohne weiteren Tipp |
 | `design-system/components/Kamera.md`, `PhotoField.md`, `Tuetenfoto.md`, `bundle.css` | neu / geändert | Baustein Kamera, Quellen des Fotofelds |
 | `tests/e2e/kamera.spec.ts`, `tests/unit/kamera.test.ts` | neu | AK unten |
+| `docs/spec/05_masken.md` | geändert | Kamera in der Maskenübersicht (Prüferbefund 5, Runde 1) |
 
 ## Migration
 
@@ -31,7 +32,7 @@ Nein. Speichern unverändert über `tuetenfotoHochladen` und `schreiben()` (Stor
 | AK | Prüfart | Fundstelle | Test |
 |---|---|---|---|
 | KA1-AK1 | E2E | Fotofeld mit Kamera (`capture="environment"`), Galerie (`accept="image/*"`), Dateien (ohne `accept`) | `KA1-AK1 Fotofeld: …` |
-| KA1-AK2 | Unit, E2E | ohne Kamera-Freigabe Meldung mit Ausweg, Auslöser gesperrt | `kamera.test.ts`, `KA1-AK2 Kamera ohne Freigabe …` |
+| KA1-AK2 | Unit, E2E | ohne Kamera-Freigabe Meldung mit Ausweg, Auslöser gesperrt | `kamera.test.ts`, `KA1-AK2 Kamera ohne Freigabe …`, `KA1-AK2 Beenden vor dem Start der Kamera …` (Prüferbefund 1, Runde 1) |
 | KA1-AK3 | E2E | Detail der Sorte: zwei Auslösungen speichern vorne und hinten | `KA1-AK3 Detail der Sorte …` |
 | KA1-AK4 | E2E | Fotos nachtragen: Kamera bleibt offen, nächste Sorte von selbst, überspringen, beenden | `KA1-AK4 Fotos nachtragen …` |
 | KA1-AK5 | E2E | Tüte erfassen: nach zwei Auslösungen startet das Lesen ohne Tipp | `KA1-AK5 Tüte erfassen …` |
@@ -56,3 +57,7 @@ Keine Taschenlampe, kein Zoom, kein automatisches Auslösen; keine Änderung an 
 3. (A) Standbild aus dem Video statt `ImageCapture.takePhoto()`: dieselbe Ausrichtung wie im Sucher, keine Geräteeigenheiten; 1080 × 1920 im Hochformat reicht für 1568 px.
 4. (A) Fehler von getUserMedia: `NotAllowedError`/`SecurityError` → nicht freigegeben, `NotFoundError`/`OverconstrainedError` → keine Kamera, sonst «startet nicht».
 5. (A) Die Testdaten `saatTeile()` haben kein `name_wiss`; `kamera.spec.ts` ergänzt es leer, damit die Erkennung der Art wie in der Datenbank läuft.
+
+## Prüfung
+
+Runde 1 «nachbessern» (fünf Befunde, alle behoben), Runde 2 «bestanden» (Prüfer, Routine). Offen als Hinweis: kein eigener Test für «Foto nicht aufgenommen» (gescheitertes Standbild).
