@@ -327,3 +327,8 @@ tests/unit/router-ernte.test.ts
 tests/unit/ds-phasen.test.ts
 tests/e2e/erntekalender.spec.ts
 tests/e2e/saeen.spec.ts
+# UX3 Kurzprüfung, Wurzeln und Nachfüllen in Heute und im Gefäss (#225)
+tests/unit/kurzpruefung-heute.test.ts
+tests/unit/aufgaben-tasten.test.ts
+tests/unit/nachfuellen-heute.test.ts
+tests/e2e/kurzpruefung-heute.spec.ts

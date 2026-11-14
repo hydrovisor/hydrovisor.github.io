@@ -255,15 +255,11 @@ describe('UX2-AK1 aufgabeZiel()', () => {
     'kontrolle_folgetag',
     'waerme_pruefen',
   ];
-  const ANSATZ: readonly AufgabenArt[] = ['loesung_wechseln', 'ansatz'];
-  const OEFFNEN: readonly AufgabenArt[] = [
-    'kurzpruefung',
-    'belueftung_pruefen',
-    'wurzeln_pruefen',
-    'nachfuellen_kratky',
-    'station_echte_blaetter',
-    'reservierung_pruefen',
-  ];
+  // Plan 225 Entscheid 7 (UX3): Station → Ansatz, Kurzprüfung und Belüftung → Kurzprüfung des Orts, Nachfüllen Kratky →
+  // Nachfüllen, Reservierung → Umsetzen des Satzes; «Öffnen» (Gefäss) bleibt nur für Wurzeln prüfen
+  const ANSATZ: readonly AufgabenArt[] = ['loesung_wechseln', 'ansatz', 'station_echte_blaetter'];
+  const KURZPRUEFUNG: readonly AufgabenArt[] = ['kurzpruefung', 'belueftung_pruefen'];
+  const OEFFNEN: readonly AufgabenArt[] = ['wurzeln_pruefen'];
   const NUR_TASTE: readonly AufgabenArt[] = [
     'wuerfel_feucht',
     'reinigen',
@@ -277,10 +273,14 @@ describe('UX2-AK1 aufgabeZiel()', () => {
   ];
   const SATZ_A1 = satzId(1);
 
-  /** Aufgabe des Typs am Ort R-2.1 (Anzuchtort R-A1 für Keimung, ohne Ort für pH-Kontrolle und Kalibrieren) */
+  /**
+   * Aufgabe des Typs am Ort R-2.1 (Anzuchtort R-A1 mit Bezug Satz für Keimung, Reservierung und Umsetzen, ohne Ort für
+   * pH-Kontrolle und Kalibrieren)
+   */
   function von(typ: AufgabenArt): Aufgabe {
-    const a = aufgabe(typ as Parameters<typeof aufgabe>[0], typ === 'keimung_pruefen' ? 'R-A1' : 'R-2.1');
-    if (typ === 'keimung_pruefen') return { ...a, bezug: SATZ_A1, bezugArt: 'satz' };
+    const amSatz = typ === 'keimung_pruefen' || typ === 'reservierung_pruefen' || typ === 'umsetzen';
+    const a = aufgabe(typ as Parameters<typeof aufgabe>[0], amSatz ? 'R-A1' : 'R-2.1');
+    if (amSatz) return { ...a, bezug: SATZ_A1, bezugArt: 'satz' };
     if (typ === 'ph_kontrolle' || typ === 'kalibrieren') {
       const ohneOrt: Aufgabe = { ...a };
       delete ohneOrt.ort;
@@ -289,11 +289,15 @@ describe('UX2-AK1 aufgabeZiel()', () => {
     return a;
   }
 
-  /** Route je Typ nach der Tabelle in Plan 224 Entscheid 6 */
+  /** Route je Typ nach der Tabelle in Plan 224 Entscheid 6, geändert durch Plan 225 Entscheid 7 */
   function erwartet(typ: AufgabenArt): AufgabenZiel | undefined {
     if (MESSEN.includes(typ)) return messen('R-2.1');
     if (typ === 'gefaess_pruefen') return pruefen('R-2.1');
     if (ANSATZ.includes(typ)) return { name: 'ansatz', code: 'R-2.1' } as AufgabenZiel;
+    if (KURZPRUEFUNG.includes(typ)) return { name: 'kurzpruefung', code: 'R-2.1' } as unknown as AufgabenZiel;
+    if (typ === 'nachfuellen_kratky')
+      return { name: 'nachfuellen', code: 'R-2.1' } as unknown as AufgabenZiel;
+    if (typ === 'reservierung_pruefen') return umsetzen(SATZ_A1);
     if (typ === 'keimung_pruefen') return { name: 'keimung', satz: SATZ_A1 } as AufgabenZiel;
     if (typ === 'ph_kontrolle') return { name: 'kalibrieren' } as AufgabenZiel;
     if (OEFFNEN.includes(typ)) return { name: 'gefaess', code: 'R-2.1' } as AufgabenZiel;
@@ -303,8 +307,15 @@ describe('UX2-AK1 aufgabeZiel()', () => {
   it('UX2-AK1 aufgabeZiel() je Typ nach der Tabelle des Plans', () => {
     // Umsetzen der Aufgaben-Rechnung steht nicht in Heute (eigene Liste aus umsetzAufgaben(), siehe heuteFolge())
     const typen = TYPEN.filter((t) => t !== 'umsetzen');
-    const abgedeckt = new Set([...MESSEN, ...ANSATZ, ...OEFFNEN, ...NUR_TASTE]);
-    for (const t of ['gefaess_pruefen', 'keimung_pruefen', 'ph_kontrolle', 'kalibrieren'] as const)
+    const abgedeckt = new Set([...MESSEN, ...ANSATZ, ...KURZPRUEFUNG, ...OEFFNEN, ...NUR_TASTE]);
+    for (const t of [
+      'gefaess_pruefen',
+      'keimung_pruefen',
+      'ph_kontrolle',
+      'kalibrieren',
+      'nachfuellen_kratky',
+      'reservierung_pruefen',
+    ] as const)
       abgedeckt.add(t);
     expect(
       typen.filter((t) => !abgedeckt.has(t)),
@@ -315,6 +326,8 @@ describe('UX2-AK1 aufgabeZiel()', () => {
       if (erwartet(typ) === undefined) expect(ziel, typ).toBeUndefined();
       else expect(ziel, typ).toEqual(erwartet(typ));
     }
+    // Umsetzen der Aufgaben-Rechnung (Taste in der Maske Gefäss, Plan 225 Entscheid 7): Umsetzen des Satzes
+    expect(aufgabeZiel(von('umsetzen'))).toEqual(umsetzen(SATZ_A1));
   });
 
   it('UX2-AK1 aufgabeZiel(): Kalibrieren und reine Tasten ohne Route, pH-Kontrolle ohne Ort öffnet Kalibrieren', () => {
