@@ -502,6 +502,24 @@ a.hv-sortenzeile, a.hv-sortenzeile:hover { color: var(--ink); text-decoration: n
   background: var(--status-warn); color: var(--surface-raised); font-size: 11px; line-height: 18px; font-weight: 700; text-align: center; }
 @media print { .hv-tabbar { display: none; } }
 
+/* Meldezeile (Meldezeile.md): fest über Leiste und festem Fuss, Text und «Rückgängig machen» */
+.hv-meldezeile { position: fixed; left: 0; right: 0; bottom: calc(var(--hv-leiste-hoehe, env(safe-area-inset-bottom)) + var(--hv-fuss-hoehe, 0px)); z-index: 9;
+  display: flex; align-items: center; gap: var(--space-3); box-sizing: border-box; min-height: calc(var(--size-touch-regal) + 2 * var(--space-2) + 1px);
+  padding: var(--space-2) max(var(--space-4), calc((100% - var(--size-content)) / 2 + var(--space-4))); background: var(--surface-raised); color: var(--ink);
+  border-top: 1px solid var(--line); box-shadow: var(--shadow-sm); }
+.hv-meldezeile-text { flex: 1 1 auto; min-width: 0; font-size: var(--text-small-size); line-height: var(--text-small-line); font-weight: 600; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
+.hv-meldezeile-aktion { flex: none; }
+.hv-meldezeile-aktion .hv-btn { max-width: calc(2 * var(--size-touch-regal)); padding: var(--space-1) var(--space-3); white-space: normal; text-align: center; }
+@media print { .hv-meldezeile { display: none; } }
+
+/* Weiterführung nach dem Speichern (Button.md): «Nächste Aufgabe: …» als Hauptaktion, daneben «Zu Heute» */
+.hv-weiter { display: flex; align-items: stretch; gap: var(--space-2); }
+.hv-weiter > .hv-btn:first-child { flex: 1 1 auto; min-width: 0; padding: var(--space-2) var(--space-3); white-space: normal; text-align: center; }
+.hv-weiter > .hv-btn:first-child { flex-direction: column; gap: 0; }
+.hv-weiter > .hv-btn > small { font-size: var(--text-small-size); line-height: var(--text-small-line); font-weight: 600; }
+.hv-weiter > .hv-btn + .hv-btn { flex: none; padding: 0 var(--space-3); }
+.hv-weiter > .hv-btn[aria-disabled="true"], .hv-aufgabe .hv-btn[aria-disabled="true"] { cursor: not-allowed; background: var(--surface-sunken); border-color: transparent; color: var(--ink-muted); }
+
 /* Navigationsliste (Tabbar.md): Unterseiten einer Hauptseite, etwa «Mehr»; Zeilen 68 dp mit Pfeil */
 .hv-navliste { display: flex; flex-direction: column; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
 .hv-navliste-zeile { display: flex; align-items: center; gap: var(--space-3); min-height: var(--size-touch-regal); padding: var(--space-2) var(--space-4);

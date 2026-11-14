@@ -532,6 +532,7 @@ export function umsetzZusammenfassung(
 export interface UmsetzAufgabe {
   satzId: string;
   text: string;
+  sorte: string;
   ort: string;
   faelligAm: string;
   ueberfaellig: boolean;
@@ -564,6 +565,7 @@ export function umsetzAufgaben(teile: Teile, jetzt: Date, zeitzone: Zeitzone): U
     aufgaben.push({
       satzId: satz.id,
       text: `${ueberfaellig ? 'Umsetzen überfällig' : 'Umsetzen'} · ${a.sorte} · ${station} → ${ziel ?? 'Ziel wählen'} · ${a.saemlinge.length === 1 ? '1 Sämling' : `${String(a.saemlinge.length)} Sämlinge`}`,
+      sorte: a.sorte,
       ort: station,
       faelligAm,
       ueberfaellig,

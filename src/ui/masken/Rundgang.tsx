@@ -62,10 +62,13 @@ function Rahmen({
   titel,
   children,
   beenden,
+  zuHeute = true,
 }: {
   titel: string;
   children: React.ReactNode;
   beenden?: () => void;
+  /** «Zu Heute» im Kopf: navigiert nur, der Rundgang lässt sich fortsetzen (Plan 224 A10) */
+  zuHeute?: boolean;
 }) {
   return (
     <main className="hv-seite hv-rundgang" data-density="regal">
@@ -75,6 +78,11 @@ function Rahmen({
           <Button variant="ghost" size="compact" onClick={beenden}>
             Rundgang beenden
           </Button>
+        ) : null}
+        {zuHeute ? (
+          <a className="hv-btn hv-btn-ghost hv-btn-compact" href={hashZu({ name: 'heute' })}>
+            Zu Heute
+          </a>
         ) : null}
       </header>
       {children}
@@ -436,7 +444,7 @@ export function Rundgang({ kuerzel }: { kuerzel: string }) {
   // Abschluss
   const liste = abschlussliste(stand, { teile, zeitzone: ZEITZONE });
   return (
-    <Rahmen titel="Rundgang fertig">
+    <Rahmen titel="Rundgang fertig" zuHeute={false}>
       <p className="hv-rundgang-kopf hv-num">{abschlussKopf(stand, liste)}</p>
       {liste.length > 0 ? (
         <ul className="hv-rundgang-liste" aria-label="Abschlussliste">

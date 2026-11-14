@@ -149,3 +149,11 @@ export function vorgangPruefen(vorgang: Vorgang): Verstoss[] {
   });
   return verstoesse;
 }
+
+/** Rückgängig (U4, 8.1 Regel 2): Storno aller neuen Zeilen eines Vorgangs in umgekehrter Reihenfolge, Grund rueckgaengig */
+export function rueckgaengigVorgang(vorgang: Vorgang): Vorgang {
+  return [...vorgang]
+    .reverse()
+    .filter((s): s is Extract<Schritt, { art: 'neu' }> => s.art === 'neu')
+    .map((s) => ({ art: 'storno', tabelle: s.tabelle, clientId: s.felder.client_id, grund: 'rueckgaengig' }));
+}

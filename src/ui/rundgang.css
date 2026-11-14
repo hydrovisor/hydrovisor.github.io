@@ -158,3 +158,8 @@ html:has(.hv-heute-fuss):not(:has(.hv-block)) {
   color: var(--status-danger);
   background: var(--status-danger-soft);
 }
+
+/* Plan 224: «Rundgang beenden» und «Zu Heute» teilen sich im Kopf eine Zeile (360 dp) */
+.hv-rundgang .hv-messen-kopf .hv-btn {
+  padding: 0 var(--space-1);
+}

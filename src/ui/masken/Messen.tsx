@@ -45,6 +45,7 @@ import { Ergebniszone, MesswertKachel, Rueckfrage } from '../bausteine/Tile.tsx'
 import { useBuendel } from '../buendel.tsx';
 import { kalibrierdaten, messgeraet, messungenIm, zustandVon } from '../bundeldaten.ts';
 import { hashZu, oeffnen } from '../router.ts';
+import { NachSpeichern, useHeuteVorher } from '../NachSpeichern.tsx';
 import '../messen.css';
 
 const BEZEICHNUNG: Record<Groesse, string> = { ph: 'pH', ec: 'EC mS/cm', temperatur: '°C' };
@@ -57,14 +58,17 @@ function Kopf({
   zeilen = [],
   badge,
   zuHeute = true,
+  eng = false,
 }: {
   titel: string;
   zeilen?: string[];
   badge?: ReactNode;
   zuHeute?: boolean;
+  /** ein Banner steht unter dem Kopf: auf niedrigen Bildschirmen bleibt der Kopf flach (messen.css) */
+  eng?: boolean;
 }) {
   return (
-    <header className="hv-messen-kopf">
+    <header className={eng ? 'hv-messen-kopf hv-messen-kopf-eng' : 'hv-messen-kopf'}>
       <h1 className="hv-messen-titel">{titel}</h1>
       {zeilen.length > 0 ? (
         <span className="hv-messen-kultur">
@@ -223,6 +227,7 @@ export function Messmaske({ ort, modus }: { ort: Ort; modus: Ablaufmodus }) {
     bewertung?: Bewertung;
   }>();
   const [rueckgaengig, setRueckgaengig] = useState(false);
+  const vorher = useHeuteVorher();
   const bindung = useRef<Erfassungsbindung | undefined>(undefined);
   // der Vorgang einer Eingabe bleibt bei jeder Wiederholung gleich, auch Dauer und Fälligkeit (TO2, Runde 1 Befund 1)
   const vorgangFuer = useRef<{ schluessel: string; schritt: Schritt } | undefined>(undefined);
@@ -571,10 +576,13 @@ export function Messmaske({ ort, modus }: { ort: Ort; modus: Ablaufmodus }) {
           <Button block onClick={modus.korrektur.onWeiter}>
             Rundgang fortsetzen
           </Button>
-        ) : (
+        ) : modus.zeile || modus.nachmessen ? (
           <a className="hv-btn hv-btn-primary hv-btn-block" href={hashZu({ name: 'heute' })}>
             Zu Heute
           </a>
+        ) : (
+          // UX2 (Plan 224): weiter zur nächsten Aufgabe in der Reihenfolge von Heute
+          <NachSpeichern bezug={{ name: 'messen', code: ort.code }} vorher={vorher} nurHeute={rueckgaengig} />
         )}
       </main>
     );
@@ -713,12 +721,14 @@ export function Messmaske({ ort, modus }: { ort: Ort; modus: Ablaufmodus }) {
 
   return (
     <main className="hv-seite hv-messen" data-density="regal">
-      {/* ein Banner verdrängt «Zu Heute»; bei einem Fehler rückt «unsicher» als Kennzeichen in den Kopf (A8) */}
+      {/* «Zu Heute» bleibt auch mit Banner im Kopf (Plan 224 A12); bei einem Fehler rückt «unsicher» als Kennzeichen
+          in den Kopf (A8) */}
       <Kopf
         titel={ort.code}
         zeilen={kopfzeilen}
         badge={fehler ? badgeUnsicher : undefined}
-        zuHeute={banner === null && !modus.rundgang && !modus.korrektur}
+        zuHeute={!modus.korrektur}
+        eng={banner !== null}
       />
       {banner}
       <div
