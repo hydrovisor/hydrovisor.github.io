@@ -32,6 +32,8 @@ import { NeueVersionHinweis } from '../NeueVersion.tsx';
 import { usePushStand } from '../pushZustand.ts';
 import { hashZu } from '../router.ts';
 import { useHeutePosition } from '../heutePosition.ts';
+import { useMelden } from '../meldung.tsx';
+import { rueckgaengigVorgang } from '../../domain/datenpfad/erfassung.ts';
 
 /** Text der Messfälligkeit in der Ortskachel (Übergang bis zu den Karten in I1b) */
 function faelligText(f: Messfaelligkeit, rolle: string): string {
@@ -177,6 +179,7 @@ function Uebersicht({ jetzt, faellig }: { jetzt: Date; faellig: readonly Aufgabe
   const kalibrieren = faellig.find(
     (a) => a.typ === 'kalibrieren' && a.bezug === geraet?.id && a.morgen.erlaubt,
   );
+  const melden = useMelden();
   const [verschoben, setVerschoben] = useState<string>();
   const [sendet, setSendet] = useState(false);
   const [fehler, setFehler] = useState<string>();
@@ -185,14 +188,17 @@ function Uebersicht({ jetzt, faellig }: { jetzt: Date; faellig: readonly Aufgabe
     setSendet(true);
     try {
       const t = new Date(Date.now());
-      const r = await schreiben(aufschubVorgang(a, 'morgen', neueClientId(), t, ZEITZONE), {
-        jetzt: t,
-        zeitzone: ZEITZONE,
-      });
+      const vorgang = aufschubVorgang(a, 'morgen', neueClientId(), t, ZEITZONE);
+      const r = await schreiben(vorgang, { jetzt: t, zeitzone: ZEITZONE });
       if (r.status === 'nicht_gespeichert') setFehler(r.fehler.text);
       else {
         setFehler(undefined);
         setVerschoben(a.schluessel);
+        melden({
+          text: `Auf morgen verschoben: ${a.titel}`,
+          rueckgaengig: rueckgaengigVorgang(vorgang),
+          nachRueckgaengig: () => setVerschoben(undefined),
+        });
       }
     } finally {
       setSendet(false);

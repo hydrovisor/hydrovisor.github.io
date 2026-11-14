@@ -665,6 +665,9 @@ test('UX2-AK5 Säen bietet nach dem Speichern «Nächste Aufgabe» (erste Aufgab
 test('UX2-AK6 Messen vor dem Speichern mit Banner «Kalibrierung überfällig» hat «Zu Heute» im Kopf; 1 Tipper nach Heute, kein POST, Messmaske ohne Scrollen', async ({
   page,
 }) => {
+  // Honor-Viewport 360 × 780: über einem Banner hat «Zu Heute» mit 68 dp auf 360 × 640 keinen Platz ohne Scrollen
+  // (8 + 68 + 4 + 68 + 4 + 122 + 4 + 380 + 8 = 666 dp); dort verdrängt der Banner die Taste wie bisher (Plan 224 A12)
+  await page.setViewportSize({ width: 360, height: 780 });
   const t = rundgangTeile();
   // letzte echte Kalibrierung am 1.12.2026: am 12.1. überfällig, Werte unsicher
   for (const k of t['kalibrierung'] ?? []) k['gilt_ab'] = '2026-12-01T08:00:00.000Z';

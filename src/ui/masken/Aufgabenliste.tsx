@@ -3,17 +3,14 @@
 // unvollständig»; Aufgaben ohne Ort (pH-Kontrolle, Stromausfall an der Anlage) in der Liste «Aufgaben». Knöpfe
 // «Morgen», «Überspringen», «Pegel ok», «Erledigt» nur, wo das Modul sie erlaubt; sie schreiben über schreiben() (11.4),
 // danach lädt das Bündel neu. Bis dahin blendet die Liste die gedrückte Aufgabe aus. Umsetzen bleibt in der eigenen
-// Liste aus Plan 33, das Messgerät im Kopf der Übersicht.
+// Liste aus Plan 33, das Messgerät im Kopf der Übersicht. UX2 (Plan 224): jede Aktion meldet sich in der Meldezeile mit
+// «Rückgängig machen» (Storno über schreiben()); nach einem Erfolg bleiben die Tasten 400 ms gesperrt (U13), damit ein
+// Doppeltipper nicht die nachgerückte Zeile trifft.
 import { useRef, useState } from 'react';
 import { neueClientId, schreiben } from '../../daten/schreiben.ts';
-import type { Vorgang } from '../../domain/datenpfad/erfassung.ts';
-import {
-  einstellungenAus,
-  fehlendeTeile,
-  naechsteAufgabe,
-  type Aufgabe,
-  type AufgabenArt,
-} from '../../domain/aufgaben.ts';
+import { rueckgaengigVorgang, type Vorgang } from '../../domain/datenpfad/erfassung.ts';
+import { einstellungenAus, fehlendeTeile, naechsteAufgabe, type Aufgabe } from '../../domain/aufgaben.ts';
+import { ANDERSWO, aufgabeZiel } from '../../domain/aufgaben-folge.ts';
 import { ausserhalbOrte, heuteKarten } from '../../domain/rundgang/heute.ts';
 import { aufschubVorgang, deckelVorgang, erledigtVorgang } from '../../domain/aufgaben-aufschub.ts';
 import { ZEITZONE } from '../../domain/zeit.ts';
@@ -21,12 +18,12 @@ import { Button } from '../bausteine/Button.tsx';
 import { Notice } from '../bausteine/Notice.tsx';
 import { StatusBadge } from '../bausteine/StatusBadge.tsx';
 import { useBuendel } from '../buendel.tsx';
+import { useMelden } from '../meldung.tsx';
 import { hashZu, type Route } from '../router.ts';
 import { startzeitMerken } from '../startzeit.ts';
 import '../rundgang.css';
 
-/** in eigener Anzeige: Umsetzen (Plan 33, «Wie geplant umsetzen»), Kalibrieren (Kopf «Messgerät») */
-const ANDERSWO: ReadonlySet<AufgabenArt> = new Set<AufgabenArt>(['umsetzen', 'kalibrieren']);
+const SPERRE_MS = 400;
 const WOCHENTAG = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'] as const;
 const uhrJetzt = () => new Date(Date.now());
 
@@ -45,22 +42,44 @@ function wochentag(tag: string): string {
   return WOCHENTAG[new Date(Date.UTC(j, m - 1, d)).getUTCDay()] ?? '';
 }
 
-/** Ziel je Typ: Maske der Erfassung («Messen», «Prüfen», «Ansetzen»), sonst «Öffnen» für die Maske des Orts */
+const TASTE: Record<string, string> = {
+  keimung: 'Prüfen',
+  pruefen: 'Prüfen',
+  messen: 'Messen',
+  ansatz: 'Ansetzen',
+};
+
+/**
+ * Ziel je Typ aus aufgabeZiel() (dieselbe Route wie «Nächste Aufgabe», Plan 224): Maske der Erfassung («Messen»,
+ * «Prüfen», «Ansetzen»), sonst «Öffnen» für die Maske des Orts, auch bei Aufgaben mit eigener Taste in Heute
+ */
 function ziel(a: Aufgabe): { route: Route; text: string } | undefined {
-  const code = a.ort?.code;
-  if (a.typ === 'keimung_pruefen') return { route: { name: 'keimung', satz: a.bezug }, text: 'Prüfen' };
-  if (a.typ === 'ph_kontrolle') return { route: { name: 'kalibrieren' }, text: 'Öffnen' };
-  if (!code) return undefined;
-  if (a.typ === 'gefaess_pruefen') return { route: { name: 'pruefen', code }, text: 'Prüfen' };
-  if (['messen_nachfuellen', 'messen', 'kontrolle_folgetag', 'waerme_pruefen'].includes(a.typ))
-    return { route: { name: 'messen', code }, text: 'Messen' };
-  if (a.typ === 'loesung_wechseln' || a.typ === 'ansatz')
-    return { route: { name: 'ansatz', code }, text: 'Ansetzen' };
-  return { route: { name: 'gefaess', code }, text: 'Öffnen' };
+  const z = aufgabeZiel(a);
+  if (z) return { route: z, text: TASTE[z.name] ?? 'Öffnen' };
+  return a.ort ? { route: { name: 'gefaess', code: a.ort.code }, text: 'Öffnen' } : undefined;
 }
+
+/** Text der Meldung: was gespeichert wurde, mit Aufgabe und Ort (Plan 224 A3) */
+function meldungText(a: Aufgabe, aktion: Aktion): string {
+  const ort = a.ort ? ` ${a.ort.code}` : '';
+  if (aktion === 'deckel')
+    return `${a.typ === 'deckel_oeffnen' ? 'Deckel geöffnet' : 'Abdeckung entfernt'}:${ort}`;
+  const vorsatz =
+    aktion === 'erledigt'
+      ? 'Erledigt'
+      : aktion === 'morgen'
+        ? 'Auf morgen verschoben'
+        : aktion === 'ueberspringen'
+          ? 'Übersprungen'
+          : 'Pegel ok gespeichert';
+  return `${vorsatz}: ${a.titel}${ort}`;
+}
+
+type Aktion = 'erledigt' | 'deckel' | 'morgen' | 'ueberspringen' | 'pegel_ok';
 
 export function Aufgabenliste({ jetzt, faellig }: { jetzt: Date; faellig: readonly Aufgabe[] }) {
   const { buendel } = useBuendel();
+  const melden = useMelden();
   const [weg, setWeg] = useState<ReadonlySet<string>>(new Set());
   // «Pegel ok» bis zum neuen Bündel nur einmal je Schlüssel (Prüfer Sicherheit Runde 1, Hinweis 3)
   const [pegel, setPegel] = useState<ReadonlySet<string>>(new Set());
@@ -84,22 +103,35 @@ export function Aufgabenliste({ jetzt, faellig }: { jetzt: Date; faellig: readon
   startzeitMerken();
 
   /** «Pegel ok» blendet nicht aus (gilt einen Tag, keine Erledigung, A7) */
-  async function senden(a: Aufgabe, vorgang: Vorgang, ausblenden = true) {
+  async function senden(a: Aufgabe, aktion: Aktion, vorgang: Vorgang) {
     if (sperre.current || vorgang.length === 0) return;
     sperre.current = true;
     setSendet(true);
+    let ok = false;
     try {
       const r = await schreiben(vorgang, { jetzt: uhrJetzt(), zeitzone: ZEITZONE });
       if (r.status === 'nicht_gespeichert') {
         setFehler(r.fehler.text);
         return;
       }
+      ok = true;
       setFehler(undefined);
-      if (ausblenden) setWeg((alt) => new Set([...alt, a.schluessel]));
-      else setPegel((alt) => new Set([...alt, a.schluessel]));
+      const merken = aktion === 'pegel_ok' ? setPegel : setWeg;
+      merken((alt) => new Set([...alt, a.schluessel]));
+      melden({
+        text: meldungText(a, aktion),
+        rueckgaengig: rueckgaengigVorgang(vorgang),
+        // nach dem Storno steht die Zeile bzw. die Taste wieder da, auch bevor das Bündel neu geladen ist
+        nachRueckgaengig: () => merken((alt) => new Set([...alt].filter((s) => s !== a.schluessel))),
+      });
     } finally {
-      sperre.current = false;
-      setSendet(false);
+      const frei = () => {
+        sperre.current = false;
+        setSendet(false);
+      };
+      // nach Erfolg noch 400 ms gesperrt: die nachgerückte Zeile liegt unter dem Finger (U13)
+      if (ok) setTimeout(frei, SPERRE_MS);
+      else frei();
     }
   }
 
@@ -125,7 +157,7 @@ export function Aufgabenliste({ jetzt, faellig }: { jetzt: Date; faellig: readon
         <Button
           variant="secondary"
           disabled={sendet}
-          onClick={() => void senden(a, deckelVorgang(a, neueClientId(), uhrJetzt()))}
+          onClick={() => void senden(a, 'deckel', deckelVorgang(a, neueClientId(), uhrJetzt()))}
         >
           {a.typ === 'deckel_oeffnen' ? 'Deckel geöffnet' : 'Abdeckung entfernt'}
         </Button>
@@ -133,7 +165,7 @@ export function Aufgabenliste({ jetzt, faellig }: { jetzt: Date; faellig: readon
         <Button
           variant="secondary"
           disabled={sendet}
-          onClick={() => void senden(a, erledigtVorgang(a, neueClientId(), uhrJetzt()))}
+          onClick={() => void senden(a, 'erledigt', erledigtVorgang(a, neueClientId(), uhrJetzt()))}
         >
           Erledigt
         </Button>
@@ -165,7 +197,7 @@ export function Aufgabenliste({ jetzt, faellig }: { jetzt: Date; faellig: readon
               variant="ghost"
               disabled={sendet}
               onClick={() =>
-                void senden(a, aufschubVorgang(a, 'morgen', neueClientId(), uhrJetzt(), ZEITZONE))
+                void senden(a, 'morgen', aufschubVorgang(a, 'morgen', neueClientId(), uhrJetzt(), ZEITZONE))
               }
             >
               Morgen
@@ -176,7 +208,11 @@ export function Aufgabenliste({ jetzt, faellig }: { jetzt: Date; faellig: readon
               variant="ghost"
               disabled={sendet}
               onClick={() =>
-                void senden(a, aufschubVorgang(a, 'ueberspringen', neueClientId(), uhrJetzt(), ZEITZONE))
+                void senden(
+                  a,
+                  'ueberspringen',
+                  aufschubVorgang(a, 'ueberspringen', neueClientId(), uhrJetzt(), ZEITZONE),
+                )
               }
             >
               Überspringen
@@ -187,7 +223,11 @@ export function Aufgabenliste({ jetzt, faellig }: { jetzt: Date; faellig: readon
               variant="ghost"
               disabled={sendet}
               onClick={() =>
-                void senden(a, aufschubVorgang(a, 'pegel_ok', neueClientId(), uhrJetzt(), ZEITZONE), false)
+                void senden(
+                  a,
+                  'pegel_ok',
+                  aufschubVorgang(a, 'pegel_ok', neueClientId(), uhrJetzt(), ZEITZONE),
+                )
               }
             >
               Pegel ok

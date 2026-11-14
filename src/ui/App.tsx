@@ -37,6 +37,7 @@ import { Tabbar } from './bausteine/Tabbar.tsx';
 import { BuendelAnbieter } from './buendel.tsx';
 import { LEISTE, leisteZiel } from './leiste.ts';
 import { LeisteAnbieter } from './leisteKontext.tsx';
+import { MeldungAnbieter, MeldungZeile, useMeldungSteht } from './meldung.tsx';
 import { hashZu, maskeFuer, useRoute, weiterleiten } from './router.ts';
 import { SitzungAnbieter, useSitzung } from './sitzung.tsx';
 import { Thema } from './thema.tsx';
@@ -55,6 +56,7 @@ function Masken({ imAblauf }: { imAblauf: boolean }) {
   const { wartet } = useNeueVersion();
   const maske = maskeFuer(route, zustand);
   const ziel = leisteZiel(maske, zustand, imAblauf);
+  const meldung = useMeldungSteht();
   // #/sorten heisst seit Entscheid 0025 #/saatgut (Plan 212 A6)
   useEffect(() => weiterleiten());
   // data-neue-version macht den Zustand für die E2E-Tests sichtbar (TO7), ohne ihn anzuzeigen; data-leiste nennt das
@@ -64,7 +66,8 @@ function Masken({ imAblauf }: { imAblauf: boolean }) {
       data-neue-version={wartet ? 'wartet' : 'keine'}
       data-sitzung={zustand}
       data-leiste={ziel ?? 'keine'}
-      className={ziel ? 'hv-rahmen-leiste' : undefined}
+      data-meldung={meldung ? 'sichtbar' : 'keine'}
+      className={ziel ? 'hv-rahmen hv-rahmen-leiste' : 'hv-rahmen'}
     >
       {maske.name === 'info' ? (
         <Info />
@@ -107,11 +110,12 @@ function Masken({ imAblauf }: { imAblauf: boolean }) {
       ) : maske.name === 'pflanze' ? (
         <Pflanze pflanzung={maske.pflanzung} />
       ) : maske.name === 'umsetzen' ? (
-        <Umsetzen satz={maske.satz} {...(maske.wie ? { wie: maske.wie } : {})} />
+        <Umsetzen key={maske.satz} satz={maske.satz} {...(maske.wie ? { wie: maske.wie } : {})} />
       ) : maske.name === 'verschieben' ? (
         <Verschieben topf={maske.topf} />
       ) : maske.name === 'keimung' ? (
-        <Keimung satz={maske.satz} />
+        // je Satz neu eingehängt: «Nächste Aufgabe» wechselt von Satz zu Satz (Plan 224 Entscheid 9)
+        <Keimung key={maske.satz} satz={maske.satz} />
       ) : maske.name === 'gefaess' ? (
         <Gefaess code={maske.code} />
       ) : maske.name === 'anlage' ? (
@@ -147,6 +151,8 @@ function Masken({ imAblauf }: { imAblauf: boolean }) {
       ) : (
         <Heute />
       )}
+      {/* Meldezeile fest über Leiste und festem Fuss (Meldezeile.md) */}
+      <MeldungZeile />
       {ziel ? <Tabbar ziele={LEISTE_ZIELE} aktiv={ziel} /> : null}
     </div>
   );
@@ -158,7 +164,9 @@ export function App() {
       <SitzungAnbieter>
         <BuendelAnbieter>
           <Thema />
-          <LeisteAnbieter>{(imAblauf) => <Masken imAblauf={imAblauf} />}</LeisteAnbieter>
+          <MeldungAnbieter>
+            <LeisteAnbieter>{(imAblauf) => <Masken imAblauf={imAblauf} />}</LeisteAnbieter>
+          </MeldungAnbieter>
         </BuendelAnbieter>
       </SitzungAnbieter>
     </DienstAnbieter>

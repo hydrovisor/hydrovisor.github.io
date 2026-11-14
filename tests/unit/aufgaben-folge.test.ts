@@ -282,7 +282,8 @@ describe('UX2-AK1 aufgabeZiel()', () => {
     const a = aufgabe(typ as Parameters<typeof aufgabe>[0], typ === 'keimung_pruefen' ? 'R-A1' : 'R-2.1');
     if (typ === 'keimung_pruefen') return { ...a, bezug: SATZ_A1, bezugArt: 'satz' };
     if (typ === 'ph_kontrolle' || typ === 'kalibrieren') {
-      const ohneOrt: Aufgabe = { ...a, ort: undefined };
+      const ohneOrt: Aufgabe = { ...a };
+      delete ohneOrt.ort;
       return { ...ohneOrt, bezugArt: 'messgeraet' };
     }
     return a;
@@ -322,7 +323,8 @@ describe('UX2-AK1 aufgabeZiel()', () => {
     expect(aufgabeZiel(von('deckel_oeffnen'))).toBeUndefined();
     expect(aufgabeZiel(von('ph_kontrolle'))).toEqual({ name: 'kalibrieren' });
     // ohne Ort keine Route mit Code
-    const ohneOrt: Aufgabe = { ...von('messen'), ort: undefined };
-    expect(aufgabeZiel(ohneOrt as Aufgabe)).toBeUndefined();
+    const ohneOrt: Aufgabe = { ...von('messen') };
+    delete ohneOrt.ort;
+    expect(aufgabeZiel(ohneOrt)).toBeUndefined();
   });
 });

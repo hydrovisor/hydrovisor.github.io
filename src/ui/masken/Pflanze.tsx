@@ -251,7 +251,12 @@ export function Pflanze({ pflanzung }: { pflanzung: string }) {
 
   return (
     <main className="hv-seite hv-pflanze" data-density="regal">
-      <h1 className="hv-seite-titel">Pflanze</h1>
+      <header className="hv-seite-kopf">
+        <h1 className="hv-seite-titel">Pflanze</h1>
+        <a className="hv-btn hv-btn-ghost hv-btn-compact" href={hashZu({ name: 'heute' })}>
+          Zu Heute
+        </a>
+      </header>
       <p className="hv-pflanze-kopf">{a.kopf.titel}</p>
       {a.kopf.mitTopf ? (
         <p className="hv-pflanze-zeile">{`Topf ${a.kopf.ort}`}</p>
