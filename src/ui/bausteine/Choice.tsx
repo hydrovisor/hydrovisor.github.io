@@ -39,7 +39,7 @@ export function Choice({
   zeile?: boolean;
   /** genau eine Option gilt: runder Punkt statt Häkchen, in einer Zeile gleich breite Segmente (U-04, B7) */
   einzeln?: boolean;
-  /** mit einzeln und höchstens drei Optionen: immer eine Zeile gleich breiter Segmente, Punkt über dem Titel (UX4) */
+  /** mit einzeln und höchstens drei Optionen: immer eine Zeile Segmente, Breite nach Inhalt, Punkt über dem Titel (UX4) */
   segmente?: boolean;
 }) {
   // bis drei Optionen in einer Zeile: gleich breite Segmente; mehr Optionen brechen um wie bisher

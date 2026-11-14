@@ -39,11 +39,11 @@ export function phasenGruppen(teile: Teile, karte: Fragekarte): Fragegruppe[] {
   const aktive = new Map<string, number>();
   for (const z of zeilen<{ satz_id: string; status: string }>(teile, 'v_pflanzung_zustand'))
     if (z.status === 'aktiv') aktive.set(z.satz_id, (aktive.get(z.satz_id) ?? 0) + 1);
-  const gruppen = new Map<string, Fragegruppe & { beginn: string }>();
+  const gruppen = new Map<string, Fragegruppe & { beginn: number }>();
   for (const z of karte.zeilen) {
     const sorteId = sorteVon.get(z.satzId) ?? z.sorte;
     const schluessel = `${sorteId}|${z.kulturform}|${z.von}|${z.nach}`;
-    const beginn = phasenBeginnZeit(teile, z.satzId) ?? '';
+    const beginn = Date.parse(phasenBeginnZeit(teile, z.satzId) ?? '') || 0;
     const g = gruppen.get(schluessel);
     if (!g) {
       gruppen.set(schluessel, {
