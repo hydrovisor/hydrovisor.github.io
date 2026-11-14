@@ -332,3 +332,8 @@ tests/unit/kurzpruefung-heute.test.ts
 tests/unit/aufgaben-tasten.test.ts
 tests/unit/nachfuellen-heute.test.ts
 tests/e2e/kurzpruefung-heute.spec.ts
+# UX4 Phasenkarten je Sorte gebündelt, Abernten in Heute (#226)
+tests/unit/phasen-gruppen.test.ts
+tests/unit/ernte-alle.test.ts
+tests/e2e/phasen-gruppen.spec.ts
+tests/e2e/ernte-heute.spec.ts

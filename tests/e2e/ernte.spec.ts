@@ -13,7 +13,8 @@
 //   Ernteknöpfe; Abschnitt mit Überschrift «Verlauf», Listeneintrag «18.3. Abgeerntet» mit Knopf «Wiederherstellen».
 // - Heute: Card (section mit Überschrift) «Ernte und Kulturende» mit Listeneinträgen «Ernte möglich · Lollo Rossa»
 //   (Link zur Pflanzenansicht) und «Kultur beenden oder verlängern? · Lollo Rossa» mit den Knöpfen «Beenden» und
-//   «Verlängern um 14 Tage». Nach [Beenden] der Text «Beendet: 3 Pflanzen Lollo Rossa» und «Rückgängig machen».
+//   «Verlängern um 14 Tage». Nach [Beenden] der Text «Beendet: 3 Pflanzen Lollo Rossa» und «Rückgängig machen»
+//   (seit Plan 226 A6 in der Meldezeile statt einer eigenen Ergebniszeile; «Alle n abernten»: ernte-heute.spec.ts).
 // - Maske «Gefäss» #/gefaess/R-2.3: Liste mit Namen «Kürzlich beendet» mit einem Eintrag je beendete Pflanzung der
 //   letzten 7 Tage (Sortenname) und Link zur Pflanzenansicht.
 // - Kein Eingabefeld, das die Systemtastatur öffnet.

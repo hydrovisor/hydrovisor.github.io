@@ -8,8 +8,8 @@
 // - Heute (h1 «Heute»): je Bündel eine Card (section mit Überschrift h3) «Salat · 4.4 · gesät 7.1.»; je Satz eine
 //   Choice-Gruppe (role group), deren Name mit dem Sortennamen beginnt, mit den Knöpfen «Ja» (vorgewählt),
 //   «Noch nicht», «Problem»; Footer-Knopf «Alle Ja». Karte «Phasen nachführen (n Sätze)» mit dem Knopf
-//   «Alle übernehmen» (im Kopf und im Footer, A14). Nach dem Speichern ein Text mit «Gespeichert» und der Knopf
-//   «Rückgängig machen».
+//   «Alle übernehmen» (nur im Footer; die Kopftaste aus A14 entfällt mit Plan 226 A5). Nach dem Speichern ein Text
+//   mit «Gespeichert» und der Knopf «Rückgängig machen».
 // - Maske «Gefäss» (#/gefaess/R-4.4): je Satzzeile der Liste «Pflanzen» ein Knopf «Phase» (Link oder Button) nach
 //   #/pflanze/<erste aktive Pflanzung des Satzes>.
 // - Pflanzenansicht #/pflanze/<pflanzung>: main mit data-density="regal", h1 «Pflanze»; Kopf «Lollo Rossa · Kopf · 4.4»,

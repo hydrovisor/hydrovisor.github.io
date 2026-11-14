@@ -21,6 +21,8 @@
 //   23.1.); Eichblatt (63) gesät 21.1. auf 4.4, Anzucht seit 25.1. (Frage 6.2.); Ochsenherz (64) gesät 7.1. auf 4.2,
 //   Anzucht seit 14.1. (Frage 8.2.); Lollo Rossa (65) gesät 7.1. auf 4.4 ohne aktive Pflanzung (alle ausgefallen).
 // - Rückdatiert (TZ8): Lollo Rossa (70) und Ochsenherz (71), gesät 1.1., erfasst 12.1. 10:00 Zürich, in A1.
+// - Gleiche Sätze (Plan 226, Uhr 11.1.2027): 5 × Lollo Rossa (81 bis 85) und Eichblatt (86), je 1 Pflanzung, gesät
+//   7.1. in A1; Frage Keimung → Anzucht am 11.1. fällig.
 import { platzId, uid, type Teile } from './regal.ts';
 import { saatTeile, SORTE } from './saeen.ts';
 import { phaseNachrechnen, pflanzSichtenNachrechnen, sichtenNachrechnen } from './sichten.ts';
@@ -403,6 +405,32 @@ export function rueckdatiertTeile(jetzt = RUECK_JETZT): Teile {
     kulturform: 'dauerkultur_frucht',
     saatdatum: '2027-01-01',
     erfasstAm,
+  });
+  return phasenNachrechnen(t);
+}
+
+/** 11.1.2027 09:00 Zürich: Saat 7.1. + typische Keimdauer 4 = Frage Keimung → Anzucht heute fällig (Plan 226) */
+export const GLEICH_JETZT = new Date('2027-01-11T08:00:00Z');
+export const GLEICH_SAAT = '2027-01-07';
+/** Satz-Nummern: 5 × Lollo Rossa kopf (81 bis 85, Reihenfolge der Karte), Eichblatt kopf (86) */
+export const GLEICH = { lollo: [81, 82, 83, 84, 85], eichblatt: 86 } as const;
+export const GLEICH_TITEL = 'Salat · A1 · gesät 7.1.';
+
+/**
+ * Plan 226 (UX4) nach dem Muster S9: 5 Sätze Lollo Rossa (Kopf) mit je einer Pflanzung, gesät 7.1. in A1 ohne
+ * Phasenantwort, dazu ein Satz Eichblatt (Kopf, eine Pflanzung) am selben Tag in A1. Alle in der Karte
+ * «Salat · A1 · gesät 7.1.»; die Frage Keimung → Anzucht ist am 11.1. fällig (Keimung 2/4/7).
+ */
+export function gleicheSaetzeTeile(jetzt = GLEICH_JETZT): Teile {
+  const t = phasenTeile(jetzt);
+  for (const nr of GLEICH.lollo)
+    phasenSatz(t, { nr, sorteId: SORTE.lollo, kulturform: 'kopf', saatdatum: GLEICH_SAAT, pflanzungen: 1 });
+  phasenSatz(t, {
+    nr: GLEICH.eichblatt,
+    sorteId: SORTE.eichblatt,
+    kulturform: 'kopf',
+    saatdatum: GLEICH_SAAT,
+    pflanzungen: 1,
   });
   return phasenNachrechnen(t);
 }
