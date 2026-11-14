@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Kalender Zeitachse</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="hv/tokens.css">
+<link rel="stylesheet" href="hv/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--link)}a:hover{color:var(--brand-strong)}
+.kal-root{--ph-k:#E8EDEB;--ph-a:#BFE3E0;--ph-w:#7CCBC6;--ph-b:#F2CF96;--ph-f:#E3A46B;position:relative;width:360px;height:780px;overflow:hidden;background:var(--surface);color:var(--ink);font-family:var(--font-sans)}
+.kal-scroll{position:absolute;left:0;right:0;top:0;bottom:69px;overflow-y:auto}
+.kal-scroll-voll{bottom:0}
+.kal-seite{box-sizing:border-box;padding:16px 16px 24px;display:flex;flex-direction:column;gap:12px}
+.kal-kopf{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.kal-titel{margin:0;font-size:var(--text-title-size);line-height:var(--text-title-line);font-weight:700}
+.kal-stand{font-size:var(--text-small-size);line-height:var(--text-small-line);color:var(--ink-muted)}
+.kal-legende{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:12px;line-height:16px;color:var(--ink-muted)}
+.kal-leg{display:inline-flex;align-items:center;gap:4px}
+.kal-leg-box{display:inline-block;width:14px;height:10px;border-radius:3px;box-shadow:inset 0 0 0 1px rgba(16,36,43,.25)}
+.kal-hatch{background-image:repeating-linear-gradient(135deg,rgba(255,255,255,.65) 0 3px,rgba(255,255,255,0) 3px 7px)}
+.kal-achse{position:relative;height:30px;margin:0 12px;font-size:11px;line-height:14px;color:var(--ink-muted);font-variant-numeric:tabular-nums}
+.kal-tick{position:absolute;top:14px;padding-left:2px;border-left:1px solid var(--line-control);height:16px}
+.kal-heute-label{position:absolute;top:0;transform:translateX(-50%);font-weight:800;color:var(--ink);font-size:11px;letter-spacing:.02em}
+.kal-liste{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.kal-zeile{display:flex;flex-direction:column;gap:6px;width:100%;box-sizing:border-box;min-height:var(--size-touch-regal);padding:10px 12px 10px;border:1px solid var(--line);border-radius:var(--radius-lg);background:var(--surface-raised);color:var(--ink);font:inherit;text-align:left;cursor:pointer;box-shadow:var(--shadow-sm)}
+.kal-zeile[aria-pressed="true"]{border:2px solid var(--brand);padding:9px 11px}
+.kal-zeile-kopf{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.kal-sorte{font-size:17px;line-height:22px;font-weight:700}
+.kal-ort{font-size:14px;line-height:20px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink-muted);white-space:nowrap}
+.kal-spur{position:relative;height:22px;border-radius:6px;background:var(--surface);overflow:hidden}
+.kal-seg{position:absolute;top:0;bottom:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:var(--ink);box-shadow:inset -1px 0 0 var(--surface-raised)}
+.kal-woche{position:absolute;top:0;bottom:0;width:0;border-left:1px dotted rgba(16,36,43,.25)}
+.kal-heute{position:absolute;top:-2px;bottom:-2px;width:0;border-left:2px solid var(--ink)}
+.kal-ernte{position:relative;height:18px}
+.kal-mark{position:absolute;top:0;transform:translateX(-50%);display:inline-flex;align-items:center;gap:2px;font-size:11px;line-height:18px;font-weight:700;color:var(--status-ok);white-space:nowrap}
+.kal-mark svg{width:14px;height:14px}
+.kal-rechts{position:absolute;right:0;top:0;font-size:11px;line-height:18px;font-weight:700;color:var(--status-ok)}
+.kal-offen{position:absolute;left:0;right:0;top:0;text-align:center;font-size:11px;line-height:16px;color:var(--ink-muted);border:1px dashed var(--line-control);border-radius:4px;background:var(--surface-raised)}
+.kal-kurz{font-size:14px;line-height:20px;color:var(--ink-muted)}
+.kal-badge{display:inline-flex;align-items:center;gap:4px;padding:1px 7px;border-radius:var(--radius-sm);border:1px dashed var(--line-control);background:var(--surface-raised);color:var(--ink-muted);font-size:12px;line-height:16px;font-weight:600;width:max-content}
+.kal-badge svg{width:14px;height:14px}
+.kal-detail{position:absolute;left:0;right:0;bottom:69px;z-index:5;box-sizing:border-box;padding:14px 16px 16px;background:var(--surface-raised);border-top:1px solid var(--line);box-shadow:var(--shadow-lg);border-radius:var(--radius-xl) var(--radius-xl) 0 0;display:flex;flex-direction:column;gap:8px}
+.kal-detail-titel{margin:0;font-size:19px;line-height:26px;font-weight:700}
+.kal-angaben{margin:0;display:grid;grid-template-columns:max-content 1fr;gap:4px 10px;font-size:15px;line-height:20px}
+.kal-angaben dt{color:var(--ink-muted)}
+.kal-angaben dd{margin:0}
+.kal-knoepfe{display:flex;gap:8px}
+.kal-knoepfe .hv-btn{flex:1 1 0;padding:0 8px}
+.kal-platz{height:290px}
+.hv-tabbar{position:absolute}
+.kal-hinweis{font-size:var(--text-small-size);line-height:var(--text-small-line);color:var(--ink-muted);background:var(--surface-sunken);border-radius:var(--radius-md);padding:10px 12px}
+.kal-pfl p{margin:0}
+.kal-pfl-zeile{font-size:var(--text-text-regal-size);line-height:var(--text-text-regal-line)}
+.kal-pfl-phase{font-size:var(--text-heading-size);line-height:var(--text-heading-line);font-weight:700}
+.kal-pfl-kopf{font-weight:700}
+</style>
+</helmet>
+<div class="kal-root" data-density="regal">
+
+<sc-if value="{{ zeigeKalender }}" hint-placeholder-val="{{ true }}">
+<div class="kal-scroll">
+<main class="kal-seite">
+  <div class="kal-kopf">
+    <h1 class="kal-titel">Erntekalender</h1>
+    <span class="kal-stand">Sa 14.11. · 8 Sätze</span>
+  </div>
+  <div class="kal-legende" aria-label="Legende">
+    <span class="kal-leg"><span class="kal-leg-box" style="background-color:var(--ph-k)"></span>K Keimung</span>
+    <span class="kal-leg"><span class="kal-leg-box" style="background-color:var(--ph-a)"></span>A Anzucht</span>
+    <span class="kal-leg"><span class="kal-leg-box" style="background-color:var(--ph-w)"></span>W Wachstum</span>
+    <span class="kal-leg"><span class="kal-leg-box" style="background-color:var(--ph-b)"></span>B Blüte</span>
+    <span class="kal-leg"><span class="kal-leg-box" style="background-color:var(--ph-f)"></span>F Frucht</span>
+    <span class="kal-leg"><span class="kal-leg-box" style="background-color:var(--ph-w)"></span>voll = bestätigt</span>
+    <span class="kal-leg"><span class="kal-leg-box kal-hatch" style="background-color:var(--ph-w)"></span>schraffiert = Prognose</span>
+    <span class="kal-leg"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><path d="M20 4 8.12 15.88M14.47 14.48 20 20M8.12 8.12 12 12"></path></svg>Ernte ab</span>
+  </div>
+  <div class="kal-achse" aria-hidden="true">
+    <span class="kal-heute-label" style="{{ heuteStil }}">heute</span>
+    <sc-for list="{{ wochen }}" as="t" hint-placeholder-count="8">
+      <span class="kal-tick" style="{{ t.stil }}">{{ t.text }}</span>
+    </sc-for>
+  </div>
+  <ul class="kal-liste">
+    <sc-for list="{{ saetze }}" as="s" hint-placeholder-count="8">
+      <li>
+        <button class="kal-zeile" aria-pressed="{{ s.gewaehlt }}" aria-label="{{ s.vorlesen }}" onClick="{{ s.waehle }}">
+          <span class="kal-zeile-kopf"><span class="kal-sorte">{{ s.titel }}</span><span class="kal-ort">{{ s.ort }}</span></span>
+          <span class="kal-spur">
+            <sc-for list="{{ s.segs }}" as="g" hint-placeholder-count="3">
+              <span class="kal-seg" style="{{ g.stil }}">{{ g.buchstabe }}</span>
+            </sc-for>
+            <sc-for list="{{ wochen }}" as="t" hint-placeholder-count="8">
+              <span class="kal-woche" style="{{ t.stil }}"></span>
+            </sc-for>
+            <span class="kal-heute" style="{{ heuteStil }}"></span>
+          </span>
+          <span class="kal-ernte">
+            <sc-if value="{{ s.ernteOffen }}" hint-placeholder-val="{{ false }}">
+              <span class="kal-offen">Ernte: Termine noch offen</span>
+            </sc-if>
+            <sc-for list="{{ s.marken }}" as="m" hint-placeholder-count="1">
+              <span class="kal-mark" style="{{ m.stil }}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><path d="M20 4 8.12 15.88M14.47 14.48 20 20M8.12 8.12 12 12"></path></svg>{{ m.text }}</span>
+            </sc-for>
+            <sc-if value="{{ s.hatRechts }}" hint-placeholder-val="{{ false }}">
+              <span class="kal-rechts">{{ s.rechts }}</span>
+            </sc-if>
+          </span>
+          <span class="kal-kurz">{{ s.kurz }}</span>
+          <sc-if value="{{ s.hatKz }}" hint-placeholder-val="{{ false }}">
+            <span class="kal-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01"></path></svg>{{ s.kz }}</span>
+          </sc-if>
+        </button>
+      </li>
+    </sc-for>
+  </ul>
+  <sc-if value="{{ hatAuswahl }}" hint-placeholder-val="{{ false }}">
+    <div class="kal-platz" aria-hidden="true"></div>
+  </sc-if>
+</main>
+</div>
+
+<sc-if value="{{ hatAuswahl }}" hint-placeholder-val="{{ false }}">
+<section class="kal-detail" aria-label="Termine des Satzes">
+  <h2 class="kal-detail-titel">{{ sel.titel }}</h2>
+  <dl class="kal-angaben">
+    <dt>Kulturform</dt><dd>{{ sel.kf }}</dd>
+    <dt>Ort</dt><dd>{{ sel.ortLang }}</dd>
+    <dt>Saat</dt><dd>{{ sel.saat }} · {{ sel.seitSaat }}</dd>
+    <dt>Phase</dt><dd><strong>{{ sel.phase }}</strong></dd>
+    <dt>Nächstes</dt><dd>{{ sel.wechsel }}<br><span style="color:var(--ink-muted)">{{ sel.wechselZusatz }}</span></dd>
+    <dt>Ernte</dt><dd>{{ sel.ernte }}</dd>
+  </dl>
+  <div class="kal-knoepfe">
+    <button class="hv-btn hv-btn-secondary" onClick="{{ schliessen }}">Feld schliessen</button>
+    <button class="hv-btn hv-btn-primary" onClick="{{ zuPflanze }}">Pflanze öffnen</button>
+  </div>
+</section>
+</sc-if>
+</sc-if>
+
+<sc-if value="{{ zeigeAnlagen }}" hint-placeholder-val="{{ false }}">
+<div class="kal-scroll">
+<main class="kal-seite">
+  <div class="kal-kopf"><h1 class="kal-titel">Saatgut</h1></div>
+  <a class="hv-btn hv-btn-primary hv-btn-block" href="#saeen">Säen</a>
+  <ul class="hv-navliste" style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px">
+    <li><a class="hv-sortenzeile" href="#s1" style="display:flex;min-height:68px;align-items:center;gap:12px;padding:8px 12px;border:1px solid var(--line);border-radius:16px;background:var(--surface-raised);color:var(--ink);text-decoration:none"><span class="hv-sortenzeile-text"><span class="hv-sortenzeile-titel" style="font-weight:700">Salat Lattughino Verde</span><br><span class="hv-sortenzeile-zusatz" style="font-size:14px;color:var(--ink-muted)">Vorrat: genug</span></span></a></li>
+    <li><a class="hv-sortenzeile" href="#s2" style="display:flex;min-height:68px;align-items:center;gap:12px;padding:8px 12px;border:1px solid var(--line);border-radius:16px;background:var(--surface-raised);color:var(--ink);text-decoration:none"><span class="hv-sortenzeile-text"><span class="hv-sortenzeile-titel" style="font-weight:700">Chili Sweet Pickle</span><br><span class="hv-sortenzeile-zusatz" style="font-size:14px;color:var(--ink-muted)">Vorrat: wenig</span></span></a></li>
+  </ul>
+  <p class="kal-hinweis">Bestehende Seite «Saatgut», neu mit «Säen» als oberster Taste (Hauptaktion). Säen selbst bleibt unverändert; die Leiste zeigt dort «Saatgut» als aktives Ziel.</p>
+</main>
+</div>
+</sc-if>
+
+<sc-if value="{{ zeigePflanze }}" hint-placeholder-val="{{ false }}">
+<div class="kal-scroll kal-scroll-voll">
+<main class="kal-seite kal-pfl">
+  <header class="kal-kopf" style="align-items:center">
+    <h1 class="kal-titel">Pflanze</h1>
+    <button class="hv-btn hv-btn-ghost hv-btn-compact" onClick="{{ zuKalender }}">Zurück</button>
+  </header>
+  <p class="kal-pfl-zeile kal-pfl-kopf">{{ sel.titel }} · {{ sel.kf }}</p>
+  <p class="kal-pfl-zeile">Ort {{ sel.ortLang }}</p>
+  <p class="kal-pfl-zeile">{{ sel.seitSaat }}</p>
+  <p class="kal-pfl-phase">{{ sel.phase }}</p>
+  <p class="kal-pfl-zeile">{{ sel.wechsel }}</p>
+  <div class="hv-pflanze-knoepfe" style="display:flex;flex-wrap:wrap;gap:8px">
+    <button class="hv-btn hv-btn-secondary">Phase wechseln</button>
+    <button class="hv-btn hv-btn-secondary">Noch nicht</button>
+  </div>
+  <p class="kal-pfl-zeile">{{ sel.ernte }}</p>
+  <p class="kal-hinweis">Bestehende Maske «Pflanze» (#/p/…), hier verkürzt. Neu ist nur «Zurück»: Es führt in den Kalender und stellt die Auswahl wieder her.</p>
+</main>
+</div>
+</sc-if>
+
+<sc-if value="{{ zeigeLeiste }}" hint-placeholder-val="{{ true }}">
+<nav class="hv-tabbar" aria-label="Hauptnavigation">
+  <a class="hv-tabbar-ziel" href="#heute"><span class="hv-tabbar-symbol" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h16M7 3v4M17 3v4"></path><rect x="4" y="5" width="16" height="15" rx="2"></rect><path d="M8 14l2.5 2.5L16 11"></path></svg></span><span class="hv-tabbar-wort">Heute</span></a>
+  <a class="hv-tabbar-ziel" href="#anlagen"><span class="hv-tabbar-symbol" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V5M20 20V5M4 9h16M4 14h16M4 19h16"></path></svg></span><span class="hv-tabbar-wort">Anlagen</span></a>
+  <a class="hv-tabbar-ziel" href="#ernte" aria-current="{{ aktivErnte }}" onClick="{{ zuKalender }}"><span class="hv-tabbar-symbol" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 22 16 8"></path><path d="M3.47 12.53 5 11l1.53 1.53a3.5 3.5 0 0 1 0 4.94L5 19l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z"></path><path d="M7.47 8.53 9 7l1.53 1.53a3.5 3.5 0 0 1 0 4.94L9 15l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z"></path><path d="M11.47 4.53 13 3l1.53 1.53a3.5 3.5 0 0 1 0 4.94L13 11l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z"></path><path d="M20 2h2v2a4 4 0 0 1-4 4h-2V6a4 4 0 0 1 4-4Z"></path></svg></span><span class="hv-tabbar-wort">Ernte</span></a>
+  <a class="hv-tabbar-ziel" href="#saatgut" aria-current="{{ aktivSaatgut }}" onClick="{{ zuAnlagen }}"><span class="hv-tabbar-symbol" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h12v16H6z"></path><path d="M9 4v3h6V4M9 12h6M9 15h4"></path></svg></span><span class="hv-tabbar-wort">Saatgut</span></a>
+  <a class="hv-tabbar-ziel" href="#mehr"><span class="hv-tabbar-symbol" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="19" cy="12" r="1.6"></circle></svg></span><span class="hv-tabbar-wort">Mehr</span></a>
+</nav>
+</sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":360,"height":780}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { screen: 'kalender', sel: null };
+  }
+  renderVals() {
+    var self = this;
+    var D = 56;
+    var HEUTE = 5;
+    function p(d) { return Math.max(0, Math.min(D, d)) / D * 100; }
+    var LET = { k: 'K', a: 'A', w: 'W', b: 'B', f: 'F' };
+    var HATCH = 'background-image:repeating-linear-gradient(135deg,rgba(255,255,255,.65) 0 3px,rgba(255,255,255,0) 3px 7px);';
+    var SAETZE = [
+      { id: 'spinat', titel: 'Spinat Butterfly', kf: 'Babyleaf', ort: 'Box A1', ortLang: 'Box A1 · 2 Schwämme · Platz X 3.1 reserviert', saat: 'Do 5.11.', seitSaat: 'Tag 9 seit Saat', phase: 'Keimung · Tag 9 von 5–10', kz: 'Phase unbestätigt', kurz: 'Anzucht fällig seit 12.11. · Ernte ab 28.11.', wechsel: 'Wechsel zu Anzucht offen seit Do 12.11.', wechselZusatz: 'spätestens So 15.11.; bestätigen in der Pflanze', ernte: 'ab Sa 28.11. (Prognose) · einmalig, danach frei', segs: [['k', -4, 3, 0], ['a', 3, 13, 1], ['w', 13, 19, 1]], marken: [[19, '28.11.']] },
+      { id: 'lattughino', titel: 'Salat Lattughino Verde', kf: 'Kopf', ort: 'X 3.1', ortLang: 'X 3.1 · Direktsaat · 2 Töpfe', saat: 'Mo 2.11.', seitSaat: 'Tag 12 seit Saat', phase: 'Anzucht · Tag 9 von 8–15', kurz: 'Wachstum ab heute · Ernte ab 26.11.', wechsel: 'Wachstum voraussichtlich ab heute', wechselZusatz: 'möglich ab Fr 13.11., spätestens Fr 20.11.', ernte: 'ab Do 26.11. (Prognose) · einmalig, danach frei', segs: [['a', -4, 5, 0], ['w', 5, 17, 1]], marken: [[17, '26.11.']] },
+      { id: 'petersilie', titel: 'Petersilie glatt', kf: 'Dauerkultur Blatt', ort: 'Box A2', ortLang: 'Box A2 · 15 Samen', saat: 'Sa 31.10.', seitSaat: 'Tag 14 seit Saat', phase: 'Keimung · Tag 14 von 7–18', kurz: 'Anzucht ab heute · Ernte offen', wechsel: 'Anzucht voraussichtlich ab heute', wechselZusatz: 'möglich seit Sa 7.11., spätestens Mi 18.11.', ernte: 'Termine noch offen · Dauerkultur, Ende offen', ernteOffen: true, segs: [['k', -9, 5, 0], ['a', 5, 12, 1], ['w', 12, 56, 1]], marken: [] },
+      { id: 'chili', titel: 'Chili Sweet Pickle', kf: 'Dauerkultur Frucht', ort: 'Box A3', ortLang: 'Box A3 · 6 Schwämme', saat: 'Sa 7.11.', seitSaat: 'Tag 7 seit Saat', phase: 'Keimung · Tag 7 von 7–10', kurz: 'Anzucht ab morgen · Ernte ab 27.2.', wechsel: 'Anzucht voraussichtlich ab morgen, So 15.11.', wechselZusatz: 'möglich ab heute, spätestens Di 17.11.', ernte: 'ab Sa 27.2.2027 (Prognose) · Dauerkultur, Ende offen', segs: [['k', -2, 5, 0], ['k', 5, 6, 1], ['a', 6, 20, 1], ['w', 20, 53, 1], ['b', 53, 56, 1]], marken: [], rechts: 'Ernte 27.2. →' },
+      { id: 'basilikum', titel: 'Basilikum Genoveser', kf: 'Schnitt (Mehrfachernte)', ort: 'X 1.2', ortLang: 'X 1.2 · 2 Töpfe', saat: 'Mo 24.8.', seitSaat: 'Tag 82 seit Saat', phase: 'Wachstum · Tag 62 · letzte Phase', kurz: 'nächster Schnitt ab 23.11. · Ende offen', wechsel: 'Nächster Schnitt ab Mo 23.11.', wechselZusatz: '1 Schnitt am Mo 2.11.; Intervall 21 Tage (Annahme)', ernte: 'Mehrfachernte · Ende offen (keine Kulturdauer im Katalog)', segs: [['w', -8, 5, 0], ['w', 5, 56, 1]], marken: [[14, '23.11.'], [35, '14.12.']] },
+      { id: 'tomate', titel: 'Tomate Tumbling Tom', kf: 'Dauerkultur Frucht', ort: 'X 1.1', ortLang: 'X 1.1 · 1 Topf', saat: 'Sa 3.10.', seitSaat: 'Tag 42 seit Saat', phase: 'Wachstum · Tag 13 von 16–35', kurz: 'Blüte ab 29.11. · Ernte ab 11.1.', wechsel: 'Blüte voraussichtlich ab So 29.11.', wechselZusatz: 'möglich ab Di 17.11., spätestens So 6.12.', ernte: 'ab Mo 11.1.2027 (Prognose) · Dauerkultur, Ende offen', segs: [['w', -8, 5, 0], ['w', 5, 20, 1], ['b', 20, 50, 1], ['f', 50, 56, 1]], marken: [], rechts: 'Ernte 11.1. →' },
+      { id: 'lollo', titel: 'Salat Lollo Rossa Loka', kf: 'Schnitt (Mehrfachernte)', ort: 'X 2.3', ortLang: 'X 2.3 · Töpfe 1 und 2', saat: 'Mo 5.10.', seitSaat: 'Tag 40 seit Saat', phase: 'Wachstum · Tag 28 von 24–42 · letzte Phase', kz: 'Termine noch offen', kurz: 'Ernte und Ende ohne Termin', wechsel: 'Termine noch offen', wechselZusatz: 'Im Katalog fehlen «Ernte ab» und Ernteintervall für Salat als Schnitt.', ernte: 'Termine noch offen', ernteOffen: true, segs: [['w', -8, 5, 0], ['w', 5, 56, 1]], marken: [] },
+      { id: 'roxette', titel: 'Salat Roxette', kf: 'Schnitt (Mehrfachernte)', ort: 'X 2.3', ortLang: 'X 2.3 · Töpfe 3 und 4', saat: 'Mo 5.10.', seitSaat: 'Tag 40 seit Saat', phase: 'Wachstum · Tag 28 von 24–42 · letzte Phase', kz: 'Termine noch offen', kurz: 'Ernte und Ende ohne Termin', wechsel: 'Termine noch offen', wechselZusatz: 'Im Katalog fehlen «Ernte ab» und Ernteintervall für Salat als Schnitt.', ernte: 'Termine noch offen', ernteOffen: true, segs: [['w', -8, 5, 0], ['w', 5, 56, 1]], marken: [] }
+    ];
+    var wochen = ['9.11.', '16.11.', '23.11.', '30.11.', '7.12.', '14.12.', '21.12.', '28.12.'].map(function (t, i) {
+      return { text: t, stil: 'left:' + p(i * 7) + '%' };
+    });
+    var saetze = SAETZE.map(function (s) {
+      var segs = s.segs.map(function (g) {
+        var l = p(g[1]), r = p(g[2]);
+        return { stil: 'left:' + l + '%;width:' + (r - l) + '%;background-color:var(--ph-' + g[0] + ');' + (g[3] ? HATCH : ''), buchstabe: (r - l) >= 6 ? LET[g[0]] : '' };
+      }).filter(function (g) { return g.stil.indexOf('width:0%') < 0; });
+      var marken = s.marken.map(function (m) { return { stil: 'left:' + p(m[0]) + '%', text: m[1] }; });
+      return {
+        id: s.id, titel: s.titel, ort: s.ort, kurz: s.kurz, segs: segs, marken: marken,
+        ernteOffen: !!s.ernteOffen, hatRechts: !!s.rechts, rechts: s.rechts || '',
+        hatKz: !!s.kz, kz: s.kz || '',
+        gewaehlt: self.state.sel === s.id ? 'true' : 'false',
+        vorlesen: s.titel + ', ' + s.ort + ', ' + s.phase + ', ' + s.kurz,
+        waehle: function () { self.setState({ sel: self.state.sel === s.id ? null : s.id }); }
+      };
+    });
+    var sel = null;
+    for (var i = 0; i < SAETZE.length; i++) { if (SAETZE[i].id === this.state.sel) sel = SAETZE[i]; }
+    var leer = { titel: '', kf: '', ortLang: '', saat: '', seitSaat: '', phase: '', wechsel: '', wechselZusatz: '', ernte: '' };
+    var screen = this.state.screen;
+    return {
+      wochen: wochen,
+      saetze: saetze,
+      heuteStil: 'left:' + p(HEUTE) + '%',
+      sel: sel || leer,
+      hatAuswahl: screen === 'kalender' && !!sel,
+      zeigeKalender: screen === 'kalender',
+      zeigeAnlagen: screen === 'anlagen',
+      zeigePflanze: screen === 'pflanze',
+      zeigeLeiste: screen !== 'pflanze',
+      aktivErnte: screen === 'kalender' ? 'page' : 'false',
+      aktivSaatgut: screen === 'anlagen' ? 'page' : 'false',
+      zuAnlagen: function () { self.setState({ screen: 'anlagen' }); },
+      zuKalender: function () { self.setState({ screen: 'kalender' }); },
+      zuPflanze: function () { self.setState({ screen: 'pflanze' }); },
+      schliessen: function () { self.setState({ sel: null }); }
+    };
+  }
+}
+</script>
+</body>
+</html>

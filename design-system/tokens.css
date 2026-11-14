@@ -48,6 +48,11 @@
   --chart-ec: #0F3D4C; /* Verlaufslinie EC. */
   --chart-temp: #B86E00; /* Verlaufslinie Wassertemperatur. */
   --chart-target: var(--status-ok-soft); /* Band des Sollbereichs hinter den Verlaufslinien. */
+  --phase-keimung: #E8EDEB; /* Abschnitt Keimung im Phasenbalken (UC15, Erntekalender); Text darauf ink (mindestens 4.5:1), Buchstabe Pflicht, nie nur Farbe. */
+  --phase-anzucht: #BFE3E0; /* Abschnitt Anzucht im Phasenbalken (UC15, Erntekalender); Text darauf ink (mindestens 4.5:1), Buchstabe Pflicht, nie nur Farbe. */
+  --phase-wachstum: #7CCBC6; /* Abschnitt Wachstum im Phasenbalken (UC15, Erntekalender); Text darauf ink (mindestens 4.5:1), Buchstabe Pflicht, nie nur Farbe. */
+  --phase-bluete: #F2CF96; /* Abschnitt Blüte im Phasenbalken (UC15, Erntekalender); Text darauf ink (mindestens 4.5:1), Buchstabe Pflicht, nie nur Farbe. */
+  --phase-frucht: #E3A46B; /* Abschnitt Fruchtbildung und Reife im Phasenbalken (UC15, Erntekalender); Text darauf ink (mindestens 4.5:1), Buchstabe Pflicht, nie nur Farbe. */
   --focus: #0F3D4C; /* Farbe des Tastatur-Fokusrings; mindestens 3:1 auf allen Flächen. */
   --label-ink: #000000; /* Schrift, QR-Code und Rahmen auf gedruckten Etiketten (Baustein Label). In beiden Themen schwarz, weil das Etikett auf Papier steht. */
   --label-paper: #FFFFFF; /* Grund des Etiketts und des Etikettenbogens. In beiden Themen weiss; label-ink darauf 21:1. */
@@ -180,6 +185,11 @@
   --gauge-target: var(--blattgruen);
   --chart-ec: #C9DCDA;
   --chart-temp: #F2B451;
+  --phase-keimung: #33454A;
+  --phase-anzucht: #1F5552;
+  --phase-wachstum: #1E6E69;
+  --phase-bluete: #6E5320;
+  --phase-frucht: #7A3F1C;
   --focus: #7FD0CC;
   --shadow-sm: 0 1px 2px #00000066;
   --shadow-lg: 0 16px 32px -4px #000000b3;

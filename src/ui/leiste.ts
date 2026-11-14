@@ -1,14 +1,15 @@
-// Leiste unten (Entscheid 0025, Plan 212): Ziele und Sichtbarkeitsregel. Die Leiste steht nur auf den fünf Hauptseiten;
+// Leiste unten (Entscheid 0025, Plan 212; Entscheid 0026, Plan 232): Ziele und Sichtbarkeitsregel. Die Leiste steht nur
+// auf den fünf Hauptseiten und in Säen Schritt 1;
 // in Abläufen und auf Unterseiten fehlt sie (Plan A1, A2), ohne Sitzung ebenso.
 import type { Sitzungszustand } from '../anmeldung/sitzung.ts';
 import type { Route } from './router.ts';
 
-export type LeisteZiel = 'heute' | 'anlagen' | 'saeen' | 'saatgut' | 'mehr';
+export type LeisteZiel = 'heute' | 'anlagen' | 'ernte' | 'saatgut' | 'mehr';
 
 export const LEISTE: readonly { ziel: LeisteZiel; text: string; route: Route }[] = [
   { ziel: 'heute', text: 'Heute', route: { name: 'heute' } },
   { ziel: 'anlagen', text: 'Anlagen', route: { name: 'anlagen' } },
-  { ziel: 'saeen', text: 'Säen', route: { name: 'saeen' } },
+  { ziel: 'ernte', text: 'Ernte', route: { name: 'ernte' } },
   { ziel: 'saatgut', text: 'Saatgut', route: { name: 'sorten' } },
   { ziel: 'mehr', text: 'Mehr', route: { name: 'mehr' } },
 ];
@@ -24,8 +25,11 @@ export function leisteZiel(route: Route, sitzung: Sitzungszustand, imAblauf = fa
       return 'heute';
     case 'anlagen':
       return 'anlagen';
+    case 'ernte':
+      return 'ernte';
     case 'saeen':
-      return imAblauf ? undefined : 'saeen';
+      // Säen liegt seit Entscheid 0026 in Saatgut: Schritt 1 zeigt «Saatgut» als aktives Ziel
+      return imAblauf ? undefined : 'saatgut';
     case 'sorten':
       // Tüte erfassen und Fotos nachtragen sind Abläufe innerhalb der Saatgut-Maske (Plan 211 A1)
       return imAblauf ? undefined : 'saatgut';

@@ -334,7 +334,7 @@ export function ausfallVorgang(
 }
 
 /** Code des Platzes mit den meisten aktiven Pflanzungen des Satzes (sonst Direktsaat- bzw. Anzuchtort) */
-function ortVon(teile: Teile, satz: Satz, aktive: readonly Zustand[]): string {
+export function ortVon(teile: Teile, satz: Satz, aktive: readonly Zustand[]): string {
   const zaehler = new Map<string, number>();
   for (const z of aktive) {
     const pl = z.platz_id ?? satz.direktsaat_platz_id ?? satz.anzuchtort_platz_id;

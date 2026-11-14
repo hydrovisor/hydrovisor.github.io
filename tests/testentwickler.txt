@@ -321,3 +321,9 @@ supabase/tests/database/11_backup.test.sql
 tests/unit/aufgaben-folge.test.ts
 tests/unit/meldung.test.ts
 tests/e2e/meldezeile.spec.ts
+# UC15 Erntekalender (#232)
+tests/unit/erntekalender.test.ts
+tests/unit/router-ernte.test.ts
+tests/unit/ds-phasen.test.ts
+tests/e2e/erntekalender.spec.ts
+tests/e2e/saeen.spec.ts

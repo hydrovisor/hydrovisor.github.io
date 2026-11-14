@@ -1,6 +1,7 @@
 // Maske «Saatgut» (Saatgut-Manager, Issue #211, Plan 211; bisher «Sorten», UC4; Schreibtisch, Standarddichte): Liste
 // nach Gemüse mit Tütenbild und Status als Wort, Filter «Vorrätig», «Ohne Foto» und «Aufgebraucht» (Plan 215); die
-// Abläufe «Tüte erfassen» und «Fotos nachtragen» sind Ansichten dieser Maske ohne eigene Route (Plan 211 A1).
+// Abläufe «Tüte erfassen» und «Fotos nachtragen» sind Ansichten dieser Maske ohne eigene Route (Plan 211 A1). Seit
+// Entscheid 0026 (Plan 232) steht «Säen» als oberste Taste (Hauptaktion); «Tüte erfassen» ist sekundär.
 import { useState } from 'react';
 import {
   nachtragStarten,
@@ -46,7 +47,11 @@ export function Sorten() {
       <header className="hv-seite-kopf">
         <h1 className="hv-seite-titel">Saatgut</h1>
       </header>
-      <Button block onClick={() => setAnsicht({ art: 'erfassen' })}>
+      {/* Säen führt in einen Regal-Ablauf: Taste in Regal-Grösse 68 dp (Plan 232, A) */}
+      <a className="hv-btn hv-btn-primary hv-btn-block" data-density="regal" href={hashZu({ name: 'saeen' })}>
+        Säen
+      </a>
+      <Button variant="secondary" block onClick={() => setAnsicht({ art: 'erfassen' })}>
         Tüte erfassen
       </Button>
       {zahlen.ohneFoto > 0 ? (

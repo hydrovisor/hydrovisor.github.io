@@ -34,6 +34,7 @@ import { Stromausfall } from './masken/Stromausfall.tsx';
 import { Anlagen } from './masken/Anlagen.tsx';
 import { Mehr } from './masken/Mehr.tsx';
 import { Tabbar } from './bausteine/Tabbar.tsx';
+import { Erntekalender } from './masken/Erntekalender.tsx';
 import { BuendelAnbieter } from './buendel.tsx';
 import { LEISTE, leisteZiel } from './leiste.ts';
 import { LeisteAnbieter } from './leisteKontext.tsx';
@@ -108,7 +109,9 @@ function Masken({ imAblauf }: { imAblauf: boolean }) {
           {...(maske.von ? { von: maske.von } : {})}
         />
       ) : maske.name === 'pflanze' ? (
-        <Pflanze pflanzung={maske.pflanzung} />
+        <Pflanze pflanzung={maske.pflanzung} {...(maske.von ? { von: maske.von } : {})} />
+      ) : maske.name === 'ernte' ? (
+        <Erntekalender {...(maske.satz ? { satz: maske.satz } : {})} />
       ) : maske.name === 'umsetzen' ? (
         <Umsetzen key={maske.satz} satz={maske.satz} {...(maske.wie ? { wie: maske.wie } : {})} />
       ) : maske.name === 'verschieben' ? (

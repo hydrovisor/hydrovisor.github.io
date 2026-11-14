@@ -2,7 +2,7 @@
 // aufschieben, Datum korrigieren, Sollbereich und Zielbereich, Teilernte und Abernten, Kulturfrage, Blüte melden,
 // Ausfall, Verlauf mit Wiederherstellen. Alle Erfassungen über schreiben(); bis zum neuen Bündel rechnet die Maske mit
 // teileNach() auf den gespeicherten Vorgängen (Plan 38 A1, Plan 35 A8).
-import { useMemo, useRef, useState } from 'react';
+import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { neueClientId, schreiben } from '../../daten/schreiben.ts';
 import type { Teile } from '../../domain/anlage/teile.ts';
 import type { Vorgang } from '../../domain/datenpfad/erfassung.ts';
@@ -65,10 +65,38 @@ interface Ergebnis {
   art: Art;
 }
 
-export function Pflanze({ pflanzung }: { pflanzung: string }) {
+/**
+ * Kopf der Pflanze mit «Zu Heute» (UX2, #224); aus dem Erntekalender zusätzlich «Zurück» in den Kalender mit derselben
+ * Auswahl (Plan 232 A15)
+ */
+function PflanzenKopf({ zurueck, zuHeute = true }: { zurueck?: string; zuHeute?: boolean }) {
+  return (
+    <header className="hv-seite-kopf">
+      <h1 className="hv-seite-titel">Pflanze</h1>
+      <span className="hv-seite-kopf-aktionen">
+        {zurueck ? (
+          <a className="hv-btn hv-btn-ghost hv-btn-compact" href={zurueck}>
+            Zurück
+          </a>
+        ) : null}
+        {zuHeute ? (
+          <a className="hv-btn hv-btn-ghost hv-btn-compact" href={hashZu({ name: 'heute' })}>
+            Zu Heute
+          </a>
+        ) : null}
+      </span>
+    </header>
+  );
+}
+
+export function Pflanze({ pflanzung, von }: { pflanzung: string; von?: 'ernte' }) {
   const { buendel, liest } = useBuendel();
   const teile = buendel?.teile;
   const [geoeffnet] = useState(() => Date.now());
+  // aus dem Erntekalender oben beginnen, damit «Zurück» im Bild steht (Plan 232, A)
+  useLayoutEffect(() => {
+    if (von === 'ernte') window.scrollTo(0, 0);
+  }, [von, pflanzung]);
   const jetzt = useMemo(() => new Date(geoeffnet), [geoeffnet]);
   const [korrigieren, setKorrigieren] = useState(false);
   const [versatz, setVersatz] = useState(0);
@@ -100,7 +128,7 @@ export function Pflanze({ pflanzung }: { pflanzung: string }) {
   if (!a) {
     return (
       <main className="hv-seite hv-pflanze" data-density="regal">
-        <h1 className="hv-seite-titel">Pflanze</h1>
+        <PflanzenKopf zuHeute={false} {...(von === 'ernte' ? { zurueck: hashZu({ name: 'ernte' }) } : {})} />
         <p>{liest ? 'Daten werden geladen' : 'Pflanze nicht bekannt'}</p>
         <a className="hv-btn hv-btn-secondary" href={hashZu({ name: 'heute' })}>
           Zu Heute
@@ -251,12 +279,7 @@ export function Pflanze({ pflanzung }: { pflanzung: string }) {
 
   return (
     <main className="hv-seite hv-pflanze" data-density="regal">
-      <header className="hv-seite-kopf">
-        <h1 className="hv-seite-titel">Pflanze</h1>
-        <a className="hv-btn hv-btn-ghost hv-btn-compact" href={hashZu({ name: 'heute' })}>
-          Zu Heute
-        </a>
-      </header>
+      <PflanzenKopf {...(von === 'ernte' ? { zurueck: hashZu({ name: 'ernte', satz: a.satzId }) } : {})} />
       <p className="hv-pflanze-kopf">{a.kopf.titel}</p>
       {a.kopf.mitTopf ? (
         <p className="hv-pflanze-zeile">{`Topf ${a.kopf.ort}`}</p>

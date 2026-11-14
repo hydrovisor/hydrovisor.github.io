@@ -78,6 +78,14 @@ html:has(.hv-rahmen-leiste .hv-heute-fuss):not(:has(.hv-block)) {
   gap: var(--space-3);
 }
 
+/* Kopf mit mehreren Textknöpfen rechts (Pflanze: «Zurück» aus dem Erntekalender und «Zu Heute», Plan 232) */
+.hv-seite-kopf-aktionen {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
 .hv-seite-titel {
   margin: 0;
   font-size: var(--text-title-size);

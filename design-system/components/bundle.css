@@ -67,7 +67,7 @@ a:hover { color: var(--brand-strong); }
 .hv-badge-danger { background: var(--status-danger-soft); color: var(--status-danger); }
 .hv-badge-info { background: var(--status-info-soft); color: var(--status-info); }
 /* Kennzeichen «veraltet» und «unsicher»: neutral, gestrichelt, nie Statusfarbe */
-.hv-badge-stale, .hv-badge-uncertain { background: var(--surface-raised); color: var(--ink-muted); border: 1px dashed var(--line-control); padding: 1px calc(var(--space-2) - 1px); }
+.hv-badge-stale, .hv-badge-uncertain, .hv-badge-kennzeichen { background: var(--surface-raised); color: var(--ink-muted); border: 1px dashed var(--line-control); padding: 1px calc(var(--space-2) - 1px); }
 
 /* Hinweis */
 .hv-notice { display: flex; gap: var(--space-3); padding: var(--space-3) var(--space-4); border-radius: var(--radius-lg); background: var(--status-info-soft); color: var(--ink); }
@@ -556,3 +556,50 @@ a.hv-belegung, a.hv-belegung:hover { color: var(--ink); text-decoration: none; }
 .hv-aufklapp-knopf { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; column-gap: var(--space-3); width: 100%; min-height: var(--size-touch); padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; touch-action: manipulation; }
 [data-density="regal"] .hv-aufklapp-knopf { min-height: var(--size-touch-regal); }
 .hv-aufklapp-aktion { color: var(--brand); font-size: var(--text-label-size); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+
+/* Phasenbalken (Phasenbalken.md, UC15, Plan 232): Abschnitte mit Buchstaben, voll = bestätigt, schraffiert = Prognose */
+.hv-phasenfarbe[data-phase="keimung"] { background-color: var(--phase-keimung); }
+.hv-phasenfarbe[data-phase="anzucht"] { background-color: var(--phase-anzucht); }
+.hv-phasenfarbe[data-phase="wachstum"] { background-color: var(--phase-wachstum); }
+.hv-phasenfarbe[data-phase="bluete"] { background-color: var(--phase-bluete); }
+.hv-phasenfarbe[data-phase="fruchtbildung_reife"] { background-color: var(--phase-frucht); }
+.hv-phasenbalken-prognose { background-image: repeating-linear-gradient(135deg, color-mix(in srgb, var(--surface-raised) 65%, transparent) 0 3px, transparent 3px 7px); }
+.hv-phasenbalken { position: relative; display: block; height: 22px; border-radius: var(--radius-sm); background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); overflow: hidden; }
+.hv-phasenbalken-abschnitt { position: absolute; top: 0; bottom: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; font-size: 11px; line-height: 14px; font-weight: 800; color: var(--ink); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--line-control) 55%, transparent); }
+.hv-phasenbalken-woche { position: absolute; top: 0; bottom: 0; width: 0; border-left: 1px dotted var(--line-control); }
+.hv-phasenbalken-heute { position: absolute; top: 0; bottom: 0; width: 0; border-left: 2px solid var(--ink); }
+.hv-phasenbalken-ernte { position: relative; display: block; height: 18px; }
+.hv-phasenbalken-marke, .hv-phasenbalken-spaeter, .hv-phasenbalken-frueher { position: absolute; top: 0; display: inline-flex; align-items: center; gap: 2px; font-size: 11px; line-height: 18px; font-weight: 700; color: var(--status-ok); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.hv-phasenbalken-marke svg { width: 14px; height: 14px; flex: none; }
+.hv-phasenbalken-spaeter { right: 0; }
+.hv-phasenbalken-frueher { left: 0; }
+.hv-phasenbalken-offen { position: absolute; left: 0; right: 0; top: 0; text-align: center; font-size: 11px; line-height: 16px; color: var(--ink-muted); border: 1px dashed var(--line-control); border-radius: var(--radius-sm); background: var(--surface-raised); }
+.hv-badge-kennzeichen { width: max-content; max-width: 100%; }
+.hv-badge-kennzeichen svg { width: 14px; height: 14px; flex: none; }
+.hv-phasenbalken-legende { display: flex; flex-wrap: wrap; gap: 4px 10px; margin: 0; padding: 0; list-style: none; font-size: 12px; line-height: 16px; color: var(--ink-muted); }
+.hv-phasenbalken-legende li { display: inline-flex; align-items: center; gap: 4px; }
+.hv-phasenbalken-legende-box { display: inline-block; width: 14px; height: 10px; border-radius: 3px; box-shadow: inset 0 0 0 1px var(--line-control); }
+.hv-phasenbalken-legende svg { width: 14px; height: 14px; color: var(--status-ok); }
+
+/* Erntekalender (Phasenbalken.md, Abschnitt Kalender): Achse, Zeile je Satz, Feld unten */
+.hv-kalender-kopf { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3); }
+.hv-kalender-stand { font-size: var(--text-small-size); line-height: var(--text-small-line); color: var(--ink-muted); white-space: nowrap; }
+.hv-kalender-achse { position: relative; display: block; height: 30px; margin: 0 13px; font-size: 11px; line-height: 14px; color: var(--ink-muted); font-variant-numeric: tabular-nums; }
+.hv-kalender-tick { position: absolute; top: 14px; height: 16px; padding-left: 2px; border-left: 1px solid var(--line-control); white-space: nowrap; }
+.hv-kalender-heute { position: absolute; top: 0; transform: translateX(-50%); font-weight: 800; color: var(--ink); white-space: nowrap; }
+.hv-kalender-liste { display: flex; flex-direction: column; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.hv-kalender-zeile { display: flex; flex-direction: column; gap: 6px; width: 100%; box-sizing: border-box; min-height: var(--size-touch-regal); padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--surface-raised); color: var(--ink); font: inherit; text-align: left; cursor: pointer; box-shadow: var(--shadow-sm); touch-action: manipulation; }
+.hv-kalender-zeile:active { background: var(--surface-sunken); }
+.hv-kalender-zeile[aria-pressed="true"] { border: 2px solid var(--brand); padding: 9px 11px; }
+.hv-kalender-zeile-kopf { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-2); }
+.hv-kalender-sorte { min-width: 0; font-size: 17px; line-height: 22px; font-weight: 700; }
+.hv-kalender-ort { font-size: 14px; line-height: 20px; font-weight: 700; color: var(--ink-muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.hv-kalender-kurz { font-size: 14px; line-height: 20px; color: var(--ink-muted); }
+.hv-kalender-feld { position: fixed; left: 0; right: 0; bottom: var(--hv-leiste-hoehe, 0px); z-index: 5; box-sizing: border-box; max-width: var(--size-content); max-height: calc(100dvh - var(--hv-leiste-hoehe, 0px) - 96px); margin: 0 auto; overflow-y: auto; display: flex; flex-direction: column; gap: var(--space-2); padding: 14px var(--space-4) var(--space-4); background: var(--surface-raised); border-top: 1px solid var(--line); border-radius: var(--radius-xl) var(--radius-xl) 0 0; box-shadow: var(--shadow-lg); }
+.hv-kalender-feld-titel { margin: 0; font-size: 19px; line-height: 26px; font-weight: 700; }
+.hv-kalender-angaben { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px 10px; margin: 0; font-size: 15px; line-height: 20px; }
+.hv-kalender-angaben dt { color: var(--ink-muted); }
+.hv-kalender-angaben dd { margin: 0; }
+.hv-kalender-zusatz { color: var(--ink-muted); }
+.hv-kalender-knoepfe { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.hv-kalender-knoepfe .hv-btn { flex: 1 1 140px; padding: 0 var(--space-2); }
