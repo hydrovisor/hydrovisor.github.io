@@ -93,5 +93,8 @@ describe('UX2-AK1 folgeAufgabe(): Ergänzungen der Runde 1', () => {
     // und nach der Messung in R-2.1 folgt das Nachfüllen R-3.1 an seiner Stelle im Laufweg
     const g = folgeAufgabe(t, RUNDGANG_JETZT, Z, { ziel: { name: 'messen', code: 'R-2.1' }, vorher });
     expect(g?.ziel).toEqual({ name: 'nachfuellen', code: 'R-3.1' });
+    // am Ort selbst (Kurzprüfung R-3.1 gespeichert): das ältere Nachfüllen geht nicht vor, es folgt R-3.3 im Laufweg
+    const h = folgeAufgabe(t, RUNDGANG_JETZT, Z, { ziel: { name: 'kurzpruefung', code: 'R-3.1' }, vorher });
+    expect(h?.ziel).toEqual({ name: 'pruefen', code: 'R-3.3' });
   });
 });
