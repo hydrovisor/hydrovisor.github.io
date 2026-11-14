@@ -307,3 +307,91 @@ describe('R6.2 Einstufung beim Umsetzen ohne Zieltopf', () => {
     expect(z.wechselIn).toBeUndefined();
   });
 });
+
+// ---------------------------------------------------------------------
+// NB1-AK8 passungVon gibt jetzt an sortenAuswahl weiter (#219; Plan 215 A9, R3.2, R3.4)
+// Uhr J = ZB_JETZT (Mo 18.1.2027 09:00 Zürich); Vorrat-Ereignisse in der Form von vorrat_ereignis, erfasst_am = gilt_ab
+// (nach den Packungen der Fixture).
+// ---------------------------------------------------------------------
+
+const STUNDE = 3_600_000;
+let vorratNr = 0;
+function aufgebraucht(sorteId: string, giltAb: Date): Record<string, unknown> {
+  vorratNr += 1;
+  const id = uid('5e', vorratNr);
+  return {
+    id,
+    client_id: id,
+    sorte_id: sorteId,
+    saatgut_id: null,
+    typ: 'aufgebraucht',
+    gilt_ab: giltAb.toISOString(),
+    erfasst_am: giltAb.toISOString(),
+    storniert_am: null,
+  };
+}
+const mitVorrat = (t: Teile, ereignisse: Record<string, unknown>[]): Teile => ({
+  ...t,
+  vorrat_ereignis: ereignisse,
+});
+const ochsenherzIn33 = () =>
+  eingabe(
+    [
+      {
+        sorteId: SORTE.ochsenherz,
+        kulturform: 'dauerkultur_frucht',
+        zieltopfIds: [netztopfId('3.3.1')],
+      },
+    ],
+    { zielPlatzId: P33 },
+  );
+
+describe('NB1-AK8 Passung beim Säen mit jetzt', () => {
+  it('NB1-AK8 gewählte Sorte mit aufgebraucht nach jetzt hat Passung und Rang', () => {
+    const basis = passungTeile();
+    const ohne = saatVorschlag(basis, ochsenherzIn33(), J, Z).saetze[0];
+    expect(ohne?.passung).toBeDefined();
+    expect(ohne?.rang).toBe(7);
+
+    // «Kein Saatgut mehr» erst eine Stunde nach jetzt: zum Zeitpunkt jetzt noch vorrätig
+    const t = mitVorrat(basis, [aufgebraucht(SORTE.ochsenherz, new Date(J.getTime() + STUNDE))]);
+    expect(sortenAuswahl(t, J).map((s) => s.sorteId)).toContain(SORTE.ochsenherz);
+    const satz = saatVorschlag(t, ochsenherzIn33(), J, Z).saetze[0];
+    expect(satz?.passung).toBeDefined();
+    expect(satz?.passung?.einstufung).toBe(ohne?.passung?.einstufung);
+    expect(satz?.rang).toBe(7);
+    // auch im Vorgang: jede Pflanzung trägt Einstufung und Rang
+    const v = saatVorgang(t, ochsenherzIn33(), neueIds(), J, Z);
+    const [p] = pflanzungenVon(v, SORTE.ochsenherz);
+    expect(p?.['einstufung']).toBe('nicht_empfohlen');
+    expect(p?.['rang']).toBe(7);
+  });
+
+  it('NB1-AK8 andere Sorte mit aufgebraucht vor jetzt zählt nicht im Rang, nach jetzt schon', () => {
+    const basis = passungTeile();
+    // Lollo Rossa steht im leeren Kratky-Gefäss vor Ochsenherz (Ochsenherz letzter Rang von 7)
+    const vorher = mitVorrat(basis, [aufgebraucht(SORTE.lollo, new Date(J.getTime() - STUNDE))]);
+    const nachher = mitVorrat(basis, [aufgebraucht(SORTE.lollo, new Date(J.getTime() + STUNDE))]);
+    expect(sortenAuswahl(vorher, J).map((s) => s.sorteId)).not.toContain(SORTE.lollo);
+    expect(sortenAuswahl(nachher, J).map((s) => s.sorteId)).toContain(SORTE.lollo);
+
+    const rangVorher = saatVorschlag(vorher, ochsenherzIn33(), J, Z).saetze[0]?.rang;
+    const rangNachher = saatVorschlag(nachher, ochsenherzIn33(), J, Z).saetze[0]?.rang;
+    expect(rangNachher).toBe(7);
+    expect(rangVorher).toBe(6);
+    // gleich wie die Gesamtliste unter den vorrätigen Sorten zum Zeitpunkt jetzt (Plan 215 A9)
+    const liste = (t: Teile) =>
+      sortenPassung(
+        t,
+        sortenAuswahl(t, J).map((s) =>
+          s.sorteId === SORTE.ochsenherz ? { ...s, kulturform: 'dauerkultur_frucht' as typeof s.vorgabe } : s,
+        ),
+        P33,
+        HEUTE,
+        J,
+        Z,
+      ).find((s) => s.sorteId === SORTE.ochsenherz)?.rang;
+    expect(rangVorher).toBe(liste(vorher));
+    expect(rangNachher).toBe(liste(nachher));
+  });
+});

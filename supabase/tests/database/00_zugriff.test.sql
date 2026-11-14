@@ -94,7 +94,7 @@ select plan(
   + (select count(*)::int from funktionen where prosecdef)
   + (select count(*)::int from funktionen)
   + (select count(*)::int from wissen)
-  + 13);
+  + 15);
 
 -- ---------------------------------------------------------------------
 -- Fixtures als postgres: mindestens eine Zeile je Tabelle, damit «0 Zeilen» etwas aussagt
@@ -217,6 +217,13 @@ insert into public.push_versand (abo_id, kanal, art, datum_lokal, app_version)
 insert into public.etikett_aufruf (code, ergebnis, app_version) values ('R-2.3', 'gefunden', 'pgtap');
 insert into public.ki_feldprotokoll (client_id, sorte_id, feld, wert_ki, status, modell, app_version)
   values (gen_random_uuid(), 'f0000000-0000-4000-8000-000000000101', 'name', 'Testsorte A', 'uebernommen', 'testmodell', 'pgtap');
+-- #219 NB1-AK12: je eine Zeile tuetenfoto und vorrat_ereignis (Tabellen aus #207 und #215)
+insert into public.tuetenfoto (client_id, sorte_id, seite, pfad, app_version)
+  values ('f0000000-0000-4000-8000-0000000003d1', 'f0000000-0000-4000-8000-000000000101', 'vorne',
+          'f0000000-0000-4000-8000-000000000101/f0000000-0000-4000-8000-0000000003d2.jpg', 'pgtap');
+insert into public.vorrat_ereignis (client_id, sorte_id, typ, gilt_ab, app_version)
+  values ('f0000000-0000-4000-8000-0000000003d3', 'f0000000-0000-4000-8000-000000000101', 'aufgebraucht',
+          '2027-01-10 10:00 Europe/Zurich', 'pgtap');
 insert into public.eigene_aufgabe (anlage_id, name, intervall_d, app_version)
   values ('f0000000-0000-4000-8000-000000000301', 'Filter reinigen', 30, 'pgtap');
 
@@ -340,6 +347,19 @@ select is(
                     (select count(*) from public.anlage where id = 'f0000000-0000-4000-8000-000000000301'),
                     (select count(*) from public.zugang where user_id = '00000000-0000-4000-8000-00000000000a'))$$),
   '4 Messungen, 1 Anlage, 1 Zugang', 'UC0-AK2 Tim liest seine Zeilen (smoke: tim sieht n)');
+
+-- #219 NB1-AK12: Fixture-Zeilen tuetenfoto und vorrat_ereignis für Tim lesbar, für das fremde Konto nicht
+create temp view nb1_ak12 as select
+  $$select format('%s tuetenfoto, %s vorrat_ereignis',
+                  (select count(*) from public.tuetenfoto where client_id = 'f0000000-0000-4000-8000-0000000003d1'),
+                  (select count(*) from public.vorrat_ereignis
+                    where client_id = 'f0000000-0000-4000-8000-0000000003d3'))$$::text as abfrage;
+select is(
+  pg_temp.zaehle_als('authenticated', '00000000-0000-4000-8000-00000000000a', (select abfrage from nb1_ak12)),
+  '1 tuetenfoto, 1 vorrat_ereignis', 'NB1-AK12 Tim liest die Fixture-Zeilen tuetenfoto und vorrat_ereignis');
+select is(
+  pg_temp.zaehle_als('authenticated', '00000000-0000-4000-8000-00000000000b', (select abfrage from nb1_ak12)),
+  '0 tuetenfoto, 0 vorrat_ereignis', 'NB1-AK12 fremdes Konto liest 0 Zeilen tuetenfoto und vorrat_ereignis');
 
 create function pg_temp.wissen_nur_lesen() returns setof text language plpgsql as $$
 declare

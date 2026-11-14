@@ -105,7 +105,8 @@ jobs:
             where n.nspname = 'public' and c.relkind in ('r', 'p') order by c.relname"; } > sicherung/zaehlung.csv
           sql "select version from supabase_migrations.schema_migrations order by version" > sicherung/migrationen.txt
           echo "Tabellen: $(($(wc -l < sicherung/zaehlung.csv) - 1)), Zeilen: $(awk -F';' 'NR > 1 { s += $2 } END { print s + 0 }' sicherung/zaehlung.csv), Migrationen: $(wc -l < sicherung/migrationen.txt)"
-          fotos=$(sql "select count(distinct fotopfad) from public.ki_feldprotokoll where fotopfad is not null")
+          # Untergrenze der Fotos: Pfade aus ki_feldprotokoll und tuetenfoto, Abfrage an einer Stelle (#219)
+          fotos=$(sql "$(node --input-type=module -e 'import("./scripts/backup-regeln.mjs").then((m) => process.stdout.write(m.FOTO_ZAEHLUNG_SQL))')")
           [[ "$fotos" =~ ^[0-9]+$ ]] || { echo "::error::Zahl der Fotos nicht lesbar"; exit 1; }
           echo "FOTOS=$fotos" >> "$GITHUB_ENV"
       - name: Storage-Bucket saattueten (nur lesend)

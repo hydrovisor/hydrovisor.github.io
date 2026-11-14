@@ -7,6 +7,15 @@ import { createHash, createHmac, pbkdf2Sync } from 'node:crypto';
 /** Bezeichner einer Tabelle in public; alles andere wird nie in SQL eingesetzt */
 const BEZEICHNER = /^[a-z_][a-z0-9_]*$/;
 
+/**
+ * Untergrenze der Fotos im Bucket saattueten (#219, Plan 207 A16): verschiedene Pfade aus ki_feldprotokoll.fotopfad
+ * und tuetenfoto.pfad, auch stornierte Zeilen (die App löscht keine Datei, 8.1 Regel 3). backup.yml liest die
+ * Konstante mit node -e; 11_backup.test.sql führt denselben Text aus. Ohne Anführungszeichen, $, ` und \.
+ */
+export const FOTO_ZAEHLUNG_SQL =
+  'select count(*) from (select fotopfad as pfad from public.ki_feldprotokoll where fotopfad is not null ' +
+  'union select pfad from public.tuetenfoto) as fotos';
+
 /** Marke der Zählung in der Ausnahme, die die Probe immer zurückrollt */
 export const PROBE_MARKE = 'HV_PROBE';
 

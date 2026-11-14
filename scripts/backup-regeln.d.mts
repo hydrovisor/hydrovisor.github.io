@@ -1,6 +1,7 @@
 // Typen zu backup-regeln.mjs (tsconfig ohne allowJs; Plan 16 «Schnittstellen»).
 
 export declare const PROBE_MARKE: 'HV_PROBE';
+export declare const FOTO_ZAEHLUNG_SQL: string;
 
 export interface StorageEintrag {
   name: string;

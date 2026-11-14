@@ -705,3 +705,214 @@ describe('VR1-AK4 Saatgut-Liste und Säen', () => {
     expect(auswahl[0]?.wieLetztesMal).toBeDefined();
   });
 });
+
+// ---------------------------------------------------------------------
+// NB1-AK5 Verlauf mit «Neue Packung» (#219, Plan 219 «Verlauf», A7, A8; Issue A5)
+//
+// Vorausgesetzt: vorratVerlauf(ereignisse, sorteId, jetzt, packungen?) → { typ: VorratTyp | 'neue_packung'; giltAb }[]
+// Je gültiges «aufgebraucht» E die erste nicht stornierte Packung P derselben Sorte mit erfasst_am(E) < erfasst_am(P)
+// und P bis jetzt; liegt P vor dem erfasst_am des nächstjüngeren gültigen Ereignisses (A7), steht direkt über E ein
+// Eintrag { typ: 'neue_packung', giltAb: erfasst_am(P) } (A8). Ohne packungen wie bisher.
+// ---------------------------------------------------------------------
+
+const verlaufMit = (
+  e: readonly VorratEreignisZeile[],
+  p: readonly PackungZeit[] | undefined,
+  sorteId = SORTE,
+  jetzt = JETZT,
+) => vorratVerlauf(e, sorteId, jetzt, p);
+
+describe('NB1-AK5 vorratVerlauf mit Packungen', () => {
+  it('NB1-AK5 neue Packung nach aufgebraucht steht als neue_packung direkt über dem aufgebraucht', () => {
+    const e = [
+      ereignis(1, 'vorraetig', '2027-01-05T08:00:00.000000+00:00'),
+      ereignis(2, 'aufgebraucht', '2027-01-10T08:00:00.000000+00:00'),
+    ];
+    const p = [packung('2027-01-11T09:15:00.123456+00:00')];
+    expect(verlaufMit(e, p)).toEqual([
+      { typ: 'neue_packung', giltAb: '2027-01-11T09:15:00.123456+00:00' },
+      { typ: 'aufgebraucht', giltAb: '2027-01-10T08:00:00.000000+00:00' },
+      { typ: 'vorraetig', giltAb: '2027-01-05T08:00:00.000000+00:00' },
+    ]);
+    // Reihenfolge der Eingabe egal
+    expect(verlaufMit([...e].reverse(), p)).toEqual(verlaufMit(e, p));
+
+    // zwei aufgebraucht mit je einem vorraetig dazwischen: der Eintrag gehört zum jüngeren aufgebraucht
+    const mehr = [
+      ereignis(3, 'aufgebraucht', '2027-01-08T08:00:00.000000+00:00'),
+      ereignis(4, 'vorraetig', '2027-01-09T08:00:00.000000+00:00'),
+      ereignis(5, 'aufgebraucht', '2027-01-12T08:00:00.000000+00:00'),
+    ];
+    expect(verlaufMit(mehr, [packung('2027-01-13T08:00:00.000000+00:00')])).toEqual([
+      { typ: 'neue_packung', giltAb: '2027-01-13T08:00:00.000000+00:00' },
+      { typ: 'aufgebraucht', giltAb: '2027-01-12T08:00:00.000000+00:00' },
+      { typ: 'vorraetig', giltAb: '2027-01-09T08:00:00.000000+00:00' },
+      { typ: 'aufgebraucht', giltAb: '2027-01-08T08:00:00.000000+00:00' },
+    ]);
+    // die neue Packung macht vorrätig wie im Stand
+    expect(stand(mehr, [packung('2027-01-13T08:00:00.000000+00:00')])).toEqual({ vorraetig: true });
+  });
+
+  it('NB1-AK5 nur die erste Packung danach zählt; zwei Packungen ergeben einen Eintrag', () => {
+    const e = [ereignis(1, 'aufgebraucht', '2027-01-10T08:00:00.000000+00:00')];
+    const p = [packung('2027-01-12T08:00:00.000000+00:00'), packung('2027-01-11T08:00:00.000000+00:00')];
+    // eine ältere Packung vor dem aufgebraucht zählt nicht
+    const alt = packung('2027-01-02T08:00:00.000000+00:00');
+    const erwartet = [
+      { typ: 'neue_packung', giltAb: '2027-01-11T08:00:00.000000+00:00' },
+      { typ: 'aufgebraucht', giltAb: '2027-01-10T08:00:00.000000+00:00' },
+    ];
+    expect(verlaufMit(e, p)).toEqual(erwartet);
+    expect(verlaufMit(e, [...p].reverse())).toEqual(erwartet);
+    expect(verlaufMit(e, [alt, ...p])).toEqual(erwartet);
+    expect(verlaufMit(e, [alt])).toEqual([
+      { typ: 'aufgebraucht', giltAb: '2027-01-10T08:00:00.000000+00:00' },
+    ]);
+  });
+
+  it('NB1-AK5 stornierte Packung, andere Sorte und Packung nach jetzt zählen nicht', () => {
+    const e = [ereignis(1, 'aufgebraucht', '2027-01-10T08:00:00.000000+00:00')];
+    const nurAufgebraucht = [{ typ: 'aufgebraucht', giltAb: '2027-01-10T08:00:00.000000+00:00' }];
+    const storniert = packung('2027-01-11T08:00:00.000000+00:00', {
+      storniert_am: '2027-01-11T09:00:00.000000+00:00',
+    });
+    const fremd = packung('2027-01-11T08:00:00.000000+00:00', { sorte_id: ANDERE_SORTE });
+    // JETZT = 15.1.2027 09:00:00.000 UTC: 16.1. und 09:00:00.000001 liegen nach jetzt
+    const spaeter = packung('2027-01-16T08:00:00.000000+00:00');
+    const knapp = packung('2027-01-15T09:00:00.000001+00:00');
+    expect(verlaufMit(e, [storniert])).toEqual(nurAufgebraucht);
+    expect(verlaufMit(e, [fremd])).toEqual(nurAufgebraucht);
+    expect(verlaufMit(e, [spaeter])).toEqual(nurAufgebraucht);
+    expect(verlaufMit(e, [knapp])).toEqual(nurAufgebraucht);
+    expect(verlaufMit(e, [storniert, fremd, spaeter, knapp])).toEqual(nurAufgebraucht);
+    // die stornierte überspringt die Funktion: die nächste gültige Packung zählt
+    expect(verlaufMit(e, [storniert, packung('2027-01-12T08:00:00.000000+00:00')])).toEqual([
+      { typ: 'neue_packung', giltAb: '2027-01-12T08:00:00.000000+00:00' },
+      ...nurAufgebraucht,
+    ]);
+    // die Packung der anderen Sorte gehört in deren Verlauf
+    const andere = [
+      ereignis(2, 'aufgebraucht', '2027-01-10T08:00:00.000000+00:00', { sorte_id: ANDERE_SORTE }),
+    ];
+    expect(verlaufMit(andere, [fremd], ANDERE_SORTE)).toEqual([
+      { typ: 'neue_packung', giltAb: '2027-01-11T08:00:00.000000+00:00' },
+      ...nurAufgebraucht,
+    ]);
+  });
+
+  it('NB1-AK5 ohne packungen bleibt der Verlauf wie bisher', () => {
+    const e = [
+      ereignis(1, 'aufgebraucht', '2027-01-08T08:00:00.000Z'),
+      ereignis(3, 'aufgebraucht', '2027-01-12T08:00:00.000Z'),
+      ereignis(2, 'vorraetig', '2027-01-09T08:00:00.000Z'),
+      ereignis(4, 'vorraetig', '2027-01-13T08:00:00.000Z', { storniert_am: '2027-01-13T09:00:00.000Z' }),
+      ereignis(5, 'vorraetig', '2027-01-16T08:00:00.000Z'),
+    ];
+    const bisher = [
+      { typ: 'aufgebraucht', giltAb: '2027-01-12T08:00:00.000Z' },
+      { typ: 'vorraetig', giltAb: '2027-01-09T08:00:00.000Z' },
+      { typ: 'aufgebraucht', giltAb: '2027-01-08T08:00:00.000Z' },
+    ];
+    expect(vorratVerlauf(e, SORTE, JETZT)).toEqual(bisher);
+    expect(verlaufMit(e, undefined)).toEqual(bisher);
+    expect(verlaufMit(e, [])).toEqual(bisher);
+    expect(verlaufMit([], [packung('2027-01-11T08:00:00.000Z')])).toEqual([]);
+    // eine Packung ohne vorangehendes aufgebraucht ergibt keinen Eintrag
+    expect(
+      verlaufMit(
+        [ereignis(6, 'vorraetig', '2027-01-09T08:00:00.000Z')],
+        [packung('2027-01-11T08:00:00.000Z')],
+      ),
+    ).toEqual([{ typ: 'vorraetig', giltAb: '2027-01-09T08:00:00.000Z' }]);
+  });
+
+  it('NB1-AK5 Packung nach einem späteren vorraetig zählt nicht (A7)', () => {
+    const aufgebraucht = ereignis(1, 'aufgebraucht', '2027-01-08T08:00:00.000000+00:00');
+    const vorraetig = ereignis(2, 'vorraetig', '2027-01-09T08:00:00.000000+00:00');
+    // Tim hat schon «Wieder vorrätig» gesetzt: die Packung danach hat nichts zurückgeholt
+    expect(verlaufMit([aufgebraucht, vorraetig], [packung('2027-01-10T08:00:00.000000+00:00')])).toEqual([
+      { typ: 'vorraetig', giltAb: '2027-01-09T08:00:00.000000+00:00' },
+      { typ: 'aufgebraucht', giltAb: '2027-01-08T08:00:00.000000+00:00' },
+    ]);
+    // vor dem vorraetig erfasst: sie hat zurückgeholt, Eintrag direkt über dem aufgebraucht
+    expect(verlaufMit([aufgebraucht, vorraetig], [packung('2027-01-08T12:00:00.000000+00:00')])).toEqual([
+      { typ: 'vorraetig', giltAb: '2027-01-09T08:00:00.000000+00:00' },
+      { typ: 'neue_packung', giltAb: '2027-01-08T12:00:00.000000+00:00' },
+      { typ: 'aufgebraucht', giltAb: '2027-01-08T08:00:00.000000+00:00' },
+    ]);
+    // zwei aufgebraucht hintereinander: die Packung nach dem jüngeren gehört nur zu diesem, jede Packung höchstens
+    // einmal
+    const zweites = ereignis(3, 'aufgebraucht', '2027-01-12T08:00:00.000000+00:00');
+    expect(verlaufMit([aufgebraucht, zweites], [packung('2027-01-13T08:00:00.000000+00:00')])).toEqual([
+      { typ: 'neue_packung', giltAb: '2027-01-13T08:00:00.000000+00:00' },
+      { typ: 'aufgebraucht', giltAb: '2027-01-12T08:00:00.000000+00:00' },
+      { typ: 'aufgebraucht', giltAb: '2027-01-08T08:00:00.000000+00:00' },
+    ]);
+    // ein storniertes vorraetig zählt nicht als nächstjüngeres Ereignis
+    const vorraetigStorniert = { ...vorraetig, storniert_am: '2027-01-09T09:00:00.000000+00:00' };
+    expect(
+      verlaufMit([aufgebraucht, vorraetigStorniert], [packung('2027-01-10T08:00:00.000000+00:00')]),
+    ).toEqual([
+      { typ: 'neue_packung', giltAb: '2027-01-10T08:00:00.000000+00:00' },
+      { typ: 'aufgebraucht', giltAb: '2027-01-08T08:00:00.000000+00:00' },
+    ]);
+  });
+});
+
+// ---------------------------------------------------------------------
+// NB1-AK7 Mikrosekunden in vorratStand und vorratVerlauf (#219; Plan 215 zeitVergleich, bisJetzt)
+// ---------------------------------------------------------------------
+
+describe('NB1-AK7 Vorrat auf die Mikrosekunde', () => {
+  it('NB1-AK7 gleiche Millisekunde: Mikrosekunde entscheidet zwischen zwei Ereignissen', () => {
+    // gleiches gilt_ab auf die Millisekunde, verschiedene Mikrosekunde; die id spricht für das andere Ereignis
+    const vorraetig = ereignis(1, 'vorraetig', '2027-01-12T08:00:00.500001+00:00', { id: id(950) });
+    const aufgebraucht = ereignis(2, 'aufgebraucht', '2027-01-12T08:00:00.500002+00:00', { id: id(940) });
+    expect(Date.parse(vorraetig.gilt_ab)).toBe(Date.parse(aufgebraucht.gilt_ab));
+    expect(stand([vorraetig, aufgebraucht])).toEqual({ vorraetig: false, seit: aufgebraucht.gilt_ab });
+    expect(stand([aufgebraucht, vorraetig])).toEqual({ vorraetig: false, seit: aufgebraucht.gilt_ab });
+    expect(vorratVerlauf([vorraetig, aufgebraucht], SORTE, JETZT).map((v) => v.typ)).toEqual([
+      'aufgebraucht',
+      'vorraetig',
+    ]);
+    expect(vorratVerlauf([aufgebraucht, vorraetig], SORTE, JETZT).map((v) => v.typ)).toEqual([
+      'aufgebraucht',
+      'vorraetig',
+    ]);
+  });
+
+  it('NB1-AK7 Packung in derselben Millisekunde wie aufgebraucht, aber spätere Mikrosekunde macht vorrätig; frühere nicht', () => {
+    const e = [
+      ereignis(1, 'aufgebraucht', '2027-01-10T08:00:00.000000+00:00', {
+        erfasst_am: '2027-01-10T08:00:00.250500+00:00',
+      }),
+    ];
+    const spaeter = packung('2027-01-10T08:00:00.250501+00:00');
+    const frueher = packung('2027-01-10T08:00:00.250499+00:00');
+    const gleich = packung('2027-01-10T08:00:00.250500+00:00');
+    expect(Date.parse(spaeter.erfasst_am)).toBe(Date.parse(e[0]?.erfasst_am ?? ''));
+    expect(stand(e, [spaeter])).toEqual({ vorraetig: true });
+    expect(stand(e, [frueher])).toEqual({ vorraetig: false, seit: '2027-01-10T08:00:00.000000+00:00' });
+    // strikt danach: gleiche Mikrosekunde zählt nicht
+    expect(stand(e, [gleich])).toEqual({ vorraetig: false, seit: '2027-01-10T08:00:00.000000+00:00' });
+  });
+
+  it('NB1-AK7 Ereignis und Packung in der Millisekunde von jetzt mit Mikrosekunden > 0 zählen nicht, mit .000000 schon', () => {
+    // JETZT = 2027-01-15T09:00:00.000Z
+    const genau = '2027-01-15T09:00:00.000000+00:00';
+    const knapp = '2027-01-15T09:00:00.000001+00:00';
+    expect(stand([ereignis(1, 'aufgebraucht', knapp)])).toEqual({ vorraetig: true });
+    expect(stand([ereignis(2, 'aufgebraucht', genau)])).toEqual({ vorraetig: false, seit: genau });
+    expect(vorratVerlauf([ereignis(3, 'aufgebraucht', knapp)], SORTE, JETZT)).toEqual([]);
+    expect(vorratVerlauf([ereignis(4, 'aufgebraucht', genau)], SORTE, JETZT)).toEqual([
+      { typ: 'aufgebraucht', giltAb: genau },
+    ]);
+    // Packung: nach einem aufgebraucht vom Vortag
+    const e = [ereignis(5, 'aufgebraucht', '2027-01-14T08:00:00.000000+00:00')];
+    expect(stand(e, [packung(knapp)])).toEqual({
+      vorraetig: false,
+      seit: '2027-01-14T08:00:00.000000+00:00',
+    });
+    expect(stand(e, [packung(genau)])).toEqual({ vorraetig: true });
+  });
+});
