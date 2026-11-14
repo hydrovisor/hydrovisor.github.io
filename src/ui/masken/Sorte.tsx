@@ -27,6 +27,7 @@ import { APP_VERSION } from '../../konstanten.ts';
 import { Button } from '../bausteine/Button.tsx';
 import { Card } from '../bausteine/Card.tsx';
 import { Notice } from '../bausteine/Notice.tsx';
+import { Kamera } from '../bausteine/Kamera.tsx';
 import { PhotoField } from '../bausteine/PhotoField.tsx';
 import { StatusBadge } from '../bausteine/StatusBadge.tsx';
 import { useBuendel } from '../buendel.tsx';
@@ -71,7 +72,7 @@ interface Offen {
  * Schreiben, sendet «Speichern wiederholen» denselben Vorgang (A12). Die Fotofelder bleiben gesperrt, bis das Bündel die
  * neue Zeile zeigt, damit kein zweites Ersetzen die alte Zeile übersieht (A11).
  */
-function TuetenfotoKarte({ sorteId }: { sorteId: string }) {
+function TuetenfotoKarte({ sorteId, titel }: { sorteId: string; titel: string }) {
   const { buendel } = useBuendel();
   const zeilen = (buendel?.teile['tuetenfoto'] ?? []) as TuetenfotoZeile[];
   const aktuell = aktuelleTuetenfotos(zeilen, sorteId);
@@ -82,19 +83,23 @@ function TuetenfotoKarte({ sorteId }: { sorteId: string }) {
   const wartetAufBuendel = erwartet !== undefined && aktuell[erwartet.seite]?.clientId !== erwartet.clientId;
   const gesperrt = laeuft || wartetAufBuendel;
 
-  async function senden(o: Offen) {
+  /** Kamera in der App (Plan kamera): offen mit dem schon aufgenommenen Foto der Vorderseite */
+  const [kamera, setKamera] = useState<{ vorne?: { datei: File; url: string } }>();
+
+  async function senden(o: Offen): Promise<boolean> {
     const r = await fotoVorgangSenden(o.vorgang);
     if (r === 'gespeichert') {
       setOffen(undefined);
       setErwartet({ seite: o.seite, clientId: o.clientId });
-      return;
+      return true;
     }
     // «abweichend»: dasselbe Senden ergäbe wieder «abweichend», kein Wiederholen anbieten
     setOffen(r.wiederholbar ? o : undefined);
     setMeldung(r.meldung);
+    return false;
   }
 
-  async function waehlen(seite: TuetenfotoSeite, datei: File) {
+  async function waehlen(seite: TuetenfotoSeite, datei: File): Promise<boolean> {
     setLaeuft(true);
     setMeldung(undefined);
     setOffen(undefined);
@@ -106,10 +111,10 @@ function TuetenfotoKarte({ sorteId }: { sorteId: string }) {
             ? 'Foto nicht gespeichert: Das Foto ist nicht lesbar. Wähle ein anderes Foto.'
             : 'Foto nicht gespeichert. Prüf die Verbindung und wähle es erneut.',
         );
-        return;
+        return false;
       }
       const clientId = neueClientId();
-      await senden({
+      return await senden({
         seite,
         clientId,
         vorgang: tuetenfotoVorgang({
@@ -133,9 +138,49 @@ function TuetenfotoKarte({ sorteId }: { sorteId: string }) {
     setLaeuft(false);
   }
 
+  /** Kamera geschlossen: Vorderseite, dann Rückseite speichern; scheitert die Vorderseite, bleibt ihre Meldung stehen */
+  async function reiheSpeichern(vorne: File, hinten?: File) {
+    setKamera(undefined);
+    if ((await waehlen('vorne', vorne)) && hinten) await waehlen('hinten', hinten);
+  }
+
+  function kameraFoto(datei: File) {
+    if (!kamera?.vorne) setKamera({ vorne: { datei, url: URL.createObjectURL(datei) } });
+    else void reiheSpeichern(kamera.vorne.datei, datei);
+  }
+
+  const vorneAufgenommen = kamera?.vorne;
   return (
     <Card title="Tütenfoto">
-      <TuetenfotoAnzeige sorteId={sorteId} leerText="Wähle unten ein Foto der Vorder- oder Rückseite." />
+      <TuetenfotoAnzeige sorteId={sorteId} leerText="Nimm unten die Vorder- und die Rückseite auf." />
+      <Button block disabled={gesperrt} onClick={() => setKamera({})}>
+        Vorder- und Rückseite aufnehmen
+      </Button>
+      {kamera ? (
+        <Kamera
+          titel={titel}
+          schritt={vorneAufgenommen ? 'Rückseite' : 'Vorderseite'}
+          hinweis={
+            vorneAufgenommen
+              ? 'Dreh die Tüte um und nimm die Rückseite auf.'
+              : 'Halte die Vorderseite der Tüte formatfüllend in den Rahmen.'
+          }
+          vorschau={vorneAufgenommen?.url}
+          vorschauText={vorneAufgenommen ? 'Vorderseite aufgenommen' : undefined}
+          aktionen={
+            vorneAufgenommen
+              ? [
+                  {
+                    text: 'Ohne Rückseite speichern',
+                    onClick: () => void reiheSpeichern(vorneAufgenommen.datei),
+                  },
+                ]
+              : undefined
+          }
+          onFoto={kameraFoto}
+          onSchliessen={() => setKamera(undefined)}
+        />
+      ) : null}
       {(['vorne', 'hinten'] as const).map((seite) => (
         <PhotoField
           key={seite}
@@ -287,7 +332,7 @@ export function Sorte({ sorte }: { sorte: string }) {
             {d.zeile.pruefauftraege} {d.zeile.pruefauftraege === 1 ? 'Prüfauftrag' : 'Prüfaufträge'}
           </p>
           <VorratKarte sorteId={sorte} />
-          <TuetenfotoKarte sorteId={sorte} />
+          <TuetenfotoKarte sorteId={sorte} titel={`${d.zeile.artName} ${d.zeile.name}`} />
           {!d.zeile.vollstaendig ? (
             <Button
               variant="secondary"
