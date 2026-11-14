@@ -14,10 +14,14 @@ Löst eine Aktion aus; `primary` höchstens einmal pro Screen, für das, wofür 
 
 Nach dem Speichern einer Erfassung (Messen, Keimung, Umsetzen, Säen) führt die Bestätigung weiter, ohne Umweg über Heute.
 
-- `div.hv-weiter`: links die Hauptaktion `primary` «Nächste Aufgabe: <Titel> <Ort>» (darf auf zwei Zeilen umbrechen),
+- `div.hv-weiter`: links die Hauptaktion `primary` «Nächste Aufgabe: <Titel> <Ort>» («Nächste Aufgabe:» als kleine Zeile oben in `<small>`, darunter Titel und Ort, die
+  umbrechen dürfen),
   rechts daneben `secondary` «Zu Heute». Gibt es keine weitere Aufgabe mit eigener Maske, steht nur «Zu Heute» als
   `primary` über die ganze Breite. Es bleibt bei einer `primary` je Maske.
 - Die nächste Aufgabe ist die folgende in der Reihenfolge von Heute (Laufweg), nicht die dringendste.
 - Beide Tasten sind nach dem Erscheinen 400 ms gesperrt (`aria-disabled="true"`, ohne Wirkung), weil sie dort
   erscheinen, wo eben «Speichern» getippt wurde.
 - Nachbau in `src/ui/NachSpeichern.tsx`.
+- In der Aufgabenliste von Heute sind nach einer Aktion («Erledigt», «Morgen», «Überspringen», «Pegel ok», Deckel) alle
+  Tasten und Links der Liste 400 ms gesperrt (Links mit `aria-disabled="true"`, Aussehen wie gesperrte Tasten), damit ein
+  Doppeltipper nicht die nachgerückte Zeile trifft (U13).

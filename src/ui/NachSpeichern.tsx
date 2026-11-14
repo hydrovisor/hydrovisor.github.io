@@ -74,7 +74,8 @@ export function NachSpeichern({ bezug, vorher = [], nurHeute = false }: NachSpei
     <div className="hv-weiter">
       {folge ? (
         <a className="hv-btn hv-btn-primary" href={hashZu(folge.ziel)} {...sperre}>
-          {`Nächste Aufgabe: ${folge.titel}${folge.ort ? ` ${folge.ort}` : ''}`}
+          <small>Nächste Aufgabe: </small>
+          {`${folge.titel}${folge.ort ? ` ${folge.ort}` : ''}`}
         </a>
       ) : null}
       <a

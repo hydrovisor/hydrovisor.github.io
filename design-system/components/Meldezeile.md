@@ -24,4 +24,4 @@ aus der Liste nehmen oder deren Ergebnis sonst ausserhalb des Bildschirms läge:
   nächsten Meldung oder beim Wechsel der Maske. Es gibt immer nur eine Meldung, kein Wischen zum Schliessen.
 - Im Druck ausgeblendet.
 - Nachbau in `src/ui/bausteine/Meldezeile.tsx`: `Meldezeile` mit `text`, optional `aktion` (`text`, `onClick`,
-  `gesperrt`); den Zustand hält `MeldungAnbieter` in `src/ui/meldung.tsx` (`useMeldung().melden({ text, rueckgaengig })`).
+  `gesperrt`); den Zustand hält `MeldungAnbieter` in `src/ui/meldung.tsx` (`useMelden()({ text, rueckgaengig })`).

@@ -515,6 +515,8 @@ a.hv-sortenzeile, a.hv-sortenzeile:hover { color: var(--ink); text-decoration: n
 /* Weiterführung nach dem Speichern (Button.md): «Nächste Aufgabe: …» als Hauptaktion, daneben «Zu Heute» */
 .hv-weiter { display: flex; align-items: stretch; gap: var(--space-2); }
 .hv-weiter > .hv-btn:first-child { flex: 1 1 auto; min-width: 0; padding: var(--space-2) var(--space-3); white-space: normal; text-align: center; }
+.hv-weiter > .hv-btn:first-child { flex-direction: column; gap: 0; }
+.hv-weiter > .hv-btn > small { font-size: var(--text-small-size); line-height: var(--text-small-line); font-weight: 600; }
 .hv-weiter > .hv-btn + .hv-btn { flex: none; padding: 0 var(--space-3); }
 .hv-weiter > .hv-btn[aria-disabled="true"], .hv-aufgabe .hv-btn[aria-disabled="true"] { cursor: not-allowed; background: var(--surface-sunken); border-color: transparent; color: var(--ink-muted); }
 
