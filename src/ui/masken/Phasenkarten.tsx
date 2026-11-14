@@ -22,6 +22,7 @@ import { Notice } from '../bausteine/Notice.tsx';
 import { StatusBadge } from '../bausteine/StatusBadge.tsx';
 import { Stepper } from '../bausteine/Stepper.tsx';
 import { useBuendel } from '../buendel.tsx';
+import { useMelden } from '../meldung.tsx';
 import { hashZu } from '../router.ts';
 import '../phasen.css';
 
@@ -36,12 +37,12 @@ const uhrJetzt = () => new Date(Date.now());
 
 export function Phasenkarten({ jetzt }: { jetzt: Date }) {
   const { buendel } = useBuendel();
+  const melden = useMelden();
   const teile = buendel?.teile;
   const [wahl, setWahl] = useState<Record<string, Antwort>>({});
   // Nachführen: Versatz je Wechsel in Tagen gegen den vorbelegten Tag, «Ohne letzten Wechsel» je Satz
   const [versatz, setVersatz] = useState<Record<string, number[]>>({});
   const [ohneLetzten, setOhneLetzten] = useState<Record<string, boolean>>({});
-  const [ergebnis, setErgebnis] = useState<{ text: string; vorgang: Vorgang; teile: typeof teile }>();
   // gespeicherte Sätze bis zum neuen Bündel ausblenden, damit kein zweiter Vorgang entsteht (Runde 1 Befund 9)
   // an das Bündel des Speicherns gebunden: mit dem neuen Bündel erscheinen Folgefragen wieder (R1.6; Runde 2 Befund 6)
   const [erledigtBei, setErledigtBei] = useState<{ teile: typeof teile; saetze: string[] }>();
@@ -87,7 +88,13 @@ export function Phasenkarten({ jetzt }: { jetzt: Date }) {
         teile,
         saetze: [...(alt && alt.teile === teile ? alt.saetze : []), ...saetze],
       }));
-      setErgebnis({ text, vorgang, teile });
+      // UX2 (Plan 224): die Meldung steht fest unten im Bild; Rückgängig mit dem Stand vor dem Speichern (Runde 1
+      // Befund 5), danach erscheinen die Karten wieder (Runde 2 Befund 6)
+      melden({
+        text,
+        rueckgaengig: phasenRueckgaengig(vorgang, teile, neueClientId),
+        nachRueckgaengig: () => setErledigtBei(undefined),
+      });
       return true;
     } finally {
       const frei = () => {
@@ -97,16 +104,6 @@ export function Phasenkarten({ jetzt }: { jetzt: Date }) {
       if (ok) setTimeout(frei, SPERRE_MS);
       else frei();
     }
-  }
-
-  function zuruecknehmen() {
-    if (!ergebnis) return;
-    // Rückgängig mit dem Stand vor dem Speichern (Runde 1 Befund 5)
-    const v = phasenRueckgaengig(ergebnis.vorgang, ergebnis.teile, neueClientId);
-    // nur nach Erfolg wieder einblenden (Runde 2 Befund 6)
-    void senden(`rueck|${JSON.stringify(ergebnis.vorgang)}`, () => v, 'Rückgängig gemacht', []).then((ok) => {
-      if (ok) setErledigtBei(undefined);
-    });
   }
 
   function alleJa(karte: Fragekarte) {
@@ -159,23 +156,13 @@ export function Phasenkarten({ jetzt }: { jetzt: Date }) {
     return p ? <a href={hashZu({ name: 'pflanze', pflanzung: p })}>{sorte}</a> : sorte;
   };
 
-  if (nachZeilen.length === 0 && fragen.length === 0 && !ergebnis && !fehler) return null;
+  if (nachZeilen.length === 0 && fragen.length === 0 && !fehler) return null;
   return (
     <div className="hv-phasen">
       {fehler ? (
         <Notice kompakt tone="danger">
           {fehler}
         </Notice>
-      ) : null}
-      {ergebnis ? (
-        <div className="hv-phasen-ergebnis" role="status">
-          <span>{ergebnis.text}</span>
-          {ergebnis.text !== 'Rückgängig gemacht' ? (
-            <Button variant="secondary" size="compact" disabled={sendet} onClick={zuruecknehmen}>
-              Rückgängig machen
-            </Button>
-          ) : null}
-        </div>
       ) : null}
       {nachZeilen.length > 0 ? (
         <Card

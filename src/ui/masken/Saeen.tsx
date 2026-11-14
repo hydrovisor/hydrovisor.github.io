@@ -41,6 +41,8 @@ import { useBuendel } from '../buendel.tsx';
 import { jetzt } from '../bundeldaten.ts';
 import { useLeisteAus } from '../leisteKontext.tsx';
 import { hashZu } from '../router.ts';
+import { NachSpeichern } from '../NachSpeichern.tsx';
+
 import { SaeenSortenwahl, type SortenAnsicht } from './SaeenSortenwahl.tsx';
 
 const KEIMART: Record<string, string> = {
@@ -207,9 +209,7 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
             Rückgängig machen
           </Button>
         )}
-        <a className="hv-btn hv-btn-primary hv-btn-block" href={hashZu({ name: 'heute' })}>
-          Zu Heute
-        </a>
+        <NachSpeichern nurHeute={fertig.zurueck === true} />
       </main>
     );
   }

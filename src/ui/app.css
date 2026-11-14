@@ -45,11 +45,45 @@ html:has(.hv-rahmen-leiste .hv-heute-fuss):not(:has(.hv-block)) {
   );
 }
 
+/* Meldezeile (Meldezeile.md, Plan 224): steht über dem festen Fuss von Heute; solange sie steht, bekommt die Seite unten
+   ihre Höhe als Abstand dazu */
+.hv-rahmen:has(.hv-heute-fuss):not(:has(.hv-block)) {
+  --hv-fuss-hoehe: calc(var(--size-touch-regal) + 2 * var(--space-2));
+}
+
+.hv-rahmen {
+  --hv-meldung-hoehe: calc(var(--size-touch-regal) + 2 * var(--space-2) + 1px);
+}
+
+.hv-rahmen[data-meldung='sichtbar'] .hv-seite {
+  padding-bottom: calc(
+    var(--space-4) + var(--hv-leiste-hoehe, env(safe-area-inset-bottom)) + var(--hv-meldung-hoehe)
+  );
+}
+
+/* mit festem Fuss liegt der Platz für die Meldezeile über dem Fuss: am Seitenende steht der Fuss dort, wo er beim
+   Scrollen haftet, die Meldezeile darüber verdeckt nur den freien Abstand (Prüfer Runde 1 Befund 1) */
+.hv-rahmen[data-meldung='sichtbar']:has(.hv-heute-fuss):not(:has(.hv-block)) .hv-seite {
+  padding-bottom: var(--hv-leiste-hoehe, 0px);
+}
+
+.hv-rahmen[data-meldung='sichtbar']:has(.hv-heute-fuss):not(:has(.hv-block)) .hv-heute-ende {
+  margin-bottom: var(--hv-meldung-hoehe);
+}
+
 .hv-seite-kopf {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
+}
+
+/* Kopf mit mehreren Textknöpfen rechts (Pflanze: «Zurück» aus dem Erntekalender und «Zu Heute», Plan 232) */
+.hv-seite-kopf-aktionen {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-2);
 }
 
 .hv-seite-titel {

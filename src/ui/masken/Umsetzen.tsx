@@ -28,6 +28,8 @@ import {
 import { kalendertag, tagKurz, tagPlus, tageZwischen } from '../../domain/zeit.ts';
 import { Stepper } from '../bausteine/Stepper.tsx';
 import { ZEITZONE } from '../../domain/zeit.ts';
+import { NachSpeichern, useHeuteVorher } from '../NachSpeichern.tsx';
+
 import { Button } from '../bausteine/Button.tsx';
 import { Deckel } from '../bausteine/Deckel.tsx';
 import { Notice } from '../bausteine/Notice.tsx';
@@ -99,6 +101,7 @@ function Maske({ satz, wie, jetzt }: { satz: string; wie: 'geplant' | undefined;
   // derselbe Vorgang bei jeder Wiederholung derselben Eingabe (TO2): gleiche client_id
   const vorgangFuer = useRef<{ schluessel: string; vorgang: Vorgang } | undefined>(undefined);
   const sperre = useRef(false);
+  const vorher = useHeuteVorher();
 
   if (!a) return null;
   const heute = kalendertag(jetzt, ZEITZONE);
@@ -238,9 +241,7 @@ function Maske({ satz, wie, jetzt }: { satz: string; wie: 'geplant' | undefined;
         <Button variant="secondary" disabled={sendet} onClick={() => zuruecknehmen(schritt.vorgang)}>
           Rückgängig machen
         </Button>
-        <a className="hv-btn hv-btn-primary" href={hashZu({ name: 'heute' })}>
-          Zu Heute
-        </a>
+        <NachSpeichern bezug={{ name: 'umsetzen', satz }} vorher={vorher} />
       </main>
     );
   }

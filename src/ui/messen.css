@@ -102,3 +102,13 @@
   min-height: calc(var(--size-touch-regal) * 4 + var(--space-2) * 3);
   flex: 1 1 0;
 }
+
+/* Plan 224 (A12): «Zu Heute» bleibt auch über einem Banner im Kopf, sobald der Bildschirm dafür reicht (Honor 780 dp).
+   Unter 700 dp (E2E mit 360 × 640) fehlen 26 dp: Kopf 68, Banner 68, Kacheln 122, Ziffernblock mit «Speichern» 380 und
+   die Abstände ergeben 666 dp. Tasten bleiben 68 dp hoch und überlappen nicht (U-03), die Messmaske bleibt ohne Scrollen:
+   dort verdrängt der Banner «Zu Heute» wie bisher (Plan 12). */
+@media (max-height: 699px) {
+  .hv-messen .hv-messen-kopf-eng .hv-btn {
+    display: none;
+  }
+}

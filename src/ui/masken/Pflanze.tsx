@@ -65,15 +65,26 @@ interface Ergebnis {
   art: Art;
 }
 
-/** Kopf der Pflanze; aus dem Erntekalender mit «Zurück» in den Kalender mit derselben Auswahl (Plan 232 A15) */
-function PflanzenKopf({ zurueck }: { zurueck?: string }) {
-  if (!zurueck) return <h1 className="hv-seite-titel">Pflanze</h1>;
+/**
+ * Kopf der Pflanze mit «Zu Heute» (UX2, #224); aus dem Erntekalender zusätzlich «Zurück» in den Kalender mit derselben
+ * Auswahl (Plan 232 A15)
+ */
+function PflanzenKopf({ zurueck, zuHeute = true }: { zurueck?: string; zuHeute?: boolean }) {
   return (
     <header className="hv-seite-kopf">
       <h1 className="hv-seite-titel">Pflanze</h1>
-      <a className="hv-btn hv-btn-ghost" href={zurueck}>
-        Zurück
-      </a>
+      <span className="hv-seite-kopf-aktionen">
+        {zurueck ? (
+          <a className="hv-btn hv-btn-ghost hv-btn-compact" href={zurueck}>
+            Zurück
+          </a>
+        ) : null}
+        {zuHeute ? (
+          <a className="hv-btn hv-btn-ghost hv-btn-compact" href={hashZu({ name: 'heute' })}>
+            Zu Heute
+          </a>
+        ) : null}
+      </span>
     </header>
   );
 }
@@ -117,7 +128,7 @@ export function Pflanze({ pflanzung, von }: { pflanzung: string; von?: 'ernte' }
   if (!a) {
     return (
       <main className="hv-seite hv-pflanze" data-density="regal">
-        <PflanzenKopf {...(von === 'ernte' ? { zurueck: hashZu({ name: 'ernte' }) } : {})} />
+        <PflanzenKopf zuHeute={false} {...(von === 'ernte' ? { zurueck: hashZu({ name: 'ernte' }) } : {})} />
         <p>{liest ? 'Daten werden geladen' : 'Pflanze nicht bekannt'}</p>
         <a className="hv-btn hv-btn-secondary" href={hashZu({ name: 'heute' })}>
           Zu Heute

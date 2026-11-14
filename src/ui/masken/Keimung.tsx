@@ -29,6 +29,7 @@ import { Stepper } from '../bausteine/Stepper.tsx';
 import { useBuendel } from '../buendel.tsx';
 import { jetzt } from '../bundeldaten.ts';
 import { hashZu } from '../router.ts';
+import { NachSpeichern, useHeuteVorher } from '../NachSpeichern.tsx';
 
 const SPERRE_MS = 400;
 const zahl2 = (x: number) => x.toFixed(2);
@@ -59,6 +60,7 @@ export function Keimung({ satz }: { satz: string }) {
   // Teil des Vorgangs schon gespeichert: Eingabe fest, nur derselbe Vorgang erneut (wie Säen, Plan 23 Befund 8)
   const [teilweise, setTeilweise] = useState(false);
   const [fertig, setFertig] = useState<Fertig>();
+  const vorher = useHeuteVorher();
   const [wieder, setWieder] = useState<{ vorgang: Vorgang; text: string; zurueck?: boolean }>();
   // gleicher Vorgang bei Wiederholung derselben Eingabe (TO2)
   const letzter = useRef<{ schluessel: string; vorgang: Vorgang } | undefined>(undefined);
@@ -151,9 +153,11 @@ export function Keimung({ satz }: { satz: string }) {
               Rückgängig machen
             </Button>
           )}
-          <a className="hv-btn hv-btn-primary" href={hashZu({ name: 'heute' })}>
-            Zu Heute
-          </a>
+          <NachSpeichern
+            bezug={{ name: 'keimung', satz }}
+            vorher={vorher}
+            nurHeute={fertig.zurueck === true}
+          />
         </div>
       </main>
     );
