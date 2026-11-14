@@ -3,6 +3,8 @@
 // Regel 2). Es gibt nur die letzte Meldung; sie endet mit der nächsten Meldung oder beim Wechsel der Maske (A2).
 import {
   createContext,
+  type Dispatch,
+  type SetStateAction,
   useCallback,
   useContext,
   useEffect,
@@ -34,7 +36,7 @@ const SPERRE_MS = 400;
 const MeldenKontext = createContext<(m: Meldung) => void>(() => undefined);
 const ZustandKontext = createContext<{
   zustand: Zustand | undefined;
-  setZustand: (z: Zustand | undefined) => void;
+  setZustand: Dispatch<SetStateAction<Zustand | undefined>>;
 }>({ zustand: undefined, setZustand: () => undefined });
 
 export function MeldungAnbieter({ children }: { children: ReactNode }) {
@@ -90,14 +92,18 @@ export function MeldungZeile() {
     setSendet(true);
     try {
       const r = await schreiben(v, { jetzt: new Date(Date.now()), zeitzone: ZEITZONE });
+      // nur, wenn noch dieselbe Meldung steht: eine neuere Meldung oder ein Maskenwechsel geht vor (Runde 1 Befund 2)
+      const nochDieselbe = (neu: Zustand) => (alt: Zustand | undefined) => (alt?.nr === z.nr ? neu : alt);
       if (r.status !== 'gespeichert') {
-        setZustand({
-          ...z,
-          fehler: r.status === 'nicht_gespeichert' ? r.fehler.text : 'Schon anders gespeichert',
-        });
+        setZustand(
+          nochDieselbe({
+            ...z,
+            fehler: r.status === 'nicht_gespeichert' ? r.fehler.text : 'Schon anders gespeichert',
+          }),
+        );
         return;
       }
-      setZustand({ nr: z.nr, meldung: { text: 'Rückgängig gemacht' } });
+      setZustand(nochDieselbe({ nr: z.nr, meldung: { text: 'Rückgängig gemacht' } }));
       z.meldung.nachRueckgaengig?.();
     } finally {
       laeuft.current = false;

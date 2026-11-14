@@ -429,6 +429,31 @@ test('UX2-AK2 U4 die Meldung bleibt beim Nachladen des Bündels und beim Scrolle
   await expect(meldezeile(page)).toHaveCount(0);
 });
 
+// Ergänzt vom Lead nach Prüferbefund 1 der Runde 1: Meldezeile und fester Fuss am Seitenende
+for (const hoehe of [640, 780])
+  test(`UX2-AK2 U4 am Seitenende steht die Meldezeile über «Rundgang starten», beide ohne Scrollen tippbar (360 × ${String(hoehe)})`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 360, height: hoehe });
+    const m = await heute(page, rundgangTeile(), RUNDGANG_JETZT, nachRundgang);
+    await tipp(m, zeileIn(page, 'R-2.2', 'Reinigen').getByRole('button', { name: 'Erledigt', exact: true }));
+    await expect(meldezeile(page)).toContainText('Erledigt: ');
+    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+    await frames(page);
+    const start = page.getByRole('link', { name: /^Rundgang starten/ });
+    await ohneScrollenTippbar(start);
+    await aktiv(rueckgaengig(page));
+    await ohneScrollenTippbar(rueckgaengig(page));
+    const taste = await start.boundingBox();
+    const zeile = await meldezeile(page).boundingBox();
+    if (!taste || !zeile) throw new Error('keine Bounding Box');
+    expect(zeile.y + zeile.height, 'Meldezeile endet über der Taste').toBeLessThanOrEqual(taste.y);
+    // die letzte Zeile der Seite liegt nicht unter der Meldezeile
+    const ende = await knopf(page.locator('main'), 'Stromausfall erfassen').boundingBox();
+    if (!ende) throw new Error('keine Bounding Box');
+    expect(ende.y + ende.height, 'Seitenende über der Meldezeile').toBeLessThanOrEqual(zeile.y);
+  });
+
 // ---------------------------------------------------------------------------------------------------------------
 // UX2-AK3 Phasenkarten melden über die Meldezeile
 // ---------------------------------------------------------------------------------------------------------------

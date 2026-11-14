@@ -6,7 +6,7 @@
 // Liste aus Plan 33, das Messgerät im Kopf der Übersicht. UX2 (Plan 224): jede Aktion meldet sich in der Meldezeile mit
 // «Rückgängig machen» (Storno über schreiben()); nach einem Erfolg bleiben die Tasten 400 ms gesperrt (U13), damit ein
 // Doppeltipper nicht die nachgerückte Zeile trifft.
-import { useRef, useState } from 'react';
+import { useRef, useState, type MouseEvent } from 'react';
 import { neueClientId, schreiben } from '../../daten/schreiben.ts';
 import { rueckgaengigVorgang, type Vorgang } from '../../domain/datenpfad/erfassung.ts';
 import { einstellungenAus, fehlendeTeile, naechsteAufgabe, type Aufgabe } from '../../domain/aufgaben.ts';
@@ -145,6 +145,11 @@ export function Aufgabenliste({ jetzt, faellig }: { jetzt: Date; faellig: readon
       </p>
     );
   }
+  // solange gesendet wird und 400 ms danach sind auch die Links ohne Wirkung: ein Doppeltipper auf die nachgerückte
+  // Zeile wechselt sonst die Maske und beendet die Meldung samt «Rückgängig machen» (U13, Runde 1 Befund 3)
+  const linkSperre = sendet
+    ? { 'aria-disabled': true, onClick: (e: MouseEvent<HTMLAnchorElement>) => e.preventDefault() }
+    : {};
   const zeile = (a: Aufgabe) => {
     const z = ziel(a);
     const hinweis = a.hinweis === 'mitmarkiert' ? 'Pumpe mitmarkiert' : a.hinweis;
@@ -170,7 +175,7 @@ export function Aufgabenliste({ jetzt, faellig }: { jetzt: Date; faellig: readon
           Erledigt
         </Button>
       ) : maske ? (
-        <a className="hv-btn hv-btn-secondary" href={hashZu(maske.route)}>
+        <a className="hv-btn hv-btn-secondary" href={hashZu(maske.route)} {...linkSperre}>
           {maske.text}
         </a>
       ) : null;
@@ -188,7 +193,7 @@ export function Aufgabenliste({ jetzt, faellig }: { jetzt: Date; faellig: readon
         <span className="hv-aufgabe-knoepfe">
           {haupt}
           {oeffnen && !haupt ? (
-            <a className="hv-btn hv-btn-secondary" href={hashZu(oeffnen.route)}>
+            <a className="hv-btn hv-btn-secondary" href={hashZu(oeffnen.route)} {...linkSperre}>
               {oeffnen.text}
             </a>
           ) : null}
@@ -234,7 +239,7 @@ export function Aufgabenliste({ jetzt, faellig }: { jetzt: Date; faellig: readon
             </Button>
           ) : null}
           {oeffnen && haupt ? (
-            <a className="hv-btn hv-btn-ghost" href={hashZu(oeffnen.route)}>
+            <a className="hv-btn hv-btn-ghost" href={hashZu(oeffnen.route)} {...linkSperre}>
               {oeffnen.text}
             </a>
           ) : null}

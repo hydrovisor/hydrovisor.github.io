@@ -6,12 +6,14 @@ aus der Liste nehmen oder deren Ergebnis sonst ausserhalb des Bildschirms läge:
 
 - **Aufbau** (`div.hv-meldezeile`, `role="status"`, `aria-live="polite"`): fest am unteren Rand über die ganze Breite,
   Fläche `surface-raised`, oben eine Linie `line`, Schatten `shadow-sm`; der Inhalt ist bei breiten Bildschirmen auf
-  `size-content` zentriert. Links der Text (`hv-meldezeile-text`, fett 600, höchstens zwei Zeilen), rechts die Aktion
-  (`hv-meldezeile-aktion`): ein Button `secondary`, in Regal-Masken 68 dp (`data-density="regal"` an der Zeile).
+  `size-content` zentriert. Links der Text (`hv-meldezeile-text`, Schrift `text-small` fett 600, höchstens drei Zeilen), rechts die Aktion
+  (`hv-meldezeile-aktion`): ein Button `secondary`, 68 dp hoch (`data-density="regal"` an der Zeile), höchstens 136 dp
+  breit und zweizeilig («Rückgängig» über «machen»), damit auf 360 dp der Text mit Aufgabe und Ort lesbar bleibt.
 - **Lage**: immer über der Hauptaktion. Die Zeile steht über der Leiste (`--hv-leiste-hoehe`) und über einem festen Fuss
   der Seite (`--hv-fuss-hoehe`, etwa «Rundgang starten»); ohne beides am unteren Rand mit dem Sicherheitsabstand
   `env(safe-area-inset-bottom)`. Solange sie steht, gibt der Rahmen (`[data-meldung="sichtbar"]`) der Seite unten ihre
-  Höhe als Abstand dazu, damit nichts verdeckt bleibt.
+  Höhe (`--hv-meldung-hoehe`) als Abstand dazu, damit nichts verdeckt bleibt; hat die Seite einen festen Fuss, liegt
+  dieser Abstand über dem Fuss, sodass der Fuss auch am Seitenende unter der Meldezeile frei bleibt.
 - **Text**: sagt, was gespeichert wurde, mit Aufgabe und Ort: «Erledigt: Würfel feucht R-A1», «Auf morgen verschoben:
   Messen R-3.1», «Gespeichert: Salat · 4.4 · gesät 7.1.». Nach dem Zurücknehmen «Rückgängig gemacht» ohne Aktion. Ein
   Fehler beim Zurücknehmen steht als Text in der Zeile, die Aktion bleibt. Der Zustand steht im Text, nie nur in einer
