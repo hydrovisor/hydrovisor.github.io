@@ -169,6 +169,17 @@ export function phasenStand(
   };
 }
 
+/**
+ * Beginn der laufenden Phase als sortierbare Zeit: gilt_ab des letzten Ja, sonst das Saatdatum (Plan 226 A3).
+ * undefined: Satz unbekannt.
+ */
+export function phasenBeginnZeit(teile: Teile, satzId: string): string | undefined {
+  const satz = satzVon(teile, satzId);
+  if (!satz) return undefined;
+  const ja = antwortenVon(teile, satzId).filter((e) => datenVon(e)['antwort'] === 'ja');
+  return ja.at(-1)?.gilt_ab ?? satz.saatdatum;
+}
+
 /** erste aktive Pflanzung des Satzes nach id (Link zur Pflanzenansicht) */
 export function pflanzungVonSatz(teile: Teile, satzId: string): string | undefined {
   return zeilen<Zustand>(teile, 'v_pflanzung_zustand')

@@ -233,6 +233,36 @@ export function ernteVorgang(
   );
 }
 
+/** Umfang «Alle n im Satz»: aktive Pflanzungen desselben Satzes am selben Platz nach id (Plan 38 A2, Plan 226) */
+export function ernteUmfang(teile: Teile, pflanzungId: string): string[] {
+  const alle = zeilen<Zustand>(teile, 'v_pflanzung_zustand');
+  const z = alle.find((x) => x.pflanzung_id === pflanzungId);
+  if (!z || z.status !== 'aktiv') return [];
+  return alle
+    .filter(
+      (x) => x.satz_id === z.satz_id && x.status === 'aktiv' && (x.platz_id ?? null) === (z.platz_id ?? null),
+    )
+    .map((x) => x.pflanzung_id)
+    .sort();
+}
+
+/** «Alle n abernten» in Heute: derselbe Vorgang wie «Alle im Satz» und «Abernten» in der Pflanzenmaske (UX4-AK5) */
+export function alleAberntenVorgang(
+  teile: Teile,
+  pflanzungId: string,
+  ids: () => string,
+  jetzt: Date,
+  zeitzone: Zeitzone,
+): Vorgang {
+  return ernteVorgang(
+    teile,
+    { pflanzungIds: ernteUmfang(teile, pflanzungId), art: 'ab' },
+    ids,
+    jetzt,
+    zeitzone,
+  );
+}
+
 /**
  * «Kultur beenden oder verlängern?» am Satz (R1.7, A6): zuerst kultur_entscheid; bei fälliger Frage mit
  * war_faellig_am und aufgabe_schluessel (R5.1); bei beenden danach ernte ab je aktive Pflanzung nach id, kein

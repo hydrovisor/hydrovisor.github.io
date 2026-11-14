@@ -46,12 +46,12 @@ Stand 1.11.2026 · Auftrag 2 «Spezifikation». Bedeutungen stehen in Konzept v1
 | Pflanzung, Schwamm | `pflanzung` | `Pflanzung` |
 | Pflanzvorgang | `pflanzvorgang` | `Pflanzvorgang` |
 | Keimprüfung, Keimansicht, Keimeingabe | Ereignis `keimung` | `keimVorgang()`, `keimAnsicht()`, `KeimEingabe` |
-| Phasenfrage, Phasenstand, Phasenwechsel | Ereignis `phase_antwort` (`daten.phase`, `daten.antwort`) | `phasenStand()`, `phasenKarten()`, `antwortVorgang()`, `Fragekarte`; Prognose an einem Tag `phaseAm()` |
+| Phasenfrage, Phasenstand, Phasenwechsel | Ereignis `phase_antwort` (`daten.phase`, `daten.antwort`) | `phasenStand()`, `phasenKarten()`, `antwortVorgang()`, `Fragekarte`; Gruppen einer Karte `phasenGruppen()`, `gruppenAntworten()`, `Fragegruppe`; Prognose an einem Tag `phaseAm()` |
 | Phasen nachführen, Profilende, Phasenfolge | `v_sollwert` (`dauer`, `wechselmerkmal`, `anwendbar`) | `nachfuehrVorgang()`, `PROFILENDE`, `phasenfolge()`, `NachfuehrZeile` |
 | Datumskorrektur, Verlauf, Wissenskarte der Phase | `ersetzt_id`, `wissenseintrag` | `korrekturVorgang()`, `korrekturGrenze()`, `phasenVerlauf()`, `wissenFuer()` |
 | Erntekalender (Hauptseite «Ernte», UC15) | – (liest `satz`, `v_pflanzung_zustand`, `ereignis_satz`, `ereignis_pflanzung`, `art_kulturform`, `v_reservierung_aktiv`) | `erntekalender()`, `kalenderFenster()`, `Erntekalender`, `KalenderZeile`, `KalenderFenster`, `Erntefenster`, `ErnteTermin`, `NaechstesEreignis`, `KalenderKennzeichen`, Maske `Erntekalender` |
 | Phasenbalken (Baustein) | – | `Phasenbalken`, `PhasenAbschnitt`, `PhasenBuchstabe`, `PHASE_BUCHSTABE`, `PhasenLegende` |
-| Erntestand, Ernte möglich, Teilernte, Abernten | Ereignis `ernte` (`daten.art`), `art_kulturform` | `ernteStand()`, `ernteVorgang()`, `ernteAufgaben()`, `ErnteStand` |
+| Erntestand, Ernte möglich, Teilernte, Abernten | Ereignis `ernte` (`daten.art`), `art_kulturform` | `ernteStand()`, `ernteVorgang()`, `ernteUmfang()`, `alleAberntenVorgang()`, `ernteAufgaben()`, `ErnteStand` |
 | Kulturfrage, Kultur beenden oder verlängern | Ereignis `kultur_entscheid` am Satz | `kulturEntscheidVorgang()`, `kulturEntscheide()`, `verlaengerungTage()`, `VERLAENGERN_TAGE` |
 | Blüte melden, Schossen-Handlung | Ereignisse `beobachtung` {kategorie: schossen}, `schossen_handlung`, `art.schossen_handlung` | `schossenVorgang()`, `SchossenHandlung` |
 | Ausfall, Endzustand, Wiederherstellen | Ereignisse `abschluss`, `ernte` ab, `wiederherstellen` | `ausfallVorgang()`, `endzustand()`, `endeWiederherstellenVorgang()`, `endeRueckgaengig()`, `kuerzlichBeendet()` |
