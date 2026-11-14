@@ -533,3 +533,8 @@ a.hv-belegung, a.hv-belegung:hover { color: var(--ink); text-decoration: none; }
 .hv-topfpunkt-belegt { background: var(--brand); border-color: var(--brand); }
 .hv-topfpunkt-reserviert { border-style: dashed; border-color: var(--brand); }
 .hv-belegung-pfeil { flex: none; width: var(--size-icon); height: var(--size-icon); color: var(--ink-muted); }
+
+/* Aufklappzeile (Aufklappzeile.md): Titel links, Verb rechts, die ganze Zeile ist die Taste */
+.hv-aufklapp-knopf { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; column-gap: var(--space-3); width: 100%; min-height: var(--size-touch); padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; touch-action: manipulation; }
+[data-density="regal"] .hv-aufklapp-knopf { min-height: var(--size-touch-regal); }
+.hv-aufklapp-aktion { color: var(--brand); font-size: var(--text-label-size); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }

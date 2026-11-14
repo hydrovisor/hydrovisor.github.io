@@ -13,7 +13,7 @@ import { regalTeile, uid, type Teile } from '../fixtures/regal.ts';
 import { JETZT as RUNDGANG_JETZT, rundgangTeile } from '../fixtures/rundgang.ts';
 import { saatTeile, SORTE } from '../fixtures/saeen.ts';
 import { sichtenNachrechnen, stornoAufnehmen, zeileAufnehmen } from '../fixtures/sichten.ts';
-import { authNachbilden, sitzungSpeichern } from './hilfen.ts';
+import { authNachbilden, einrichtungZeigen, sitzungSpeichern } from './hilfen.ts';
 import { sorteWaehlen } from './sortenwahl-hilfe.ts';
 import { restNachbilden } from './rest.ts';
 
@@ -61,6 +61,8 @@ test('U04-AK1 Einrichtung mit 6 erledigten Punkten: eine Zeile «Punkte 1 bis 6 
   await oeffnen(page, einrichtungsTeile(6), '/#/heute', new Date('2026-12-01T08:00:00Z'));
   const liste = page.getByRole('list', { name: 'Einrichtung' });
   await expect(page.getByRole('heading', { name: 'Einrichtung · 6 von 9 erledigt' })).toBeVisible();
+  // UX1: mit fälligen Aufgaben ist die Einrichtung eingeklappt, ein Tipper zeigt sie
+  await einrichtungZeigen(page);
   const zeile = liste.getByRole('button', { name: /^Punkte 1 bis 6 erledigt/ });
   await expect(zeile).toHaveAttribute('aria-expanded', 'false');
   await expect(zeile).toHaveAccessibleName('Punkte 1 bis 6 erledigt anzeigen');

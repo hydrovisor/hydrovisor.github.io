@@ -148,7 +148,13 @@ test('UC3-AK5 nach Prüfschritten 1 bis 3 «in Betrieb (Volumen offen)», Aufgab
   await expect(page.getByRole('heading', { name: 'Heute', level: 1 })).toBeVisible();
   const aufgaben = page.getByRole('listitem').filter({ hasText: 'Gefäss prüfen' });
   await expect(aufgaben).toHaveCount(1);
-  await expect(aufgaben).toContainText('3.3');
+  // UX1: der Ort steht nur im Kopf der Ortskarte, nicht mehr in der Zeile
+  await expect(
+    page
+      .getByRole('region', { name: 'R-3.3', exact: true })
+      .getByRole('listitem')
+      .filter({ hasText: 'Gefäss prüfen' }),
+  ).toHaveCount(1);
   await knopf(aufgaben, 'Prüfen').click();
   await expect(page).toHaveURL(/#\/pruefen\/R-3\.3$/);
   await expect(page.locator('main[data-density="regal"]')).toBeVisible();

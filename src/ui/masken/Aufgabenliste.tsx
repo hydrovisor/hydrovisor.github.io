@@ -45,7 +45,7 @@ function wochentag(tag: string): string {
   return WOCHENTAG[new Date(Date.UTC(j, m - 1, d)).getUTCDay()] ?? '';
 }
 
-/** Hauptknopf je Typ: Maske der Erfassung, sonst die Maske des Orts */
+/** Ziel je Typ: Maske der Erfassung («Messen», «Prüfen», «Ansetzen»), sonst «Öffnen» für die Maske des Orts */
 function ziel(a: Aufgabe): { route: Route; text: string } | undefined {
   const code = a.ort?.code;
   if (a.typ === 'keimung_pruefen') return { route: { name: 'keimung', satz: a.bezug }, text: 'Prüfen' };
@@ -116,11 +116,37 @@ export function Aufgabenliste({ jetzt, faellig }: { jetzt: Date; faellig: readon
   const zeile = (a: Aufgabe) => {
     const z = ziel(a);
     const hinweis = a.hinweis === 'mitmarkiert' ? 'Pumpe mitmarkiert' : a.hinweis;
+    // UX1 (Plan 223): die Aktion der Aufgabe steht zuerst und ist betont; «Öffnen» ist nur dann der betonte Weg,
+    // wenn die Aufgabe keine eigene Aktion hat (Kurzprüfung, pH-Kontrolle; A2)
+    const maske = z && z.text !== 'Öffnen' ? z : undefined;
+    const oeffnen = z && !maske ? z : undefined;
+    const haupt =
+      a.typ === 'deckel_oeffnen' || a.typ === 'abdeckung_entfernen' ? (
+        <Button
+          variant="secondary"
+          disabled={sendet}
+          onClick={() => void senden(a, deckelVorgang(a, neueClientId(), uhrJetzt()))}
+        >
+          {a.typ === 'deckel_oeffnen' ? 'Deckel geöffnet' : 'Abdeckung entfernt'}
+        </Button>
+      ) : a.erledigtKnopf ? (
+        <Button
+          variant="secondary"
+          disabled={sendet}
+          onClick={() => void senden(a, erledigtVorgang(a, neueClientId(), uhrJetzt()))}
+        >
+          Erledigt
+        </Button>
+      ) : maske ? (
+        <a className="hv-btn hv-btn-secondary" href={hashZu(maske.route)}>
+          {maske.text}
+        </a>
+      ) : null;
     return (
       <li key={a.schluessel} className="hv-aufgabe hv-aufgabe-umbruch" data-gewicht={a.gewicht}>
+        {/* der Ort steht im Kopf der Ortskarte, nicht in jeder Zeile */}
         <span className="hv-aufgabe-text">
           {a.titel}
-          {a.ort ? ` · ${a.ort.code}` : ''}
           <br />
           <small>
             {a.grund}
@@ -128,9 +154,10 @@ export function Aufgabenliste({ jetzt, faellig }: { jetzt: Date; faellig: readon
           </small>
         </span>
         <span className="hv-aufgabe-knoepfe">
-          {z ? (
-            <a className="hv-btn hv-btn-secondary" href={hashZu(z.route)}>
-              {z.text}
+          {haupt}
+          {oeffnen && !haupt ? (
+            <a className="hv-btn hv-btn-secondary" href={hashZu(oeffnen.route)}>
+              {oeffnen.text}
             </a>
           ) : null}
           {a.morgen.erlaubt ? (
@@ -166,23 +193,10 @@ export function Aufgabenliste({ jetzt, faellig }: { jetzt: Date; faellig: readon
               Pegel ok
             </Button>
           ) : null}
-          {a.erledigtKnopf ? (
-            <Button
-              variant="ghost"
-              disabled={sendet}
-              onClick={() => void senden(a, erledigtVorgang(a, neueClientId(), uhrJetzt()))}
-            >
-              Erledigt
-            </Button>
-          ) : null}
-          {a.typ === 'deckel_oeffnen' || a.typ === 'abdeckung_entfernen' ? (
-            <Button
-              variant="ghost"
-              disabled={sendet}
-              onClick={() => void senden(a, deckelVorgang(a, neueClientId(), uhrJetzt()))}
-            >
-              {a.typ === 'deckel_oeffnen' ? 'Deckel geöffnet' : 'Abdeckung entfernt'}
-            </Button>
+          {oeffnen && haupt ? (
+            <a className="hv-btn hv-btn-ghost" href={hashZu(oeffnen.route)}>
+              {oeffnen.text}
+            </a>
           ) : null}
         </span>
       </li>

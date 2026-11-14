@@ -2,7 +2,7 @@
 // Datenstände aus tests/fixtures/einrichtung.ts; 360 × 640 aus der Konfiguration.
 import { expect, test, type Page } from '@playwright/test';
 import { einrichtungsTeile } from '../fixtures/einrichtung.ts';
-import { authNachbilden, sitzungSpeichern } from './hilfen.ts';
+import { authNachbilden, einrichtungZeigen, sitzungSpeichern } from './hilfen.ts';
 import { restNachbilden } from './rest.ts';
 
 const HELL = 'rgb(242, 245, 244)'; // --surface im hellen Thema (design-system/tokens.css)
@@ -29,6 +29,8 @@ const zustaende = (page: Page) =>
 
 /** U-04 (B6): erledigte Punkte am Anfang stehen eingeklappt in einer Zeile; aufklappen zeigt sie wieder einzeln */
 async function aufklappen(page: Page): Promise<void> {
+  // UX1: mit fälligen Aufgaben (ab den erfassten Gefässen) ist die Einrichtung selbst eingeklappt
+  await einrichtungZeigen(page);
   const zeile = liste(page).getByRole('button', { name: /^Punkte? 1( bis \d)? erledigt/ });
   await zeile.click();
   await expect(zeile).toHaveAttribute('aria-expanded', 'true');
@@ -73,6 +75,8 @@ test('UC0-AK1 neun Punkte in fester Reihenfolge, jeder hakt sich selbst ab, dana
   await page.reload();
   await expect(page.getByRole('heading', { name: 'Heute', level: 1 })).toBeVisible();
   await expect(liste(page)).toHaveCount(0);
+  // UX1 (Prüfer Runde 1): auch die eingeklappte Zeile «Einrichtung · n von 9 erledigt» ist weg
+  await expect(page.getByRole('heading', { name: /^Einrichtung ·/ })).toHaveCount(0);
 
   // Abschluss bleibt: ein später erfasstes Gefäss in Prüfung bringt die Liste nicht zurück (A4)
   stufe = 7;
@@ -81,6 +85,8 @@ test('UC0-AK1 neun Punkte in fester Reihenfolge, jeder hakt sich selbst ab, dana
   await geladen;
   await expect(page.getByRole('heading', { name: 'Heute', level: 1 })).toBeVisible();
   await expect(liste(page)).toHaveCount(0);
+  // UX1 (Prüfer Runde 1): auch die eingeklappte Zeile «Einrichtung · n von 9 erledigt» ist weg
+  await expect(page.getByRole('heading', { name: /^Einrichtung ·/ })).toHaveCount(0);
 });
 
 test('UC0-AK1 der aktive Punkt öffnet seinen Ablauf: Kalibrieren und Leitungswasser messen', async ({
@@ -145,6 +151,7 @@ test('UC0-AK1 Punkt 9 öffnet seit I1a-06 Säen', async ({ page }) => {
 test('UC0-AK1 Punkt 7 öffnet seit I1a-05 die Etiketten der Anlage', async ({ page }) => {
   await heuteMit(page, () => einrichtungsTeile(6));
   await expect(page.getByRole('heading', { name: 'Einrichtung · 6 von 9 erledigt' })).toBeVisible();
+  await einrichtungZeigen(page);
   await expect(liste(page).getByText('Ablauf folgt mit einer der nächsten Versionen')).toHaveCount(0);
   await liste(page).getByRole('link', { name: 'Etiketten drucken' }).click();
   await expect(page).toHaveURL(/#\/etiketten\?a=R$/);

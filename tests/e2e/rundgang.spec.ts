@@ -337,10 +337,19 @@ test('UC8 Heute zeigt «Rundgang starten (3 Orte)» und Ortskarten; Einträge «
 
   // bestehende Selektoren: genau ein Listeneintrag je Aufgabe, keine verschachtelten Einträge
   await expect(page.getByRole('listitem').filter({ hasText: 'Gefäss prüfen' })).toHaveCount(1);
-  await expect(page.getByRole('listitem').filter({ hasText: 'Gefäss prüfen · R-3.3' })).toHaveCount(1);
+  // UX1: der Ort steht nur im Kopf der Ortskarte, nicht mehr in der Zeile
+  await expect(
+    page
+      .getByRole('region', { name: 'R-3.3', exact: true })
+      .getByRole('listitem')
+      .filter({ hasText: 'Gefäss prüfen' }),
+  ).toHaveCount(1);
   for (const code of ['R-2.2', 'R-2.3'])
     await expect(
-      page.getByRole('listitem').filter({ hasText: `Reinigen, freie Löcher abdecken · ${code}` }),
+      page
+        .getByRole('region', { name: code, exact: true })
+        .getByRole('listitem')
+        .filter({ hasText: 'Reinigen, freie Löcher abdecken' }),
       code,
     ).toHaveCount(1);
 });

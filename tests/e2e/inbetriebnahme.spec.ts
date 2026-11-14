@@ -14,7 +14,7 @@ import { expect, test, type Locator, type Page } from '@playwright/test';
 import { DECKELTYPEN, leeresRegal, type Teile } from '../fixtures/regal.ts';
 import { netztopfPlatz, saatWissen } from '../fixtures/saeen.ts';
 import { sichtenNachrechnen, stornoAufnehmen, zeileAufnehmen } from '../fixtures/sichten.ts';
-import { authNachbilden, sitzungSpeichern } from './hilfen.ts';
+import { authNachbilden, einrichtungZeigen, sitzungSpeichern } from './hilfen.ts';
 import { sorteWaehlen } from './sortenwahl-hilfe.ts';
 import { restNachbilden } from './rest.ts';
 
@@ -116,6 +116,8 @@ async function heute(page: Page, erledigt: number): Promise<void> {
   await expect(page.getByRole('heading', { name: `Einrichtung · ${erledigt} von 9 erledigt` })).toBeVisible({
     timeout: 15_000,
   });
+  // UX1: sobald Aufgaben fällig sind (ab den erfassten Gefässen), ist die Einrichtung eingeklappt
+  await einrichtungZeigen(page);
 }
 
 /** tippt Ziffern über den Ziffernblock; zwischen zwei Tipps mehr als die 80 ms des Prellfilters */
@@ -290,6 +292,8 @@ test('IB-AK2 nach dem Seed führt die Checkliste Punkt für Punkt durch die Inbe
   await page.reload();
   await expect(page.getByRole('heading', { name: 'Heute', level: 1 })).toBeVisible({ timeout: 15_000 });
   await expect(liste(page)).toHaveCount(0);
+  // UX1 (Prüfer Runde 1): auch die eingeklappte Zeile «Einrichtung · n von 9 erledigt» ist weg
+  await expect(page.getByRole('heading', { name: /^Einrichtung ·/ })).toHaveCount(0);
 });
 
 test('IB-AK4 Seed nur mit Konstanten (ohne W0): Punkte 1 bis 8 gehen durch, die Aussaat wartet auf die Sorten', async ({
