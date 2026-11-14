@@ -8,7 +8,7 @@ import { verteilteAufgaben } from '../../src/domain/aufgaben-verteilung.ts';
 import { umsetzAufgaben } from '../../src/domain/anzucht/umsetzen.ts';
 import type { Teile } from '../../src/domain/anlage/teile.ts';
 import { KEIM_JETZT, KEIM_SATZ, KEIM_SATZ_2, keimTeile } from '../fixtures/keimung.ts';
-import { JETZT as RUNDGANG_JETZT, rundgangTeile } from '../fixtures/rundgang.ts';
+import { JETZT as RUNDGANG_JETZT, rundgangMessungDazu, rundgangTeile } from '../fixtures/rundgang.ts';
 import { pflanzSichtenNachrechnen, sichtenNachrechnen } from '../fixtures/sichten.ts';
 import { SATZ, UMSETZ_FAELLIG, umsetzTeile } from '../fixtures/umsetzen.ts';
 
@@ -59,5 +59,42 @@ describe('UX2-AK1 folgeAufgabe(): Ergänzungen der Runde 1', () => {
     expect(eintrag?.ort).toBe(aufgabe?.ort);
     expect(eintrag?.ort).toBeTruthy();
     expect(eintrag?.schluessel).toBe(`umsetzen|${SATZ.lollo}|${aufgabe?.faelligAm ?? ''}`);
+  });
+
+  // Ergänzung nach Prüferbefund 3 der Runde 1 zu #225 (Plan 225 Entscheid 7): Vorrang nur für eine neue Aufgabe am Ort
+  it('UX3-AK5 eine seit dem Öffnen an einem anderen Ort entstandene Aufgabe geht nicht vor', () => {
+    const vorher = folge(rundgangTeile(), RUNDGANG_JETZT).map((e) => e.schluessel);
+    // inzwischen Kratky-Messung «unter ⅓» in 3.1: «Nachfüllen Kratky» R-3.1 ist neu
+    const t = rundgangTeile();
+    rundgangMessungDazu(t, { kennung: '3.1', ec: 1.0, fuellstand: 'unter_drittel', nr: 81 });
+    sichtenNachrechnen(t);
+    expect(
+      folge(t, RUNDGANG_JETZT).some((e) => e.ziel?.name === 'nachfuellen' && e.ort === 'R-3.1'),
+      'Vorbedingung: Nachfüllen R-3.1 fällig',
+    ).toBe(true);
+    // nach der Messung in R-1.1 folgt R-2.1 im Laufweg, nicht das neue Nachfüllen in R-3.1
+    const f = folgeAufgabe(t, RUNDGANG_JETZT, Z, { ziel: { name: 'messen', code: 'R-1.1' }, vorher });
+    expect(f?.ziel).toEqual({ name: 'messen', code: 'R-2.1' });
+    // nach der Messung in R-3.1 selbst geht das neue Nachfüllen am selben Ort vor
+    const g = folgeAufgabe(t, RUNDGANG_JETZT, Z, { ziel: { name: 'messen', code: 'R-3.1' }, vorher });
+    expect(g?.ziel).toEqual({ name: 'nachfuellen', code: 'R-3.1' });
+  });
+
+  it('UX3-AK5 eine Aufgabe am selben Ort, die schon beim Öffnen fällig war, geht nicht vor', () => {
+    const t = rundgangTeile();
+    rundgangMessungDazu(t, { kennung: '3.1', ec: 1.0, fuellstand: 'unter_drittel', nr: 82 });
+    sichtenNachrechnen(t);
+    // die Maske wurde geöffnet, als das Nachfüllen R-3.1 schon in Heute stand
+    const vorher = folge(t, RUNDGANG_JETZT).map((e) => e.schluessel);
+    expect(vorher.some((s) => s.startsWith('nachfuellen_kratky|'))).toBe(true);
+    const f = folgeAufgabe(t, RUNDGANG_JETZT, Z, { ziel: { name: 'pruefen', code: 'R-3.3' }, vorher });
+    // nach «Gefäss prüfen» R-3.3 (letzte Karte) beginnt die Suche oben: Messen R-1.1, nicht das ältere Nachfüllen
+    expect(f?.ziel).toEqual({ name: 'messen', code: 'R-1.1' });
+    // und nach der Messung in R-2.1 folgt das Nachfüllen R-3.1 an seiner Stelle im Laufweg
+    const g = folgeAufgabe(t, RUNDGANG_JETZT, Z, { ziel: { name: 'messen', code: 'R-2.1' }, vorher });
+    expect(g?.ziel).toEqual({ name: 'nachfuellen', code: 'R-3.1' });
+    // am Ort selbst (Kurzprüfung R-3.1 gespeichert): das ältere Nachfüllen geht nicht vor, es folgt R-3.3 im Laufweg
+    const h = folgeAufgabe(t, RUNDGANG_JETZT, Z, { ziel: { name: 'kurzpruefung', code: 'R-3.1' }, vorher });
+    expect(h?.ziel).toEqual({ name: 'pruefen', code: 'R-3.3' });
   });
 });

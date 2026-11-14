@@ -38,11 +38,12 @@ import { neueClientId, schreiben } from '../../daten/schreiben.ts';
 import type { Vorgang } from '../../domain/datenpfad/erfassung.ts';
 import { Button } from '../bausteine/Button.tsx';
 import { Notice } from '../bausteine/Notice.tsx';
-import { StatusIcon } from '../bausteine/StatusIcon.tsx';
-import { NumPad, type Taste } from '../bausteine/NumPad.tsx';
+import { NumPad } from '../bausteine/NumPad.tsx';
 import { useBuendel } from '../buendel.tsx';
 import { hashZu, oeffnen } from '../router.ts';
 import { Messmaske, type RundgangMessung } from './Messen.tsx';
+import { Kurzpruefung, Rahmen } from './Kurzpruefung.tsx';
+import { KratkyNachfuellen, kratkyAnzeige, literTippen } from './NachfuellenKratky.tsx';
 import type { Groesse } from '../../domain/messung/eingabe.ts';
 import '../rundgang.css';
 
@@ -57,38 +58,6 @@ const KOMPONENTE: Readonly<Record<string, string>> = {
 const KENNUNG_MS = 1000;
 
 type Ergebnis = Awaited<ReturnType<typeof schreiben>>;
-
-function Rahmen({
-  titel,
-  children,
-  beenden,
-  zuHeute = true,
-}: {
-  titel: string;
-  children: React.ReactNode;
-  beenden?: () => void;
-  /** «Zu Heute» im Kopf: navigiert nur, der Rundgang lässt sich fortsetzen (Plan 224 A10) */
-  zuHeute?: boolean;
-}) {
-  return (
-    <main className="hv-seite hv-rundgang" data-density="regal">
-      <header className="hv-messen-kopf">
-        <h1 className="hv-messen-titel">{titel}</h1>
-        {beenden ? (
-          <Button variant="ghost" size="compact" onClick={beenden}>
-            Rundgang beenden
-          </Button>
-        ) : null}
-        {zuHeute ? (
-          <a className="hv-btn hv-btn-ghost hv-btn-compact" href={hashZu({ name: 'heute' })}>
-            Zu Heute
-          </a>
-        ) : null}
-      </header>
-      {children}
-    </main>
-  );
-}
 
 export function Rundgang({ kuerzel }: { kuerzel: string }) {
   const { buendel, liest } = useBuendel();
@@ -344,13 +313,7 @@ export function Rundgang({ kuerzel }: { kuerzel: string }) {
     const g = gefaessAm(teile, rOrt.platzId);
     const volumenL = Number(g?.betriebsvolumen_l ?? 0);
     const k = messung ? kratkySchritt(teile, rOrt.platzId, messung, ZEITZONE) : undefined;
-    const hoechstens = k && 'hoechstensLiter' in k ? k.hoechstensLiter / 10 : undefined;
-    const text =
-      k?.art === 'nur_wasser'
-        ? `Nur Wasser, höchstens ${(k.hoechstensLiter / 10).toFixed(1)} l`
-        : k?.art === 'halbe_konzentration'
-          ? `Halbe Konzentration ${(k.dMlL / 100).toFixed(2)} ml/L, höchstens ${(k.hoechstensLiter / 10).toFixed(1)} l`
-          : 'Nach Bedarf nachfüllen';
+    const { text, hoechstens } = kratkyAnzeige(k);
     const aufgabe = rOrt.aufgaben.find((a) => a.typ === 'nachfuellen_kratky');
     return (
       <KratkyNachfuellen
@@ -492,117 +455,6 @@ export function Rundgang({ kuerzel }: { kuerzel: string }) {
   );
 }
 
-/** Sammel-Tipp der Ebene: «Alles ok» oder Ausnahmen einzeln (Wort und Symbol, nicht nur Farbe) */
-/** Prüfpunkt als Frage (U-04, B8): «Pumpe sprudelt» wird «Pumpe sprudelt?» */
-const frage = (text: string) => (text.endsWith('?') ? text : `${text}?`);
-
-/** Zustand der Kurzprüfung als Wort mit Symbol 32 dp, nie nur über Farbe (U-04, B8): ja, nach Tipp nein */
-function Urteil({ abweichung }: { abweichung: boolean }) {
-  return (
-    <span className="hv-rundgang-urteil">
-      <StatusIcon ton={abweichung ? 'danger' : 'ok'} />
-      {abweichung ? 'nein' : 'ja'}
-    </span>
-  );
-}
-
-function Kurzpruefung({
-  ebene,
-  titel,
-  sendet,
-  fehler,
-  beenden,
-  onSpeichern,
-}: {
-  ebene: RundgangEbene;
-  titel: string;
-  sendet: boolean;
-  fehler: React.ReactNode;
-  beenden: () => void;
-  onSpeichern: (abweichungen: ReadonlySet<string>) => void;
-}) {
-  const [abw, setAbw] = useState<ReadonlySet<string>>(new Set());
-  const umschalten = (key: string) =>
-    setAbw((alt) => {
-      const neu = new Set(alt);
-      if (neu.has(key)) neu.delete(key);
-      else neu.add(key);
-      return neu;
-    });
-  return (
-    <Rahmen titel={titel} beenden={beenden}>
-      {fehler}
-      <h2 className="hv-rundgang-ebene">{`${ebene.name} · Pumpen laufen, Licht an, Lüfter läuft`}</h2>
-      {ebene.mitLichtLuefter && ebene.bereichId !== null ? (
-        <div className="hv-rundgang-kannen" role="group" aria-label="Licht und Lüfter">
-          {(
-            [
-              ['licht', 'Licht an?'],
-              ['luefter', 'Lüfter läuft?'],
-            ] as const
-          ).map(([punkt, text]) => {
-            const key = `${String(ebene.bereichId)}|${punkt}`;
-            const ab = abw.has(key);
-            return (
-              <Button
-                key={key}
-                variant="secondary"
-                className="hv-rundgang-punkt"
-                aria-pressed={ab}
-                onClick={() => umschalten(key)}
-              >
-                <span>{text}</span>
-                <Urteil abweichung={ab} />
-              </Button>
-            );
-          })}
-        </div>
-      ) : null}
-      <ul className="hv-rundgang-liste" aria-label="Kurzprüfung">
-        {ebene.kurzpruefung.map((z) => {
-          const key = `${z.platzId}|${z.punkt}`;
-          const ab = abw.has(key);
-          return (
-            <li key={key}>
-              <Button
-                variant="secondary"
-                block
-                className="hv-rundgang-punkt"
-                aria-pressed={ab}
-                onClick={() => umschalten(key)}
-              >
-                <span>{`${kennung(z.code)} ${frage(z.text)}`}</span>
-                <Urteil abweichung={ab} />
-                {z.vermerk ? (
-                  <span className="hv-rundgang-vermerk">
-                    {z.vermerk === 'mitmarkiert' ? 'Pumpe mitmarkiert' : 'Belüftung prüfen'}
-                  </span>
-                ) : null}
-              </Button>
-            </li>
-          );
-        })}
-      </ul>
-      <div className="hv-rundgang-fuss">
-        <Button block disabled={sendet} onClick={() => onSpeichern(abw)}>
-          {abw.size === 0
-            ? 'Alles ok'
-            : `Speichern mit ${String(abw.size)} Abweichung${abw.size === 1 ? '' : 'en'}`}
-        </Button>
-      </div>
-    </Rahmen>
-  );
-}
-
-/** Liter über den Ziffernblock: höchstens eine Nachkommastelle, höchstens vier Zeichen */
-function literTippen(alt: string, t: Taste): string {
-  if (t === 'leeren') return '';
-  if (t === 'zurueck') return alt.slice(0, -1);
-  if (t === '.') return alt.includes('.') || alt === '' ? alt : `${alt}.`;
-  if (/^\d$/.test(t)) return /\.\d$/.test(alt) || alt.length >= 4 ? alt : `${alt}${t}`;
-  return alt;
-}
-
 /** Nachfüllen DWC, Konstantpegel, Station (R4.9): Kannen wählen, Dosis je Komponente, «Nachgefüllt» */
 function Nachfuellen({
   code,
@@ -707,47 +559,6 @@ function Nachfuellen({
           Nachgefüllt
         </Button>
       </div>
-    </Rahmen>
-  );
-}
-
-/** Nachfüllen Kratky (R4.10): Anzeige aus kratkyNachfuellen(), Menge in Litern über den Ziffernblock */
-function KratkyNachfuellen({
-  code,
-  text,
-  hoechstens,
-  sendet,
-  fehler,
-  onNachgefuellt,
-}: {
-  code: string;
-  text: string;
-  hoechstens?: number;
-  sendet: boolean;
-  fehler: React.ReactNode;
-  onNachgefuellt: (liter: number) => void;
-}) {
-  const [eingabe, setEingabe] = useState('');
-  const liter = Number(eingabe);
-  const zuViel = hoechstens !== undefined && liter > hoechstens;
-  const tippen = (t: Taste) => setEingabe((alt) => literTippen(alt, t));
-  return (
-    <Rahmen titel={`${code} Nachfüllen Kratky`}>
-      {fehler}
-      <p className="hv-rundgang-ebene">{text}</p>
-      {zuViel ? (
-        <Notice kompakt tone="warn" title={`Höchstens ${String(hoechstens)} l, sonst fehlt die Luftzone`} />
-      ) : null}
-      <NumPad
-        onTaste={tippen}
-        echo={eingabe === '' ? 'Liter' : `${eingabe} l`}
-        ohnePlusMinus
-        speichern={
-          <Button block disabled={sendet || !(liter > 0) || zuViel} onClick={() => onNachgefuellt(liter)}>
-            Nachgefüllt
-          </Button>
-        }
-      />
     </Rahmen>
   );
 }

@@ -30,6 +30,8 @@ import { SorteNeu } from './masken/SorteNeu.tsx';
 import { Sorten } from './masken/Sorten.tsx';
 import { Notfallblatt } from './masken/Notfallblatt.tsx';
 import { Rundgang } from './masken/Rundgang.tsx';
+import { KurzpruefungOrt } from './masken/Kurzpruefung.tsx';
+import { NachfuellenOrt } from './masken/NachfuellenKratky.tsx';
 import { Stromausfall } from './masken/Stromausfall.tsx';
 import { Anlagen } from './masken/Anlagen.tsx';
 import { Mehr } from './masken/Mehr.tsx';
@@ -143,6 +145,10 @@ function Masken({ imAblauf }: { imAblauf: boolean }) {
         <Notfallblatt {...(maske.kuerzel ? { kuerzel: maske.kuerzel } : {})} />
       ) : maske.name === 'rundgang' ? (
         <Rundgang kuerzel={maske.kuerzel} />
+      ) : maske.name === 'kurzpruefung' ? (
+        <KurzpruefungOrt key={maske.code} code={maske.code} {...(maske.von ? { von: maske.von } : {})} />
+      ) : maske.name === 'nachfuellen' ? (
+        <NachfuellenOrt key={maske.code} code={maske.code} {...(maske.von ? { von: maske.von } : {})} />
       ) : maske.name === 'stromausfall' ? (
         <Stromausfall />
       ) : maske.name === 'push' ? (

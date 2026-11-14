@@ -51,6 +51,9 @@ export type Route =
   | { name: 'kalibrieren'; datenart?: 'demo' | 'test' }
   // Plan 30: Rundgang je Anlage, Stromausfall erfassen
   | { name: 'rundgang'; kuerzel: string }
+  // Plan 225: Kurzprüfung eines Orts und Nachfüllen Kratky aus Heute und Gefäss; «von» führt zurück zum Gefäss
+  | { name: 'kurzpruefung'; code: string; von?: 'gefaess' }
+  | { name: 'nachfuellen'; code: string; von?: 'gefaess' }
   | { name: 'stromausfall' };
 
 const KUERZEL = /^[A-Z]{1,3}$/;
@@ -143,6 +146,15 @@ export function routeAusHash(hash: string): Route {
       ...(nachmessen && UUID.test(nachmessen) ? { nachmessen } : {}),
     };
   }
+  const amOrt = /^\/(kurzpruefung|nachfuellen)\/([A-Za-z0-9.-]+)$/.exec(pfad);
+  if (amOrt?.[1] && amOrt[2]) {
+    const code = decodeURIComponent(amOrt[2]);
+    if (!CODE.test(code)) return { name: 'heute' };
+    const name = amOrt[1] === 'kurzpruefung' ? 'kurzpruefung' : 'nachfuellen';
+    return new URLSearchParams(abfrage).get('von') === 'gefaess'
+      ? { name, code, von: 'gefaess' }
+      : { name, code };
+  }
   const ansatz = /^\/ansatz\/([A-Za-z0-9.-]+)$/.exec(pfad);
   if (ansatz?.[1]) return { name: 'ansatz', code: decodeURIComponent(ansatz[1]) };
   const aendern = /^\/gefaess\/([A-Za-z0-9.-]+)\/aendern$/.exec(pfad);
@@ -229,6 +241,8 @@ export function hashZu(route: Route): string {
     return `#/messen/${route.code}`;
   }
   if (route.name === 'ansatz') return `#/ansatz/${route.code}`;
+  if (route.name === 'kurzpruefung' || route.name === 'nachfuellen')
+    return `#/${route.name}/${route.code}${route.von ? '?von=gefaess' : ''}`;
   if (route.name === 'gefaess') return `#/gefaess/${route.code}`;
   if (route.name === 'gefaess-aendern')
     return `#/gefaess/${route.code}/aendern${route.teil ? `?teil=${route.teil}` : ''}`;
