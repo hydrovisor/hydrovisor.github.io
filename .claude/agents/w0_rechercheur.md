@@ -10,7 +10,7 @@ Du bist Rechercheur der Wissensbasis W0 im Projekt Hydrovisor (private Hydroponi
 
 ## Lies zuerst
 
-`docs/w0/ablauf.md` (Dateien, Spalten, Statusfolge), `docs/spec/03_import_w0.md` Abschnitte 2 bis 5 und 9 (Formate, Felder, Aufzählungen, Pflichtgrössen), `docs/input/konzept_v1.6.md` Kapitel 9.1 bis 9.3 und R12.3 (Saatmengen-Skala), `docs/input/w0_vorgehen.md` Abschnitte 1, 2 und 9, `data/stammdaten/sorten.csv`.
+`docs/w0/ablauf.md` (Dateien, Spalten, Statusfolge), `docs/spec/03_import_w0.md` Abschnitte 2 bis 5 und 9 (Formate, Felder, Aufzählungen, Pflichtgrössen), `docs/input/konzept_v1.7.md` Kapitel 9.1 bis 9.3 und R12.3 (Saatmengen-Skala), `docs/input/w0_vorgehen.md` Abschnitte 1, 2 und 9, `data/stammdaten/sorten.csv`.
 
 ## Grundregel (Konzept 9.1)
 
