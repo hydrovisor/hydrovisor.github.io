@@ -11,6 +11,8 @@ import { Button } from '../bausteine/Button.tsx';
 import { Checklist } from '../bausteine/Checklist.tsx';
 import { useBuendel } from '../buendel.tsx';
 import { abschlussGemerkt, abschlussMerken, einweichenEndeLesen, einweichenStarten } from '../einweichen.ts';
+import { Aufklappzeile } from '../bausteine/Aufklappzeile.tsx';
+import { einrichtungOffenGemerkt, einrichtungOffenMerken } from '../heutePosition.ts';
 import { hashZu } from '../router.ts';
 
 function Aktion({
@@ -100,8 +102,10 @@ function Aktion({
   return <span className="hv-check-menge">Ablauf folgt mit einer der nächsten Versionen</span>;
 }
 
-export function Einrichtung() {
+/** `eingeklappt`: in Heute stehen fällige Aufgaben, die Liste ist nur eine Zeile mit dem Stand (UX1, Plan 223) */
+export function Einrichtung({ eingeklappt = false }: { eingeklappt?: boolean }) {
   const { buendel } = useBuendel();
+  const [geoeffnet, setGeoeffnet] = useState(() => einrichtungOffenGemerkt());
   const [jetzt, setJetzt] = useState(() => Date.now());
   const [ende, setEnde] = useState(() => einweichenEndeLesen());
   const [gemerkt] = useState(() => abschlussGemerkt());
@@ -133,26 +137,41 @@ export function Einrichtung() {
     setJetzt(neu);
   };
   const erledigt = stand.punkte.filter((p) => p.erledigt).length;
+  const titel = `Einrichtung · ${String(erledigt)} von 9 erledigt`;
+  const offen = !eingeklappt || geoeffnet;
   return (
     <section className="hv-einrichtung" aria-labelledby="einrichtung-titel">
       <h2 id="einrichtung-titel" className="hv-einrichtung-titel">
-        Einrichtung · {erledigt} von 9 erledigt
+        {eingeklappt ? (
+          <Aufklappzeile
+            titel={titel}
+            offen={offen}
+            onWechsel={(o) => {
+              einrichtungOffenMerken(o);
+              setGeoeffnet(o);
+            }}
+          />
+        ) : (
+          titel
+        )}
       </h2>
-      <Checklist
-        variante="selbst"
-        label="Einrichtung"
-        erledigteZusammenfassen
-        jetzt={jetzt}
-        zeilen={stand.punkte.map((p) => ({
-          nr: p.nr,
-          titel: p.titel,
-          zustand: p.zustand,
-          ...(p.timerEnde !== undefined ? { timerEnde: p.timerEnde } : {}),
-          ...(p.zustand === 'aktiv'
-            ? { aktion: <Aktion punkt={p} starten={starten} ueberspringen={ueberspringen} /> }
-            : {}),
-        }))}
-      />
+      {offen ? (
+        <Checklist
+          variante="selbst"
+          label="Einrichtung"
+          erledigteZusammenfassen
+          jetzt={jetzt}
+          zeilen={stand.punkte.map((p) => ({
+            nr: p.nr,
+            titel: p.titel,
+            zustand: p.zustand,
+            ...(p.timerEnde !== undefined ? { timerEnde: p.timerEnde } : {}),
+            ...(p.zustand === 'aktiv'
+              ? { aktion: <Aktion punkt={p} starten={starten} ueberspringen={ueberspringen} /> }
+              : {}),
+          }))}
+        />
+      ) : null}
     </section>
   );
 }

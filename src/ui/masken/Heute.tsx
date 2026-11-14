@@ -1,5 +1,5 @@
-// Heute (Kontext Regal, docs/spec/05_masken.md 3.1): Kopf, Hinweise, Einrichtungs-Checkliste (Plan 18), Ortskarten aus
-// der Aufgaben-Rechnung (Plan 27, Plan 30), unten im Daumenbereich «Rundgang starten (n Orte)» und «Stromausfall
+// Heute (Kontext Regal, docs/spec/05_masken.md 3.1): Kopf, Hinweise, Ortskarten aus der Aufgaben-Rechnung (Plan 27,
+// Plan 30), darunter Phasenkarten, Einrichtungs-Checkliste (Plan 18) und Push-Hinweis (UX1, Plan 223), unten im Daumenbereich «Rundgang starten (n Orte)» und «Stromausfall
 // erfassen» (Plan 30).
 import { useState } from 'react';
 import { useAblaufOffen } from '../../ablauf/offen.ts';
@@ -31,6 +31,7 @@ import { hinweisNeueVersionZeigen } from '../neueVersion.ts';
 import { NeueVersionHinweis } from '../NeueVersion.tsx';
 import { usePushStand } from '../pushZustand.ts';
 import { hashZu } from '../router.ts';
+import { useHeutePosition } from '../heutePosition.ts';
 
 /** Text der Messfälligkeit in der Ortskachel (Übergang bis zu den Karten in I1b) */
 function faelligText(f: Messfaelligkeit, rolle: string): string {
@@ -66,6 +67,7 @@ export function Heute() {
   // die fälligen Aufgaben einmal je Render für Karten, Übersicht und Rundgang (Plan 30, UC8-AK9), mit den nach
   // R5.6 vorgezogenen Ansätzen (Plan 113); der Rundgang führt keine Ansätze und bleibt davon unberührt (A6)
   const teile = buendel?.teile;
+  useHeutePosition(teile !== undefined);
   const faellig = teile
     ? aufgabenSicher(() => verteilteAufgaben(teile, einstellungenAus(teile), new Date(jetzt), ZEITZONE), [])
     : [];
@@ -90,13 +92,17 @@ export function Heute() {
       {keinZugang ? <Notice tone="warn" title="Kein Zugang für dieses Konto" /> : null}
       {buendel && !keinZugang ? <Ablaeufe jetzt={new Date(jetzt)} faellig={faellig} /> : null}
       {!keinZugang && anzeige.hinweis ? <Notice title={anzeige.hinweis} /> : null}
-      {buendel && !keinZugang ? <Einrichtung /> : null}
       {zeigen ? <NeueVersionHinweis /> : null}
-      {buendel && !keinZugang ? <PushHinweis /> : null}
-      {buendel && !keinZugang ? <Phasenkarten jetzt={new Date(jetzt)} /> : null}
+      {/* UX1 (Plan 223): zuerst, was heute zu tun ist; Phasenkarten, Einrichtung und Push-Hinweis darunter */}
       {buendel && !keinZugang ? <Aufgabenliste jetzt={new Date(jetzt)} faellig={faellig} /> : null}
       {buendel && !keinZugang ? <Umsetzaufgaben jetzt={new Date(jetzt)} /> : null}
       {buendel && !keinZugang ? <Erntekarten jetzt={new Date(jetzt)} /> : null}
+      {buendel && !keinZugang ? <Phasenkarten jetzt={new Date(jetzt)} /> : null}
+      {/* eingeklappt, solange darüber Aufgaben stehen; «Kalibrieren» steht im Kopf «Messgerät» darunter (A3) */}
+      {buendel && !keinZugang ? (
+        <Einrichtung eingeklappt={faellig.some((a) => a.typ !== 'kalibrieren')} />
+      ) : null}
+      {buendel && !keinZugang ? <PushHinweis /> : null}
       {buendel ? <Uebersicht jetzt={new Date(jetzt)} faellig={faellig} /> : null}
       {buendel && !keinZugang ? <RundgangFuss jetzt={new Date(jetzt)} faellig={faellig} /> : null}
     </main>
