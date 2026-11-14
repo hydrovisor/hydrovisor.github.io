@@ -99,12 +99,38 @@ export function vorratAus(t: Teile, sorteId: string, jetzt: Date): VorratStand {
   return vorratStand(ereignisse, packungen, sorteId, jetzt);
 }
 
+/** Eintrag im Verlauf: ein Ereignis oder die neue Packung, die eine aufgebrauchte Sorte wieder vorrätig macht */
+export interface VorratVerlaufEintrag {
+  typ: VorratTyp | 'neue_packung';
+  giltAb: string;
+}
+
+/**
+ * Verlauf der Sorte, das jüngste zuerst. Mit Packungen steht direkt über jedem «aufgebraucht» die erste danach
+ * erfasste, nicht stornierte Packung derselben Sorte bis jetzt als «neue_packung» (wieder vorrätig, A5 wie
+ * vorratStand), sofern sie vor dem nächstjüngeren gültigen Ereignis erfasst wurde (#219, Plan 219 A7, A8).
+ */
 export function vorratVerlauf(
   ereignisse: readonly VorratEreignisZeile[],
   sorteId: string,
   jetzt: Date,
-): { typ: VorratTyp; giltAb: string }[] {
-  return gueltige(ereignisse, sorteId, jetzt).map((e) => ({ typ: e.typ as VorratTyp, giltAb: e.gilt_ab }));
+  packungen: readonly PackungZeit[] = [],
+): VorratVerlaufEintrag[] {
+  const liste = gueltige(ereignisse, sorteId, jetzt);
+  const eigene = packungen
+    .filter((p) => p.sorte_id === sorteId && p.storniert_am === null && bisJetzt(p.erfasst_am, jetzt))
+    .sort((a, b) => zeitVergleich(a.erfasst_am, b.erfasst_am));
+  const verlauf: VorratVerlaufEintrag[] = [];
+  liste.forEach((e, i) => {
+    if (e.typ === 'aufgebraucht') {
+      const naechstes = i > 0 ? liste[i - 1] : undefined;
+      const neue = eigene.find((p) => zeitVergleich(p.erfasst_am, e.erfasst_am) > 0);
+      if (neue && (!naechstes || zeitVergleich(neue.erfasst_am, naechstes.erfasst_am) < 0))
+        verlauf.push({ typ: 'neue_packung', giltAb: neue.erfasst_am });
+    }
+    verlauf.push({ typ: e.typ as VorratTyp, giltAb: e.gilt_ab });
+  });
+  return verlauf;
 }
 
 /**

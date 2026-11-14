@@ -19,8 +19,10 @@ import {
   vorratAus,
   vorratVerlauf,
   vorratVorgang,
+  type PackungZeit,
   type VorratEreignisZeile,
   type VorratTyp,
+  type VorratVerlaufEintrag,
 } from '../../domain/sorten/vorrat.ts';
 import { kalendertag, ZEITZONE } from '../../domain/zeit.ts';
 import { APP_VERSION } from '../../konstanten.ts';
@@ -33,6 +35,7 @@ import { useBuendel } from '../buendel.tsx';
 import { RechercheHinweis } from '../RechercheHinweis.tsx';
 import { hashZu } from '../router.ts';
 import { fotoVorgangSenden, tuetenfotoHochladen, vorratSenden } from '../saatgutSpeichern.ts';
+import { useSpeichersperre } from '../speichersperre.ts';
 import { TuetenfotoAnzeige } from '../TuetenfotoAnzeige.tsx';
 import '../sorten.css';
 
@@ -58,6 +61,9 @@ const KULTURFORM_NAME: Record<string, string> = {
 
 const SEITE_LABEL: Record<TuetenfotoSeite, string> = { vorne: 'Vorderseite', hinten: 'Rückseite' };
 
+/** Uhr der Oberfläche (G2: Date.now() nur hier) */
+const jetzt = () => new Date(Date.now());
+
 /** offener Vorgang für «Speichern wiederholen» und die client_id, die das Bündel danach zeigen muss */
 interface Offen {
   vorgang: Vorgang;
@@ -67,9 +73,9 @@ interface Offen {
 
 /**
  * Card «Tütenfoto» am Schreibtisch (Plan 207): Anzeige über signierte Links, je Seite «Tütenfoto ergänzen» oder «Foto
- * ersetzen». Wahl → verkleinern → hochladen → Storno der alten Zeile plus neue Zeile über schreiben(); scheitert das
+ * ersetzen». Wahl → verkleinern → hochladen → neue Zeile, dann Storno der alten über schreiben() (#219); scheitert das
  * Schreiben, sendet «Speichern wiederholen» denselben Vorgang (A12). Die Fotofelder bleiben gesperrt, bis das Bündel die
- * neue Zeile zeigt, damit kein zweites Ersetzen die alte Zeile übersieht (A11).
+ * neue Zeile zeigt, höchstens bis zur Frist von useSpeichersperre (A11, #219).
  */
 function TuetenfotoKarte({ sorteId }: { sorteId: string }) {
   const { buendel } = useBuendel();
@@ -78,15 +84,16 @@ function TuetenfotoKarte({ sorteId }: { sorteId: string }) {
   const [laeuft, setLaeuft] = useState(false);
   const [meldung, setMeldung] = useState<string>();
   const [offen, setOffen] = useState<Offen>();
-  const [erwartet, setErwartet] = useState<{ seite: TuetenfotoSeite; clientId: string }>();
-  const wartetAufBuendel = erwartet !== undefined && aktuell[erwartet.seite]?.clientId !== erwartet.clientId;
-  const gesperrt = laeuft || wartetAufBuendel;
+  const { wartet, erwarten } = useSpeichersperre<{ seite: TuetenfotoSeite; clientId: string }>(
+    (e) => aktuell[e.seite]?.clientId === e.clientId,
+  );
+  const gesperrt = laeuft || wartet;
 
   async function senden(o: Offen) {
     const r = await fotoVorgangSenden(o.vorgang);
     if (r === 'gespeichert') {
       setOffen(undefined);
-      setErwartet({ seite: o.seite, clientId: o.clientId });
+      erwarten({ seite: o.seite, clientId: o.clientId });
       return;
     }
     // «abweichend»: dasselbe Senden ergäbe wieder «abweichend», kein Wiederholen anbieten
@@ -156,18 +163,16 @@ function TuetenfotoKarte({ sorteId }: { sorteId: string }) {
   );
 }
 
-/** Uhr der Oberfläche (G2: Date.now() nur hier) */
-const jetzt = () => new Date(Date.now());
-
 /** Kalendertag in Zürich als «TT.MM.JJJJ» (G2) */
 function tagAnzeige(zeitpunkt: string): string {
   const [j, m, t] = kalendertag(new Date(zeitpunkt), ZEITZONE).split('-');
   return `${t ?? ''}.${m ?? ''}.${j ?? ''}`;
 }
 
-const VORRAT_TEXT: Record<VorratTyp, string> = {
+const VORRAT_TEXT: Record<VorratVerlaufEintrag['typ'], string> = {
   aufgebraucht: 'Kein Saatgut mehr',
   vorraetig: 'Wieder vorrätig',
+  neue_packung: 'Neue Packung · wieder vorrätig',
 };
 
 /**
@@ -181,13 +186,14 @@ function VorratKarte({ sorteId }: { sorteId: string }) {
   const ereignisse = (teile['vorrat_ereignis'] ?? []) as VorratEreignisZeile[];
   const nun = jetzt();
   const stand = vorratAus(teile, sorteId, nun);
-  const verlauf = vorratVerlauf(ereignisse, sorteId, nun);
+  const verlauf = vorratVerlauf(ereignisse, sorteId, nun, (teile['saatgut'] ?? []) as PackungZeit[]);
   const [laeuft, setLaeuft] = useState(false);
   const [meldung, setMeldung] = useState<string>();
   const [offen, setOffen] = useState<Vorgang>();
-  const [erwartet, setErwartet] = useState<string>();
-  const wartetAufBuendel = erwartet !== undefined && !ereignisse.some((e) => e.client_id === erwartet);
-  const gesperrt = laeuft || wartetAufBuendel;
+  const { wartet, erwarten } = useSpeichersperre<string>((clientId) =>
+    ereignisse.some((e) => e.client_id === clientId),
+  );
+  const gesperrt = laeuft || wartet;
 
   async function senden(vorgang: Vorgang, clientId: string) {
     setLaeuft(true);
@@ -196,7 +202,7 @@ function VorratKarte({ sorteId }: { sorteId: string }) {
       const r = await vorratSenden(vorgang);
       if (r === 'gespeichert') {
         setOffen(undefined);
-        setErwartet(clientId);
+        erwarten(clientId);
         return;
       }
       setOffen(r.wiederholbar ? vorgang : undefined);
