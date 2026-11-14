@@ -28,6 +28,7 @@ import { APP_VERSION } from '../../konstanten.ts';
 import { Button } from '../bausteine/Button.tsx';
 import { Choice } from '../bausteine/Choice.tsx';
 import { Notice } from '../bausteine/Notice.tsx';
+import { Kamera } from '../bausteine/Kamera.tsx';
 import { PhotoField } from '../bausteine/PhotoField.tsx';
 import { TextField } from '../bausteine/TextField.tsx';
 import { useBuendel } from '../buendel.tsx';
@@ -91,6 +92,8 @@ export function SaatgutErfassen({ onSchliessen }: { onSchliessen: () => void }) 
   const [stand, setStand] = useState<Speicherstand>();
   const [ergebnis, setErgebnis] = useState<{ sorteId: string; text: string }>();
   const [recherche, setRecherche] = useState<RechercheErgebnis | 'laeuft'>();
+  /** Kamera in der App offen (Plan kamera); vorne: schon aufgenommene Vorderseite */
+  const [kamera, setKamera] = useState<{ vorne?: Foto }>();
   /** aktuelle sorte_id; ein spätes Ergebnis der Recherche einer früheren Tüte überschreibt nichts */
   const aktiveSorte = useRef(ids.sorteId);
 
@@ -139,13 +142,13 @@ export function SaatgutErfassen({ onSchliessen }: { onSchliessen: () => void }) 
   }
 
   /** lädt jedes gewählte, noch nicht hochgeladene Foto in den Ordner der neuen sorte_id (Plan 37 A16) */
-  async function hochladen(): Promise<
-    { seite: TuetenfotoSeite; pfad: string }[] | { fehler: 'lesbar' | 'hochladen' }
-  > {
+  async function hochladen(
+    quelle: Partial<Record<TuetenfotoSeite, Foto>> = fotos,
+  ): Promise<{ seite: TuetenfotoSeite; pfad: string }[] | { fehler: 'lesbar' | 'hochladen' }> {
     const liste: { seite: TuetenfotoSeite; pfad: string }[] = [];
     const neu = { ...hochgeladen };
     for (const seite of ['vorne', 'hinten'] as const) {
-      const foto = fotos[seite];
+      const foto = quelle[seite];
       if (!foto) continue;
       const schon = neu[seite];
       if (schon && schon.datei === foto.datei) {
@@ -164,12 +167,13 @@ export function SaatgutErfassen({ onSchliessen }: { onSchliessen: () => void }) 
     return liste;
   }
 
-  async function lesen() {
+  /** quelle: Fotos aus der Kamera, die noch nicht im Zustand stehen (Plan kamera) */
+  async function lesen(quelle?: Partial<Record<TuetenfotoSeite, Foto>>) {
     setSchritt('ergebnis');
     setLiest(true);
     setLadefehler(undefined);
     setKiHinweis(undefined);
-    const hoch = await hochladen();
+    const hoch = await hochladen(quelle);
     if ('fehler' in hoch) {
       setLiest(false);
       setLadefehler(hoch.fehler);
@@ -245,7 +249,16 @@ export function SaatgutErfassen({ onSchliessen }: { onSchliessen: () => void }) 
     }
   }
 
+  /** Kamera fertig: Fotos übernehmen und die Tüte ohne weiteren Tipp lesen */
+  function kameraFertig(vorne: Foto, hinten?: Foto) {
+    setKamera(undefined);
+    const quelle = hinten ? { vorne, hinten } : { vorne };
+    setFotos(quelle);
+    void lesen(quelle);
+  }
+
   const felderZeigen = !liest && !ladefehler && (!erkannt || aendern);
+  const kameraVorne = kamera?.vorne;
   return (
     <main className="hv-seite">
       <header className="hv-seite-kopf">
@@ -264,8 +277,39 @@ export function SaatgutErfassen({ onSchliessen }: { onSchliessen: () => void }) 
         </ol>
       ) : null}
 
+      {kamera ? (
+        <Kamera
+          titel="Tüte erfassen"
+          schritt={kameraVorne ? 'Rückseite' : 'Vorderseite'}
+          hinweis={
+            kameraVorne
+              ? 'Dreh die Tüte um. Auf der Rückseite stehen meist Keimart und Keimtemperatur.'
+              : 'Halte die Vorderseite der Tüte formatfüllend in den Rahmen.'
+          }
+          vorschau={kameraVorne?.url}
+          vorschauText={kameraVorne ? 'Vorderseite aufgenommen' : undefined}
+          aktionen={
+            kameraVorne
+              ? [{ text: 'Ohne Rückseite lesen', onClick: () => kameraFertig(kameraVorne) }]
+              : undefined
+          }
+          onFoto={(datei) => {
+            const foto = { datei, url: URL.createObjectURL(datei) };
+            if (!kameraVorne) setKamera({ vorne: foto });
+            else kameraFertig(kameraVorne, foto);
+          }}
+          onSchliessen={() => {
+            if (kameraVorne) URL.revokeObjectURL(kameraVorne.url);
+            setKamera(undefined);
+          }}
+        />
+      ) : null}
+
       {schritt === 'vorne' ? (
         <section className="hv-formular" aria-label="Vorderseite">
+          <Button block onClick={() => setKamera({})}>
+            Vorder- und Rückseite aufnehmen
+          </Button>
           <PhotoField
             label="Vorderseite"
             knopf="Foto aufnehmen"

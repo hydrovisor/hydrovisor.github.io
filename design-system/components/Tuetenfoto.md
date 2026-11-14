@@ -1,6 +1,6 @@
 # Tuetenfoto
 
-Zeigt das Foto der Saattüte im Detail einer Sorte (Säen und Saatgut; Entscheid 0023, Paket Tütenfotos #207, Saatgut-Manager #211). Die Aufnahme bleibt `PhotoField` am Schreibtisch.
+Zeigt das Foto der Saattüte im Detail einer Sorte (Säen und Saatgut; Entscheid 0023, Paket Tütenfotos #207, Saatgut-Manager #211). Die Aufnahme bleibt am Schreibtisch: `Kamera` für Vorder- und Rückseite in einem Zug, `PhotoField` für eine einzelne Seite.
 
 - Props: `bild` (Vorderseite, URL), `rueckseite` (URL), `hinweis` (`'offline'` oder `'laedt'`), `leerText` (zweite Zeile des Platzhalters), `alt`, `onFehler(seite)`.
 - Fläche in voller Breite, Seitenverhältnis 3 : 2, Radius `radius-lg`, Grund `surface-sunken`; das Foto füllt sie mit `object-fit: contain` (`hv-tuetenfoto`). Alternativtext «Tütenfoto Vorderseite» bzw. «Tütenfoto Rückseite».
