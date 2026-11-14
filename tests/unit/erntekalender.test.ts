@@ -496,6 +496,17 @@ describe('UC15-AK3 Erntefenster aus ernteStand() und voraussichtlichesEnde()', (
     expect(z.kurz).toBe('nächster Schnitt ab 25.3.');
   });
 
+  it('UC15-AK3 Basilikum nach Teilernte 1.3.: nächster Schnitt 15.3. liegt vor heute, Kurzzeile «nächster Schnitt möglich seit 15.3.» (Prüfer Runde 1)', () => {
+    const t = ernteTeile();
+    ernteDazu(t, BASILIKUM, 'teil', '2027-03-01');
+    ernteSichtenNachrechnen(t);
+    const z = zeileVon(erntekalender(t, J, Z), SATZ.basilikum);
+    expect(z.ernte.naechsterSchnitt).toBe(tagPlus('2027-03-01', 14));
+    expect(z.ernte.naechsterSchnitt).toBe(ernteStand(t, BASILIKUM, J, Z)?.moeglichAb);
+    expect(z.kurz).toBe('nächster Schnitt möglich seit 15.3.');
+    expect(z.kennzeichen).toEqual([]);
+  });
+
   it('UC15-AK3 massgebend ist die Pflanzung mit dem frühesten «Ernte möglich» (wie ernteAufgaben()): nach Teilernte an Lollo 1 zählt Lollo 2', () => {
     const t = ernteTeile();
     ernteDazu(t, LOLLO[1] as string, 'teil', '2027-03-15');

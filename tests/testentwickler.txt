@@ -323,6 +323,4 @@ tests/unit/erntekalender.test.ts
 tests/unit/router-ernte.test.ts
 tests/unit/ds-phasen.test.ts
 tests/e2e/erntekalender.spec.ts
-tests/unit/leiste.test.ts
-tests/e2e/leiste.spec.ts
 tests/e2e/saeen.spec.ts

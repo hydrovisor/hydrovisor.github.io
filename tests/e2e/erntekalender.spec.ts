@@ -357,3 +357,26 @@ test('UC15-AK8 jeder Abschnitt trägt seinen Buchstaben passend zu data-phase; P
   await expect(page.locator('.hv-phasenbalken-marke').first()).toBeAttached();
   await expect(page.locator('.hv-phasenbalken-heute').first()).toBeAttached();
 });
+
+// Prüfer Runde 1, Befund 1: Ein Erntetermin vor dem Fenster ist ein Termin, kein «Termine noch offen». Am linken Rand
+// steht dann der Hinweis .hv-phasenbalken-frueher «← Ernte seit <T.M.>».
+test('UC15-AK3 Erntetermin vor dem Fenster: Eissalat zeigt «← Ernte seit 4.3.» statt «Termine noch offen»; Eichblatt mit Marke 5.5. ebenfalls ohne', async ({
+  page,
+}) => {
+  await oeffnen(page, ernteTeile(), '/#/ernte', J);
+  await expect(kalenderTitel(page)).toBeVisible({ timeout: 15_000 });
+
+  const eissalat = zeileEissalat(page);
+  await expect(eissalat).toHaveCount(1);
+  await expect(eissalat.locator('.hv-phasenbalken-offen')).toHaveCount(0);
+  const frueher = eissalat.locator('.hv-phasenbalken-frueher');
+  await expect(frueher).toHaveCount(1);
+  await expect(frueher).toHaveText('← Ernte seit 4.3.');
+  await expect(eissalat).not.toContainText('Termine noch offen');
+
+  const eichblatt = page.getByRole('button', { name: /^Salat Eichblatt, R-A2,/ });
+  await expect(eichblatt).toHaveCount(1);
+  await expect(eichblatt.locator('.hv-phasenbalken-offen')).toHaveCount(0);
+  await expect(eichblatt.locator('.hv-phasenbalken-marke')).toHaveCount(1);
+  await expect(eichblatt.locator('.hv-phasenbalken-marke')).toContainText('5.5.');
+});
