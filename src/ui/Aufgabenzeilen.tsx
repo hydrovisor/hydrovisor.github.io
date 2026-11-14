@@ -102,7 +102,11 @@ export function useAufgabenAktionen(faellig: readonly Aufgabe[], jetzt: Date): A
   async function senden(a: Aufgabe, aktion: Aktion) {
     if (sperre.current) return;
     const vorgang = vorgangFuer(a, aktion);
-    if (vorgang.length === 0) return;
+    if (vorgang.length === 0) {
+      // die Aufgabe ist inzwischen erledigt oder bietet die Aktion nicht mehr an: sagen statt schweigen
+      setFehler('Nicht mehr fällig, Heute neu laden');
+      return;
+    }
     sperre.current = true;
     setSendet(true);
     let ok = false;

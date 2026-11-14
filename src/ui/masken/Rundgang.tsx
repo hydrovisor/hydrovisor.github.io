@@ -317,7 +317,6 @@ export function Rundgang({ kuerzel }: { kuerzel: string }) {
     const aufgabe = rOrt.aufgaben.find((a) => a.typ === 'nachfuellen_kratky');
     return (
       <KratkyNachfuellen
-        zuHeute={false}
         code={rOrt.code}
         text={text}
         {...(hoechstens !== undefined ? { hoechstens } : {})}
