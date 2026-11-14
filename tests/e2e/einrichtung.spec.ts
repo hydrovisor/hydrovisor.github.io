@@ -75,6 +75,8 @@ test('UC0-AK1 neun Punkte in fester Reihenfolge, jeder hakt sich selbst ab, dana
   await page.reload();
   await expect(page.getByRole('heading', { name: 'Heute', level: 1 })).toBeVisible();
   await expect(liste(page)).toHaveCount(0);
+  // UX1 (Prüfer Runde 1): auch die eingeklappte Zeile «Einrichtung · n von 9 erledigt» ist weg
+  await expect(page.getByRole('heading', { name: /^Einrichtung ·/ })).toHaveCount(0);
 
   // Abschluss bleibt: ein später erfasstes Gefäss in Prüfung bringt die Liste nicht zurück (A4)
   stufe = 7;
@@ -83,6 +85,8 @@ test('UC0-AK1 neun Punkte in fester Reihenfolge, jeder hakt sich selbst ab, dana
   await geladen;
   await expect(page.getByRole('heading', { name: 'Heute', level: 1 })).toBeVisible();
   await expect(liste(page)).toHaveCount(0);
+  // UX1 (Prüfer Runde 1): auch die eingeklappte Zeile «Einrichtung · n von 9 erledigt» ist weg
+  await expect(page.getByRole('heading', { name: /^Einrichtung ·/ })).toHaveCount(0);
 });
 
 test('UC0-AK1 der aktive Punkt öffnet seinen Ablauf: Kalibrieren und Leitungswasser messen', async ({

@@ -80,7 +80,8 @@ test('UX1-AK1 die erste Ortskarte steht vor Phasenkarten, Einrichtung und Push-H
   expect(await page.evaluate(() => window.scrollY)).toBe(0);
   const erste = karte.getByRole('listitem').first();
   await expect(erste).toContainText('Würfel feucht');
-  await expect(erste).toBeInViewport({ ratio: 1 });
+  // ganz im Bild und weder vom festen Fuss noch von der Leiste verdeckt
+  await ohneScrollenTippbar(erste);
 });
 
 test('UX1-AK2 mit fälligen Aufgaben ist die Einrichtung eine eingeklappte Zeile mit dem Stand; ein Tipper öffnet die Liste', async ({
@@ -136,7 +137,7 @@ test('UX1-AK3 die Aktion der Aufgabe ist die Haupttaste der Zeile, «Öffnen» n
   }
 
   // jede Zeile mit eigener Aktion: genau eine betonte Taste, sie steht zuerst; «Öffnen» ist nie betont und nie zuerst
-  const zeilen = await page.locator('main .hv-ortskarte .hv-aufgabe').evaluateAll((li) =>
+  const zeilen = await page.locator('main .hv-aufgabe:has(.hv-aufgabe-knoepfe)').evaluateAll((li) =>
     li.map((e) => ({
       text: e.querySelector('.hv-aufgabe-text')?.textContent ?? '',
       ort: e.closest('.hv-ortskarte')?.getAttribute('aria-label') ?? '',
@@ -171,6 +172,7 @@ test('UX1-AK3 die Aktion der Aufgabe ist die Haupttaste der Zeile, «Öffnen» n
       }
     }
     // der Ort steht nur im Kartenkopf
+    if (z.ort === '') continue;
     expect(z.text, name).not.toContain(z.ort);
     expect(z.text, name).not.toContain(z.ort.replace(/^[A-Z]-/, ''));
   }

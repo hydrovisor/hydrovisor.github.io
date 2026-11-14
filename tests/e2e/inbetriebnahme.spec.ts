@@ -292,6 +292,8 @@ test('IB-AK2 nach dem Seed führt die Checkliste Punkt für Punkt durch die Inbe
   await page.reload();
   await expect(page.getByRole('heading', { name: 'Heute', level: 1 })).toBeVisible({ timeout: 15_000 });
   await expect(liste(page)).toHaveCount(0);
+  // UX1 (Prüfer Runde 1): auch die eingeklappte Zeile «Einrichtung · n von 9 erledigt» ist weg
+  await expect(page.getByRole('heading', { name: /^Einrichtung ·/ })).toHaveCount(0);
 });
 
 test('IB-AK4 Seed nur mit Konstanten (ohne W0): Punkte 1 bis 8 gehen durch, die Aussaat wartet auf die Sorten', async ({
