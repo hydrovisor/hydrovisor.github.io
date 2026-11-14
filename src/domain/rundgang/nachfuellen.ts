@@ -185,3 +185,23 @@ export function nachfuellVorgang(
         });
   return [kopf, ...positionen];
 }
+
+/**
+ * Nachfüllen Kratky ausserhalb des Rundgangs (Plan 225 Entscheid 4, R4.10): die fällige Aufgabe des Platzes und ihre
+ * Auslöser-Messung, die letzte gültige Messung des Platzes mit Füllstand «unter ⅓»; ohne fällige Aufgabe undefined.
+ */
+export function kratkyNachfuellAufgabe(
+  teile: Teile,
+  faellig: readonly Aufgabe[],
+  platzId: string,
+): { aufgabe: Aufgabe; messung: MessungZeile } | undefined {
+  const aufgabe = faellig.find((a) => a.typ === 'nachfuellen_kratky' && a.ort?.platzId === platzId);
+  if (!aufgabe) return undefined;
+  const messung = zeilen<MessungZeile & { storniert_am?: string | null }>(teile, 'messung')
+    .filter(
+      (m) => m.platz_id === platzId && (m.storniert_am ?? null) === null && m.fuellstand === 'unter_drittel',
+    )
+    .sort((a, b) => Date.parse(a.gilt_ab) - Date.parse(b.gilt_ab))
+    .at(-1);
+  return messung ? { aufgabe, messung } : undefined;
+}

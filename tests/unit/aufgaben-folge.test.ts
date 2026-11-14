@@ -178,9 +178,16 @@ describe('UX2-AK1 folgeAufgabe() und heuteFolge() im Grundstand', () => {
     const t = grundstand();
     // Heute beginnt mit pH-Kontrolle (ohne Ort), Würfel feucht R-A1, Würfel feucht und Deckel öffnen R-A3, Station
     // R-4.4: keine davon hat eine eigene Maske; erste Aufgabe mit Maske ist «Messen» R-3.1
+    // seit UX3 (Plan 225 Entscheid 7) führt «Station auf 1. echte Blätter» R-4.4 zum Ansatz und ist damit die erste
+    // Aufgabe mit Maske; danach folgt «Messen» R-3.1
     const ohneBezug = folgeAufgabe(t, GRUND_JETZT, Z);
-    expect(ohneBezug?.ziel).toEqual(messen('R-3.1'));
-    expect(ohneBezug?.titel).toBe('Messen');
+    expect(ohneBezug?.ziel).toEqual({ name: 'ansatz', code: 'R-4.4' });
+    const nachStation = folgeAufgabe(t, GRUND_JETZT, Z, {
+      ziel: { name: 'ansatz', code: 'R-4.4' },
+      vorher: vorherVon(t, GRUND_JETZT),
+    });
+    expect(nachStation?.ziel).toEqual(messen('R-3.1'));
+    expect(nachStation?.titel).toBe('Messen');
 
     // nach «Messen und nachfüllen» R-1.1 folgt nicht die Kurzprüfung R-1.1, sondern «Ansatz für Umsetzen» R-1.2
     const vorher = vorherVon(t, GRUND_JETZT);

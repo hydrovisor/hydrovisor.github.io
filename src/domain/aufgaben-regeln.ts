@@ -319,10 +319,15 @@ export const kontrolleFolgetag: Regel = (k, lage) => {
   return amPlatz(lage, 'kontrolle_folgetag', folge, 'Kontrollmessung am Folgetag');
 };
 
-/** Kurzprüfung: täglich, solange am Platz heute keine erfasst ist */
+/**
+ * Kurzprüfung: täglich, solange am Platz heute keine erfasst ist. Eine einzelne Wurzelprüfung («Wurzeln ok» in Heute,
+ * Plan 225 A2) erledigt sie nicht; im Rundgang steht der Punkt Wurzeln immer neben dem Hauptpunkt des Orts.
+ */
 export const kurzpruefung: Regel = (k, lage) => {
   if (!lage.gefaess) return [];
-  const heute = lage.ereignisse.some((e) => e.typ === 'kurzpruefung' && tag(k, e.gilt_ab) === k.heute);
+  const heute = lage.ereignisse.some(
+    (e) => e.typ === 'kurzpruefung' && datenVon(e)['punkt'] !== 'wurzeln' && tag(k, e.gilt_ab) === k.heute,
+  );
   return heute ? [] : amPlatz(lage, 'kurzpruefung', k.heute, 'Kurzprüfung');
 };
 

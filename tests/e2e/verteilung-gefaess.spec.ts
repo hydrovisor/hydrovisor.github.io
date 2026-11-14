@@ -106,7 +106,10 @@ test('R5.6-AK7 Heute zeigt vorgezogenen Wechsel', async ({ page }) => {
   await expect(page.getByText(/Ansätze heute/)).toHaveCount(0);
 });
 
-test('UC1-AK2 Offene Aufgaben in der Maske Gefäss ohne Links, Hauptknopf ohne Scrollen', async ({ page }) => {
+// seit UX3 (#225, Plan 225 Entscheid 6, Abweichung von Plan 113) tragen die Offenen Aufgaben dieselben Tasten wie Heute
+test('UC1-AK2 Offene Aufgaben in der Maske Gefäss mit ihren Tasten, Hauptknopf ohne Scrollen', async ({
+  page,
+}) => {
   // ohne Kurzprüfung Wurzeln in 1.1: «Wurzeln prüfen» seit dem 10.1. (Neuansatz 3.1. + 7)
   const t = rundgangTeile();
   t['ereignis'] = (t['ereignis'] ?? []).filter(
@@ -124,11 +127,24 @@ test('UC1-AK2 Offene Aufgaben in der Maske Gefäss ohne Links, Hauptknopf ohne S
   await expect(offen).toBeVisible({ timeout: 15_000 });
   await expect(offen.getByRole('listitem').filter({ hasText: 'Wurzeln prüfen' })).toHaveCount(1);
   await expect(offen.getByRole('listitem').filter({ hasText: 'Messen und nachfüllen' })).toHaveCount(1);
-  await expect(offen.getByRole('link')).toHaveCount(0);
-  await expect(offen.getByRole('button')).toHaveCount(0);
+  // jede Zeile mit ihrer Taste, kein «Öffnen» (die Maske ist schon offen)
+  await expect(
+    offen
+      .getByRole('listitem')
+      .filter({ hasText: 'Wurzeln prüfen' })
+      .getByRole('button', { name: 'Wurzeln ok' }),
+  ).toBeVisible();
+  await expect(
+    offen
+      .getByRole('listitem')
+      .filter({ hasText: 'Messen und nachfüllen' })
+      .getByRole('link', { name: 'Messen' }),
+  ).toBeVisible();
+  await expect(offen.getByRole('link', { name: 'Öffnen' })).toHaveCount(0);
 
-  // Kopf, Zustand und Hauptknopf ohne Scrollen auf 360 × 640; genau ein Link «… Messen»
-  const haupt = page.getByRole('link', { name: /Messen$/ });
+  // Kopf, Zustand und Hauptknopf ohne Scrollen auf 360 × 640; der Hauptknopf «… Messen» ist das einzige primary
+  const haupt = page.locator('main .hv-btn-primary');
+  await expect(haupt).toHaveText(/Messen$/);
   await expect(haupt).toHaveCount(1);
   await expect(haupt).toBeVisible();
   await imViewport(page, page.getByRole('heading', { level: 1 }), 'Kopf');

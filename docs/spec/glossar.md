@@ -129,3 +129,6 @@ Stand 1.11.2026 · Auftrag 2 «Spezifikation». Bedeutungen stehen in Konzept v1
 | Vorrat einer Sorte (Kein Saatgut mehr, Plan 215) | `vorrat_ereignis` | `VorratTyp`, `VorratEreignisZeile`, `VorratStand`, `vorratStand()`, `vorratAus()`, `vorratVerlauf()`, `vorratVorgang()`, `vorratSenden()`, `VorratKarte` |
 | Meldezeile, Meldung mit «Rückgängig machen» (Plan 224) | Storno in `ereignis`, `aufschub` (`storno_grund` `rueckgaengig`) | Baustein `Meldezeile`, `MeldungAnbieter`, `MeldungZeile`, `useMelden()`, `useMeldungSteht()`, `Meldung`, `rueckgaengigVorgang()` |
 | Reihenfolge von Heute, Folgeaufgabe «Nächste Aufgabe» (Plan 224) | – | `heuteFolge()`, `HeuteEintrag`, `folgeAufgabe()`, `Folgeaufgabe`, `aufgabeZiel()`, `AufgabenZiel`, `NachSpeichern`, `useHeuteVorher()` |
+| Aufgabenzeile, Tasten je Aufgabe (Plan 225) | – | Baustein `Aufgabenzeile`, `useAufgabenAktionen()`, `aufgabenTasten()`, `AufgabenTaste`, `Aktion` |
+| Kurzprüfung eines Orts, «Wurzeln ok» (Plan 225) | Ereignis `kurzpruefung` | `ortKurzpruefung()`, `lichtLuefterHeute()`, `pruefVorgang()`, `pruefFragen()`, `befundZeilen()`, `KURZ_ABWEICHUNG`, Maske `KurzpruefungOrt`, Route `kurzpruefung` |
+| Nachfüllen Kratky aus der Aufgabe (Plan 225) | `naehrloesungsansatz` Typ `nachfuellen` | `kratkyNachfuellAufgabe()`, `kratkyAnzeige()`, Maske `NachfuellenOrt`, Route `nachfuellen` |

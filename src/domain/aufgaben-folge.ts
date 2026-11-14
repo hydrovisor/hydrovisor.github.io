@@ -18,7 +18,10 @@ export type AufgabenZiel =
   | { name: 'gefaess'; code: string }
   | { name: 'keimung'; satz: string }
   | { name: 'umsetzen'; satz: string; wie?: 'geplant' }
-  | { name: 'kalibrieren' };
+  | { name: 'kalibrieren' }
+  // Plan 225: Kurzprüfung eines Orts und Nachfüllen Kratky; «von» führt nach dem Speichern zurück zur Maske Gefäss
+  | { name: 'kurzpruefung'; code: string; von?: 'gefaess' }
+  | { name: 'nachfuellen'; code: string; von?: 'gefaess' };
 
 export interface HeuteEintrag {
   schluessel: string;
@@ -38,7 +41,7 @@ export interface Folgeaufgabe {
 /** in eigener Anzeige: Umsetzen (Liste aus umsetzAufgaben()), Kalibrieren (Kopf «Messgerät») */
 export const ANDERSWO: ReadonlySet<AufgabenArt> = new Set<AufgabenArt>(['umsetzen', 'kalibrieren']);
 
-type Maske = 'messen' | 'pruefen' | 'ansatz' | 'gefaess';
+type Maske = 'messen' | 'pruefen' | 'ansatz' | 'gefaess' | 'kurzpruefung' | 'nachfuellen';
 
 /** Maske am Ort je Typ; Typen ohne Eintrag haben nur eine Taste in Heute */
 const AM_ORT: Partial<Record<AufgabenArt, Maske>> = {
@@ -49,27 +52,34 @@ const AM_ORT: Partial<Record<AufgabenArt, Maske>> = {
   gefaess_pruefen: 'pruefen',
   loesung_wechseln: 'ansatz',
   ansatz: 'ansatz',
-  kurzpruefung: 'gefaess',
-  belueftung_pruefen: 'gefaess',
+  // Plan 225: Kurzprüfung und Belüftung führen in die Kurzprüfung des Orts, Nachfüllen Kratky in den Nachfüllschritt,
+  // die Station zum Neuansatz (R4.5); «Wurzeln prüfen» erledigt Heute mit einer Taste, «Öffnen» führt zum Gefäss
+  kurzpruefung: 'kurzpruefung',
+  belueftung_pruefen: 'kurzpruefung',
   wurzeln_pruefen: 'gefaess',
-  nachfuellen_kratky: 'gefaess',
-  station_echte_blaetter: 'gefaess',
-  reservierung_pruefen: 'gefaess',
+  nachfuellen_kratky: 'nachfuellen',
+  station_echte_blaetter: 'ansatz',
 };
 
-/** Erfassungsmasken: nur sie kommen als «Nächste Aufgabe» in Frage (A6) */
+/**
+ * Erfassungsmasken: nur sie kommen als «Nächste Aufgabe» in Frage (A6). Die Kurzprüfung erledigt Heute mit einem
+ * Tipper und gehört nicht dazu (Plan 225 A10).
+ */
 const EIGENE_MASKE: ReadonlySet<AufgabenZiel['name']> = new Set<AufgabenZiel['name']>([
   'messen',
   'pruefen',
   'ansatz',
   'keimung',
   'umsetzen',
+  'nachfuellen',
 ]);
 
 /** Route je Aufgabentyp (Tabelle in Plan 224 Entscheid 6); undefined, wenn die Aufgabe nur eine Taste in Heute hat */
 export function aufgabeZiel(a: Aufgabe): AufgabenZiel | undefined {
   if (a.typ === 'keimung_pruefen') return { name: 'keimung', satz: a.bezug };
   if (a.typ === 'ph_kontrolle') return { name: 'kalibrieren' };
+  // Reservierung prüfen wird durch Umsetzen oder Ausfall erledigt (Konzept R5.2); beide tragen den Satz als Bezug
+  if (a.typ === 'reservierung_pruefen' || a.typ === 'umsetzen') return { name: 'umsetzen', satz: a.bezug };
   const maske = AM_ORT[a.typ];
   const code = a.ort?.code;
   return maske && code ? { name: maske, code } : undefined;
@@ -121,7 +131,7 @@ function kennungAusSchluessel(schluessel: string): string | undefined {
   const s = schluesselLesen(schluessel);
   if (!s) return undefined;
   if (s.typ === 'keimung_pruefen') return `keimung|${s.bezug}`;
-  if (s.typ === 'umsetzen') return `umsetzen|${s.bezug}`;
+  if (s.typ === 'umsetzen' || s.typ === 'reservierung_pruefen') return `umsetzen|${s.bezug}`;
   const maske = AM_ORT[s.typ];
   return maske ? `${maske}|${s.bezug}` : undefined;
 }
@@ -129,7 +139,8 @@ function kennungAusSchluessel(schluessel: string): string | undefined {
 /**
  * Die Aufgabe nach der eben erledigten (UX2-AK1). `bezug.ziel` ist die Maske, in der gespeichert wurde, `bezug.vorher`
  * die Schlüsselfolge von Heute beim Öffnen dieser Maske: die Antwort ist der erste noch offene Eintrag mit eigener
- * Maske nach der Stelle des Bezugs, sonst von vorne (A7), sonst ein seither neuer Eintrag. Ohne Bezug der erste
+ * Maske nach der Stelle des Bezugs, sonst von vorne (A7), sonst ein seither neuer Eintrag; ein seither neuer Eintrag
+ * am Ort des Bezugs geht allen vor. Ohne Bezug der erste
  * Eintrag mit eigener Maske; ohne Kandidat undefined.
  */
 export function folgeAufgabe(
@@ -147,6 +158,14 @@ export function folgeAufgabe(
   if (!bezug) return kandidaten[0];
   const stelle = bezug.vorher.findIndex((s) => kennungAusSchluessel(s) === eigene);
   if (stelle < 0) return kandidaten[0];
+  // eine Aufgabe, die seit dem Öffnen am selben Ort entstanden ist, geht vor: nach der Kratky-Messung «unter ⅓»
+  // folgt das Nachfüllen desselben Gefässes (Plan 225 Entscheid 7)
+  const ort = 'code' in bezug.ziel ? bezug.ziel.code : undefined;
+  const amOrt = kandidaten.find(
+    (k) =>
+      ort !== undefined && 'code' in k.ziel && k.ziel.code === ort && !bezug.vorher.includes(k.schluessel),
+  );
+  if (amOrt) return amOrt;
   const offen = new Map(kandidaten.map((k) => [k.schluessel, k]));
   for (const s of [...bezug.vorher.slice(stelle + 1), ...bezug.vorher.slice(0, stelle)]) {
     const k = offen.get(s);

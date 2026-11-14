@@ -1,6 +1,6 @@
 // Maske «Gefäss» (UC1, 05_masken.md 3.3; Plan 20): Kontext Regal. Ohne Scrollen sichtbar: Kopf, Zustand und
 // Hauptknopf; darunter der Verlauf als Zahlenreihe mit Ereignismarkern (ohne Diagramm).
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { neueClientId, schreiben } from '../../daten/schreiben.ts';
 import { leerenVorgang } from '../../domain/anlage/aendern.ts';
 import { gefaessAnsicht, type Gefaessansicht } from '../../domain/anlage/gefaess.ts';
@@ -10,6 +10,7 @@ import { ortAufloesen } from '../../domain/ort.ts';
 import { einstellungenAus } from '../../domain/aufgaben.ts';
 import { verteilteAufgaben } from '../../domain/aufgaben-verteilung.ts';
 import { aufgabenSicher } from './Aufgabenliste.tsx';
+import { Aufgabenzeile, useAufgabenAktionen } from '../Aufgabenzeilen.tsx';
 import { ZEITZONE } from '../../domain/zeit.ts';
 import { kuerzlichBeendet } from '../../domain/phasen/ende.ts';
 import { pflanzungVonSatz } from '../../domain/phasen/fragen.ts';
@@ -300,35 +301,25 @@ function Nebenknoepfe({ a, teile }: { a: Gefaessansicht; teile: Teile }) {
  */
 function OffeneAufgaben({ code, teile, jetzt: zeit }: { code: string; teile: Teile; jetzt: Date }) {
   const platzId = ortAufloesen(code, teile as Record<string, readonly unknown[]>)?.platzId;
+  // dieselbe Liste wie Heute (R5.1, R5.6); die ganze Liste geht an den Baustein, weil die Kurzprüfung eines Orts die
+  // Ebene wie der Rundgang rechnet (Plan 225)
+  const faellig = useMemo(
+    () => aufgabenSicher(() => verteilteAufgaben(teile, einstellungenAus(teile), zeit, ZEITZONE), []),
+    [teile, zeit],
+  );
+  const aktionen = useAufgabenAktionen(faellig, zeit);
   const liste = platzId
-    ? aufgabenSicher(
-        () =>
-          verteilteAufgaben(teile, einstellungenAus(teile), zeit, ZEITZONE).filter(
-            (x) => x.ort?.platzId === platzId,
-          ),
-        [],
-      )
+    ? faellig.filter((x) => x.ort?.platzId === platzId && !aktionen.weg.has(x.schluessel))
     : [];
-  if (liste.length === 0) return null;
+  if (liste.length === 0 && !aktionen.fehler) return null;
   return (
     <section className="hv-gefaess-beendet" aria-label="Offene Aufgaben">
       <h2 className="hv-gefaess-h2">Offene Aufgaben</h2>
+      {aktionen.fehler ? <Notice kompakt tone="warn" title={aktionen.fehler} /> : null}
       <ul className="hv-aufgaben">
-        {liste.map((x) => {
-          const hinweis = x.hinweis === 'mitmarkiert' ? 'Pumpe mitmarkiert' : x.hinweis;
-          return (
-            <li key={x.schluessel} className="hv-aufgabe hv-aufgabe-umbruch" data-gewicht={x.gewicht}>
-              <span className="hv-aufgabe-text">
-                {x.titel}
-                <br />
-                <small>
-                  {x.grund}
-                  {hinweis ? ` · ${hinweis}` : ''}
-                </small>
-              </span>
-            </li>
-          );
-        })}
+        {liste.map((x) => (
+          <Aufgabenzeile key={x.schluessel} a={x} wo="gefaess" aktionen={aktionen} />
+        ))}
       </ul>
     </section>
   );

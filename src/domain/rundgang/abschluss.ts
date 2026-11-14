@@ -9,6 +9,7 @@ import { bewertungsband, type Sollband } from '../bewertung/sollband.ts';
 import type { Groesse } from '../messung/eingabe.ts';
 import { ZEITZONE, type Zeitzone } from '../zeit.ts';
 import type { OrtErgebnis, RundgangStand } from './ablauf.ts';
+import { KURZ_ABWEICHUNG } from './abweichung.ts';
 
 export interface AbschlussZeile {
   platzId: string;
@@ -45,21 +46,6 @@ const ZU_GROESSE: Readonly<Record<Hinweis['ausloeser'], Groesse | undefined>> = 
 };
 
 /** Abweichungen der Kurzprüfung (R10.5 «Pumpe sprudelt nicht oder keine Luftzone») */
-const BELUEFTUNG =
-  'Pumpe, Schlauch und Luftstein prüfen; bei Kratky Pegel senken; Gefässe derselben Luftpumpe mitmarkiert';
-const KURZ_ABWEICHUNG: Readonly<Record<string, { text: string; massnahme: string }>> = {
-  pumpe: { text: 'Pumpe sprudelt nicht → Belüftung prüfen', massnahme: BELUEFTUNG },
-  luftzone: { text: 'Keine Luftzone → Belüftung prüfen', massnahme: BELUEFTUNG },
-  loesung_topfboden: {
-    text: 'Lösung berührt Topfboden nicht',
-    massnahme: 'Pegel bis an den Topfboden anheben',
-  },
-  wurzeln: { text: 'Wurzeln nicht weiss', massnahme: 'Wurzeln und Geruch prüfen' },
-  wuerfel_feucht: { text: 'Würfel nicht feucht', massnahme: 'Würfel befeuchten' },
-  // am Bereich (Sammel-Tipp, Prüfer Runde 1 Befund 2; Massnahmen A)
-  licht: { text: 'Licht aus', massnahme: 'AC10-Zeitplan und Stromzufuhr des Lichts prüfen' },
-  luefter: { text: 'Lüfter steht', massnahme: 'Lüfter und Stromzufuhr prüfen' },
-};
 
 const kennung = (code: string) => code.slice(code.indexOf('-') + 1);
 const GEFAESS = { text: 'Gefäss öffnen', route: 'gefaess' } as const;
