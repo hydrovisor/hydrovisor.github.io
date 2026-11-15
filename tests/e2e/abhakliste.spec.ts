@@ -6,8 +6,9 @@
 // Konfiguration.
 //
 // Erwartete Oberfläche (vom Testentwickler festgelegt, wo Plan 29 offen ist):
-// - #/ansatz/R-2.3: main[data-density="regal"] mit der Abhakliste ol.hv-checklist aus dem Baustein Checklist, 18
-//   Zeilen li.hv-check-row in der Reihenfolge 0 bis 17 mit data-zustand offen | aktiv | erledigt; der Haken der
+// - #/ansatz/R-2.3: main[data-density="regal"] mit der Abhakliste ol.hv-checklist aus dem Baustein Checklist, 16
+//   Zeilen li.hv-check-row in der Reihenfolge 0 bis 17 ohne 6 und 8 (UX8, Plan 230), Nummer in .hv-check-nr, mit
+//   data-zustand offen | aktiv | erledigt; der Haken der
 //   aktiven Zeile heisst «Zeile n abhaken», eine abwählbare erledigte Zeile «Zeile n abwählen».
 // - Timer-Zeile mit role="timer" und Restzeit «14:00»; der Haken ist bis zum Ende gesperrt (disabled).
 // - Rückfrage nach mehr als 2 min Pause als Card über der Liste mit dem Text «Zuletzt bestätigt: Micro 7.0 ml um
@@ -55,19 +56,23 @@ async function mitDaten(page: Page, start: Teile, pfad: string, uhr: Date): Prom
 
 const liste = (page: Page) => page.locator('ol.hv-checklist');
 const zeilen = (page: Page) => liste(page).locator('li.hv-check-row');
-const zeile = (page: Page, nr: number) => zeilen(page).nth(nr);
+// UX8: die Nummern haben Lücken (6, 8), die Zeile wird über ihre Nummer gefunden, nicht über den Index
+const zeile = (page: Page, nr: number) =>
+  zeilen(page).filter({ has: page.locator('.hv-check-nr', { hasText: new RegExp(`^${String(nr)}$`) }) });
 const abhaken = (page: Page, nr: number) =>
   page.getByRole('button', { name: `Zeile ${nr} abhaken`, exact: true });
 const knopf = (page: Page, name: string) => page.getByRole('button', { name, exact: true });
 
 async function listeGeladen(page: Page): Promise<void> {
   await expect(page.locator('main[data-density="regal"]')).toBeVisible({ timeout: 15_000 });
-  await expect(zeilen(page)).toHaveCount(18, { timeout: 15_000 });
+  await expect(zeilen(page)).toHaveCount(16, { timeout: 15_000 });
 }
 
 async function zustaende(page: Page, erledigtBis: number, aktiv: number): Promise<void> {
-  for (let nr = 0; nr <= erledigtBis; nr += 1)
+  for (let nr = 0; nr <= erledigtBis; nr += 1) {
+    if (nr === 6 || nr === 8) continue;
     await expect(zeile(page, nr), `Zeile ${nr}`).toHaveAttribute('data-zustand', 'erledigt');
+  }
   await expect(zeile(page, aktiv), `Zeile ${aktiv}`).toHaveAttribute('data-zustand', 'aktiv');
 }
 
@@ -188,7 +193,7 @@ test('Loesungswechsel-AK5 nach mehr als 2 Minuten Pause fragt die App mit Zeitst
   await page.clock.setFixedTime(um('18:44'));
   await page.reload();
   await listeGeladen(page);
-  await zustaende(page, 5, 6);
+  await zustaende(page, 5, 7);
   await expect(page.getByText('Zuletzt bestätigt:')).toHaveCount(0);
 
   // 2:01 Pause: Rückfrage beim Fortsetzen
@@ -201,9 +206,10 @@ test('Loesungswechsel-AK5 nach mehr als 2 Minuten Pause fragt die App mit Zeitst
 
   await knopf(page, 'Ja, war schon drin').click();
   await expect(page.getByText(RUECKFRAGE)).toHaveCount(0);
-  await zustaende(page, 7, 8);
+  // UX8: Grow (7) abgehakt, Bloom (9) aktiv; kein Schritt 6 mehr
+  await zustaende(page, 7, 9);
   await expect.poll(() => schrittNr(m, 7).length).toBe(1);
-  expect(schrittNr(m, 6)).toHaveLength(1);
+  expect(schrittNr(m, 6)).toHaveLength(0);
   expect(Number(schrittNr(m, 7)[0]?.['ist_ml'])).toBe(10.5);
 });
 
@@ -215,20 +221,21 @@ test('Loesungswechsel-AK5 Rückfrage vor dem nächsten Tipp; «Nein, jetzt geben
   await abhaken(page, 5).click();
   await expect(zeile(page, 5)).toHaveAttribute('data-zustand', 'erledigt');
 
+  // UX8: nach Micro ist Grow (7) aktiv
   await page.clock.setFixedTime(um('18:44', 1));
-  await abhaken(page, 6).click();
+  await abhaken(page, 7).click();
   await expect(page.getByText(RUECKFRAGE)).toBeVisible();
-  await expect(zeile(page, 6)).not.toHaveAttribute('data-zustand', 'erledigt');
-  expect(schrittNr(m, 6)).toEqual([]);
+  await expect(zeile(page, 7)).not.toHaveAttribute('data-zustand', 'erledigt');
+  expect(schrittNr(m, 7)).toEqual([]);
 
   await knopf(page, 'Nein, jetzt geben').click();
   await expect(page.getByText(RUECKFRAGE)).toHaveCount(0);
-  await zustaende(page, 5, 6);
+  await zustaende(page, 5, 7);
   expect(schrittNr(m, 6)).toEqual([]);
   expect(schrittNr(m, 7)).toEqual([]);
-  await abhaken(page, 6).click();
-  await expect(zeile(page, 6)).toHaveAttribute('data-zustand', 'erledigt');
-  await expect(zeile(page, 7)).toHaveAttribute('data-zustand', 'aktiv');
+  await abhaken(page, 7).click();
+  await expect(zeile(page, 7)).toHaveAttribute('data-zustand', 'erledigt');
+  await expect(zeile(page, 9)).toHaveAttribute('data-zustand', 'aktiv');
 });
 
 test('Loesungswechsel-AK3 05-3.5 Abhakliste auf 360 × 640: data-density regal, Haken 68 dp, kein waagrechtes Scrollen, keine Systemtastatur', async ({

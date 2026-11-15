@@ -341,3 +341,7 @@ tests/e2e/ernte-heute.spec.ts
 tests/unit/keimbox.test.ts
 tests/unit/router-keimbox.test.ts
 tests/e2e/keimung-box.spec.ts
+# UX8 Spülen in der Dosierzeile (#230)
+tests/unit/abhakliste-ux8.test.ts
+tests/e2e/usability-ux8.spec.ts
+tests/honor/ablaeufe.spec.ts
