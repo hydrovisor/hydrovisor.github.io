@@ -1,7 +1,7 @@
 // UX1 Heute: Aufgaben zuerst, Aktion als Haupttaste, Position merken (Issue #223, Plan 223; Usability-Runde vom
 // 14.11.2026). REST nachgebildet, feste Uhr, 360 × 640 aus der Konfiguration. Datenstände:
 // - rueckdatiertTeile() (tests/fixtures/phasen.ts, 12.1.2027): Einrichtung 4 von 9, Push nicht eingerichtet, Karte
-//   «Phasen nachführen», Ortskarte R-A1 mit «Würfel feucht» und «Keimung prüfen».
+//   «Phasen nachführen», Ortskarte R-A1 mit «Würfel feucht» und «Keimung prüfen · 2 Sätze» (Boxzeile, Plan 227).
 // - grundstand() (tests/unit/aufgaben-fixture.ts, 12.1.2027): alle Aufgabentypen der Aufgaben-Rechnung.
 // - rundgangTeile() (tests/fixtures/rundgang.ts, 12.1.2027): drei Ortskarten, R-3.1 unter dem ersten Bildschirm.
 // - einrichtungsTeile(0): nichts erfasst, keine fällige Aufgabe.

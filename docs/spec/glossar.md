@@ -46,6 +46,7 @@ Stand 1.11.2026 · Auftrag 2 «Spezifikation». Bedeutungen stehen in Konzept v1
 | Pflanzung, Schwamm | `pflanzung` | `Pflanzung` |
 | Pflanzvorgang | `pflanzvorgang` | `Pflanzvorgang` |
 | Keimprüfung, Keimansicht, Keimeingabe | Ereignis `keimung` | `keimVorgang()`, `keimAnsicht()`, `KeimEingabe` |
+| Keimprüfung je Box, Boxzeile, Wahl der Box | – (Anzeige; Ereignisse wie Keimprüfung) | `heuteZeilen()`, `keimBoxSaetze()`, `keimBoxVorgang()`, `folgeAnzeige()`, `KeimBox`, `KeimBoxWahl`, Maske `KeimungBox` |
 | Phasenfrage, Phasenstand, Phasenwechsel | Ereignis `phase_antwort` (`daten.phase`, `daten.antwort`) | `phasenStand()`, `phasenKarten()`, `antwortVorgang()`, `Fragekarte`; Gruppen einer Karte `phasenGruppen()`, `gruppenAntworten()`, `Fragegruppe`; Prognose an einem Tag `phaseAm()` |
 | Phasen nachführen, Profilende, Phasenfolge | `v_sollwert` (`dauer`, `wechselmerkmal`, `anwendbar`) | `nachfuehrVorgang()`, `PROFILENDE`, `phasenfolge()`, `NachfuehrZeile` |
 | Datumskorrektur, Verlauf, Wissenskarte der Phase | `ersetzt_id`, `wissenseintrag` | `korrekturVorgang()`, `korrekturGrenze()`, `phasenVerlauf()`, `wissenFuer()` |

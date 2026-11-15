@@ -13,7 +13,6 @@ import {
   keimStationsvorschlag,
   keimVorgang,
   keimZusammenfassung,
-  packungsrate,
   wiederherstellenVorgang,
   type KeimAnsicht,
   type KeimEingabe,
@@ -30,24 +29,9 @@ import { useBuendel } from '../buendel.tsx';
 import { jetzt } from '../bundeldaten.ts';
 import { hashZu } from '../router.ts';
 import { NachSpeichern, useHeuteVorher } from '../NachSpeichern.tsx';
+import { fertigText, schwammName, type Fertig } from './keimungErgebnis.ts';
 
 const SPERRE_MS = 400;
-const zahl2 = (x: number) => x.toFixed(2);
-const HERKUNFT = { beobachtet: 'beobachtet', packung: 'Packung', art: 'Art' } as const;
-
-interface Fertig {
-  vorgang: Vorgang;
-  zeilen: string[];
-  warnung?: string;
-  nachsaeen: string[];
-  zurueck?: boolean;
-}
-
-function schwammName(s: Schwamm, mitZiel: boolean): string {
-  if (s.zieltopf) return `Schwamm ${s.nr} · Ziel ${s.zieltopf.kennung}`;
-  return mitZiel ? `Schwamm ${s.nr} · Reserve` : `Schwamm ${s.nr}`;
-}
-
 export function Keimung({ satz }: { satz: string }) {
   const { buendel, liest } = useBuendel();
   const teile = buendel?.teile;
@@ -522,31 +506,4 @@ function stationsLoecher(
     if (belegt.has(nr)) return { nr, zustand: 'belegt', text: 'bel.', nichtWaehlbar: true };
     return { nr, zustand: 'frei', nichtWaehlbar: true };
   });
-}
-
-/** Bestätigung nach dem Speichern: Ergebnis, Keimrate der Packung, «Saatgut prüfen», Nachsäen (A6, G5) */
-function fertigText(teile: Teile, a: KeimAnsicht, eingabe: KeimEingabe, vorgang: Vorgang): Fertig {
-  const z = keimZusammenfassung(teile, eingabe);
-  const stationen = new Map<string, number>();
-  for (const s of eingabe.station) stationen.set(s.platzId, (stationen.get(s.platzId) ?? 0) + 1);
-  const kennung = (platzId: string) =>
-    zeilen<{ id: string; kennung: string }>(teile, 'platz').find((p) => p.id === platzId)?.kennung ?? '';
-  const station = [...stationen].map(([id, n]) => `${n} auf ${kennung(id)}`);
-  const mitKeimung = eingabe.werte.some((w) => w.gekeimt !== 'offen');
-  const zeilenText = [`Gespeichert: ${[...(mitKeimung ? [z.text] : []), ...station].join(' · ')}`];
-  let warnung: string | undefined;
-  if (!mitKeimung) {
-    // reiner Stationsschritt: keine Keimrate
-  } else if (eingabe.keimtempEingehalten !== true)
-    zeilenText.push('Keimtemperatur nicht eingehalten: zählt nicht für die Keimrate');
-  else if (a.datenart !== 'echt') zeilenText.push('Keimrate zählt nur in echten Anlagen');
-  else {
-    const rate = packungsrate(teile, a.satzId, vorgang);
-    if (rate?.p !== undefined)
-      zeilenText.push(
-        `Keimrate der Packung ${zahl2(rate.p)} (${rate.herkunft ? HERKUNFT[rate.herkunft] : ''}, ${rate.gesaet} Samen)`,
-      );
-    if (rate?.saatgutPruefen) warnung = `Saatgut prüfen: ${rate.gekeimt} von ${rate.gesaet} Samen gekeimt`;
-  }
-  return { vorgang, zeilen: zeilenText, ...(warnung ? { warnung } : {}), nachsaeen: z.nachsaeen };
 }

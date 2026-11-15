@@ -21,6 +21,7 @@ import { EtikettAufloesen } from './masken/EtikettAufloesen.tsx';
 import { Etiketten } from './masken/Etiketten.tsx';
 import { Saeen } from './masken/Saeen.tsx';
 import { Keimung } from './masken/Keimung.tsx';
+import { KeimungBox } from './masken/KeimungBox.tsx';
 import { Pflanze } from './masken/Pflanze.tsx';
 import { Umsetzen } from './masken/Umsetzen.tsx';
 import { Verschieben } from './masken/Verschieben.tsx';
@@ -121,6 +122,8 @@ function Masken({ imAblauf }: { imAblauf: boolean }) {
       ) : maske.name === 'keimung' ? (
         // je Satz neu eingehängt: «Nächste Aufgabe» wechselt von Satz zu Satz (Plan 224 Entscheid 9)
         <Keimung key={maske.satz} satz={maske.satz} />
+      ) : maske.name === 'keimung-box' ? (
+        <KeimungBox key={maske.code} code={maske.code} />
       ) : maske.name === 'gefaess' ? (
         <Gefaess code={maske.code} />
       ) : maske.name === 'anlage' ? (

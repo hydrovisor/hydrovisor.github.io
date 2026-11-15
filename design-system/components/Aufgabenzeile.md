@@ -18,6 +18,12 @@ und in der Maske Gefäss unter «Offene Aufgaben»; keine Aufgabe steht ohne Tas
   - «Öffnen» (Maske Gefäss) nur in Heute und nur bei Zeilen, deren Aktion schreibt; in der Maske Gefäss nie.
 - **Kurzprüfung**: Statt des Grunds stehen unter dem Titel die Fragen, die «Alles ok» bestätigt: «Pumpe sprudelt? ·
   Licht an? · Lüfter läuft?». Licht und Lüfter erscheinen nur, solange sie an der Ebene heute noch offen sind.
+- **Sammelzeile «Keimung prüfen · n Sätze»** (Plan 227): Ab zwei fälligen Keimprüfungen in derselben Anzuchtbox steht
+  in Heute eine Zeile statt einer je Satz, an der Stelle der ersten. Unter dem Titel stehen die Sorten mit Anzahl und
+  die älteste Fälligkeit («Lollo Rossa × 2, Eichblatt × 1 · heute fällig»). Tasten: «Prüfen» (`secondary`, Link in
+  die Maske Keimung je Box) und «Morgen» (`ghost`, nur wenn jeder Satz es erlaubt; verschiebt alle Sätze der Zeile).
+  Kein «Öffnen». Nachbau `KeimBoxZeile`, die Gruppierung liefert `heuteZeilen()` in
+  `src/domain/pflanzung/keimbox.ts`.
 - **Nach dem Tipp**: Die Zeile verschwindet, die Meldezeile nennt, was gespeichert wurde, mit «Rückgängig machen»
   (Meldezeile.md). Während des Sendens und 400 ms danach sind alle Tasten und Links der Liste gesperrt (Links mit
   `aria-disabled="true"`, Aussehen wie gesperrte Tasten), damit ein Doppeltipper nicht die nachgerückte Zeile trifft.

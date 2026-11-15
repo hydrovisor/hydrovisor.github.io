@@ -337,3 +337,7 @@ tests/unit/phasen-gruppen.test.ts
 tests/unit/ernte-alle.test.ts
 tests/e2e/phasen-gruppen.spec.ts
 tests/e2e/ernte-heute.spec.ts
+# UX5 Keimung prüfen je Anzuchtbox (#227)
+tests/unit/keimbox.test.ts
+tests/unit/router-keimbox.test.ts
+tests/e2e/keimung-box.spec.ts

@@ -4,6 +4,7 @@ import { useEffect, useState, type MouseEvent } from 'react';
 import { folgeAufgabe, heuteFolge, type AufgabenZiel } from '../domain/aufgaben-folge.ts';
 import { verteilteAufgaben } from '../domain/aufgaben-verteilung.ts';
 import { einstellungenAus } from '../domain/aufgaben.ts';
+import { folgeAnzeige } from '../domain/pflanzung/keimbox.ts';
 import type { Teile } from '../domain/anlage/teile.ts';
 import { ZEITZONE } from '../domain/zeit.ts';
 import { useBuendel } from './buendel.tsx';
@@ -48,9 +49,14 @@ interface NachSpeichernProps {
   vorher?: readonly string[];
   /** nach «Rückgängig machen»: die Aufgabe ist wieder offen, nur «Zu Heute» (A8) */
   nurHeute?: boolean;
+  /**
+   * eben gespeicherte Box (Plan 227): bis das Bündel neu geladen ist, gelten ihre Sätze noch als fällig; eine Folge
+   * in dieselbe Box oder zu einem ihrer Sätze wird nicht angeboten
+   */
+  erledigteBox?: { code: string; saetze: readonly string[] };
 }
 
-export function NachSpeichern({ bezug, vorher = [], nurHeute = false }: NachSpeichernProps) {
+export function NachSpeichern({ bezug, vorher = [], nurHeute = false, erledigteBox }: NachSpeichernProps) {
   const { buendel } = useBuendel();
   const teile = buendel?.teile;
   const [jetzt] = useState(() => Date.now());
@@ -60,12 +66,27 @@ export function NachSpeichern({ bezug, vorher = [], nurHeute = false }: NachSpei
     const t = setTimeout(() => setFrei(true), SPERRE_MS);
     return () => clearTimeout(t);
   }, []);
+  // «Keimung prüfen» eines Satzes in einer Box mit Boxzeile führt in die Maske je Box (Plan 227)
   const folge =
     teile && !nurHeute
-      ? sicher(
-          () => folgeAufgabe(teile, new Date(jetzt), ZEITZONE, bezug ? { ziel: bezug, vorher } : undefined),
-          undefined,
-        )
+      ? sicher(() => {
+          const f = folgeAufgabe(
+            teile,
+            new Date(jetzt),
+            ZEITZONE,
+            bezug ? { ziel: bezug, vorher } : undefined,
+          );
+          if (!f) return undefined;
+          const a = folgeAnzeige(
+            f,
+            verteilteAufgaben(teile, einstellungenAus(teile), new Date(jetzt), ZEITZONE),
+          );
+          const dieselbe =
+            erledigteBox !== undefined &&
+            ((a.ziel.name === 'keimung-box' && a.ziel.code === erledigteBox.code) ||
+              (a.ziel.name === 'keimung' && erledigteBox.saetze.includes(a.ziel.satz)));
+          return dieselbe ? undefined : a;
+        }, undefined)
       : undefined;
   const sperre = frei
     ? {}
