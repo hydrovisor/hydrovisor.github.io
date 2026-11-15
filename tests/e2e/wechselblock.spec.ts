@@ -59,7 +59,7 @@ const abhaken = (page: Page, nr: number) =>
 
 async function listeGeladen(page: Page): Promise<void> {
   await expect(page.locator('main[data-density="regal"]')).toBeVisible({ timeout: 15_000 });
-  await expect(zeilen(page)).toHaveCount(18, { timeout: 15_000 });
+  await expect(zeilen(page)).toHaveCount(16, { timeout: 15_000 });
 }
 
 async function hash(page: Page, ziel: string): Promise<void> {

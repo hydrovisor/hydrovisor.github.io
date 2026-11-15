@@ -137,6 +137,7 @@ Vorschau: Cloudflare Pages `hydrovisor-vorschau` baut jeden Zweig (`<zweig>.hydr
 - [0024 Produktions-Migration gibt der Lead frei](docs/entscheide/0024-produktions-migration-durch-lead.md)
 - [0025 Navigation unten und Saatgut-Manager](docs/entscheide/0025-navigation-unten.md)
 - [0026 Erntekalender als Ziel der Leiste, Säen in Saatgut](docs/entscheide/0026-erntekalender-und-leiste.md)
+- [0027 Spülen des Messbechers steht in der Dosierzeile](docs/entscheide/0027-spuelen-in-der-dosierzeile.md)
 - Übrige Entscheide vom 1.11.2026: `docs/spec/00_rueckfragen.md` (R1 bis R13, W1 bis W14, Annahmen 1 bis 16)
 
 ## Arbeitsweise in der Sitzung

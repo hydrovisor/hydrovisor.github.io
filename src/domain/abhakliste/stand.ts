@@ -4,7 +4,14 @@
 import type { Schritt } from '../datenpfad/erfassung.ts';
 import type { NeuansatzErgebnis } from '../rechner.ts';
 import { uhrzeit, type Zeitzone } from '../zeit.ts';
-import { MESSZEILEN, TIMER_MIN, type Messfeld, type Teilschritt, type ZeileDef } from './zeilen.ts';
+import {
+  ENTFALLENE_ZEILEN,
+  MESSZEILEN,
+  TIMER_MIN,
+  type Messfeld,
+  type Teilschritt,
+  type ZeileDef,
+} from './zeilen.ts';
 
 export interface AblaufMessung {
   id: string;
@@ -92,19 +99,26 @@ export function standNeu(
   };
 }
 
-/** Soll, Aufzüge und Teilschritte offener, nicht begonnener Zeilen aus neuen Zeilen übernehmen (Restdosis nach 14) */
+/**
+ * Soll, Aufzüge und Teilschritte offener, nicht begonnener Zeilen aus neuen Zeilen übernehmen (Restdosis nach 14).
+ * Zeilen ohne Definition entfallen (alter lokaler Stand mit den Spülzeilen 6 und 8, Entscheid 0027); ihre schon
+ * geschriebenen oder ausstehenden Schritte bleiben unberührt.
+ */
 export function defsUebernehmen(stand: AblaufStand, defs: readonly ZeileDef[]): AblaufStand {
+  const vorhanden = new Set(defs.map((d) => d.nr));
   return {
     ...stand,
-    zeilen: stand.zeilen.map((z) => {
-      const d = defs.find((x) => x.nr === z.nr);
-      if (!d || z.erledigtAm !== undefined || z.begonnen) return z;
-      return {
-        ...zeilenStand(d),
-        ...(z.schrittClientId === undefined ? {} : { schrittClientId: z.schrittClientId }),
-        ...(z.messungId === undefined ? {} : { messungId: z.messungId }),
-      };
-    }),
+    zeilen: stand.zeilen
+      .filter((z) => vorhanden.has(z.nr))
+      .map((z) => {
+        const d = defs.find((x) => x.nr === z.nr);
+        if (!d || z.erledigtAm !== undefined || z.begonnen) return z;
+        return {
+          ...zeilenStand(d),
+          ...(z.schrittClientId === undefined ? {} : { schrittClientId: z.schrittClientId }),
+          ...(z.messungId === undefined ? {} : { messungId: z.messungId }),
+        };
+      }),
   };
 }
 
@@ -112,6 +126,22 @@ const zeileVon = (s: AblaufStand, nr: number) => s.zeilen.find((z) => z.nr === n
 
 export function aktiveZeile(stand: AblaufStand): number | undefined {
   return stand.zeilen.find((z) => z.erledigtAm === undefined)?.nr;
+}
+
+/**
+ * Nächste offene Zeile für die Anzeige ausserhalb der Abhakliste (Wechselblock, «Wechsel läuft» in Heute): dort wird
+ * der lokale Stand ohne defsUebernehmen() gelesen, und ein alter Stand kann noch die Spülzeilen 6 und 8 enthalten
+ * (Entscheid 0027). Sie zählen nicht.
+ */
+export function aktiveZeileAnzeige(stand: AblaufStand): number | undefined {
+  return stand.zeilen.find((z) => z.erledigtAm === undefined && !ENTFALLENE_ZEILEN.includes(z.nr))?.nr;
+}
+
+/** Stand ohne die entfallenen Spülzeilen (alter lokaler Stand, Entscheid 0027); sonst unverändert */
+export function ohneEntfallene(stand: AblaufStand): AblaufStand {
+  return stand.zeilen.some((z) => ENTFALLENE_ZEILEN.includes(z.nr))
+    ? { ...stand, zeilen: stand.zeilen.filter((z) => !ENTFALLENE_ZEILEN.includes(z.nr)) }
+    : stand;
 }
 
 function ersetze(stand: AblaufStand, z: ZeilenStand, jetzt: Date): AblaufStand {
@@ -209,7 +239,8 @@ export function abwaehlbar(stand: AblaufStand, nr: number): boolean {
   const erledigt = stand.zeilen.filter((z) => z.erledigtAm !== undefined);
   const letzte = erledigt[erledigt.length - 1];
   if (letzte?.nr !== nr) return false;
-  const naechste = zeileVon(stand, nr + 1);
+  // die nächste Zeile der Liste, nicht nr + 1: seit Entscheid 0027 hat die Liste Lücken (6 und 8)
+  const naechste = stand.zeilen[stand.zeilen.findIndex((z) => z.nr === nr) + 1];
   return !naechste?.begonnen;
 }
 

@@ -134,20 +134,19 @@ function bis(s: AblaufStand, nrs: readonly number[], ab: number): AblaufStand {
 const iso = (x: unknown) => (x === undefined || x === null ? undefined : new Date(x as string).toISOString());
 
 describe('Zeilen 0 bis 17 (R4.6)', () => {
-  it('Loesungswechsel-AK1 Zeilen 0 bis 17 in fester Reihenfolge mit Schritt, Mengen aus dem Rechner, Timern und Messfeldern', () => {
+  // UX8 (Plan 230, Entscheid vom 14.11.2026): die Zeilen 6 und 8 «Messbecher spülen» entfallen, die Nummern bleiben
+  it('Loesungswechsel-AK1 Zeilen 0 bis 17 ohne 6 und 8 (UX8) in fester Reihenfolge mit Schritt, Mengen aus dem Rechner, Timern und Messfeldern', () => {
     const d = defs();
-    expect(d.map((z) => z.nr)).toEqual([...Array(18).keys()]);
+    expect(d.map((z) => z.nr)).toEqual([0, 1, 2, 3, 4, 5, 7, 9, 10, 11, 12, 13, 14, 15, 16, 17]);
     const schritte = d.map((z) => z.schritt);
-    expect(schritte.slice(0, 16)).toEqual([
+    expect(schritte.slice(0, 14)).toEqual([
       'kalibrierung_pruefen',
       'absaugen',
       'frischwasser',
       'frischwasser_messen',
       'gerechnet_fuer',
       'micro',
-      'spuelen',
       'grow',
-      'spuelen',
       'bloom',
       'umruehren',
       'timer',
@@ -156,8 +155,8 @@ describe('Zeilen 0 bis 17 (R4.6)', () => {
       'kontrollmessung',
       'restdosis',
     ]);
-    expect(['umruehren', 'timer']).toContain(schritte[16]);
-    expect(schritte[17]).toBe('endmessung');
+    expect(['umruehren', 'timer']).toContain(schritte[14]);
+    expect(schritte[15]).toBe('endmessung');
     expect(def(d, 2).titel).toBe('Frischwasser 9 l, temperiert');
     expect([def(d, 5).sollMl, def(d, 7).sollMl, def(d, 9).sollMl]).toEqual([70, 105, 35]);
     expect(def(d, 5).messmittel).toBeDefined();
@@ -205,7 +204,8 @@ describe('Haken in fester Reihenfolge (R4.6, U4)', () => {
     // ein Haken übernimmt Soll als Ist
     s = bis(s, [3, 4, 5], 4);
     expect(zeile(s, 5).istMl).toBe(70);
-    expect(aktiveZeile(s)).toBe(6);
+    // UX8: nach Micro folgt Grow (Zeile 6 entfällt)
+    expect(aktiveZeile(s)).toBe(7);
   });
 
   it('Loesungswechsel-AK1 ein Haken ist abwählbar, solange die nächste Zeile nicht begonnen ist', () => {
@@ -218,7 +218,7 @@ describe('Haken in fester Reihenfolge (R4.6, U4)', () => {
     expect(erledigt(s)).toEqual([0]);
     expect(aktiveZeile(s)).toBe(1);
     // ein laufender Timer zählt nicht als Beginn (A8)
-    s = bis(neu(), [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 1);
+    s = bis(neu(), [0, 1, 2, 3, 4, 5, 7, 9, 10], 1);
     expect(aktiveZeile(s)).toBe(11);
     expect(abwaehlbar(s, 10)).toBe(true);
   });
@@ -289,12 +289,13 @@ describe('Rückfrage nach einer Pause (R4.6, A6)', () => {
   it('Loesungswechsel-AK5 «Ja, war schon drin» hakt bis und mit Grow ab, «Nein, jetzt geben» lässt die Liste vor Grow', () => {
     const s = vorGrow();
     const ja = rueckfrageBeantworten(s, 'ja', min(15));
-    expect(erledigt(ja)).toEqual([0, 1, 2, 3, 4, 5, 6, 7]);
+    // UX8: ohne Zeile 6, danach Bloom (9) aktiv
+    expect(erledigt(ja)).toEqual([0, 1, 2, 3, 4, 5, 7]);
     expect(zeile(ja, 7).istMl).toBe(105);
-    expect(aktiveZeile(ja)).toBe(8);
+    expect(aktiveZeile(ja)).toBe(9);
     const nein = rueckfrageBeantworten(s, 'nein', min(15));
     expect(erledigt(nein)).toEqual([0, 1, 2, 3, 4, 5]);
-    expect(aktiveZeile(nein)).toBe(6);
+    expect(aktiveZeile(nein)).toBe(7);
     expect(rueckfrage(nein, defs(), min(15), ZEITZONE)).toBeUndefined();
   });
 

@@ -202,7 +202,8 @@ test('07 Messmaske bei Systemschrift 130 % auf 780 und 640 dp (Vorprobe zu Issue
 
 test('08 Abhakliste Lösungswechsel: Zeilen abhaken (wie abhakliste.spec.ts)', async ({ page, sim }) => {
   await sim.start(ansatzTeile(), '/#/ansatz/R-2.3', um('18:30'));
-  await expect(page.locator('ol.hv-checklist li.hv-check-row')).toHaveCount(18, { timeout: 15_000 });
+  // UX8 (Plan 230): 16 Zeilen, «Messbecher spülen» steht als Hinweis an Micro und Grow
+  await expect(page.locator('ol.hv-checklist li.hv-check-row')).toHaveCount(16, { timeout: 15_000 });
   await sim.zeige('Abhakliste 2.3: nur die nächste offene Zeile ist abhakbar');
   await sim.regeln('Abhakliste');
   for (const [nr, uhr] of [

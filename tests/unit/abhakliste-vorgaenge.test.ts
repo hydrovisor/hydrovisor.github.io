@@ -178,6 +178,8 @@ function durchlauf(
   let s = neuStand();
   const vorgaenge: Record<number, Vorgang> = {};
   for (let nr = 0; nr <= bisNr; nr += 1) {
+    // UX8 (Plan 230): die Zeilen 6 und 8 «Messbecher spülen» gibt es nicht mehr; der Durchlauf übergeht fehlende Nummern
+    if (!s.zeilen.some((z) => z.nr === nr)) continue;
     if (nr === 12) s = mengeAendern(s, 12, 10, zeitNach(12));
     s = haken(s, nr);
     if (nr === 14) s = defsUebernehmen(s, defs(RESTDOSIS));
@@ -311,8 +313,9 @@ describe('Schritte nach dem Kopf (A10)', () => {
       });
       expect(schritt?.felder).toMatchObject({ ansatz_id: ANSATZ, nr: Number(nr), soll_ml: ml, ist_ml: ml });
     }
-    // Spülen ohne Position
-    expect(tabellen(vorgaenge[6] ?? [])).toEqual(['neu:ansatz_schritt']);
+    // UX8: keine Spülzeilen 6 und 8, also auch kein Vorgang dafür
+    expect(vorgaenge[6]).toBeUndefined();
+    expect(vorgaenge[8]).toBeUndefined();
   });
 
   it('Loesungswechsel-AK3 Zeile 12 schreibt ph_minus_ml im Schritt und eine Position ph_minus', () => {
@@ -427,7 +430,8 @@ describe('Abbruch und Abschluss', () => {
     const f = neue(v)[0]?.felder ?? ({} as Record<string, unknown>);
     expect(f).toMatchObject({
       ansatz_id: ANSATZ,
-      nr: 8,
+      // UX8: nach Grow (7) ist Bloom (9) die nächste offene Zeile
+      nr: 9,
       schritt: 'abbruch',
       erledigt_am: jetzt.toISOString(),
     });
