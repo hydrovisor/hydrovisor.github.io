@@ -156,9 +156,11 @@ function bestaetigung(
     if (!a) continue;
     const f = fertigText(teile, a, j.eingabe, ergebnis.vorgang);
     const [erste = '', ...rest] = f.zeilen;
-    je.push(`${namen.get(j.satzId) ?? a.sorte}: ${erste.replace(/^Gespeichert: /, '')}`);
-    for (const z of rest) dazu.add(z.startsWith('Keimrate der Packung') ? `${a.sorte}: ${z}` : z);
-    if (f.warnung) warnungen.add(`${a.sorte}: ${f.warnung}`);
+    const name = namen.get(j.satzId) ?? a.sorte;
+    je.push(`${name}: ${erste.replace(/^Gespeichert: /, '')}`);
+    // Keimrate und Warnung gelten je Packung: mit dem Namen des Satzes, damit zwei Sätze einer Sorte unterscheidbar sind
+    for (const z of rest) dazu.add(z.startsWith('Keimrate der Packung') ? `${name}: ${z}` : z);
+    if (f.warnung) warnungen.add(`${name}: ${f.warnung}`);
     for (const n of f.nachsaeen) nachsaeen.add(n);
   }
   if (ergebnis.uebersprungen.length > 0)
@@ -277,6 +279,7 @@ export function KeimungBox({ code }: { code: string }) {
               bezug={{ name: 'keimung', satz: liste[liste.length - 1] ?? '' }}
               vorher={vorher}
               nurHeute={fertig.zurueck === true}
+              erledigteBox={{ code: box.code, saetze: liste }}
             />
           ) : null}
         </div>
@@ -341,7 +344,7 @@ export function KeimungBox({ code }: { code: string }) {
     if (ergebnis.verstoesse.length > 0 || ergebnis.vorgang.length === 0) {
       setFehler(
         ergebnis.verstoesse.length > 0
-          ? ergebnis.verstoesse.map((v) => `${namen.get(v.satzId) ?? ''}: ${v.grund}`)
+          ? ergebnis.verstoesse.map((v) => `${namen.get(v.satzId) ?? 'Satz'}: ${v.grund}`)
           : ['Nichts zu speichern'],
       );
       return;

@@ -49,9 +49,14 @@ interface NachSpeichernProps {
   vorher?: readonly string[];
   /** nach «Rückgängig machen»: die Aufgabe ist wieder offen, nur «Zu Heute» (A8) */
   nurHeute?: boolean;
+  /**
+   * eben gespeicherte Box (Plan 227): bis das Bündel neu geladen ist, gelten ihre Sätze noch als fällig; eine Folge
+   * in dieselbe Box oder zu einem ihrer Sätze wird nicht angeboten
+   */
+  erledigteBox?: { code: string; saetze: readonly string[] };
 }
 
-export function NachSpeichern({ bezug, vorher = [], nurHeute = false }: NachSpeichernProps) {
+export function NachSpeichern({ bezug, vorher = [], nurHeute = false, erledigteBox }: NachSpeichernProps) {
   const { buendel } = useBuendel();
   const teile = buendel?.teile;
   const [jetzt] = useState(() => Date.now());
@@ -71,9 +76,16 @@ export function NachSpeichern({ bezug, vorher = [], nurHeute = false }: NachSpei
             ZEITZONE,
             bezug ? { ziel: bezug, vorher } : undefined,
           );
-          return f
-            ? folgeAnzeige(f, verteilteAufgaben(teile, einstellungenAus(teile), new Date(jetzt), ZEITZONE))
-            : undefined;
+          if (!f) return undefined;
+          const a = folgeAnzeige(
+            f,
+            verteilteAufgaben(teile, einstellungenAus(teile), new Date(jetzt), ZEITZONE),
+          );
+          const dieselbe =
+            erledigteBox !== undefined &&
+            ((a.ziel.name === 'keimung-box' && a.ziel.code === erledigteBox.code) ||
+              (a.ziel.name === 'keimung' && erledigteBox.saetze.includes(a.ziel.satz)));
+          return dieselbe ? undefined : a;
         }, undefined)
       : undefined;
   const sperre = frei
