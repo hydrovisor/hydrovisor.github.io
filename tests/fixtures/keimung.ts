@@ -8,8 +8,12 @@
 //   in A1, gesät 7.1. (Tag 4), 6 Schwämme à 2 Samen, Packung P1 mit Keimfähigkeit 0.85.
 // - Zieltöpfe 2.3.1 bis 2.3.5 an den Pflanzungen 1 bis 5 (Schwamm 1 bis 5), Pflanzung 6 ist Reserve (Schwamm 6).
 // - zweite Packung P2 derselben Sorte mit 0.6 für einen zweiten Satz (UC6-AK10).
+// - dritter Satz (Plan 227): Nr. 82 Eichblatt (Salat, 5 cm, Keimdauer 2/4/7, Keimtemperatur 15–20 °C wie Lollo Rossa),
+//   Packung Eichblatt (0.7), 4 Schwämme à 2 Samen, ohne Zieltopf, gesät 7.1.
+// - keimBoxTeile(n) (Plan 227, Muster S9): n Sätze (bis 14) in A1 ohne den Satz 80, je 1 Schwamm à 2 Samen ohne
+//   Zieltopf, abwechselnd Lollo Rossa (gesät 7.1.), Rucola (gesät 8.1.) und Eichblatt (gesät 7.1.); alle am 11.1. fällig.
 import { netztopfId, platzId, uid, type Teile } from './regal.ts';
-import { saatTeile, SORTE } from './saeen.ts';
+import { PACKUNG, saatTeile, SORTE } from './saeen.ts';
 import { pflanzSichtenNachrechnen } from './sichten.ts';
 
 const o = { storniert_am: null };
@@ -21,9 +25,12 @@ const SAAT_GILT = '2027-01-07T11:00:00.000Z';
 /** Packungen der Keimtests: P1 (0.85) und P2 (0.6), beide Lollo Rossa */
 export const KEIM_PACKUNG = { p1: uid('29', 21), p2: uid('29', 22) } as const;
 
-/** Satz-Nummern: 80 = Satz der Keimtests, 81 = zweiter Satz */
+/** Satz-Nummern: 80 = Satz der Keimtests, 81 = zweiter Satz, 82 = dritter Satz (Eichblatt, Plan 227) */
 export const KEIM_SATZ = uid('27', 80);
 export const KEIM_SATZ_2 = uid('27', 81);
+export const KEIM_SATZ_3 = uid('27', 82);
+/** erste Nummer der Sätze aus keimBoxTeile(n): 90, 91, … */
+export const KEIM_BOX_NR = 90;
 
 /** Pflanzung i (1 bis m) des Satzes mit der Nummer satzNr */
 export const pflanzungId = (satzNr: number, i: number) => uid('28', satzNr * 100 + i);
@@ -138,19 +145,8 @@ export function keimungDazu(
   });
 }
 
-/**
- * Regal R mit dem Satz der Keimtests. Optionen: andere Zieltöpfe, Datenart der Anlage R, Direktsaat in 3.1
- * (4 Schwämme à 2 Samen, Zieltöpfe 3.1.1 bis 3.1.4), zweiter Satz (Nr. 81, Packung P2, 6 Schwämme à 2 ohne Zieltopf).
- */
-export function keimTeile(
-  e: {
-    zieltoepfe?: string[];
-    datenart?: 'echt' | 'demo' | 'test';
-    direktsaat?: boolean;
-    zweiterSatz?: boolean;
-    jetzt?: Date;
-  } = {},
-): Teile {
+/** Regal R mit Wissen und den Packungen P1 und P2, ohne Satz */
+function keimGrund(e: { datenart?: 'echt' | 'demo' | 'test'; jetzt?: Date }): Teile {
   const t = saatTeile(e.jetzt ?? KEIM_JETZT, { ohneSatzIn23: true });
   if (e.datenart) for (const a of t['anlage'] ?? []) a['datenart'] = e.datenart;
   t['saatgut'] = [
@@ -171,6 +167,25 @@ export function keimTeile(
   ];
   t['reservierung'] = [];
   t['ereignis_pflanzung'] = [];
+  return t;
+}
+
+/**
+ * Regal R mit dem Satz der Keimtests. Optionen: andere Zieltöpfe, Datenart der Anlage R, Direktsaat in 3.1
+ * (4 Schwämme à 2 Samen, Zieltöpfe 3.1.1 bis 3.1.4), zweiter Satz (Nr. 81, Packung P2, 6 Schwämme à 2 ohne Zieltopf),
+ * dritter Satz (Nr. 82, Eichblatt, 4 Schwämme à 2 ohne Zieltopf).
+ */
+export function keimTeile(
+  e: {
+    zieltoepfe?: string[];
+    datenart?: 'echt' | 'demo' | 'test';
+    direktsaat?: boolean;
+    zweiterSatz?: boolean;
+    dritterSatz?: boolean;
+    jetzt?: Date;
+  } = {},
+): Teile {
+  const t = keimGrund(e);
   if (e.direktsaat)
     satzAnlegen(t, {
       nr: 80,
@@ -189,5 +204,48 @@ export function keimTeile(
     });
   if (e.zweiterSatz)
     satzAnlegen(t, { nr: 81, box: 'A1', saatgutId: KEIM_PACKUNG.p2, schwaemme: 6, samen: 2, zieltoepfe: [] });
+  if (e.dritterSatz)
+    satzAnlegen(t, {
+      nr: 82,
+      box: 'A1',
+      sorteId: SORTE.eichblatt,
+      saatgutId: PACKUNG.eichblatt,
+      schwaemme: 4,
+      samen: 2,
+      zieltoepfe: [],
+    });
+  return pflanzSichtenNachrechnen(t);
+}
+
+/** Sorte, Packung und Saatdatum der Sätze aus keimBoxTeile(), im Wechsel */
+const BOX_SORTEN = [
+  { sorteId: SORTE.lollo, saatgutId: KEIM_PACKUNG.p1, saatdatum: KEIM_SAAT },
+  { sorteId: SORTE.rucola, saatgutId: PACKUNG.rucola, saatdatum: '2027-01-08' },
+  { sorteId: SORTE.eichblatt, saatgutId: PACKUNG.eichblatt, saatdatum: KEIM_SAAT },
+] as const;
+
+/** Satz-id des i-ten Satzes (0-basiert) aus keimBoxTeile() */
+export const keimBoxSatz = (i: number) => uid('27', KEIM_BOX_NR + i);
+
+/** n Sätze (1 bis 14) in A1, je 1 Schwamm à 2 Samen ohne Zieltopf, alle am 11.1. fällig (Muster S9, Plan 227) */
+export function keimBoxTeile(
+  n: number,
+  e: { datenart?: 'echt' | 'demo' | 'test'; jetzt?: Date } = {},
+): Teile {
+  if (!Number.isInteger(n) || n < 1 || n > 14) throw new Error(`keimBoxTeile: 1 bis 14 Sätze, nicht ${n}`);
+  const t = keimGrund(e);
+  for (let i = 0; i < n; i += 1) {
+    const s = BOX_SORTEN[i % BOX_SORTEN.length] ?? BOX_SORTEN[0];
+    satzAnlegen(t, {
+      nr: KEIM_BOX_NR + i,
+      box: 'A1',
+      sorteId: s.sorteId,
+      saatgutId: s.saatgutId,
+      saatdatum: s.saatdatum,
+      schwaemme: 1,
+      samen: 2,
+      zieltoepfe: [],
+    });
+  }
   return pflanzSichtenNachrechnen(t);
 }
