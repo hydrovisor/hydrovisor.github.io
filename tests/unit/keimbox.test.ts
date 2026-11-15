@@ -506,7 +506,15 @@ describe('UX5-AK2 keimBoxVorgang', () => {
     expect(falsch.verstoesse.every((v) => v.grund.length > 0)).toBe(true);
 
     // ohne Keimtemperatur: Verstoss, leerer Vorgang
-    const ohneTemp = keimBoxVorgang(t, DREI, alleGekeimt(undefined), zaehler(), JETZT, ZEITZONE);
+    // die Wahl ausgeschrieben: alleGekeimt(undefined) fiele auf den Vorgabewert true zurück
+    const ohneTemp = keimBoxVorgang(
+      t,
+      DREI,
+      { keimtempEingehalten: undefined, abweichung: {} },
+      zaehler(),
+      JETZT,
+      ZEITZONE,
+    );
     expect(ohneTemp.vorgang).toEqual([]);
     expect(ohneTemp.verstoesse.length).toBeGreaterThan(0);
   });
