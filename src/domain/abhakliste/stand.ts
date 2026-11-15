@@ -92,19 +92,26 @@ export function standNeu(
   };
 }
 
-/** Soll, Aufzüge und Teilschritte offener, nicht begonnener Zeilen aus neuen Zeilen übernehmen (Restdosis nach 14) */
+/**
+ * Soll, Aufzüge und Teilschritte offener, nicht begonnener Zeilen aus neuen Zeilen übernehmen (Restdosis nach 14).
+ * Zeilen ohne Definition entfallen (alter lokaler Stand mit den Spülzeilen 6 und 8, Entscheid 0027); ihre schon
+ * geschriebenen oder ausstehenden Schritte bleiben unberührt.
+ */
 export function defsUebernehmen(stand: AblaufStand, defs: readonly ZeileDef[]): AblaufStand {
+  const vorhanden = new Set(defs.map((d) => d.nr));
   return {
     ...stand,
-    zeilen: stand.zeilen.map((z) => {
-      const d = defs.find((x) => x.nr === z.nr);
-      if (!d || z.erledigtAm !== undefined || z.begonnen) return z;
-      return {
-        ...zeilenStand(d),
-        ...(z.schrittClientId === undefined ? {} : { schrittClientId: z.schrittClientId }),
-        ...(z.messungId === undefined ? {} : { messungId: z.messungId }),
-      };
-    }),
+    zeilen: stand.zeilen
+      .filter((z) => vorhanden.has(z.nr))
+      .map((z) => {
+        const d = defs.find((x) => x.nr === z.nr);
+        if (!d || z.erledigtAm !== undefined || z.begonnen) return z;
+        return {
+          ...zeilenStand(d),
+          ...(z.schrittClientId === undefined ? {} : { schrittClientId: z.schrittClientId }),
+          ...(z.messungId === undefined ? {} : { messungId: z.messungId }),
+        };
+      }),
   };
 }
 
@@ -209,7 +216,8 @@ export function abwaehlbar(stand: AblaufStand, nr: number): boolean {
   const erledigt = stand.zeilen.filter((z) => z.erledigtAm !== undefined);
   const letzte = erledigt[erledigt.length - 1];
   if (letzte?.nr !== nr) return false;
-  const naechste = zeileVon(stand, nr + 1);
+  // die nächste Zeile der Liste, nicht nr + 1: seit Entscheid 0027 hat die Liste Lücken (6 und 8)
+  const naechste = stand.zeilen[stand.zeilen.findIndex((z) => z.nr === nr) + 1];
   return !naechste?.begonnen;
 }
 

@@ -52,6 +52,14 @@ export interface ZeileDef {
   komponente?: Komponente;
 }
 
+/**
+ * Zeilen, die es seit Entscheid 0027 (UX8, Issue #230) nicht mehr gibt: «Messbecher spülen» nach Micro und nach Grow
+ * steht als Hinweis in der Dosierzeile. Die Nummern der übrigen Zeilen bleiben (Lücken 6 und 8).
+ */
+export const ENTFALLENE_ZEILEN: readonly number[] = [6, 8];
+/** Hinweis der Dosierzeilen Micro und Grow (Entscheid 0027) */
+export const SPUELHINWEIS = 'danach Messbecher spülen';
+
 /** Wartezeit der Zeilen 11, 13 und 16 (R4.6, A21) */
 export const TIMER_MIN = 15;
 /** Messzeilen mit Messung im Ablauf */
@@ -176,10 +184,8 @@ export function zeilenAus(
       titel: e.gerechnetFuer ? `Gerechnet für: ${e.gerechnetFuer}` : 'Gerechnet für: prüfen',
       aufzuege: 1,
     },
-    zugabe(micro),
-    { nr: 6, schritt: 'spuelen', titel: 'Messbecher spülen', aufzuege: 1 },
-    zugabe(grow),
-    { nr: 8, schritt: 'spuelen', titel: 'Messbecher spülen', aufzuege: 1 },
+    { ...zugabe(micro), hinweis: SPUELHINWEIS },
+    { ...zugabe(grow), hinweis: SPUELHINWEIS },
     zugabe(bloom),
     { nr: 10, schritt: 'umruehren', titel: 'Umrühren', aufzuege: 1 },
     timer(11),

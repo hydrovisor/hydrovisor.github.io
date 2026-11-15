@@ -8,7 +8,7 @@ import type { Teile } from '../teile.ts';
 import { kalendertag, uhrzeit, type Zeitzone } from '../zeit.ts';
 import { laufendeAnsaetze } from './folgen.ts';
 import { aktiveZeile, timerEnde, type AblaufStand, type SchrittZeile } from './stand.ts';
-import { TIMER_MIN, type SchrittTyp } from './zeilen.ts';
+import { ENTFALLENE_ZEILEN, TIMER_MIN, type SchrittTyp } from './zeilen.ts';
 
 export const MAX_ABHAKLISTEN_JE_BLOCK = 3;
 
@@ -38,27 +38,29 @@ const SCHRITT_TEXT: Readonly<Record<SchrittTyp, string>> = {
   endmessung: 'Endmessung',
   abbruch: 'Abbruch',
 };
-/** feste Reihenfolge der Schritte 0 bis 17 (zeilenAus) für Glieder ohne lokalen Stand */
-const SCHRITT_JE_ZEILE: readonly SchrittTyp[] = [
-  'kalibrierung_pruefen',
-  'absaugen',
-  'frischwasser',
-  'frischwasser_messen',
-  'gerechnet_fuer',
-  'micro',
-  'spuelen',
-  'grow',
-  'spuelen',
-  'bloom',
-  'umruehren',
-  'timer',
-  'ph_einstellen',
-  'timer',
-  'kontrollmessung',
-  'restdosis',
-  'timer',
-  'endmessung',
-];
+/** Schritt je Zeilennummer (zeilenAus) für Glieder ohne lokalen Stand; 6 und 8 gibt es seit Entscheid 0027 nicht mehr */
+const SCHRITT_JE_ZEILE: Readonly<Record<number, SchrittTyp>> = {
+  0: 'kalibrierung_pruefen',
+  1: 'absaugen',
+  2: 'frischwasser',
+  3: 'frischwasser_messen',
+  4: 'gerechnet_fuer',
+  5: 'micro',
+  7: 'grow',
+  9: 'bloom',
+  10: 'umruehren',
+  11: 'timer',
+  12: 'ph_einstellen',
+  13: 'timer',
+  14: 'kontrollmessung',
+  15: 'restdosis',
+  16: 'timer',
+  17: 'endmessung',
+};
+/** Zeilennummern der Liste in ihrer Reihenfolge */
+const ZEILEN_NR: readonly number[] = Object.keys(SCHRITT_JE_ZEILE)
+  .map(Number)
+  .sort((a, b) => a - b);
 const textZeile = (nr: number): string | undefined => {
   const s = SCHRITT_JE_ZEILE[nr];
   return s === undefined ? undefined : SCHRITT_TEXT[s];
@@ -123,8 +125,13 @@ export function buendelZeile(
   schritte: readonly SchrittZeile[],
   timerEndeKopf: string | null | undefined,
 ): { zeile: number; timerEnde?: string } {
-  const erledigt = schritte.filter((x) => !x.storniert_am && x.erledigt_am).map((x) => x.nr);
-  const zeile = erledigt.length === 0 ? 0 : Math.min(17, Math.max(...erledigt) + 1);
+  // Schritte der entfallenen Zeilen (alte Wechsel mit «spülen») zählen nicht; nach der höchsten erledigten Zeile folgt
+  // die nächste Zeile der Liste (nach 5 die 7, nach 7 die 9)
+  const erledigt = schritte
+    .filter((x) => !x.storniert_am && x.erledigt_am && !ENTFALLENE_ZEILEN.includes(x.nr))
+    .map((x) => x.nr);
+  const hoechste = erledigt.length === 0 ? -1 : Math.max(...erledigt);
+  const zeile = ZEILEN_NR.find((nr) => nr > hoechste) ?? 17;
   if (!TIMER_ZEILEN.has(zeile)) return { zeile };
   const vor = schritte.find((x) => x.nr === zeile - 1 && !x.storniert_am && x.erledigt_am);
   const ende = timerEndeKopf
