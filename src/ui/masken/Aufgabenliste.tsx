@@ -6,9 +6,10 @@
 // einer Aktion (U13). Umsetzen bleibt in der eigenen Liste aus Plan 33, das Messgerät im Kopf der Übersicht.
 import { einstellungenAus, fehlendeTeile, naechsteAufgabe, type Aufgabe } from '../../domain/aufgaben.ts';
 import { ANDERSWO } from '../../domain/aufgaben-folge.ts';
+import { heuteZeilen } from '../../domain/pflanzung/keimbox.ts';
 import { ausserhalbOrte, heuteKarten } from '../../domain/rundgang/heute.ts';
 import { ZEITZONE } from '../../domain/zeit.ts';
-import { Aufgabenzeile, useAufgabenAktionen } from '../Aufgabenzeilen.tsx';
+import { Aufgabenzeile, KeimBoxZeile, useAufgabenAktionen } from '../Aufgabenzeilen.tsx';
 import { Button } from '../bausteine/Button.tsx';
 import { Notice } from '../bausteine/Notice.tsx';
 import { StatusBadge } from '../bausteine/StatusBadge.tsx';
@@ -103,7 +104,16 @@ export function Aufgabenliste({ jetzt, faellig }: { jetzt: Date; faellig: readon
               {k.code}
               {k.ausserhalb ? <StatusBadge tone="danger" /> : null}
             </h2>
-            <ul className="hv-aufgaben">{aufgaben.map(zeile)}</ul>
+            <ul className="hv-aufgaben">
+              {/* fällige «Keimung prüfen» einer Anzuchtbox als eine Zeile (Plan 227); die Rechnung bleibt je Satz */}
+              {heuteZeilen(aufgaben).map((z) =>
+                z.art === 'keimbox' ? (
+                  <KeimBoxZeile key={z.box.schluessel} box={z.box} aktionen={aktionen} />
+                ) : (
+                  zeile(z.aufgabe)
+                ),
+              )}
+            </ul>
           </section>
         );
       })}

@@ -4,6 +4,7 @@ import { useEffect, useState, type MouseEvent } from 'react';
 import { folgeAufgabe, heuteFolge, type AufgabenZiel } from '../domain/aufgaben-folge.ts';
 import { verteilteAufgaben } from '../domain/aufgaben-verteilung.ts';
 import { einstellungenAus } from '../domain/aufgaben.ts';
+import { folgeAnzeige } from '../domain/pflanzung/keimbox.ts';
 import type { Teile } from '../domain/anlage/teile.ts';
 import { ZEITZONE } from '../domain/zeit.ts';
 import { useBuendel } from './buendel.tsx';
@@ -60,12 +61,20 @@ export function NachSpeichern({ bezug, vorher = [], nurHeute = false }: NachSpei
     const t = setTimeout(() => setFrei(true), SPERRE_MS);
     return () => clearTimeout(t);
   }, []);
+  // «Keimung prüfen» eines Satzes in einer Box mit Boxzeile führt in die Maske je Box (Plan 227)
   const folge =
     teile && !nurHeute
-      ? sicher(
-          () => folgeAufgabe(teile, new Date(jetzt), ZEITZONE, bezug ? { ziel: bezug, vorher } : undefined),
-          undefined,
-        )
+      ? sicher(() => {
+          const f = folgeAufgabe(
+            teile,
+            new Date(jetzt),
+            ZEITZONE,
+            bezug ? { ziel: bezug, vorher } : undefined,
+          );
+          return f
+            ? folgeAnzeige(f, verteilteAufgaben(teile, einstellungenAus(teile), new Date(jetzt), ZEITZONE))
+            : undefined;
+        }, undefined)
       : undefined;
   const sperre = frei
     ? {}

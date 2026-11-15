@@ -30,6 +30,8 @@ export type Route =
   | { name: 'saeen'; box?: string; ziel?: string; von?: 'gefaess' }
   // Plan 24: Keimung prüfen je Satz (04 Abschnitt 3)
   | { name: 'keimung'; satz: string }
+  // Plan 227: Keimung prüfen je Anzuchtbox, Code der Box wie #/gefaess/<code>
+  | { name: 'keimung-box'; code: string }
   // von: 'ernte' zeigt in der Pflanze «Zurück» in den Erntekalender (Plan 232 A15)
   | { name: 'pflanze'; pflanzung: string; von?: 'ernte' }
   // Plan 232: Erntekalender (UC15, Entscheid 0026), Auswahl eines Satzes im Pfad
@@ -73,6 +75,9 @@ export function routeAusHash(hash: string): Route {
   const [pfad = '', abfrage = ''] = hash.replace(/^#/, '').split('?');
   const etikett = /^\/e\/([A-Za-z0-9.-]+)$/.exec(pfad);
   if (etikett?.[1]) return { name: 'etikett', code: decodeURIComponent(etikett[1]) };
+  const keimbox = /^\/keimung\/box\/([^/]+)$/.exec(pfad);
+  if (keimbox?.[1])
+    return CODE.test(keimbox[1]) ? { name: 'keimung-box', code: keimbox[1] } : { name: 'heute' };
   const keimung = /^\/keimung\/([^/]+)$/.exec(pfad);
   if (keimung?.[1]) return UUID.test(keimung[1]) ? { name: 'keimung', satz: keimung[1] } : { name: 'heute' };
   // Plan 35: Pflanzenansicht (Phasen) je Pflanzung
@@ -253,6 +258,7 @@ export function hashZu(route: Route): string {
   if (route.name === 'sorte-neu') return '#/sorten/neu';
   if (route.name === 'sorte') return `#/sorten/${route.sorte}`;
   if (route.name === 'keimung') return `#/keimung/${route.satz}`;
+  if (route.name === 'keimung-box') return `#/keimung/box/${route.code}`;
   if (route.name === 'pflanze')
     return route.von === 'ernte' ? `#/pflanze/${route.pflanzung}?von=ernte` : `#/pflanze/${route.pflanzung}`;
   if (route.name === 'ernte') return route.satz ? `#/ernte/${route.satz}` : '#/ernte';

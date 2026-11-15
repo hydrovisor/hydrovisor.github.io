@@ -8,6 +8,7 @@ import { aufschubVorgang, deckelVorgang, erledigtVorgang } from '../domain/aufga
 import { aufgabenTasten, type Aktion } from '../domain/aufgaben-tasten.ts';
 import type { Aufgabe } from '../domain/aufgaben.ts';
 import { rueckgaengigVorgang, type Vorgang } from '../domain/datenpfad/erfassung.ts';
+import type { KeimBox } from '../domain/pflanzung/keimbox.ts';
 import { KURZ_ABWEICHUNG } from '../domain/rundgang/abweichung.ts';
 import { HAUPTPUNKTE, ortKurzpruefung, pruefFragen, pruefVorgang } from '../domain/rundgang/kurzpruefung.ts';
 import { ZEITZONE } from '../domain/zeit.ts';
@@ -48,6 +49,8 @@ export interface AufgabenAktionen {
   /** Fragen der Kurzprüfung je Schlüssel: was «Alles ok» bestätigt (A3) */
   fragen: ReadonlyMap<string, string>;
   ausfuehren: (a: Aufgabe, aktion: Aktion) => void;
+  /** «Morgen» für alle Sätze einer Boxzeile: je Satz ein Aufschub, ein Vorgang (Plan 227 A7, R5.3) */
+  ausfuehrenBox: (box: KeimBox, aktion: 'morgen') => void;
 }
 
 /**
@@ -137,7 +140,53 @@ export function useAufgabenAktionen(faellig: readonly Aufgabe[], jetzt: Date): A
     }
   }
 
-  return { weg, pegel, fehler, sendet, fragen, ausfuehren: (a, aktion) => void senden(a, aktion) };
+  async function sendenBox(box: KeimBox, aktion: 'morgen') {
+    if (sperre.current) return;
+    const t = uhrJetzt();
+    const vorgang: Vorgang = box.aufgaben.flatMap((a) => [
+      ...aufschubVorgang(a, aktion, neueClientId(), t, ZEITZONE),
+    ]);
+    if (vorgang.length === 0) {
+      setFehler('Nicht mehr fällig, Heute neu laden');
+      return;
+    }
+    const schluessel = box.aufgaben.map((a) => a.schluessel);
+    sperre.current = true;
+    setSendet(true);
+    let ok = false;
+    try {
+      const r = await schreiben(vorgang, { jetzt: uhrJetzt(), zeitzone: ZEITZONE });
+      if (r.status === 'nicht_gespeichert') {
+        setFehler(r.fehler.text);
+        return;
+      }
+      ok = true;
+      setFehler(undefined);
+      setWeg((alt) => new Set([...alt, ...schluessel]));
+      melden({
+        text: `Auf morgen verschoben: ${box.titel} ${box.code}`,
+        rueckgaengig: rueckgaengigVorgang(vorgang),
+        nachRueckgaengig: () => setWeg((alt) => new Set([...alt].filter((s) => !schluessel.includes(s)))),
+      });
+    } finally {
+      const frei = () => {
+        sperre.current = false;
+        setSendet(false);
+      };
+      if (ok) setTimeout(frei, SPERRE_MS);
+      else frei();
+    }
+  }
+
+  return {
+    weg,
+    pegel,
+    fehler,
+    sendet,
+    fragen,
+    ausfuehren: (a, aktion) => void senden(a, aktion),
+    ausfuehrenBox: (box, aktion) => void sendenBox(box, aktion),
+  };
 }
 
 export function Aufgabenzeile({
@@ -187,6 +236,37 @@ export function Aufgabenzeile({
             </a>
           ),
         )}
+      </span>
+    </li>
+  );
+}
+
+/** Sammelzeile «Keimung prüfen · n Sätze» einer Anzuchtbox (Plan 227; Aufgabenzeile.md «Sammelzeile») */
+export function KeimBoxZeile({ box, aktionen }: { box: KeimBox; aktionen: AufgabenAktionen }) {
+  const { sendet } = aktionen;
+  const linkSperre = sendet
+    ? { 'aria-disabled': true, onClick: (e: MouseEvent<HTMLAnchorElement>) => e.preventDefault() }
+    : {};
+  return (
+    <li className="hv-aufgabe hv-aufgabe-umbruch" data-gewicht={box.aufgaben[0]?.gewicht}>
+      <span className="hv-aufgabe-text">
+        {box.titel}
+        <br />
+        <small>{box.grund}</small>
+      </span>
+      <span className="hv-aufgabe-knoepfe">
+        <a
+          className="hv-btn hv-btn-secondary"
+          href={hashZu({ name: 'keimung-box', code: box.code })}
+          {...linkSperre}
+        >
+          Prüfen
+        </a>
+        {box.morgenErlaubt ? (
+          <Button variant="ghost" disabled={sendet} onClick={() => aktionen.ausfuehrenBox(box, 'morgen')}>
+            Morgen
+          </Button>
+        ) : null}
       </span>
     </li>
   );
