@@ -23,6 +23,7 @@ import {
   eingabeAus,
   eingabeStart,
   eingabeTippen,
+  vorherUebernehmen,
   feldVollstaendig,
   feldWaehlen,
   messwerte,
@@ -283,7 +284,22 @@ export function Messmaske({ ort, modus }: { ort: Ort; modus: Ablaufmodus }) {
     if (modus.korrektur) return;
     // pH vor EC in der Kontroll- und Endmessung (Herstellerregel Konzept 5.6)
     if (modus.zeile && !feldFrei(modus.zeile, messwerteHundertstel(aktuell.current), g)) return;
-    const neu = feldWaehlen(aktuell.current, g);
+    // UX7: Tipp auf das aktive, leere Feld übernimmt «vorher» und springt weiter; veraltete Vorwerte nicht
+    const stand = aktuell.current;
+    const v = kontext?.vorher[g];
+    if (zone === 'eingabe' && v && !v.veraltet) {
+      const mit = vorherUebernehmen(stand, g, v.wert);
+      if (mit !== stand) {
+        ersterTipp.current ??= uhrJetzt().getTime();
+        aktuell.current = mit;
+        setEingabe(mit);
+        setBestaetigt(false);
+        setErgebnis(undefined);
+        if (!messstelle && eingabeAbgeschlossen(stand, mit, '0')) setZone('ergebnis');
+        return;
+      }
+    }
+    const neu = feldWaehlen(stand, g);
     aktuell.current = neu;
     setEingabe(neu);
     setZone('eingabe');

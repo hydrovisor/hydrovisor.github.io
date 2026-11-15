@@ -132,6 +132,7 @@
   --size-icon-sm: 16px; /* Symbole in Badges und Hinweisen. */
   --size-content: 720px; /* Maximale Inhaltsbreite am Tablet. */
   --size-touch-regal: 68px; /* Tippfläche in Regal-Masken (data-density="regal"): Tasten des Ziffernblocks, Haken der Abhakliste, Aktionsknöpfe. Ersetzt dort size-touch und size-touch-compact. */
+  --size-link-regal: 48px; /* Mindesthöhe der Trefferfläche eines Textlinks in Regal-Masken (data-density="regal"); Tasten bleiben bei size-touch-regal. */
   --icon-status-regal: 32px; /* Statussymbol in den Kacheln der Messmaske. */
   --size-tile-min-width: 72px; /* Mindestbreite einer Ortskachel (Tile) in der Anlagenübersicht. */
   --size-tile-min-height: 80px; /* Mindesthöhe einer Ortskachel (Tile) in der Anlagenübersicht. */
@@ -200,4 +201,6 @@
 [data-density="regal"] {
   --size-touch: var(--size-touch-regal);
   --size-touch-compact: var(--size-touch-regal);
+  --text-caption-size: var(--text-small-size);
+  --text-caption-line: var(--text-small-line);
 }

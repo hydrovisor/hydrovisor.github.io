@@ -143,6 +143,21 @@ function zurueck(e: Messeingabe): Messeingabe {
   return mitText(e, t.vor.slice(0, -1));
 }
 
+/**
+ * «vorher» übernehmen (UX7, Issue #229): setzt das aktive, leere Feld auf den letzten Messwert (Hundertstel, auf die
+ * Dezimalen des Felds gerundet) und aktiviert das nächste Feld. Ohne Vorwert, bei einem anderen als dem aktiven Feld,
+ * bei schon getipptem Text oder einem Wert ausserhalb der Feldgrenzen bleibt die Eingabe unverändert.
+ */
+export function vorherUebernehmen(e: Messeingabe, feld: Groesse, vorher: number | undefined): Messeingabe {
+  if (vorher === undefined || feld !== e.aktiv || e.text[feld] !== '') return e;
+  const regel = FELDREGEL[feld];
+  if (!Number.isFinite(vorher) || vorher < regel.min || vorher > regel.max) return e;
+  const stufe = 10 ** (2 - regel.dezimalen);
+  const gerundet = Math.min(regel.max, Math.round(vorher / stufe) * stufe);
+  const text = (gerundet / 100).toFixed(regel.dezimalen);
+  return { ...mitText(e, text), aktiv: naechstes(e) };
+}
+
 export function eingabeTippen(e: Messeingabe, taste: Taste): Messeingabe {
   switch (taste) {
     case 'weiter':
