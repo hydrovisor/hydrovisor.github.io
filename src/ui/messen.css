@@ -69,7 +69,7 @@
 }
 
 /* UX7: «vorher» im aktiven, leeren Feld ist antippbar (übernimmt den Wert); veraltete Vorwerte bleiben gestrichelt */
-.hv-messen .hv-tile-aktiv .hv-tile-value-leer ~ .hv-tile-trend:not(:has(.hv-tile-trend-veraltet)) {
+.hv-messen:not(.hv-messen-ablauf) .hv-tile-aktiv .hv-tile-value-leer ~ .hv-tile-trend:not(:has(.hv-tile-trend-veraltet)) {
   color: var(--brand);
   text-decoration: underline;
   text-underline-offset: 3px;

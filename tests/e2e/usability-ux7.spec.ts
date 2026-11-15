@@ -139,6 +139,9 @@ test('UX7-AK3 Lösungswechsel: kein Text unter 14 dp, «Gerechnet für» ist nic
   await oeffnen(page, ansatzTeile(), '/#/ansatz/R-2.3', um('18:30'));
   await expect(page.locator('ol.hv-checklist li.hv-check-row').first()).toBeVisible({ timeout: 15_000 });
   expect(await kleineTexte(page), 'Lösungswechsel').toEqual([]);
+  // die Zeile «Gerechnet für» steht im Kopf (sonst prüfte der Filter unten nichts)
+  await expect(page.locator('.hv-messen-kultur > span')).toHaveCount(2);
+  await expect(page.locator('.hv-messen-kultur > span').nth(1)).not.toBeEmpty();
   const abgeschnitten = await page.evaluate(() =>
     [...document.querySelectorAll('.hv-messen-kultur > span')]
       .filter((s) => s.scrollWidth > s.clientWidth + 1)
@@ -169,4 +172,13 @@ test('UX7-AK3 UX7-AK4 Heute und Pflanze: Trefferhöhe mindestens 48 dp, kein Tex
   await page.locator('main a[href^="#/pflanze/"]').first().click();
   await expect(page.getByRole('heading', { name: 'Pflanze', level: 1 })).toBeVisible();
   expect(await kleineTexte(page), 'Pflanze').toEqual([]);
+});
+
+test('UX7-AK2 im Ablauf der Abhakliste übernimmt der Tipp auf die Kachel keinen Vorwert', async ({
+  page,
+}) => {
+  await oeffnen(page, mitKalibrierung(messTeile()), '/#/messen/R-2.3?zeile=14', JETZT);
+  await expect(kachel(page, 'EC')).toBeVisible({ timeout: 15_000 });
+  await kachel(page, 'pH').click();
+  await expect(kachel(page, 'pH')).toContainText('–');
 });
