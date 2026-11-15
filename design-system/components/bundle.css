@@ -620,5 +620,6 @@ a.hv-belegung, a.hv-belegung:hover { color: var(--ink); text-decoration: none; }
 .hv-kalender-knoepfe .hv-btn { flex: 1 1 140px; padding: 0 var(--space-2); }
 
 /* Dichte «regal»: Textlinks ohne eigene Klasse mit 48 dp Trefferhöhe (UX7, Issue #229) */
-[data-density="regal"] a:not([class]) { display: inline-flex; align-items: center; min-height: var(--size-link-regal); }
+/* Die Trefferfläche wächst über Innenabstand und gleich grossen negativen Aussenabstand: die Zeile wird nicht höher. */
+[data-density="regal"] a:not([class]) { --link-polster: max(0px, calc((var(--size-link-regal) - 1lh) / 2)); display: inline-block; padding-block: var(--link-polster); margin-block: calc(-1 * var(--link-polster)); }
 [data-density="regal"] .hv-badge, [data-density="regal"] .hv-card-meta { font-size: var(--text-small-size); line-height: var(--text-small-line); }
