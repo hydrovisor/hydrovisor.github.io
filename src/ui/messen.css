@@ -64,8 +64,21 @@
 
 /* «EC mS/cm» zweizeilig neben dem Statussymbol, ohne die Kachel zu verlängern */
 .hv-messen .hv-tile:not(.hv-tile-kompakt) .hv-tile-label {
-  font-size: 13px;
+  font-size: var(--text-small-size);
   line-height: 16px;
+}
+
+/* UX7: «vorher» im aktiven, leeren Feld ist antippbar (übernimmt den Wert); veraltete Vorwerte bleiben gestrichelt */
+.hv-messen:not(.hv-messen-ablauf) .hv-tile-aktiv .hv-tile-value-leer ~ .hv-tile-trend:not(:has(.hv-tile-trend-veraltet)) {
+  color: var(--brand);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* UX7: Kopf des Lösungswechsels bricht «Gerechnet für» um, statt es abzuschneiden */
+.hv-ansatz .hv-messen-kultur > span {
+  white-space: normal;
+  overflow: visible;
 }
 
 /* Trendzeile «vorher 1.20 ↗» ganz in der Kachelbreite (drei Kacheln auf 360 dp) */
