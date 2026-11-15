@@ -7,7 +7,7 @@ import { messbareOrte } from '../ort.ts';
 import type { Teile } from '../teile.ts';
 import { kalendertag, uhrzeit, type Zeitzone } from '../zeit.ts';
 import { laufendeAnsaetze } from './folgen.ts';
-import { aktiveZeile, timerEnde, type AblaufStand, type SchrittZeile } from './stand.ts';
+import { aktiveZeile, ohneEntfallene, timerEnde, type AblaufStand, type SchrittZeile } from './stand.ts';
 import { ENTFALLENE_ZEILEN, TIMER_MIN, type SchrittTyp } from './zeilen.ts';
 
 export const MAX_ABHAKLISTEN_JE_BLOCK = 3;
@@ -199,7 +199,8 @@ export function wechselblock(
     if (jetzt.getTime() - Date.parse(s.letzteAktionAm) > ALT_MS) continue;
     const ort = orte.get(s.platzId);
     if (!ort) continue;
-    const g = gliedAusStand(s, ort);
+    // ein alter lokaler Stand kann noch die Spülzeilen 6 und 8 enthalten (Entscheid 0027): sie werden kein Glied
+    const g = gliedAusStand(ohneEntfallene(s), ort);
     if (g) laufend.push({ anlageId: ort.anlageId, glied: g });
   }
 

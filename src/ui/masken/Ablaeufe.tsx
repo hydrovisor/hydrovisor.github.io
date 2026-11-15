@@ -12,7 +12,7 @@ import {
   type Wechselblock,
 } from '../../domain/abhakliste/block.ts';
 import { laufendeAnsaetze, offeneNachmessungen } from '../../domain/abhakliste/folgen.ts';
-import { aktiveZeile, timerEnde, type AblaufStand } from '../../domain/abhakliste/stand.ts';
+import { aktiveZeileAnzeige, timerEnde, type AblaufStand } from '../../domain/abhakliste/stand.ts';
 import type { Aufgabe } from '../../domain/aufgaben.ts';
 import type { AnsatzZeile } from '../../domain/bewertung/verlauf.ts';
 import { messbareOrte } from '../../domain/ort.ts';
@@ -86,7 +86,7 @@ export function Ablaeufe({ jetzt, faellig = [] }: { jetzt: Date; faellig?: reado
     const ort = codeVon(s.platzId);
     const code = ort?.code ?? s.code;
     wechselOrte.add(s.platzId);
-    const nr = aktiveZeile(s);
+    const nr = aktiveZeileAnzeige(s);
     eintraege.push({
       schluessel: e.id,
       text: `${ort?.kennung ?? code} Wechsel läuft · ${wasAktiv(s, nr)}`,

@@ -4,7 +4,14 @@
 import type { Schritt } from '../datenpfad/erfassung.ts';
 import type { NeuansatzErgebnis } from '../rechner.ts';
 import { uhrzeit, type Zeitzone } from '../zeit.ts';
-import { MESSZEILEN, TIMER_MIN, type Messfeld, type Teilschritt, type ZeileDef } from './zeilen.ts';
+import {
+  ENTFALLENE_ZEILEN,
+  MESSZEILEN,
+  TIMER_MIN,
+  type Messfeld,
+  type Teilschritt,
+  type ZeileDef,
+} from './zeilen.ts';
 
 export interface AblaufMessung {
   id: string;
@@ -119,6 +126,22 @@ const zeileVon = (s: AblaufStand, nr: number) => s.zeilen.find((z) => z.nr === n
 
 export function aktiveZeile(stand: AblaufStand): number | undefined {
   return stand.zeilen.find((z) => z.erledigtAm === undefined)?.nr;
+}
+
+/**
+ * Nächste offene Zeile für die Anzeige ausserhalb der Abhakliste (Wechselblock, «Wechsel läuft» in Heute): dort wird
+ * der lokale Stand ohne defsUebernehmen() gelesen, und ein alter Stand kann noch die Spülzeilen 6 und 8 enthalten
+ * (Entscheid 0027). Sie zählen nicht.
+ */
+export function aktiveZeileAnzeige(stand: AblaufStand): number | undefined {
+  return stand.zeilen.find((z) => z.erledigtAm === undefined && !ENTFALLENE_ZEILEN.includes(z.nr))?.nr;
+}
+
+/** Stand ohne die entfallenen Spülzeilen (alter lokaler Stand, Entscheid 0027); sonst unverändert */
+export function ohneEntfallene(stand: AblaufStand): AblaufStand {
+  return stand.zeilen.some((z) => ENTFALLENE_ZEILEN.includes(z.nr))
+    ? { ...stand, zeilen: stand.zeilen.filter((z) => !ENTFALLENE_ZEILEN.includes(z.nr)) }
+    : stand;
 }
 
 function ersetze(stand: AblaufStand, z: ZeilenStand, jetzt: Date): AblaufStand {
