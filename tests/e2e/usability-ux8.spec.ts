@@ -124,8 +124,10 @@ test('UX8-AK3 Tipperzahl Lösung wechseln: Zeilen 0 bis 13 mit 12 Haken (vorher 
   await expect(zeile(page, 14)).toHaveAttribute('data-zustand', 'aktiv');
   expect(m.tipper, 'Haken der Zeilen 0 bis 13').toBe(12);
   // keine Schritte 6 und 8 gesendet, die Dosierzeilen schon
-  const nrs = m.geschrieben.filter(([tab]) => tab === 'ansatz_schritt').map(([, z]) => Number(z['nr']));
-  expect(nrs).not.toContain(6);
-  expect(nrs).not.toContain(8);
-  expect(nrs).toEqual(expect.arrayContaining([5, 7, 9, 13]));
+  const gesendet = () =>
+    m.geschrieben.filter(([tab]) => tab === 'ansatz_schritt').map(([, z]) => Number(z['nr']));
+  // der Schritt des letzten Hakens wird nach dem Tipp gesendet: warten, bis er angekommen ist
+  await expect.poll(gesendet).toEqual(expect.arrayContaining([5, 7, 9, 13]));
+  expect(gesendet()).not.toContain(6);
+  expect(gesendet()).not.toContain(8);
 });
