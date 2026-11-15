@@ -408,11 +408,14 @@ export function KeimungBox({ code }: { code: string }) {
         {gemeinsam === undefined && a.keimtemp ? (
           <p className="hv-keimung-zeile">Keimtemperatur {a.keimtemp}</p>
         ) : null}
-        {a.hinweise.map((h) => (
-          <p key={h} className="hv-keimung-zeile">
-            {h}
-          </p>
-        ))}
+        {/* «Keimrate zählt nur in echten Anlagen» steht einmal im Kopf der Maske */}
+        {a.hinweise
+          .filter((h) => h !== HINWEIS_NICHT_ECHT)
+          .map((h) => (
+            <p key={h} className="hv-keimung-zeile">
+              {h}
+            </p>
+          ))}
         <Choice
           einzeln
           zeile
@@ -509,7 +512,7 @@ export function KeimungBox({ code }: { code: string }) {
         />
       ) : null}
       <div className="hv-keimbox-fuss">
-        <p className="hv-keimung-zusammenfassung" aria-live="polite">
+        <p className="hv-keimbox-summe" aria-live="polite">
           {`${saetzeText(vorschau.je.length)} · ${gesamt.gekeimt} von ${gesamt.gesaet} Samen${anteil}`}
         </p>
         <Button disabled={sendet || !bereit} onClick={() => void speichern()}>

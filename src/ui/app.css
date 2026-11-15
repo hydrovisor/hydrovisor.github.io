@@ -617,6 +617,12 @@ html:has(.hv-rahmen-leiste .hv-heute-fuss):not(:has(.hv-block)) {
   background: var(--surface);
 }
 
+/* Gesamtzeile über der Taste: eine Zeile auch bei 360 dp */
+.hv-keimbox-summe {
+  font-size: var(--text-caption-size);
+  font-weight: 600;
+}
+
 .hv-rahmen-leiste .hv-keimbox-fuss {
   bottom: var(--hv-leiste-hoehe);
   padding-bottom: var(--space-2);
