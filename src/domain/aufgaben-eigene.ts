@@ -70,16 +70,30 @@ function ketteVon(z: EigeneZeile, nachId: ReadonlyMap<string, EigeneZeile>): Eig
   return kette;
 }
 
+/** a ist später erfasst als b (bei Gleichstand die grössere Id) */
+const spaeter = (a: EigeneZeile, b: EigeneZeile) =>
+  Date.parse(a.erfasst_am) - Date.parse(b.erfasst_am) > 0 ||
+  (Date.parse(a.erfasst_am) === Date.parse(b.erfasst_am) && a.id > b.id);
+
 /**
- * Aktive Definitionen: nicht storniert, ohne nicht stornierten Nachfolger (TO2, A9), Anlage aktiv; nach Name, dann Id.
+ * Aktive Definitionen: nicht storniert, ohne nicht stornierten Nachfolger (TO2, A9), Anlage aktiv; zeigen mehrere offene
+ * Nachfolger auf dieselbe Zeile, gilt nur der jüngste (Runde 1 Befund 1); nach Name, dann Id.
  */
 export function eigeneDefinitionen(teile: Teile, anlageId?: string): EigeneDefinition[] {
   const alle = zeilen<EigeneZeile>(teile, 'eigene_aufgabe');
   const nachId = new Map(alle.map((z) => [z.id, z]));
-  const ersetzt = new Set(alle.filter(offen).map((z) => z.ersetzt_id ?? ''));
+  const offene = alle.filter(offen);
+  const ersetzt = new Set(offene.map((z) => z.ersetzt_id ?? ''));
+  const juengster = new Map<string, EigeneZeile>();
+  for (const z of offene) {
+    if (!z.ersetzt_id) continue;
+    const bisher = juengster.get(z.ersetzt_id);
+    if (!bisher || spaeter(z, bisher)) juengster.set(z.ersetzt_id, z);
+  }
   const anlagen = new Set(anlagenAus(teile).map((a) => a.id));
-  return alle
-    .filter((z) => offen(z) && !ersetzt.has(z.id) && anlagen.has(z.anlage_id))
+  return offene
+    .filter((z) => !ersetzt.has(z.id) && anlagen.has(z.anlage_id))
+    .filter((z) => !z.ersetzt_id || juengster.get(z.ersetzt_id) === z)
     .filter((z) => anlageId === undefined || z.anlage_id === anlageId)
     .map((z) => ({
       id: z.id,
@@ -167,7 +181,8 @@ export function eigeneAufgaben(k: Regelkontext): Rohaufgabe[] {
       bezugArt: 'eigene_aufgabe',
       faelligAm: f.faelligAm,
       anlageId: d.anlageId,
-      datenart: datenart.get(d.anlageId) ?? 'echt',
+      // unerreichbar (Definitionen nur aktiver Anlagen); als Rückfall die sichere Richtung (8.1 Regel 7)
+      datenart: datenart.get(d.anlageId) ?? 'test',
       titel: d.name,
       gewicht: 'routine',
       grund: grundText(d, f.zuletztErledigtAm, k.heute),
@@ -191,7 +206,7 @@ export function eigeneAufgabenListe(
       ueber === 0
         ? 'heute fällig'
         : ueber > 0
-          ? `seit ${tageText(ueber)} fällig`
+          ? `seit ${tageText(ueber)} überfällig`
           : `fällig ${tagKurz(faelligAm)}`;
     return { definition: d, faelligAm, text: `${intervallText(d.intervallD)} · ${wann}` };
   });

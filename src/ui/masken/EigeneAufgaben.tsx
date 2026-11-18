@@ -43,6 +43,8 @@ export function EigeneAufgaben({
   const [beruehrt, setBeruehrt] = useState({ name: false, intervall: false });
   const [sendet, setSendet] = useState(false);
   const [fehler, setFehler] = useState<string>();
+  // Wiederholung nach einem Fehler sendet dieselben Client-UUIDs (TO2, 8.1 Regel 3; Runde 1 Befund 1)
+  const [entwurf, setEntwurf] = useState<{ schluessel: string; vorgang: Vorgang }>();
   const liste = teile ? eigeneAufgabenListe(teile, anlageId, jetzt, ZEITZONE) : [];
 
   const eingabe = { name, intervallD: zahl(intervall) };
@@ -55,6 +57,7 @@ export function EigeneAufgaben({
     setIntervall(alt ? String(alt.intervallD) : '');
     setBeruehrt({ name: false, intervall: false });
     setFehler(undefined);
+    setEntwurf(undefined);
     setModus(alt ? { art: 'formular', alt } : { art: 'formular' });
   }
 
@@ -71,6 +74,7 @@ export function EigeneAufgaben({
         return;
       }
       setFehler(undefined);
+      setEntwurf(undefined);
       setModus({ art: 'liste' });
     } finally {
       setSendet(false);
@@ -79,10 +83,17 @@ export function EigeneAufgaben({
 
   function speichern() {
     if (modus.art !== 'formular' || verstoesse.length > 0) return;
-    const id = neueClientId();
-    void senden(
-      modus.alt ? eigeneAendernVorgang(modus.alt, eingabe, id) : eigeneAnlegenVorgang(anlageId, eingabe, id),
-    );
+    // gleiches Ziel und gleiche Eingabe behalten die Client-UUIDs, eine geänderte Eingabe bekommt neue
+    const schluessel = JSON.stringify([modus.alt?.id ?? anlageId, eingabe.name.trim(), eingabe.intervallD]);
+    let vorgang = entwurf?.schluessel === schluessel ? entwurf.vorgang : undefined;
+    if (!vorgang) {
+      const id = neueClientId();
+      vorgang = modus.alt
+        ? eigeneAendernVorgang(modus.alt, eingabe, id)
+        : eigeneAnlegenVorgang(anlageId, eingabe, id);
+      setEntwurf({ schluessel, vorgang });
+    }
+    void senden(vorgang);
   }
 
   return (
