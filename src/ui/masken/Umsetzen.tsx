@@ -90,7 +90,10 @@ export function Umsetzen({ satz, wie }: { satz: string; wie?: 'geplant' }) {
 
 function Maske({ satz, wie, jetzt }: { satz: string; wie: 'geplant' | undefined; jetzt: Date }) {
   const { buendel } = useBuendel();
-  const teile = buendel?.teile;
+  // während der Sperre rechnet die Maske aus dem Bündel beim Senden: ein neu geladenes Bündel liesse sonst die
+  // umgesetzten Sämlinge verschwinden und die gesperrte Taste rutschen (#241, Befund 1 des Prüfers)
+  const [starr, setStarr] = useState<NonNullable<typeof buendel>['teile']>();
+  const teile = starr ?? buendel?.teile;
   const a = umsetzAnsicht(teile, satz, jetzt, ZEITZONE);
   const [schritt, setSchritt] = useState<Schritt>(() =>
     wie === 'geplant' && a ? { art: 'bestaetigen', eingabe: wieGeplant(a) } : { art: 'uebersicht' },
@@ -119,6 +122,7 @@ function Maske({ satz, wie, jetzt }: { satz: string; wie: 'geplant' | undefined;
     if (sperre.current) return;
     sperre.current = true;
     setSendet(true);
+    setStarr(teile);
     let naechster: Schritt | undefined;
     try {
       naechster = await f();
@@ -126,6 +130,7 @@ function Maske({ satz, wie, jetzt }: { satz: string; wie: 'geplant' | undefined;
       const frei = () => {
         sperre.current = false;
         setSendet(false);
+        setStarr(undefined);
         if (naechster) setSchritt(naechster);
       };
       if (naechster) setTimeout(frei, SPERRE_MS);
@@ -325,6 +330,7 @@ function Maske({ satz, wie, jetzt }: { satz: string; wie: 'geplant' | undefined;
         <div className="hv-umsetzen-fuss">
           <Button
             variant="secondary"
+            disabled={sendet}
             onClick={() =>
               setSchritt(
                 schritt.art === 'zusammen'

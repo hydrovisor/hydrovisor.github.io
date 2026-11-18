@@ -62,15 +62,20 @@ async function mitDaten(
 const frames = (page: Page) =>
   page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
 
-/** Text der Taste, die an (x, y) liegt, oder null */
+/** Taste an (x, y): Text, gesperrt und Überschrift der umgebenden Karte (section), oder null */
 const tasteBei = (page: Page, x: number, y: number) =>
   page.evaluate(
-    ([px, py]) => document.elementFromPoint(px, py)?.closest('button, a')?.textContent?.trim() ?? null,
+    ([px, py]) => {
+      const t = document.elementFromPoint(px, py)?.closest('button, a');
+      if (!t) return null;
+      const karte = t.closest('section')?.querySelector('h1, h2, h3')?.textContent?.trim() ?? null;
+      return { text: t.textContent?.trim() ?? '', gesperrt: t.matches(':disabled'), karte };
+    },
     [x, y] as const,
   );
 
 /** erster Tipp, nach 100 ms prüfen, was unter dem Finger liegt, dann zweiter Tipp an derselben Stelle */
-async function doppeltipp(page: Page, taste: Locator): Promise<string | null> {
+async function doppeltipp(page: Page, taste: Locator): Promise<Awaited<ReturnType<typeof tasteBei>>> {
   await taste.scrollIntoViewIfNeeded();
   await frames(page);
   const box = await taste.boundingBox();
@@ -98,7 +103,12 @@ test('RB1-AK1 Phasenkarte: zweiter Tipp 100 ms nach «Alle Ja» trifft noch die 
   const k = karte(page, GLEICH_TITEL);
   await expect(k).toHaveCount(1);
   const unter = await doppeltipp(page, k.getByRole('button', { name: 'Alle Ja', exact: true }));
-  expect(unter, 'nach 100 ms liegt noch «Alle Ja» unter dem Finger').toBe('Alle Ja');
+  // dieselbe, gesperrte Taste in derselben Karte (nicht eine nachgerückte «Alle Ja»)
+  expect(unter, 'nach 100 ms liegt noch «Alle Ja» unter dem Finger').toEqual({
+    text: 'Alle Ja',
+    gesperrt: true,
+    karte: GLEICH_TITEL,
+  });
   await expect(k).toHaveCount(0);
   // Zeit für einen allfälligen zweiten Schreibvorgang
   await page.waitForTimeout(800);
@@ -123,7 +133,10 @@ test('RB1-AK2 Umsetzen: zweiter Tipp 100 ms nach «Umsetzen bestätigen» trifft
   );
   await knopf(page, 'Wie geplant umsetzen').click();
   const unter = await doppeltipp(page, knopf(page, 'Umsetzen bestätigen'));
-  expect(unter, 'nach 100 ms liegt noch «Umsetzen bestätigen» unter dem Finger').toBe('Umsetzen bestätigen');
+  expect(unter, 'nach 100 ms liegt noch «Umsetzen bestätigen» unter dem Finger').toMatchObject({
+    text: 'Umsetzen bestätigen',
+    gesperrt: true,
+  });
   await expect(page.getByText('Umgesetzt: 5 Sämlinge')).toBeVisible();
   await page.waitForTimeout(800);
   expect(ereignisse(m, 'umsetzen')).toHaveLength(5);
@@ -149,10 +162,47 @@ test('RB1-AK2 Umsetzen: zweiter Tipp 100 ms nach «Rückgängig machen» trifft 
   // Sperre nach dem Umsetzen abwarten
   await page.waitForTimeout(500);
   const unter = await doppeltipp(page, knopf(page, 'Rückgängig machen'));
-  expect(unter, 'nach 100 ms liegt noch «Rückgängig machen» unter dem Finger').toBe('Rückgängig machen');
+  expect(unter, 'nach 100 ms liegt noch «Rückgängig machen» unter dem Finger').toMatchObject({
+    text: 'Rückgängig machen',
+    gesperrt: true,
+  });
   await expect(knopf(page, 'Wie geplant umsetzen')).toBeVisible();
   await page.waitForTimeout(800);
   expect(m.storniert).toHaveLength(5);
   // kein neues Umsetzen durch den zweiten Tipp
   expect(ereignisse(m, 'umsetzen')).toHaveLength(5);
+});
+
+const loch = (page: Page, n: number) => page.getByRole('button', { name: new RegExp(`^Loch ${String(n)},`) });
+
+test('RB1-AK2 Umsetzen Schritt 3 von 3: zweiter Tipp 100 ms nach «Umsetzen» trifft noch die gesperrte Taste, die Zeilen stehen still, nichts doppelt', async ({
+  page,
+}) => {
+  const m = await mitDaten(
+    page,
+    umsetzTeile(),
+    umsetzNachrechnen,
+    UMSETZ_JETZT,
+    `/#/umsetzen/${SATZ.rucola}`,
+    'Umsetzen',
+  );
+  await knopf(page, 'Ziel wählen').click();
+  await page
+    .getByRole('button', { name: /^2\.1(?![.\d])/ })
+    .first()
+    .click();
+  for (const n of [1, 3, 4, 5]) await loch(page, n).click();
+  await knopf(page, 'Weiter').click();
+  await expect(page.getByText('Schritt 3 von 3')).toBeVisible();
+  const zeilen = await page.getByRole('list', { name: 'Umsetzen' }).getByRole('listitem').count();
+  expect(zeilen).toBeGreaterThan(0);
+  const unter = await doppeltipp(page, knopf(page, 'Umsetzen'));
+  expect(unter, 'nach 100 ms liegt noch «Umsetzen» unter dem Finger').toMatchObject({
+    text: 'Umsetzen',
+    gesperrt: true,
+  });
+  await expect(page.getByText('Umgesetzt: 4 Sämlinge')).toBeVisible();
+  await page.waitForTimeout(800);
+  expect(ereignisse(m, 'umsetzen')).toHaveLength(4);
+  expect(m.storniert).toEqual([]);
 });
