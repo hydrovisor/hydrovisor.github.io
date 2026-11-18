@@ -363,6 +363,13 @@ button.hv-tile { cursor: pointer; touch-action: manipulation; }
 [data-density="regal"] .hv-choice-segmente-fest > .hv-choice-item { min-width: var(--size-touch-regal); }
 .hv-choice-segmente-fest .hv-choice-text { align-items: center; }
 .hv-choice-segmente-fest .hv-choice-titel { overflow-wrap: normal; word-break: normal; hyphens: none; }
+/* UX6 (Plan 228): Raster, zwei gleich breite Spalten für viele kurze Optionen mit Stufe und Zusatz (Ziele beim Säen); Titel, Stufe und Zusatz untereinander über die ganze Breite, der Punkt oben rechts; das Wort der Stufe bricht nur zwischen Wörtern */
+.hv-choice-raster { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
+.hv-choice-raster > .hv-choice-item { position: relative; align-items: flex-start; padding: var(--space-1) var(--space-3); }
+.hv-choice-raster .hv-choice-check { position: absolute; top: var(--space-1); right: var(--space-2); }
+.hv-choice-raster .hv-choice-titel { padding-right: calc(var(--size-icon) + var(--space-2)); line-height: var(--text-body-line); }
+.hv-choice-raster .hv-choice-zusatz { line-height: var(--text-caption-line); }
+.hv-choice-raster .hv-choice-text { align-items: flex-start; gap: 2px; min-width: 0; }
 
 /* Stepper: − Wert + ohne Systemtastatur, Grenzen deaktivieren den Knopf (Plan 23) */
 .hv-stepper { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: var(--space-2); }

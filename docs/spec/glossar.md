@@ -65,6 +65,7 @@ Stand 1.11.2026 · Auftrag 2 «Spezifikation». Bedeutungen stehen in Konzept v1
 | Demo- oder Testdaten löschen | `datenart_loeschen()` | `datenartLoeschen` (nur Skript) |
 | Direktsaat | `satz.direktsaat_platz_id` | `istDirektsaat()` |
 | Passungs-Empfehlung, Einstufung | `pflanzung.einstufung`, `gruende` | `passung()`, `passungText()`, `Einstufung`, `GrundCode` (P1 bis P11), `LeitkulturBezug`, `passungKontext()`, `sortenPassung()`, `gefaessPassung()` (`src/domain/passung/`) |
+| Zielliste beim Säen (Urteil je Zielgefäss, Vorwahl) | – | `zielliste()`, `ZielUrteil`, `zielVorwahl()`, `freiText()`, `OHNE_URTEIL` (`src/domain/pflanzung/zielliste.ts`) |
 | Zielbereich, Schnittmenge | `v_zielbereich`, Schnappschuss in `schnappschuss` | `zaehlendePflanzungen()`, `schnittmenge()`, `reservierteImGefaess()`; Zweck Passung `zaehlendeFuerPassung()`, `zielbereichPassung()`, Band-Hilfen `bandSchnitt()`, `restbreite()`, `bandmitte()`, `mindestbreiteEc()` (`src/domain/zielbereich*.ts`) |
 | Mischentscheid | `mischentscheid` | `Mischentscheid` |
 | Messung, Messart | `messung`, `messart` | `Messung`, `Messart` |

@@ -345,3 +345,6 @@ tests/e2e/keimung-box.spec.ts
 tests/unit/abhakliste-ux8.test.ts
 tests/e2e/usability-ux8.spec.ts
 tests/honor/ablaeufe.spec.ts
+# UX6 Ziele mit Passung, Tüte von selbst lesen (#228)
+tests/unit/zielliste.test.ts
+tests/e2e/usability-ux6.spec.ts

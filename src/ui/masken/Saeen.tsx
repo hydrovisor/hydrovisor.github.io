@@ -27,6 +27,7 @@ import {
   type SatzVorschlag,
   type Zieltopf,
 } from '../../domain/pflanzung/saeen.ts';
+import { zielliste, zielVorwahl } from '../../domain/pflanzung/zielliste.ts';
 import { sortenPassung, type SortePassung } from '../../domain/passung/kontext.ts';
 import { passungText, type Einstufung, type GrundCode, type Passung } from '../../domain/passung/passung.ts';
 import type { Kulturform } from '../../domain/phasen/profil.ts';
@@ -78,6 +79,10 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
   const [gewaehlt, setGewaehlt] = useState<string[]>([]);
   const [kulturform, setKulturform] = useState<Record<string, string>>({});
   const [zielWahl, setZielWahl] = useState<string>();
+  // UX6 (Plan 228 R1): Vorwahl als Zustand, nur beim Übergang von Schritt 1 nach 2 gesetzt
+  const [vorwahl, setVorwahl] = useState<string>();
+  // nach dem Schrittwechsel aus der Zielliste bestimmen: «Wählen und weiter» setzt Sorte und Schritt im selben Tipp
+  const [vorwahlOffen, setVorwahlOffen] = useState(false);
   const [aktiv, setAktiv] = useState(1);
   const [toepfe, setToepfe] = useState<Map<string, number>>(new Map());
   const [spaeter, setSpaeter] = useState(false);
@@ -121,27 +126,59 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
     sorten.length === 0 &&
     ((teile?.['sorte'] ?? []) as { gueltig_bis?: string | null }[]).some((z) => !z.gueltig_bis);
   const ziele = useMemo(() => (teile && anlageId ? zielgefaesse(teile, anlageId) : []), [teile, anlageId]);
-  const zielPlatzId = zielWahl ?? ziele.find((z) => z.platzId === zielOrt?.platzId)?.platzId;
+  // gewählt oder aus der Adresse; Schritt 1 rechnet die Passung nur damit, nicht mit der Vorwahl (Plan 228 R2)
+  const zielBasis = zielWahl ?? ziele.find((z) => z.platzId === zielOrt?.platzId)?.platzId;
+  const zielPlatzId = zielBasis ?? (schritt > 1 ? vorwahl : undefined);
   const zielG = ziele.find((z) => z.platzId === zielPlatzId);
   const heute = kalendertag(jetzt(), ZEITZONE);
   const saatdatum = tagPlus(heute, -rueck);
+  const kulturformVon = (id: string) => {
+    const s = sorten.find((x) => x.sorteId === id);
+    return (kulturform[id] ?? s?.wieLetztesMal ?? s?.vorgabe) as Kulturform;
+  };
+  // UX6 (Plan 228): Ziele mit Urteil der bestehenden Passung für die gewählten Sorten, geordnet
+  const zielUrteile = useMemo(
+    () =>
+      teile && schritt === 2
+        ? zielliste(
+            teile,
+            ziele,
+            gewaehlt.flatMap((id) => {
+              const s = sorten.find((x) => x.sorteId === id);
+              return s ? [{ ...s, kulturform: kulturformVon(id) }] : [];
+            }),
+            saatdatum,
+            jetzt(),
+            ZEITZONE,
+          )
+        : [],
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- kulturformVon liest nur sorten und kulturform
+    [teile, schritt, ziele, gewaehlt, sorten, kulturform, saatdatum],
+  );
+  if (vorwahlOffen && schritt === 2 && teile) {
+    const neu = zielVorwahl(zielUrteile);
+    setVorwahlOffen(false);
+    // wechselt die Vorwahl (z. B. nach Rückdatieren und 2 → 1 → 2), gehören gewählte Töpfe zum alten Ziel (Prüfer Befund 1)
+    if (!zielBasis && neu !== vorwahl) setToepfe(new Map());
+    setVorwahl(neu);
+  }
   // Plan 36 (R3.1, R3.2): Einstufung je Sorte im Zielgefäss am Umsetzdatum, gewählte Kulturform
   const passungen = useMemo(
     () =>
-      teile && zielPlatzId && !spaeter
+      teile && zielBasis && !spaeter
         ? sortenPassung(
             teile,
             sorten.map((s) => ({
               ...s,
               kulturform: (kulturform[s.sorteId] ?? s.wieLetztesMal ?? s.vorgabe) as Kulturform,
             })),
-            zielPlatzId,
+            zielBasis,
             saatdatum,
             jetzt(),
             ZEITZONE,
           )
         : undefined,
-    [teile, sorten, kulturform, zielPlatzId, spaeter, saatdatum],
+    [teile, sorten, kulturform, zielBasis, spaeter, saatdatum],
   );
   const kopieAktiv = kopie && gewaehlt.includes(kopie.sorteId) ? kopie : undefined;
   const einstieg: SaatEingabe['einstieg'] = kopieAktiv
@@ -240,6 +277,7 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
       },
     });
     setZielWahl(v.ziel?.platzId);
+    setVorwahlOffen(true);
     setToepfe(new Map(s.zieltopfIds.map((id) => [id, 1])));
     setSpaeter(false);
     setRueck(0);
@@ -263,6 +301,13 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
         />
       ))
     : null;
+
+  /** Übergang Schritt 1 → 2: Vorwahl einmal bestimmen (Plan 228 R1, A6) */
+  function zuSchritt2() {
+    setVorwahl(undefined);
+    setVorwahlOffen(true);
+    setSchritt(2);
+  }
 
   function sorteUmschalten(id: string) {
     setGewaehlt((g) => (g.includes(id) ? g.filter((x) => x !== id) : [...g, id]));
@@ -300,11 +345,16 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
     return ab === undefined ? undefined : tagPlus(saatdatum, ab);
   }
 
-  function alleFreien() {
-    if (!teile || !zielG || !aktivMalbar) return;
-    const frei = zieltoepfe(teile, zielG.platzId, toepfe, umsetzenAktiv(), zielG.direktsaat).filter(
+  function freiePassende() {
+    if (!teile || !zielG || !aktivMalbar) return [];
+    return zieltoepfe(teile, zielG.platzId, toepfe, umsetzenAktiv(), zielG.direktsaat).filter(
       (t) => t.zustand === 'frei' && passt(t),
     );
+  }
+
+  function alleFreien() {
+    const frei = freiePassende();
+    if (frei.length === 0) return;
     setToepfe((alt) => {
       const neu = new Map(alt);
       for (const t of frei) neu.set(t.netztopfId, aktiv);
@@ -440,7 +490,7 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
             nichtEmpfohlen={nichtEmpfohlen}
             nichtOffen={nichtOffen}
             setNichtOffen={setNichtOffen}
-            weiter={() => setSchritt(2)}
+            weiter={zuSchritt2}
           />
         ) : null}
         {/* Plan 25 A15: unter der Sortenwahl, damit die Sortenwahl zuerst kommt */}
@@ -463,7 +513,7 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
         ) : null}
         {imDetail ? null : (
           <div className="hv-saeen-fuss">
-            <Button block disabled={gewaehlt.length === 0} onClick={() => setSchritt(2)}>
+            <Button block disabled={gewaehlt.length === 0} onClick={zuSchritt2}>
               Weiter
             </Button>
           </div>
@@ -526,6 +576,8 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
           }))
       : [];
     const loecher = [...mitTopf, ...ohneTopf];
+    const anlageKuerzel = anlagenAus(teile).find((a) => a.id === anlageId)?.kuerzel ?? '';
+    const freiAnzahl = toepfeZiel.filter((t) => t.zustand === 'frei' && passt(t)).length;
     const hinweisUmsetzen =
       zielG && !zielG.direktsaat
         ? gewaehlt
@@ -538,14 +590,19 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
         {kopf}
         {schrittText}
         {kopieHinweise}
+        <h2 className="hv-saeen-wohin">Wohin? · Anlage {anlageKuerzel}</h2>
         <Choice
           einzeln
           label="Zielgefäss"
-          zeile
-          optionen={ziele.map((z) => ({
-            wert: z.platzId,
-            titel: z.kennung,
-            zusatz: [z.direktsaat ? 'Direktsaat' : '', z.hinweis ?? ''].filter(Boolean).join(' · '),
+          raster
+          optionen={zielUrteile.map((u) => ({
+            wert: u.ziel.platzId,
+            titel: u.ziel.kennung,
+            ...(u.einstufung ? { stufe: u.einstufung } : {}),
+            // Plan 228 A12: «Direktsaat» steht beim Deckel des gewählten Ziels, damit die Kacheln kurz bleiben
+            zusatz: [u.einstufung ? '' : u.wort, u.freiText, u.ziel.hinweis ?? '']
+              .filter(Boolean)
+              .join(' · '),
           }))}
           gewaehlt={zielPlatzId ? [zielPlatzId] : []}
           onWahl={(id) => {
@@ -556,17 +613,7 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
         {zielG ? (
           <>
             {zielG.hinweis ? <Notice kompakt tone="warn" title={zielG.hinweis} /> : null}
-            {gewaehlt.map((id) => {
-              const p = passungen?.find((x) => x.sorteId === id);
-              return p ? (
-                <Notice
-                  key={`passung-${id}`}
-                  kompakt
-                  tone={NOTICE_TON[p.passung.einstufung]}
-                  title={`${p.name}: ${passungText(p.passung)}`}
-                />
-              ) : null;
-            })}
+            {zielG.direktsaat ? <p className="hv-saeen-zeile">{zielG.kennung} · Direktsaat</p> : null}
             {hinweisUmsetzen.length > 0 ? (
               <Notice
                 kompakt
@@ -597,9 +644,40 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
               {...(aktivMalbar ? { onReihe: reiheTippen } : {})}
               kanten
             />
-            <Button variant="secondary" disabled={!aktivMalbar} onClick={alleFreien}>
-              Alle freien wählen
-            </Button>
+            {gewaehlt.length === 1 ? (
+              // Plan 228: bei einer Sorte wählt die Taste alle freien Löcher und öffnet Schritt 3 (wie «Wählen und weiter»)
+              <Button
+                variant="secondary"
+                // gesperrt erst, wenn weder frei noch schon gewählt: nach «Zurück» sind alle Löcher gewählt, die Taste wirkt
+                // dann wie «Weiter» (Prüfer Befund 2)
+                disabled={!aktivMalbar || (freiAnzahl === 0 && toepfe.size === 0)}
+                onClick={() => {
+                  alleFreien();
+                  setSpaeter(false);
+                  setSchritt(3);
+                }}
+              >
+                Alle freien wählen und weiter
+              </Button>
+            ) : (
+              <Button variant="secondary" disabled={!aktivMalbar} onClick={alleFreien}>
+                Alle freien wählen
+              </Button>
+            )}
+            {/* Plan 228: Passung je Sorte unter dem Deckel, damit der Deckel des Ziels im Bild bleibt */}
+            {gewaehlt.map((id) => {
+              const p = zielUrteile
+                .find((u) => u.ziel.platzId === zielG.platzId)
+                ?.sorten.find((x) => x.sorteId === id);
+              return p ? (
+                <Notice
+                  key={`passung-${id}`}
+                  kompakt
+                  tone={NOTICE_TON[p.passung.einstufung]}
+                  title={`${p.name}: ${passungText(p.passung)}`}
+                />
+              ) : null;
+            })}
           </>
         ) : null}
         <div className="hv-saeen-fuss">

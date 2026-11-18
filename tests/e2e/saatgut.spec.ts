@@ -16,7 +16,8 @@
 //   Name mit dem Sortennamen beginnt; Zusatzzeile «vollständig» oder «Recherche offen», ohne Foto ergänzt um
 //   « · ohne Foto». Tütenbild in .hv-sortenzeile-bild: img (alt="") mit signiertem Link oder svg-Platzhalter.
 // - «Tüte erfassen»: h1 «Tüte erfassen», ol[aria-label="Schritte"] mit aria-current="step"; PhotoField «Vorderseite»
-//   und «Rückseite» (input type=file mit aria-label); Knöpfe «Ohne Rückseite lesen» bzw. «Tüte lesen»; Ergebnis mit
+//   und «Rückseite» (input type=file mit aria-label); Knopf «Ohne Rückseite lesen», nach der Rückseite liest die Maske
+//   von selbst (UX6, #228); Ergebnis mit
 //   Feld «Name», Auswahl «Art» (Wert art_id), Gruppe «Kulturtyp» (Choice, aria-pressed); «Sorte speichern»; erkannt:
 //   «<Name> gibt es schon» mit «Packung zu <Name> hinzufügen». Fertig: «Gespeichert: <Name> mit Packung» bzw.
 //   «Gespeichert: Packung zu <Name>», Link «Sorte öffnen», Knopf «Zum Saatgut».
@@ -262,17 +263,18 @@ test('SG1-AK5 Tüte erfassen mit Vorder- und Rückseite, unbekannte Sorte: Name 
     await bildschirm(page, testInfo, 'tuete-schritt-1');
     await fotoWaehlen(page, 'Vorderseite', await testbild(page, '#2e7d32', 'Vorne'));
 
-    // ohne weiteren Tipp zu Schritt 2
+    // ohne weiteren Tipp zu Schritt 2; Prüfungen von Schritt 2 vor der Rückseite, weil Schritt 2 mit der Rückseite
+    // endet (UX6, Plan 228: das Lesen startet von selbst, kein Knopf «Tüte lesen»)
     await expect(schrittAktiv(page)).toContainText('Rückseite');
     await expect(knopf(page, 'Ohne Rückseite lesen')).toBeVisible();
-    await fotoWaehlen(page, 'Rückseite', await testbild(page, '#1565c0', 'Hinten'));
-    await expect(fotoFeld(page, 'Rückseite')).toContainText('Foto ersetzen');
+    await expect(fotoFeld(page, 'Vorderseite')).toContainText('Foto ersetzen');
     await ohneWaagrechtesScrollen(page);
     await bildschirm(page, testInfo, 'tuete-schritt-2');
-    await knopf(page, 'Tüte lesen').click();
+    await fotoWaehlen(page, 'Rückseite', await testbild(page, '#1565c0', 'Hinten'));
 
     // Schritt 3: Ergebnis der KI, unbekannte Sorte
     await expect(schrittAktiv(page)).toContainText('Ergebnis');
+    await expect(knopf(page, 'Tüte lesen')).toHaveCount(0);
     await expect(page.getByLabel('Name', { exact: true })).toHaveValue(name, { timeout: 15_000 });
     await expect(page.getByLabel('Art', { exact: true })).toHaveValue('lactuca_sativa');
     const kulturtyp = page.getByRole('group', { name: 'Kulturtyp' });

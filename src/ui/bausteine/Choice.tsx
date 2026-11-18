@@ -1,4 +1,4 @@
-// Baustein Choice (design-system/components/Choice.md): Wahlliste mit aria-pressed und Häkchen, ohne Systemtastatur
+// Baustein Choice (design-system/components/Choice.md; Raster seit UX6): Wahlliste mit aria-pressed und Häkchen, ohne Systemtastatur
 // (Säen, Plan 23); Stufe als Badge mit Symbol und Wort (Passung, Plan 36); Einzelauswahl mit rundem Punkt und in einer
 // Zeile als gleich breite Segmente (U-04, B7)
 import type { Einstufung } from '../../domain/passung/passung.ts';
@@ -29,6 +29,7 @@ export function Choice({
   zeile,
   einzeln,
   segmente: fest,
+  raster,
 }: {
   optionen: readonly Option[];
   gewaehlt: readonly string[];
@@ -41,15 +42,21 @@ export function Choice({
   einzeln?: boolean;
   /** mit einzeln und höchstens drei Optionen: immer eine Zeile Segmente, Breite nach Inhalt, Punkt über dem Titel (UX4) */
   segmente?: boolean;
+  /** zwei gleich breite Spalten, Titel, Stufe und Zusatz untereinander (UX6, Plan 228); ohne Segmente */
+  raster?: boolean;
 }) {
   // bis drei Optionen in einer Zeile: gleich breite Segmente; mehr Optionen brechen um wie bisher
   const erzwungen = fest === true && einzeln === true && optionen.length <= 3;
-  const segmente = !erzwungen && einzeln === true && zeile === true && optionen.length <= 3;
+  // Optionen mit Stufe stehen nie als Segmente (Choice.md; Säen Schritt 2, Plan 228 A7)
+  const mitStufe = optionen.some((o) => o.stufe !== undefined);
+  const segmente =
+    !erzwungen && !mitStufe && !raster && einzeln === true && zeile === true && optionen.length <= 3;
   const klasse = [
     'hv-choice',
     zeile && 'hv-choice-zeile',
     einzeln && 'hv-choice-einzeln',
     segmente && 'hv-choice-segmente',
+    raster && 'hv-choice-raster',
     erzwungen && 'hv-choice-zeile hv-choice-segmente-fest',
   ]
     .filter(Boolean)
