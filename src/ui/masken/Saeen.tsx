@@ -156,8 +156,11 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
     [teile, schritt, ziele, gewaehlt, sorten, kulturform, saatdatum],
   );
   if (vorwahlOffen && schritt === 2 && teile) {
+    const neu = zielVorwahl(zielUrteile);
     setVorwahlOffen(false);
-    setVorwahl(zielVorwahl(zielUrteile));
+    // wechselt die Vorwahl (z. B. nach Rückdatieren und 2 → 1 → 2), gehören gewählte Töpfe zum alten Ziel (Prüfer Befund 1)
+    if (!zielBasis && neu !== vorwahl) setToepfe(new Map());
+    setVorwahl(neu);
   }
   // Plan 36 (R3.1, R3.2): Einstufung je Sorte im Zielgefäss am Umsetzdatum, gewählte Kulturform
   const passungen = useMemo(
@@ -645,6 +648,8 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
               // Plan 228: bei einer Sorte wählt die Taste alle freien Löcher und öffnet Schritt 3 (wie «Wählen und weiter»)
               <Button
                 variant="secondary"
+                // gesperrt erst, wenn weder frei noch schon gewählt: nach «Zurück» sind alle Löcher gewählt, die Taste wirkt
+                // dann wie «Weiter» (Prüfer Befund 2)
                 disabled={!aktivMalbar || (freiAnzahl === 0 && toepfe.size === 0)}
                 onClick={() => {
                   alleFreien();
