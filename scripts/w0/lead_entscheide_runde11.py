@@ -56,7 +56,7 @@ E(f'{ak}{a}.schnitt.kulturdauer_max_d', f'{ak}{a}.schnitt.kulturdauer_max_d#1', 
 # ---------------- Nüsslisalat (Kopf) ----------------
 a = 'valerianella_locusta'
 W(f'{ak}{a}.kopf.kulturdauer_max_d', f'{ak}{a}.kopf.kulturdauer_max_d#2',
-  'letzter Erntetermin bei Marktreife 66 Tage ab Saat (Floating, Klasse A); ≥ kulturdauer_typisch_d 51')
+  'letzter Erntetermin bei Marktreife 66 Tage ab Saat (Topfkultur mit Nährlösung, Klasse A); ≥ kulturdauer_typisch_d 51')
 
 # ---------------- Tomate und Chili (Dauerkultur Frucht) ----------------
 a = 'solanum_lycopersicum'
@@ -68,10 +68,8 @@ E(f'{ak}{a}.dauerkultur_frucht.ernteintervall_d', f'{ak}{a}.dauerkultur_frucht.e
   'üblich, die Anlage erntet für den Eigenbedarf wöchentlich',
   fundstelle='Kapitel 8, S. 8-4 (Abschnitt «HARVESTING» beginnt auf S. 8-3), Unterabschnitt «Pepper» '
              '(Gewächshaus-Hydroponik); Seite nach der Quellenprüfung')
-E(f'{ak}{a}.dauerkultur_frucht.kulturdauer_max_d', 'ak.solanum_lycopersicum.dauerkultur_frucht.kulturdauer_max_d#1', 364,
-  '(A) andere Art: Leitkultur Tomate der Kulturgruppe Fruchtgemüse (wie V13); Chili als Jahreskultur im Gewächshaus '
-  '(Anbauquellen in recherche.md nennen Saat im Herbst und Ende nach rund einem Jahr); ≥ Saat bis erste Ernte '
-  '(Keimung 8 + Anzucht 14 + ernte_ab_d 102 = 124)')
+# Chili kulturdauer_max_d: zuerst als eigener Wert von der Tomate (364) freigegeben, nach Befund 1 des Prüfers
+# zurückgenommen (Quelle belegt die Tomate, nicht Chili; Konzept 9.3 Regel 4). Lücke im Bericht.
 
 # ---------------- Pak Choi (Kopf) ----------------
 a = 'brassica_rapa_chinensis'

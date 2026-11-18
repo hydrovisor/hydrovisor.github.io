@@ -21,7 +21,6 @@ Stand 18.11.2026. Erzeugt aus den Kandidatendateien (Spalte `notiz_tim` der frei
 | `ak.allium_schoenoprasum.dauerkultur_blatt.kulturdauer_max_d` | 730 | simplyhydro-schnittlauch (C) | eigener Wert aus ak.allium_schoenoprasum.dauerkultur_blatt.kulturdauer_max_d#1: Runde 11 (#242), Regel D4 sinngemäss (A): «replacing plants every two years» = 2 × 365 Tage (Hydroponik-Praxis, Klasse C) |
 | `ak.brassica_rapa_chinensis.kopf.kulturdauer_max_d` | 60 | risegardens-bok-choy-2026 (B2) | Runde 11 (#242), obere Grenze für grosse Sorten, Zählung ab Saat (Quellenprüfung), Klasse B2; ≥ kulturdauer_typisch_d 32 |
 | `ak.capsicum_annuum.dauerkultur_frucht.ernteintervall_d` | 7 | ua-ceac-kurs-kap8 (B1) | eigener Wert aus ak.capsicum_annuum.dauerkultur_frucht.ernteintervall_d#1: Runde 11 (#242), Regel D4 (A): «once a week» = 7 Tage (Gewächshaus-Hydroponik, Klasse B1); dieselbe Stelle nennt zweimal je Woche als üblich, die Anlage erntet für den Eigenbedarf wöchentlich |
-| `ak.capsicum_annuum.dauerkultur_frucht.kulturdauer_max_d` | 364 | ua-tomato-workshop-modul5-2026 (B1) | eigener Wert aus ak.solanum_lycopersicum.dauerkultur_frucht.kulturdauer_max_d#1: Runde 11 (#242), (A) andere Art: Leitkultur Tomate der Kulturgruppe Fruchtgemüse (wie V13); Chili als Jahreskultur im Gewächshaus (Anbauquellen in recherche.md nennen Saat im Herbst und Ende nach rund einem Jahr); ≥ Saat bis erste Ernte (Keimung 8 + Anzucht 14 + ernte_ab_d 102 = 124) |
 | `ak.lactuca_sativa.schnitt.ernteintervall_d` | 7 | jas-lettuce-cut-and-come-again-2017 (A) | eigener Wert aus ak.lactuca_sativa.schnitt.ernteintervall_d#1: Runde 11 (#242), Regel D4 (A): 1 Woche = 7 Tage («weekly harvests», Floating-Schalen, Klasse A) |
 | `ak.lactuca_sativa.schnitt.kulturdauer_max_d` | 42 | jas-lettuce-cut-and-come-again-2017 (A) | eigener Wert aus ak.lactuca_sativa.schnitt.kulturdauer_max_d#1: Runde 11 (#242), Regel D4 (A): 6 Wochen ab Saat = 42 Tage, bis zum zweiten Schnitt (passt zu schnitte_max 2 und Intervall 7) |
 | `ak.lactuca_sativa.schnitt.schnitte_max` | 2 | jas-lettuce-cut-and-come-again-2017 (A) | Runde 11 (#242), Empfehlung der Quelle: nach zwei Schnitten neu säen (Klasse A); im Versuch mehr Schnitte bei sinkendem Ertrag |
@@ -31,7 +30,7 @@ Stand 18.11.2026. Erzeugt aus den Kandidatendateien (Spalte `notiz_tim` der frei
 | `ak.solanum_lycopersicum.dauerkultur_frucht.kulturdauer_max_d` | 364 | ua-tomato-workshop-modul5-2026 (B1) | Runde 11 (#242), Jahresplan Gewächshaus-Hydroponik «Day 364 Remove Plants» (Klasse B1) |
 | `ak.spinacia_oleracea.schnitt.ernteintervall_d` | 7 | cornell-cea-spinat-2005 (B1) | eigener Wert aus ak.spinacia_oleracea.schnitt.ernteintervall_d#1: Runde 11 (#242), Regel D4 (A): 1 Woche = 7 Tage (Cornell CEA, Klasse B1) |
 | `ak.spinacia_oleracea.schnitt.schnitte_max` | 3 | cornell-cea-spinat-2005 (B1) | Runde 11 (#242), drei Schnitte je Pflanze (Cornell CEA, Klasse B1); #3 (5 Schnitte, Klasse A) wegen gesperrter Quelle nicht geprüft |
-| `ak.valerianella_locusta.kopf.kulturdauer_max_d` | 66 | plants-valerianella-selen-2021 (A) | Runde 11 (#242), letzter Erntetermin bei Marktreife 66 Tage ab Saat (Floating, Klasse A); ≥ kulturdauer_typisch_d 51 |
+| `ak.valerianella_locusta.kopf.kulturdauer_max_d` | 66 | plants-valerianella-selen-2021 (A) | Runde 11 (#242), letzter Erntetermin bei Marktreife 66 Tage ab Saat (Topfkultur mit Nährlösung, Klasse A); ≥ kulturdauer_typisch_d 51 |
 
 Dazu 0 Kulturgruppen-Mindestzeilen (V13) als Kopie der neuen Art-Zeilen der Leitkultur bzw. mit «(A) andere Art».
 
@@ -39,7 +38,7 @@ Dazu 0 Kulturgruppen-Mindestzeilen (V13) als Kopie der neuen Art-Zeilen der Leit
 
 - **Regel D4 sinngemäss für Jahre (A):** 1 Jahr = 365 Tage (Schnittlauch Dauerkultur «every two years» = 730).
 - **Salat Schnitt, Kulturdauer max. 42 (A):** Die Quelle nennt 6 Wochen ab Saat bis zum zweiten Schnitt. Mit den freigegebenen Phasenwerten (typisch) läge der zweite Schnitt bei rund 47 Tagen (Fachkritik P3). Der Wert bleibt bei der Quelle; die Kulturfrage (R1.7) fragt ohnehin am früheren Tag von Kulturende und erreichten Schnitten und bietet «Verlängern um 14 Tage».
-- **Chili, Kulturdauer max. 364 (A):** andere Art, Leitkultur Tomate der Kulturgruppe Fruchtgemüse (wie V13); die Anbauquellen in `teile/fruchtgemuese/recherche.md` nennen für Chili im Gewächshaus eine Jahreskultur.
+- **Chili, Kulturdauer max.:** Der eigene Wert 364 von der Leitkultur Tomate ist nach Befund 1 des Prüfers zurückgenommen (Quelle belegt die Tomate, nicht Chili; Konzept 9.3 Regel 4). Die Anbauquellen in `teile/fruchtgemuese/recherche.md` (Saat im Herbst, Räumung nach rund einem Jahr) sind ein Kandidat für eine spätere Runde.
 - **Ohne Redaktor (A):** Die Fachkritik fand keinen Konflikt; die Freigabevorschläge des Redaktors entfallen, der Lead wählt je Feld den einzigen geprüften Kandidaten (Petersilie: zwei gleiche Werte, Klasse A gewählt, Annahme 8).
 - **MDPI-Quellen:** Drei Arbeiten (Mangold Meerwasser 2022, Randen Babyleaf 2025, Spinat und Rauke Floating 2021) waren für die Quellenprüfung gesperrt (HTTP 403) und sind deshalb verworfen. Sie enthielten unter anderem Spinat Schnitte 5, Mangold Intervall 14 und Ernte ab 28 Tagen. Eine Prüfung im Browser ist ein Posten für eine spätere Runde.
 
@@ -50,7 +49,7 @@ Klasse D erzeugt nach `docs/spec/03_import_w0.md` Abschnitt 2 Punkt 7 keine Zeil
 | Art | Kulturform | ohne Wert |
 |---|---|---|
 | Salat | kopf, babyleaf | `kulturdauer_max_d` |
-| Tomate, Chili | dauerkultur_frucht | `schnitte_max` (Zahl der Pflückgänge nennt keine Quelle); Tomate auch `ernteintervall_d` («every 3-4 days» nur als Bereich) |
+| Tomate, Chili | dauerkultur_frucht | `schnitte_max` (Zahl der Pflückgänge nennt keine Quelle); Tomate auch `ernteintervall_d` («every 3-4 days» nur als Bereich); Chili auch `kulturdauer_max_d` |
 | Basilikum | dauerkultur_blatt, schnitt | `schnitte_max`, `kulturdauer_max_d` |
 | Schnittlauch | dauerkultur_blatt | `ernteintervall_d`, `schnitte_max` |
 | Schnittlauch | schnitt | alle drei |
