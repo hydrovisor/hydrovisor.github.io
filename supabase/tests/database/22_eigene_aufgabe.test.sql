@@ -74,7 +74,7 @@ language sql immutable as $$
                 'values (%L, %L, %L, %L, %s, %L, %L)', id, id, anlage_id, name, intervall_d, ersetzt_id, 'pgtap')
 $$;
 
-select plan(25);
+select plan(26);
 
 -- ---------------------------------------------------------------------
 -- Fixture als postgres
@@ -208,10 +208,19 @@ select is(pg_temp.ausfuehren_dann('authenticated', '00000000-0000-4000-8000-0000
 -- EA-AK5 Löschen der Anlage entfernt die Kette ohne Fehler
 -- ---------------------------------------------------------------------
 
+-- Runde 1: Die Service-Rolle hat bewusst kein DELETE in public (Migration 20261104171000_service_ohne_delete.sql,
+-- Konzept 8.1 Regel 3); Demo- und Testdaten löscht sie nur über datenart_loeschen() (unten). Physisch löscht eine
+-- Anlage nur der Eigentümer (postgres, z. B. Seed oder Wiederherstellung); dann entfernt on delete cascade die ganze
+-- Kette, und der Fremdschlüssel ersetzt_id (on delete set null) stört die Reihenfolge nicht.
 select is(pg_temp.ausfuehren_dann('service_role', null,
             $q$delete from public.anlage where id = 'f2490000-0000-4000-8000-000000000001'$q$,
             $q$select count(*)::text from public.eigene_aufgabe where anlage_id = 'f2490000-0000-4000-8000-000000000001'$q$),
-          'ok 1, 0', 'EA-AK5 Löschen der Anlage (Service-Rolle) entfernt Vorgänger und Nachfolger ohne Fehler');
+          '42501, 3', 'EA-AK5 Löschen der Anlage: Service-Rolle darf nicht direkt löschen (42501), die Kette bleibt');
+
+select is(pg_temp.ausfuehren_dann('postgres', null,
+            $q$delete from public.anlage where id = 'f2490000-0000-4000-8000-000000000001'$q$,
+            $q$select count(*)::text from public.eigene_aufgabe where anlage_id = 'f2490000-0000-4000-8000-000000000001'$q$),
+          'ok 1, 0', 'EA-AK5 Löschen der Anlage (Eigentümer postgres) entfernt Vorgänger und Nachfolger ohne Fehler');
 
 -- Kette an der Demo-Anlage, danach datenart_loeschen('demo')
 insert into public.eigene_aufgabe (id, client_id, anlage_id, name, intervall_d, app_version) values

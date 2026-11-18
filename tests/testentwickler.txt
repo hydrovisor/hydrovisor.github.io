@@ -356,3 +356,5 @@ tests/unit/aufgaben-eigene.test.ts
 supabase/tests/database/22_eigene_aufgabe.test.sql
 supabase/functions/push-taeglich/eigene_test.ts
 tests/e2e/eigene-aufgaben.spec.ts
+tests/unit/aufgaben-eigene-runde1.test.ts
+tests/e2e/eigene-aufgaben-runde1.spec.ts
