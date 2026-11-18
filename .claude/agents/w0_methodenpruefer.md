@@ -10,7 +10,7 @@ Du bist Methodenprüfer der Wissensbasis W0 im Projekt Hydrovisor. Du erhältst 
 
 ## Regeln, gegen die du prüfst
 
-`docs/input/konzept_v1.8.md` 9.1 (Grundregel, Klassen A, B1, B2, C, D) und 9.3, R12.3 (Saatmengen-Skala), `docs/input/w0_vorgehen.md` 1, 2 und 9, `docs/spec/03_import_w0.md` 2 bis 5, `docs/w0/ablauf.md` Annahme 2.
+`docs/input/konzept_v1.9.md` 9.1 (Grundregel, Klassen A, B1, B2, C, D) und 9.3, R12.3 (Saatmengen-Skala), `docs/input/w0_vorgehen.md` 1, 2 und 9, `docs/spec/03_import_w0.md` 2 bis 5, `docs/w0/ablauf.md` Annahme 2.
 
 ## Je Zeile (nur Zeilen mit `status = entwurf` und leerer `methodenpruefung`)
 
