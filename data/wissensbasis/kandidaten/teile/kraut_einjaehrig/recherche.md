@@ -109,7 +109,7 @@ Gesucht nur: `pw.ocimum_basilicum.anzucht.dauer`, `pw.ocimum_basilicum.wachstum.
 
 - Walters und Currey, ASHS 2015 (Abstract Paper21157): Umsetzen «two weeks after sowing», Frischmasse «three weeks after transplanting» nur aus Suchausschnitt (Wochen, Seite nicht erreichbar, HTTP 503); nicht erfasst, Wochen ohnehin nicht umrechnen.
 - Doty u. a. 2020 (Arkansas, NFT, Umsetzen 14/21/28 Tage nach Saat, Ernte 35 Tage nach Saat): wie Runde 2 verworfen (Anzucht in Torfsubstrat; Werte ab Saat).
-- Pennisi u. a. 2020, Eur. J. Hortic. Sci. 85(5) (Bologna, laut Suchausschnitt Umsetzen 21 Tage nach Saat, 21 Tage bis zur Ernte): Volltext gesperrt (HTTP 403), Zitat nicht prüfbar, nicht erfasst.
+- Studie 2020, Eur. J. Hortic. Sci. 85(5) (Bologna, laut Suchausschnitt Umsetzen 21 Tage nach Saat, 21 Tage bis zur Ernte): Volltext gesperrt (HTTP 403), Zitat nicht prüfbar, nicht erfasst.
 - Wageningen/LettUs Grow 2026 (J. Hortic. Sci. Biotechnol.): nur «4–5 weeks after transplanting» im Suchausschnitt, Wochen, nicht erfasst.
 - Johnny's «approximately 28 days» (bereits `wachstum.dauer#2` offen), Rise Gardens 28 bis 35 Tage (Blog ohne Methode), hydroponiccalendar.pages.dev (ohne Quelle): nicht neu erfasst.
 
@@ -196,3 +196,47 @@ Hinweis für den Lead: #7 ist der einzige Kandidat mit Bezug ab Keimung ohne Rec
 | Art | Phase | Grösse | Stand |
 |---|---|---|---|
 | ocimum_basilicum | anzucht | dauer | weiterhin kein Kandidat mit `wert_min/wert_typ/wert_max`; offen neu: 7 (Rise Genovese), 7 (Rise Purple), 7–10 ab Keimung (Rise Blog), 20 Tage minus 48 h (A, Schwamm 2.3 cm) |
+
+## Runde 11 (#242)
+
+Gesucht: `ernteintervall_d`, `schnitte_max`, `kulturdauer_max_d` für `ocimum_basilicum`, Kulturformen `dauerkultur_blatt` und `schnitt`. Abruf 18.11.2026.
+
+### Suchweg
+
+- Bekannte Quellen erneut gelesen: CAFRE 2020 (Abschnitt 5.6), UT/UF W 844-B, Johnny's Hydroponic & Container Basil Guide, frankiesgarten.de Basilikum, Rise Gardens «How to Grow Hydroponic Basil».
+- Websuche: «basil hydroponic NFT deep water culture successive harvests cuts days after regrowth number of harvests»; daraus Frontiers 2021 (Floating Raft, drei Genovese-Sorten) und Frontiers 2022 (rotes und grünes Basilikum) gelesen.
+
+### Neue Kandidaten
+
+| kandidat_id | Wert | Quelle | Klasse |
+|---|---|---|---|
+| `ak.ocimum_basilicum.schnitt.ernteintervall_d#2` | 3 Wochen («roughly 3 week intervals»; Umrechnung D4 durch den Lead) | CAFRE 2020 | B1 |
+| `ak.ocimum_basilicum.schnitt.schnitte_max#1` | 2 («harvested twice») | Frontiers 2021, Floating Raft | A |
+| `ak.ocimum_basilicum.schnitt.kulturdauer_max_d#1` | 47 Tage ab Saat (32 DAT plus 15 Tage Anzucht, beide aus derselben Quelle) | Frontiers 2021, Floating Raft | A |
+
+Hinweis: Frontiers 2021 nennt die Schnitte bei 18 und 32 DAT, aber kein Intervall wörtlich (Differenz nicht eingetragen); Zahl der Schnitte und Ende sind Versuchsplan, keine Empfehlung zur Höchstzahl. Der CAFRE-Wert gilt für zurückgeschnittene Pflanzen mit Seitentrieben und passt ebenso zu `dauerkultur_blatt`; eingetragen bei `schnitt` wie `ernteart#1` derselben Quelle.
+
+### Offene Werte (Form passt nicht, kein Kandidat)
+
+| Feld | Wortlaut | Quelle | grund |
+|---|---|---|---|
+| `ernteintervall_d` | «With regular harvesting every 1-7 days, a single basil plant can produce fresh leaves continuously» | Rise Gardens Blog 2025 (C) | Bereich ohne typischen Wert, sehr breit |
+
+### Verworfen
+
+| Quelle | Grund |
+|---|---|
+| Frontiers 2022, 10.3389/fpls.2022.799213 (Schnitte bei 42 und 65 DAT) | Töpfe mit Perlit und Torf (2/3 Torf) mit Tropfbewässerung: kein inertes Substrat nach 9.1 |
+| frankiesgarten.de Basilikum | keine Zahl zu Intervall, Schnitten oder Kulturende (Anzuchtkarte «Erster Rückschnitt nach:» ohne Wert) |
+| Johnny's Basil Guide | nur «approximately 28 days» Kulturzeit und 4–6 Wochen bis Verkaufsware (Topf), nichts zu Folgeschnitten |
+| UT/UF W 844-B | «Often basil plants can be grown and harvested for many weeks or months» ohne Zahl |
+| Agronomy 10(6):830 (2020, laut Suchauszug Schnitte bei 47 und 75 DAT) | MDPI liefert 403, Spiegel liefert HTML; nicht gelesen |
+
+### Lückenliste nach Runde 11 (Klasse D)
+
+| Art | Kulturform | Feld | Stand und was Anbauquellen sagen |
+|---|---|---|---|
+| Basilikum | `dauerkultur_blatt` | `ernteintervall_d` | kein eigener Kandidat; CAFRE «roughly 3 week intervals» (bei `schnitt` eingetragen) und Rise Gardens «every 1-7 days» liegen vor; Lead entscheidet die Zuordnung |
+| Basilikum | `dauerkultur_blatt` | `schnitte_max` | keine Quelle nennt eine Höchstzahl |
+| Basilikum | `dauerkultur_blatt` | `kulturdauer_max_d` | keine hydroponische Zahl; W 844-B: «grown and harvested for many weeks or months» (https://uthort.tennessee.edu/wp-content/uploads/sites/228/2023/11/W844-B.pdf) |
+| Basilikum | `schnitt` | `schnitte_max`, `kulturdauer_max_d` | nur Versuchsplan Frontiers 2021 (2 Schnitte, 47 Tage); weitere Quellen fehlen |

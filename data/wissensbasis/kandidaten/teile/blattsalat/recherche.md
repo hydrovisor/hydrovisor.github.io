@@ -327,3 +327,29 @@ Nur `pw.valerianella_locusta.keimung.dauer` und `pw.valerianella_locusta.keimung
 | valerianella_locusta | keimung | dauer | kein Kandidat in Validatorform; offen #1 bis #7 (Bereiche ohne typ, ein Einzelwert in Wochen); Lead entscheidet nach Entscheid 0018 und 0022 |
 | valerianella_locusta | keimung | keimart | ein Kandidat (#1 dunkel, Klasse C, Gartenbau-Ratgeber); keine Saatgutfirma mit ausdrücklicher Keimart gefunden |
 | valerianella_locusta | anzucht | dauer | bildet der Lead aus `anzucht.dauer#1` minus Keimdauer (nicht gesucht) |
+
+## Runde 11 (#242)
+
+Auftrag `auftrag_runde-11.md`: Kulturform-Felder für den Erntekalender (`ernteintervall_d`, `schnitte_max`, `kulturdauer_max_d`).
+
+### Suchweg
+
+- `agronomy-lettuce-sequential-harvest-2021` (Floating, zwei Schnitte): Volltext bei MDPI gesperrt (HTTP 403, auch PDF), OpenAlex nennt nur den MDPI-Link; nach Suchtreffern beschreibt die Studie zwei aufeinanderfolgende Schnitte als Versuchsanlage, ohne Abstand im Abstract. Kein Kandidat.
+- Suche «lettuce hydroponic multiple harvests regrowth cut-and-come-again» führt zur Studie J. Agric. Sci. 9(1) 64 (2017, `jas-lettuce-cut-and-come-again-2017`): schwimmende Speedling-Schalen mit Vermiculit in Aquaponik-Durchflusskanälen (Folientunnel), Schnitt «Cut-and-Come-Again» wöchentlich, sechs Schnitte bis zum Ende der Produktivität, Empfehlung Neusaat nach zwei Schnitten. Kandidaten `ernteintervall_d#1` (1 Woche), `schnitte_max#1` (2), `kulturdauer_max_d#1` (6 Wochen bis zum zweiten Schnitt). Hinweis für die Methodenprüfung: Nährlösung ist Fischwasser (EC 0.13 mS/cm), Substrat Vermiculit; im Versuch bis zur letzten Ernte «ten week growing period» (10 Wochen, sechs Schnitte), steht nur in `fundstelle`.
+- Rise Gardens «Hydroponic Lettuce» (Hersteller, B2; Titel aus dem Linkpfad, vom Quellenprüfer zu bestätigen): Pflücksalat alle 2 Wochen (`ernteintervall_d#2`), Kopf «4-5 weeks total growing time from seed» (`kopf.kulturdauer_max_d#1` = 5 Wochen, obere Grenze). Zu `schnitte_max` nur «until it begins to bolt», keine Zahl.
+- frankiesgarten.de Salat: Pflücksalat «über Wochen immer wieder Blätter», «4 bis 6 Wochen erntereif»; keine Zahl zu Abstand, Schnitten oder Ende. Kein Kandidat.
+- Nüsslisalat: `plants-valerianella-selen-2021` (Volltext Europe PMC PMC8706042): Ernten 38, 52, 66 Tage ab Saat, «At the last stage (66 DAS) … commercial maturity» → `valerianella_locusta.kopf.kulturdauer_max_d#2` = 66.
+- UKY CCD und Purdue HO-309 durchsucht: keine Kulturdauer ab Saat (Purdue nur «After four weeks, we harvested plants», Versuchsdauer ab Umsetzen ohne Anzucht).
+- Babyleaf: Suche «baby leaf lettuce hydroponic … days after sowing» ohne verwertbaren Volltext (eine Studie von 2020 als PDF nicht abrufbar; Purdue «17-day crop cycle» nur als Suchtreffer).
+
+### Verworfen
+
+- hydrogreenspace.pages.dev, scaleandstem.pages.dev (Hydroponik-Blogs ohne erkennbaren Autor oder Quelle, mutmasslich KI-Texte): nennen 7 bis 14 bzw. 10 bis 14 Tage Abstand und 3 bis 4 Schnitte.
+- gardeningchores.com, countrylife.co.uk (Gartenbau, Erde).
+
+### Lückenliste Runde 11 (Klasse D)
+
+| Art | Kulturform | Feld | Stand |
+|---|---|---|---|
+| lactuca_sativa | babyleaf | kulturdauer_max_d | kein Hydroponik-Wert; der einzige Babyleaf-Wert (Cornell GPN, 3 Tage Keimung plus 10 Tage DWC) wurde in Runde 2 wegen Torf/Perlit-Schalen verworfen. Anbauquellen: Purdue nennt für dicht gesäten Babysalat «Rouxai» einen 17-Tage-Zyklus im Vertical Farming (Suchtreffer https://journals.ashs.org/downloadpdf/view/journals/hortsci/60/7/article-p1092.pdf, nicht geprüft) |
+| lactuca_sativa | schnitt | schnitte_max | nur eine Quelle (A, Aquaponik); Blogs ohne Beleg nennen 3 bis 4 |

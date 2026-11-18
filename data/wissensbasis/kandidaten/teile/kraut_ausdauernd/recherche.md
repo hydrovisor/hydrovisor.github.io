@@ -368,3 +368,42 @@ Hinweise für den Lead: Die Keimangaben liegen zwischen 7 und 25 Tagen; die meis
 |---|---|---|---|
 | Schnittlauch | keimung | dauer | kein Kandidat in Validatorform (keine Quelle mit typischem Wert); 10 neue offene Kandidaten (7-25 Tage) für den Entscheid des Lead nach 0018 und 0022 |
 | Schnittlauch | anzucht | dauer | kein Kandidat in Validatorform; 7 neue offene Kandidaten (Wochen oder Tage ab Saat mit Keimdauer derselben Quelle) |
+
+## Runde 11 (#242)
+
+Auftrag: `ernteintervall_d`, `schnitte_max`, `kulturdauer_max_d` für Schnittlauch (dauerkultur_blatt, schnitt) und Petersilie (dauerkultur_blatt). Abruf 18.11.2026.
+
+### Suchweg
+
+- Bestehende Quellen erneut gelesen: VT SPES-466 (Text und Table 1), CAFRE 2020 (Abschnitt 5.9 Chives, Anhang 2), Simply Hydroponics «Hydroponic Chives», frankiesgarten Petersilie, Fork Farms Herb Grow Guide 2025, Rise Gardens Plant Library (Parsley Darki, Chives Staro).
+- Websuche: «chives hydroponic repeated harvests cuts days interval», «parsley hydroponic floating system successive cuts harvest interval», «Allium schoenoprasum hydroponic harvests cuts days».
+- Neu: Proc. Fla. State Hort. Soc. 114:332-334 (2001), Kräuter in Verti-Gro-Türmen mit Perlit (`fshs-kraeuter-vertikal-2001`, peer_review, substrat_inert). Gelesen, nicht erfasst: Horticultura Brasileira, Schnittlauch in NFT mit Magnesiumsulfat (nur eine Ernte 40 Tage nach Umsetzen).
+
+### Neue Kandidaten (art.csv)
+
+| zeile_id | Kandidat | Wert | Quelle |
+|---|---|---|---|
+| ak.petroselinum_crispum.dauerkultur_blatt.ernteintervall_d | #1 | 1 Woche («weekly») | vt-spes-466-2023 (B1) |
+| ak.petroselinum_crispum.dauerkultur_blatt.ernteintervall_d | #2 | 1 Woche («weekly») | fshs-kraeuter-vertikal-2001 (A) |
+| ak.petroselinum_crispum.dauerkultur_blatt.kulturdauer_max_d | #1 | 84 Tage ab Saat (Table 1, Harvest 49-84 d, Obergrenze) | vt-spes-466-2023 (B1) |
+| ak.allium_schoenoprasum.dauerkultur_blatt.kulturdauer_max_d | #1 | 2 Jahre («replacing plants every two years») | simplyhydro-schnittlauch (C) |
+
+Hinweise für den Lead: «weekly» ist als 1 Woche eingetragen (Wochenwert, Regel D4); der Schnittlauch-Wert steht in Jahren, die Umrechnung macht der Lead. Petersilie 84: Die Tabelle nennt nur den Bereich 49-84 d der Ernten; 84 ist die letzte Ernte des Versuchs (sechs Wochen wöchentliche Ernte), ein Abbruchgrund der Pflanze ist nicht genannt.
+
+### Verworfen oder ohne Zahl
+
+- CAFRE 5.9 Chives: «best harvested young and replanted» bzw. CCA-Kultur, keine Zahl; Anhang 2 (Kulturzeit in Wochen als Balken) im Text nicht lesbar.
+- Simply Hydroponics: «regeneration time is several weeks» (keine Zahl); «every three to eight weeks» gilt für Knoblauch-Schnittlauch (Allium tuberosum), nicht für Allium schoenoprasum.
+- Fork Farms Herb Grow Guide 2025 (B2, Steinwolle, Indoor-Turm): «Mature plants can be harvested weekly, bi-weekly or when necessary» (kein Einzelwert) und «herbs can remain in the Flex Farm and be continuously harvested up to four months before replanting» (Monate ab Umsetzen; Keimung nur als Bereich 5-7 Tage, Saatbezug nicht rechenbar). Nicht erfasst, Hinweis für den Lead für beide Arten.
+- Rise Gardens Parsley Darki, Chives Staro: nur «can be harvested multiple times», Entfernen bei Blüte, keine Zahl.
+- frankiesgarten Petersilie: «über Monate», «monatelang», keine Zahl; Nachsaat «alle zwei bis drei Wochen» ist kein Ernteintervall.
+- Proc. FSHS 2001: Schnittlauch wurde wegen Problemen aus dem Versuch genommen (keine Werte); Petersilie: Kulturende «mid-June» ohne genaues Datum, Kulturdauer nicht ohne Schätzung rechenbar.
+
+### Lückenliste Runde 11 (Klasse D)
+
+| Art | Kulturform | Feld | Stand, was Anbauquellen sagen |
+|---|---|---|---|
+| allium_schoenoprasum | dauerkultur_blatt | ernteintervall_d | kein Hydroponik-Wert in Zahlen; Simply Hydroponics nur «several weeks», Fork Farms «weekly, bi-weekly» (Bereich). Gärtnerische Anleitungen (Erde) nennen wiederholten Rückschnitt über die Saison ([Johnny's Chives Key Growing Information](https://www.johnnyseeds.com/growers-library/herbs/chives/chives-key-growing-information.html)). |
+| allium_schoenoprasum | dauerkultur_blatt | schnitte_max | kein Wert; Simply Hydroponics nur «after many harvests». |
+| allium_schoenoprasum | schnitt | ernteintervall_d, schnitte_max, kulturdauer_max_d | kein Wert; CAFRE nur «harvested young and replanted» (NFT); Fork Farms bis vier Monate ab Umsetzen (Hinweis oben). |
+| petroselinum_crispum | dauerkultur_blatt | schnitte_max | kein Einzelwert; VT: wöchentlich über sechs Wochen bzw. «until yields begin to diminish». frankiesgarten (hydroponisch, ohne Zahl): zweijährig, Blütenstiel im zweiten Jahr ([frankiesgarten Petersilie](https://frankiesgarten.de/anleitungen/gemueseanbau/petersilie-hydroponik/)). |

@@ -237,3 +237,42 @@ Zuordnungen zur Prüfung:
 |---|---|---|---|
 | beta_vulgaris_cicla | anzucht | ph | neu Entwurf #3 (5.5 bis 6.5, C, Form erfüllt); offen #2, #4 (Einzelwerte 6.0, 6.5) |
 | beta_vulgaris_cicla | anzucht | ec | weiter kein Band (D); offen #1, #2 sowie neu #3 (0.6), #4 (1.2), #5 (0.68), alle Einzelwerte |
+
+## Runde 11 (#242)
+
+Auftrag: `ernteintervall_d`, `schnitte_max`, `kulturdauer_max_d` für Spinat (schnitt; babyleaf und kopf nur `kulturdauer_max_d`), Randen (schnitt) und Mangold (schnitt). Abruf 18.11.2026.
+
+### Suchweg
+
+- Bestehende Quellen erneut gelesen: Cornell CEA Spinat 2005 (Kapitel 3), Horticulturae 2022 Mangold, Rise Gardens Plant Library (Swiss Chard Bright Lights, Spinach Seaside, Beet Touchstone Gold), frankiesgarten Rote Bete, VT SPES-466 (Spinat, Table 1).
+- Websuche: «spinach hydroponic regrowth second harvest cut days floating raft», «Swiss chard hydroponic multiple harvests days after transplanting», «beet leaves hydroponic repeated harvest cuts».
+- Neu: Agriculture 11(5) 465 (2021), Spinat und Rauke als Babyleaf im Floating-System mit fünf Schnitten (`agriculture-spinat-rauke-floating-2021`, peer_review, dwc; PDF über mdpi-res.com, die HTML-Seite antwortet mit HTTP 403).
+
+### Neue Kandidaten (art.csv)
+
+| zeile_id | Kandidat | Wert | Quelle |
+|---|---|---|---|
+| ak.spinacia_oleracea.schnitt.ernteintervall_d | #1 | 1 Woche («approximately one-week intervals») | cornell-cea-spinat-2005 (B1) |
+| ak.spinacia_oleracea.schnitt.schnitte_max | #2 | 3 (erste, zweite, dritte Ernte) | cornell-cea-spinat-2005 (B1) |
+| ak.spinacia_oleracea.schnitt.schnitte_max | #3 | 5 | agriculture-spinat-rauke-floating-2021 (A) |
+| ak.spinacia_oleracea.schnitt.kulturdauer_max_d | #1 | 96 (46 + 22 + 10 + 10 + 8) | agriculture-spinat-rauke-floating-2021 (A) |
+| ak.spinacia_oleracea.babyleaf.kulturdauer_max_d | #1 | 46 (längster Kontrollzyklus; 46, 43, 28 Tage ab Saat) | agriculture-spinat-rauke-floating-2021 (A) |
+| ak.beta_vulgaris_cicla.schnitt.kulturdauer_max_d | #1 | 77 (21 + 56, Versuchsende nach dem 3. Schnitt) | horticulturae-mangold-meerwasser-2022 (A) |
+
+Hinweise für den Lead: Cornell S. 3-2 ist die Stelle, die der Methodenprüfer bei `schnitte_max#1` (Wert 2, verworfen) angeführt hat; #2 stützt sich darauf. In der Agriculture-Studie betragen die Abstände zwischen den Schnitten 22, 10, 10 und 8 Tage (kein Einzelwert für `ernteintervall_d`, nicht erfasst; Text: «only 8 to 10 more days for the third, fourth, and fifth cuts»). Babyleaf 46 ist die Auswahl des längsten von drei gemessenen Zyklen, kein Mittel. Die Studie lief im Winter (Januar bis März, Gewächshaus mit Tageslicht, Wassertemperatur 6 bis 15 °C), die Zyklen sind daher eher lang.
+
+### Verworfen oder ohne Zahl
+
+- Rise Gardens Swiss Chard: «ready to remove when you have gotten 5-10 harvests» (Bereich ohne Einzelwert, nicht erfasst; Kandidat für Mangold `schnitte_max` nur, wenn der Lead die Obergrenze 10 annimmt).
+- Rise Gardens Spinat-Blog: «Cutting outer leaves every 7 to 10 days» (Bereich, wie Runde 2). Spinach Seaside und Beet Touchstone Gold: «can only be harvested once».
+- VT SPES-466: Spinat «Harvest 42 d» als einmaliger Schnitt auf Packungsgrösse; Kulturform (babyleaf oder kopf) nicht eindeutig, nicht erfasst.
+- frankiesgarten Rote Bete: «etwa 8 bis 10 Wochen» gilt für die Knolle (Baby-Bete); Blätter «laufend», keine Zahl für die Blatternte.
+- HortScience 60(6) 967 (Mangold-Sorten in NFT): Download liefert HTML statt PDF, nicht gelesen.
+
+### Lückenliste Runde 11 (Klasse D)
+
+| Art | Kulturform | Feld | Stand, was Anbauquellen sagen |
+|---|---|---|---|
+| spinacia_oleracea | kopf | kulturdauer_max_d | kein Hydroponik-Wert für das Kulturende; vorhanden nur `kulturdauer_typisch_d` 64 (MedAgrSci 2022). UGA C1304 (DWC, B1) nennt nur Bereiche in Wochen: «seedlings needed 2–3 weeks after sowing before transplanting into the DWC system», «The crop was harvested after 3–4 weeks» (also 5 bis 7 Wochen ab Saat, nicht erfasst, Bereich ohne Einzelwert; [UGA C1304](https://fieldreport.caes.uga.edu/publications/C1304/how-to-grow-greenhouse-spinach-during-georgia-summers-using-hydroponics/)). |
+| beta_vulgaris_conditiva | schnitt | ernteintervall_d, schnitte_max, kulturdauer_max_d | kein Hydroponik-Wert; frankiesgarten nur «laufend ernten», Rise Gardens nur einmalige Ernte der Knolle; Knollenernte nach 8 bis 10 Wochen ([frankiesgarten Rote Bete](https://frankiesgarten.de/anleitungen/gemueseanbau/rote-bete-hydroponik/)). |
+| beta_vulgaris_cicla | schnitt | ernteintervall_d, schnitte_max | nur die Horticulturae-Kandidaten (14 Tage, 3 Schnitte, Versuchsende); weitere Quelle nur Bereich «5-10 harvests» (Rise Gardens). |

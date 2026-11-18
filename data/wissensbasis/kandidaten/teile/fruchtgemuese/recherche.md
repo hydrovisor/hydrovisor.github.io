@@ -410,3 +410,50 @@ Nur `pw.solanum_lycopersicum.bluete.dauer` (offene Blüte, BBCH 60/61, bis Fruch
 | Art | Phase / Feld | Stand |
 |---|---|---|
 | Tomate | `bluete.dauer` | kein Kandidat in Validatorform; offen neu #3 (30 Tage, BBCH 61 bis 71), #4 (42.3 und 57.2 DDT), #5 (20.00 und 24.37 Tage), #6 (10 Tage); Entscheid durch den Lead nach 0018 und 0022 (eigener Wert) |
+
+## Runde 11 (#242)
+
+Gesucht: `ernteintervall_d`, `schnitte_max`, `kulturdauer_max_d` für `solanum_lycopersicum` und `capsicum_annuum`, Kulturform `dauerkultur_frucht`. Abruf 18.11.2026.
+
+### Suchweg
+
+- Bekannte Quellen erneut gelesen: UA/CEAC Kapitel 3 (Anbauplanung), Alberta «Production of sweet bell peppers», frankiesgarten.de Tomaten und Paprika, Fork Farms Mini-Tomaten und Mini-Paprika, La Molina «Pimiento hidropónico» (Boletín 46).
+- Neu: UA/CEAC Kapitel 8 «Harvesting», UA Tomato Workshop 2026 Modul 5, UT/UF W 844-C (Fruchtgemüse in Hydroponik).
+- Websuche: «hydroponic greenhouse tomato harvested times per week», «bell pepper rockwool number of harvests days after transplanting», «sweet pepper rockwool crop end week 52».
+
+### Neue Kandidaten
+
+| kandidat_id | Wert | Quelle | Klasse |
+|---|---|---|---|
+| `ak.solanum_lycopersicum.dauerkultur_frucht.kulturdauer_max_d#1` | 364 Tage ab Saat («52 364 Remove Plants») | UA Tomato Workshop 2026, Modul 5 | B1 |
+| `ak.capsicum_annuum.dauerkultur_frucht.ernteintervall_d#1` | 1 Woche («once a week»; Umrechnung D4 durch den Lead) | UA/CEAC Kapitel 8 | B1 |
+
+### Offene Werte (Form passt nicht, kein Kandidat)
+
+| Art, Feld | Wortlaut | Quelle | grund |
+|---|---|---|---|
+| Tomate, `ernteintervall_d` | «Tomato fruit should be harvested every 3-4 days or 2-3 times / week.» (S. 8-2, «HARVESTING», «Tomato»; im Kurs selbst «we will only harvest once a week» wegen Stundenplan) | UA/CEAC Kapitel 8 (B1) | Bereich ohne typischen Wert; das Feld ist eine Ganzzahl, Wahl durch den Lead |
+| Paprika, `ernteintervall_d` | «se cosecha uno o tres por semana» (Abschnitt «COSECHA») | La Molina, Boletín 46 «Pimiento hidropónico» (Steinwolle) | Häufigkeit je Woche als Bereich, kein Intervall in Tagen |
+| Tomate, `kulturdauer_max_d` | «Seed late July, transplant early August, plant 1-month-old seedlings late August. Harvest late October until May or June. Plants in 9-10 months» (S. 3-1, Example 1) | UA/CEAC Kapitel 3 (B1) | Monate, Bereich, ab Pflanzung statt ab Saat |
+| Tomate, `kulturdauer_max_d` | «Greenhouse hydroponic tomatoes are grown for ~9 months» und «Yield can decline after ~9 months of continuous production» | UA Tomato Workshop 2026, Modul 5 | Monate, Zählbeginn nicht genannt |
+| Tomate, `kulturdauer_max_d` | «Harvest started at 71 days after transplanting (DAT) and ended at 91 DAT.» | CIGR NFT 2025 (A, schon Quelle von `ernte_ab_d#1`) | ab Umsetzen; Anzuchtdauer in derselben Quelle nicht eindeutig (Widerspruch «harvested after 85 days from sowing»); Versuchsende, kein Kulturende |
+
+### Verworfen
+
+| Quelle | Grund |
+|---|---|
+| frankiesgarten.de Tomaten («Ernte von Anfang Juli bis Mitte Oktober», «Aussaat ab 20. März») | nur Monatsangaben, keine Zahl in Tagen oder Wochen; kein Ernteintervall |
+| frankiesgarten.de Paprika | keine Zahl zu Intervall, Ernten oder Kulturende |
+| Fork Farms Mini-Tomaten und Mini-Paprika | nur Tage bis Ernte (50-55, 75-90), nichts zu Intervall oder Ende |
+| UT/UF W 844-C | «harvest can continue for several months» ohne Zahl |
+| UF/IFAS HS368 (Paprika-Sortenversuch, Pinienrinde unter Schattierung, laut Suchauszug Ernte alle 7 bis 14 Tage) | Pinienrinde nicht als inertes Hydroponik-Substrat geführt, offene Schattenhalle; nicht gelesen |
+| Chapingo 2011 (Phänologie Paprika) | redalyc liefert 403; die vorhandene Zusammenfassung nennt nur Tage bis Erntebeginn |
+
+### Lückenliste nach Runde 11 (Klasse D)
+
+| Art | Feld | Stand und was Anbauquellen sagen |
+|---|---|---|
+| Tomate | `ernteintervall_d` | nur Bereich «every 3-4 days» (UA/CEAC, offen oben); Lead wählt |
+| Tomate | `schnitte_max` | keine Quelle nennt eine Zahl der Pflückgänge (Auftrag: nur dann); Feld leer lassen |
+| Paprika | `schnitte_max` | keine Quelle nennt eine Zahl der Pflückgänge; Feld leer lassen |
+| Paprika | `kulturdauer_max_d` | keine hydroponische Zahl in Tagen oder Wochen. Alberta (Steinwolle/Kokos, B1) nennt Saat «around November 15» und «December is usually the month when crops are pulled» (Jahreskultur, nur Monate; https://www.alberta.ca/production-of-sweet-bell-peppers); La Molina Boletín 46 nennt Saat Mitte Oktober, Ernte bis November (https://www.lamolina.edu.pe/hidroponia/Boletin46/PIMIENTO_HIDROPONICO_RESH.pdf). Nächstliegende Analogie: Jahreskultur wie bei der Tomate (364); Entscheid durch den Lead |
