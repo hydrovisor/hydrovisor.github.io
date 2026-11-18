@@ -34,3 +34,29 @@ Stand 18.11.2026. Erzeugt aus den Kandidatendateien (Spalte `notiz_tim` der frei
 | `ak.valerianella_locusta.kopf.kulturdauer_max_d` | 66 | plants-valerianella-selen-2021 (A) | Runde 11 (#242), letzter Erntetermin bei Marktreife 66 Tage ab Saat (Floating, Klasse A); ≥ kulturdauer_typisch_d 51 |
 
 Dazu 0 Kulturgruppen-Mindestzeilen (V13) als Kopie der neuen Art-Zeilen der Leitkultur bzw. mit «(A) andere Art».
+
+## Ergänzungen des Lead zu Runde 11
+
+- **Regel D4 sinngemäss für Jahre (A):** 1 Jahr = 365 Tage (Schnittlauch Dauerkultur «every two years» = 730).
+- **Salat Schnitt, Kulturdauer max. 42 (A):** Die Quelle nennt 6 Wochen ab Saat bis zum zweiten Schnitt. Mit den freigegebenen Phasenwerten (typisch) läge der zweite Schnitt bei rund 47 Tagen (Fachkritik P3). Der Wert bleibt bei der Quelle; die Kulturfrage (R1.7) fragt ohnehin am früheren Tag von Kulturende und erreichten Schnitten und bietet «Verlängern um 14 Tage».
+- **Chili, Kulturdauer max. 364 (A):** andere Art, Leitkultur Tomate der Kulturgruppe Fruchtgemüse (wie V13); die Anbauquellen in `teile/fruchtgemuese/recherche.md` nennen für Chili im Gewächshaus eine Jahreskultur.
+- **Ohne Redaktor (A):** Die Fachkritik fand keinen Konflikt; die Freigabevorschläge des Redaktors entfallen, der Lead wählt je Feld den einzigen geprüften Kandidaten (Petersilie: zwei gleiche Werte, Klasse A gewählt, Annahme 8).
+- **MDPI-Quellen:** Drei Arbeiten (Mangold Meerwasser 2022, Randen Babyleaf 2025, Spinat und Rauke Floating 2021) waren für die Quellenprüfung gesperrt (HTTP 403) und sind deshalb verworfen. Sie enthielten unter anderem Spinat Schnitte 5, Mangold Intervall 14 und Ernte ab 28 Tagen. Eine Prüfung im Browser ist ein Posten für eine spätere Runde.
+
+## Verbleibende Lücken (Klasse D, keine Zeile)
+
+Klasse D erzeugt nach `docs/spec/03_import_w0.md` Abschnitt 2 Punkt 7 keine Zeile. Der Erntekalender zeigt für diese Kulturformen die Termine, die aus den übrigen Werten folgen (erste Ernte über `ernte_ab_d`, Schnitte über das Intervall), sonst «Termine noch offen».
+
+| Art | Kulturform | ohne Wert |
+|---|---|---|
+| Salat | kopf, babyleaf | `kulturdauer_max_d` |
+| Tomate, Chili | dauerkultur_frucht | `schnitte_max` (Zahl der Pflückgänge nennt keine Quelle); Tomate auch `ernteintervall_d` («every 3-4 days» nur als Bereich) |
+| Basilikum | dauerkultur_blatt, schnitt | `schnitte_max`, `kulturdauer_max_d` |
+| Schnittlauch | dauerkultur_blatt | `ernteintervall_d`, `schnitte_max` |
+| Schnittlauch | schnitt | alle drei |
+| Petersilie | dauerkultur_blatt | `schnitte_max`, `kulturdauer_max_d` |
+| Spinat | schnitt | `kulturdauer_max_d` |
+| Spinat | babyleaf, kopf | `kulturdauer_max_d` (Babyleaf 46 Tage stand in einer gesperrten MDPI-Quelle) |
+| Randen, Mangold | schnitt | alle drei |
+
+Nebenbefund der Fachkritik: Für Salat Schnitt, Spinat Schnitt, Basilikum, Petersilie, Schnittlauch, Randen und Mangold ist auch `ernte_ab_d` nicht freigegeben; ohne ihn fehlt im Erntekalender die erste Ernte. Folgeposten für eine spätere W0-Runde.
