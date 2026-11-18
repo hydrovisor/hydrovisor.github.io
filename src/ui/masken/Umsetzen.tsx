@@ -110,20 +110,25 @@ function Maske({ satz, wie, jetzt }: { satz: string; wie: 'geplant' | undefined;
   const geplant = wieGeplant(a);
   const planZeilen = umsetzZusammenfassung(teile, geplant, jetzt, ZEITZONE).zeilen;
 
-  /** Sperre wie in Keimung (U13; Runde 2 Befund 2): nach Erfolg noch 400 ms, nach einem Fehler sofort frei */
-  async function mitSperre(f: () => Promise<boolean>) {
+  /**
+   * Sperre wie in Keimung (U13; Runde 2 Befund 2): nach Erfolg noch 400 ms, nach einem Fehler sofort frei. Der nächste
+   * Schritt erscheint erst mit dem Ende der Sperre: bis dahin steht die Ansicht still, damit ein Doppeltipper nicht die
+   * nachgerückte Taste trifft (wie Erntekarten seit Plan 226; #241)
+   */
+  async function mitSperre(f: () => Promise<Schritt | undefined>) {
     if (sperre.current) return;
     sperre.current = true;
     setSendet(true);
-    let ok = false;
+    let naechster: Schritt | undefined;
     try {
-      ok = await f();
+      naechster = await f();
     } finally {
       const frei = () => {
         sperre.current = false;
         setSendet(false);
+        if (naechster) setSchritt(naechster);
       };
-      if (ok) setTimeout(frei, SPERRE_MS);
+      if (naechster) setTimeout(frei, SPERRE_MS);
       else frei();
     }
   }
@@ -132,7 +137,7 @@ function Maske({ satz, wie, jetzt }: { satz: string; wie: 'geplant' | undefined;
     void mitSperre(() => sendenOhneSperre(eingabe));
   }
 
-  async function sendenOhneSperre(eingabe: UmsetzEingabe): Promise<boolean> {
+  async function sendenOhneSperre(eingabe: UmsetzEingabe): Promise<Schritt | undefined> {
     const jetztSenden = uhrJetzt();
     const bewegt = new Set([
       ...eingabe.zuweisung.map((z) => z.pflanzungId),
@@ -149,7 +154,7 @@ function Maske({ satz, wie, jetzt }: { satz: string; wie: 'geplant' | undefined;
         : umsetzVorgang(teile, eingabe, neueClientId, jetztSenden, ZEITZONE);
     if (vorgang.length === 0) {
       setFehler('Eingabe nicht gültig, nicht gespeichert');
-      return false;
+      return undefined;
     }
     vorgangFuer.current = { schluessel, vorgang };
     const z = umsetzZusammenfassung(teile, eingabe, jetzt, ZEITZONE);
@@ -159,18 +164,17 @@ function Maske({ satz, wie, jetzt }: { satz: string; wie: 'geplant' | undefined;
       setFehler(
         r.status === 'nicht_gespeichert' ? r.fehler.text : 'Schon anders gespeichert, nicht übernommen',
       );
-      return false;
+      return undefined;
     }
     setFehler(undefined);
-    setSchritt({
+    return {
       art: 'ergebnis',
       eingabe,
       vorgang,
       restIds,
       ...(z.rest ? { rest: z.rest } : {}),
       ...(z.stationLeer ? { stationLeer: z.stationLeer } : {}),
-    });
-    return true;
+    };
   }
 
   function zuruecknehmen(vorgang: Vorgang) {
@@ -178,11 +182,10 @@ function Maske({ satz, wie, jetzt }: { satz: string; wie: 'geplant' | undefined;
       const r = await schreiben(saatRueckgaengig(vorgang), { jetzt: uhrJetzt(), zeitzone: ZEITZONE });
       if (r.status !== 'gespeichert') {
         setFehler(r.status === 'nicht_gespeichert' ? r.fehler.text : 'Nicht zurückgenommen');
-        return false;
+        return undefined;
       }
       vorgangFuer.current = undefined;
-      setSchritt({ art: 'uebersicht' });
-      return true;
+      return { art: 'uebersicht' };
     });
   }
 
