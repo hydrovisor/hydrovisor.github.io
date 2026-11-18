@@ -197,10 +197,13 @@ test('RB1-AK2 Umsetzen Schritt 3 von 3: zweiter Tipp 100 ms nach «Umsetzen» tr
   const zeilen = await page.getByRole('list', { name: 'Umsetzen' }).getByRole('listitem').count();
   expect(zeilen).toBeGreaterThan(0);
   const unter = await doppeltipp(page, knopf(page, 'Umsetzen'));
+  // gleich nach dem zweiten Tipp (noch in der Sperre): dieselben Zeilen stehen da
+  const zeilenDanach = await page.getByRole('list', { name: 'Umsetzen' }).getByRole('listitem').count();
   expect(unter, 'nach 100 ms liegt noch «Umsetzen» unter dem Finger').toMatchObject({
     text: 'Umsetzen',
     gesperrt: true,
   });
+  expect(zeilenDanach, 'die Zeilen stehen während der Sperre still').toBe(zeilen);
   await expect(page.getByText('Umgesetzt: 4 Sämlinge')).toBeVisible();
   await page.waitForTimeout(800);
   expect(ereignisse(m, 'umsetzen')).toHaveLength(4);
