@@ -654,6 +654,13 @@ html:has(.hv-rahmen-leiste .hv-heute-fuss):not(:has(.hv-block)) {
   font-weight: 700;
 }
 
+/* Säen Schritt 2 «Wohin? · Anlage R» (UX6, Plan 228) */
+.hv-saeen-wohin {
+  font-size: var(--text-body-size);
+  font-weight: 700;
+  margin: 0;
+}
+
 .hv-saeen-zeile,
 .hv-saeen-hinweis {
   font-size: var(--text-caption-size);

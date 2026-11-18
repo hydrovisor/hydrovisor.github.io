@@ -137,8 +137,13 @@ export function SaatgutErfassen({ onSchliessen }: { onSchliessen: () => void }) 
   }
 
   function fotoWaehlen(seite: TuetenfotoSeite, datei: File) {
-    setFotos((alt) => ({ ...alt, [seite]: { datei, url: URL.createObjectURL(datei) } }));
+    const foto = { datei, url: URL.createObjectURL(datei) };
+    setFotos((alt) => ({ ...alt, [seite]: foto }));
     if (seite === 'vorne' && schritt === 'vorne') setSchritt('hinten');
+    // UX6 (Plan 228): mit Vorder- und Rückseite liest die App ohne weiteren Tipp; Quelle als Argument, weil setFotos
+    // erst nach dem Rendern gilt; ein zweiter Start während des Lesens unterbleibt (R6)
+    if (seite === 'hinten' && schritt === 'hinten' && fotos.vorne && !liest)
+      void lesen({ vorne: fotos.vorne, hinten: foto });
   }
 
   /** lädt jedes gewählte, noch nicht hochgeladene Foto in den Ordner der neuen sorte_id (Plan 37 A16) */
@@ -333,15 +338,10 @@ export function SaatgutErfassen({ onSchliessen }: { onSchliessen: () => void }) 
             hint="Auf der Rückseite stehen meist Keimart und Keimtemperatur."
             onWahl={(datei) => fotoWaehlen('hinten', datei)}
           />
-          {fotos.hinten ? (
-            <Button block onClick={() => void lesen()}>
-              Tüte lesen
-            </Button>
-          ) : (
-            <Button variant="secondary" block onClick={() => void lesen()}>
-              Ohne Rückseite lesen
-            </Button>
-          )}
+          {/* UX6: nach der Rückseite liest die App von selbst; «Tüte lesen» entfällt */}
+          <Button variant="secondary" block onClick={() => void lesen()}>
+            Ohne Rückseite lesen
+          </Button>
         </section>
       ) : null}
 
