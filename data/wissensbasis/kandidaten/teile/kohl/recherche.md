@@ -90,3 +90,19 @@ Saatempfehlung `se.brassica_rapa_chinensis.kopf`: zwei Kandidaten (B: 1 Samen je
 | brassica_rapa_chinensis | babyleaf | Saatempfehlung | nur offen (Cornell 6 bis 12 Samen je Zelle, Analogie) |
 
 Geschlossen in Runde 2 (Kandidat in Form): `keimung.keimart` (dunkel), `anzucht.ec` (0.5 bis 0.9 mS/cm), `anzucht.wassertemp`, `systemeignung` (dwc bzw. kratky), `kulturformen_erlaubt` und `kulturform_vorgabe` (kopf).
+
+## Runde 11 (#242)
+
+Auftrag `auftrag_runde-11.md`: `brassica_rapa_chinensis.kopf.kulturdauer_max_d`.
+
+### Suchweg
+
+- Rise Gardens «Growing Bok Choy Hydroponically» (`risegardens-bok-choy-2026`, B2, schon in `quelle.csv`): Zeitleiste «Days 35–60 (full-size varieties): Full heads develop.», FAQ «Full-size varieties take 45–60 days.»; Babysorten «Days 21–35». Kandidat `kulturdauer_max_d#1` = 60 (obere Grenze für grosse Sorten). Die Seite zählt in der Zeitleiste ab Saat (Umsetzen «around day 7–10»), im Abschnitt Babysorten aber «within 21–30 days of germination»; der Bezugspunkt ist vom Quellenprüfer zu bestätigen.
+- frankiesgarten.de Pak Choi: Anbauplan «etwa ab Tag 35» Ernte, Ende nur als «Ein kräftiger Blütenstiel in der Mitte zeigt das Ende der Erntezeit»; keine Tageszahl für das Ende. Kein Kandidat.
+- Suche nach Hochschulquellen mit Tagen ab Saat in Hydroponik: nur Anbauquellen (UF/IFAS HS1337 «40–50 days after seeding», Erde; NC State «about 60 days»), keine Kandidaten.
+
+### Lückenliste Runde 11 (Klasse D)
+
+| Art | Kulturform | Feld | Stand |
+|---|---|---|---|
+| brassica_rapa_chinensis | kopf | kulturdauer_max_d | nur eine Quelle (B2); Anbauquellen: UF/IFAS HS1337 nennt 40 bis 50 Tage ab Saat (https://edis.ifas.ufl.edu/pdffiles/HS/HS133700.pdf), NC State rund 60 Tage (https://plants.ces.ncsu.edu/plants/brassica-rapa-chinensis-group) |
