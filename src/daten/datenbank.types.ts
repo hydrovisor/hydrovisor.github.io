@@ -347,14 +347,14 @@ isOneToOne: false
                   ]
                 },"eigene_aufgabe": {
                   Row: {
-                    "anlage_id": string,"app_version": string,"client_id": string | null,"erfasst_am": string,"id": string,"intervall_d": number,"letzte_erledigung": string | null,"name": string,"storniert_am": string | null
+                    "anlage_id": string,"app_version": string,"client_id": string | null,"erfasst_am": string,"ersetzt_id": string | null,"id": string,"intervall_d": number,"letzte_erledigung": string | null,"name": string,"storniert_am": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "anlage_id": string,"app_version": string,"client_id"?: string | null,"erfasst_am"?: string,"id"?: string,"intervall_d": number,"letzte_erledigung"?: string | null,"name": string,"storniert_am"?: string | null
+                    "anlage_id": string,"app_version": string,"client_id"?: string | null,"erfasst_am"?: string,"ersetzt_id"?: string | null,"id"?: string,"intervall_d": number,"letzte_erledigung"?: string | null,"name": string,"storniert_am"?: string | null
                   }
                   Update: {
-                    "anlage_id"?: string,"app_version"?: string,"client_id"?: string | null,"erfasst_am"?: string,"id"?: string,"intervall_d"?: number,"letzte_erledigung"?: string | null,"name"?: string,"storniert_am"?: string | null
+                    "anlage_id"?: string,"app_version"?: string,"client_id"?: string | null,"erfasst_am"?: string,"ersetzt_id"?: string | null,"id"?: string,"intervall_d"?: number,"letzte_erledigung"?: string | null,"name"?: string,"storniert_am"?: string | null
                   }
                   Relationships: [
                     {
@@ -375,6 +375,12 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "v_saeurebedarf"
       referencedColumns: ["anlage_id"]
+    },{
+      foreignKeyName: "eigene_aufgabe_ersetzt_fk"
+      columns: ["ersetzt_id","anlage_id"]
+isOneToOne: false
+      referencedRelation: "eigene_aufgabe"
+      referencedColumns: ["id","anlage_id"]
     }
                   ]
                 },"einstellung": {
