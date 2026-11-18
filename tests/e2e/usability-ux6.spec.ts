@@ -157,6 +157,8 @@ test('UX6-AK2 Ziele nach Urteil geordnet; das beste empfohlene Ziel ist vorgewä
   await expect(zielGruppe(page).locator('button[aria-pressed="true"]')).toHaveCount(1);
   // Deckel D1 von 1.1 mit 4 Löchern, im Bild; die Zeile der Passung steht ohne Tipp
   await expect(loecher(page)).toHaveCount(4);
+  // im Honor-Viewport 360 × 780 (CLAUDE.md); das erste Loch im DOM liegt in der vorderen, unteren Reihe (column-reverse)
+  await page.setViewportSize({ width: 360, height: 780 });
   await expect(loecher(page).first()).toBeInViewport();
   await expect(page.getByText(/^Lollo Rossa: Empfohlen/)).toBeVisible();
   await expect(knopf(page, 'Alle freien wählen und weiter')).toBeEnabled();
@@ -258,7 +260,8 @@ test('UX6-AK3 Säen mit einer Sorte, vorgewähltem Ziel und «Alle freien wähle
   await tipp(m, knopf(page, 'Säen speichern'));
   await expect(page.getByText(/Gespeichert: 1 Satz/)).toBeVisible({ timeout: 15_000 });
 
-  expect(m.tipper - abLeiste + 1, 'ab «Säen» in Saatgut').toBeLessThanOrEqual(6);
+  // abLeiste zählt den Tipp auf die Leiste schon mit: ab «Säen» (eingeschlossen) sind es m.tipper - abLeiste
+  expect(m.tipper - abLeiste, 'ab «Säen» in Saatgut').toBeLessThanOrEqual(6);
   expect(m.tipper, 'ab der Leiste').toBeLessThanOrEqual(7);
 
   // geschrieben: ein Satz Lollo Rossa, Reservierungen auf alle freien 8-cm-Töpfe von 1.1, Einstufung empfohlen
