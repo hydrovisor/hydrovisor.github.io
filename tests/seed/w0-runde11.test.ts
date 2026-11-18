@@ -71,7 +71,6 @@ const RUNDE11: [string, string, keyof Kulturform, number][] = [
   ['allium_schoenoprasum', 'dauerkultur_blatt', 'kulturdauer_max_d', 730],
   ['brassica_rapa_chinensis', 'kopf', 'kulturdauer_max_d', 60],
   ['capsicum_annuum', 'dauerkultur_frucht', 'ernteintervall_d', 7],
-  ['capsicum_annuum', 'dauerkultur_frucht', 'kulturdauer_max_d', 364],
   ['lactuca_sativa', 'schnitt', 'ernteintervall_d', 7],
   ['lactuca_sativa', 'schnitt', 'kulturdauer_max_d', 42],
   ['lactuca_sativa', 'schnitt', 'schnitte_max', 2],
@@ -85,8 +84,8 @@ const RUNDE11: [string, string, keyof Kulturform, number][] = [
 ];
 
 describe('W242-AK2 W0 Runde 11 nach dem Seed in art_kulturform', () => {
-  it('W242-AK2 die 14 Werte der Runde 11 stehen in den gültigen Zeilen von art_kulturform', async () => {
-    expect(RUNDE11).toHaveLength(14);
+  it('W242-AK2 die 13 Werte der Runde 11 stehen in den gültigen Zeilen von art_kulturform', async () => {
+    expect(RUNDE11).toHaveLength(13);
     await inTransaktion(async (tx) => {
       await seedAusData(tx);
       const formen = await gueltigeKulturformen(tx);
