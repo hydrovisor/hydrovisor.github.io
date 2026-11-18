@@ -156,7 +156,7 @@ Dieselben Fixtures dienen E2E und Abnahme 1 (Konzept 8.5). Ablage `tests/fixture
 
 | Szenario | Inhalt | deckt |
 |---|---|---|
-| S1 Regal komplett | 13 Gefässe (5 Stationen) mit je einem Ereignis `gefaess_erfasst`, 4 Anzuchtboxen, W, 7 Deckel- und Plattentypen nach 3D-Modell | UC1-AK1, UC2-AK5, UC14 |
+| S1 Regal komplett | 13 Gefässe (5 Stationen) mit je einem Ereignis `gefaess_erfasst`, 4 Anzuchtboxen, W, 7 Deckel- und Plattentypen nach 3D-Modell; in 1.2 vier freie 8-cm-Töpfe (seit #241), damit Säen Schritt 2 ein empfohlenes Ziel vorwählt | UC1-AK1, UC2-AK5, UC14, UX6-AK2 (RB1-AK3) |
 | S2 DWC normal | 2.3 mit 2 Salatsorten (Lollo Rossa Loka, Roxette), Messungen 14 Tage, letzter Wechsel vor 12 Tagen | Heute, Wechsel in 2 Tagen, Rechner |
 | S3 veraltet | 1.1 mit Nachfüllen nach der letzten Messung | UC7-AK10 |
 | S4 Kratky belüftet | 3.1 Füllstand unter ⅓, EC über Band | UC7-AK8, Rundgang |

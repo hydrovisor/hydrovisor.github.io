@@ -60,12 +60,17 @@ export function Phasenkarten({ jetzt }: { jetzt: Date }) {
   const [erledigtBei, setErledigtBei] = useState<{ teile: typeof teile; saetze: string[] }>();
   const [fehler, setFehler] = useState<string>();
   const [sendet, setSendet] = useState(false);
+  // während des Sendens und 400 ms danach bleiben die Karten stehen, sonst läge beim Doppeltipper schon die
+  // nachgerückte Karte unter dem Finger (U13, wie Erntekarten seit Plan 226; #241)
+  const [starr, setStarr] = useState<{ teile: typeof teile; erledigt: string[] }>();
   const sperre = useRef(false);
   // derselbe Vorgang bei Wiederholung derselben Eingabe (TO2)
   const vorgangFuer = useRef<{ schluessel: string; vorgang: Vorgang } | undefined>(undefined);
   if (!teile) return null;
-  const erledigt = erledigtBei?.teile === teile ? erledigtBei.saetze : [];
-  const roh = phasenKarten(teile, jetzt, ZEITZONE, PHASENLOGIK_AB);
+  const erledigtJetzt = erledigtBei?.teile === teile ? erledigtBei.saetze : [];
+  const sicht = starr?.teile ?? teile;
+  const erledigt = starr ? starr.erledigt : erledigtJetzt;
+  const roh = phasenKarten(sicht, jetzt, ZEITZONE, PHASENLOGIK_AB);
   const nachZeilen = (roh.nachfuehren?.zeilen ?? []).filter((z) => !erledigt.includes(z.satzId));
   const fragen = roh.fragen
     .map((k) => ({ ...k, zeilen: k.zeilen.filter((z) => !erledigt.includes(z.satzId)) }))
@@ -80,6 +85,7 @@ export function Phasenkarten({ jetzt }: { jetzt: Date }) {
     if (sperre.current) return false;
     sperre.current = true;
     setSendet(true);
+    setStarr({ teile, erledigt: erledigtJetzt });
     let ok = false;
     try {
       const vorgang = vorgangFuer.current?.schluessel === schluessel ? vorgangFuer.current.vorgang : bauen();
@@ -112,6 +118,7 @@ export function Phasenkarten({ jetzt }: { jetzt: Date }) {
       const frei = () => {
         sperre.current = false;
         setSendet(false);
+        setStarr(undefined);
       };
       if (ok) setTimeout(frei, SPERRE_MS);
       else frei();
@@ -229,7 +236,7 @@ export function Phasenkarten({ jetzt }: { jetzt: Date }) {
         </Card>
       ) : null}
       {fragen.map((karte) => {
-        const gruppen = phasenGruppen(teile, karte);
+        const gruppen = phasenGruppen(sicht, karte);
         const w = wahl[karte.titel] ?? KEINE_WAHL;
         const istOffen = offen[karte.titel] === true;
         const mehrfach = gruppen.some((g) => g.zeilen.length > 1);
