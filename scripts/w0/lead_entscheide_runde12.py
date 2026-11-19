@@ -53,14 +53,17 @@ E(f'{ak}{a}.schnitt.ernte_ab_d', f'{ak}{a}.schnitt.ernte_ab_d#1', 23,
   'Regel D4 (A): 5 Wochen = 35 Tage ab Saat (Direktsaat in Floating-Schalen, Klasse A); Regel D7 (A): minus '
   'art.umsetzen_ab_d 12 = 23 Tage ab Umsetzen; passt zu Intervall 7 und Kulturdauer max. 42 (zweiter Schnitt 6 Wochen '
   'ab Saat); #3 (4 Wochen ab Umsetzen, Klasse C) und #2 (21 ab Saat, Klasse B2) nicht gewählt')
-E(f'{ak}{a}.babyleaf.ernte_ab_d', f'{ak}{a}.babyleaf.ernte_ab_d#3', 9,
-  'Regel D7 (A): 21 Tage ab Saat (Indoor-System mit LED, Klasse B2) minus art.umsetzen_ab_d 12 = 9 Tage ab Umsetzen; '
-  'bei Direktsaat rechnet die App ab Saat')
+W(f'{ak}{a}.babyleaf.ernte_ab_d', f'{ak}{a}.babyleaf.ernte_ab_d#3',
+  'Babyleaf-Ernte 21 Tage ab Saat (Indoor-System mit LED, Saatpods im System, Klasse B2); die Babyleaf-Mischung wird '
+  'nach Konzept 3.3 direkt im Kratky-Gefäss gesät, der Wert gilt also ab Saat ohne Umrechnung (Befund 1 des Prüfers, '
+  'Runde 1; wie Spinat Babyleaf 14); ≤ kulturdauer_max_d 30')
 W(f'{ak}{a}.babyleaf.kulturdauer_max_d', f'{ak}{a}.babyleaf.kulturdauer_max_d#1',
   'spätester Babyleaf-Erntetermin 30 Tage ab Saat (Floating, Klasse A); #2 (35, Klasse B2) gilt für Pflücksalat allgemein')
 W(f'{ak}{a}.kopf.kulturdauer_max_d', f'{ak}{a}.kopf.kulturdauer_max_d#2',
   'obere Grenze «30–45 days» ab Saat (Indoor-System mit LED, Klasse B2); ≥ kulturdauer_typisch_d 35; #3 (Klasse B1) '
-  'wegen verworfener Quellenzeile (Jahr) nicht wählbar')
+  'wegen verworfener Quellenzeile (Jahr) nicht wählbar; Fachkritik P6: Butterhead und Romana brauchen bis 55 Tage, '
+  'die Kulturfrage (R1.7) bietet dann «Verlängern um 14 Tage»; P12: Rise Gardens nennt NFT für seine Systeme, NFT ist '
+  'hydroponisch (Konzept 9.1)')
 
 # ---------------- Basilikum (Dauerkultur Blatt) ----------------
 a = 'ocimum_basilicum'
