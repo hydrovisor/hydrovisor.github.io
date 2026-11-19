@@ -198,6 +198,7 @@ REGELN = {
     'D4': 'Angabe in Wochen: Tage = 7·Wochen',
     'D5': 'Tage ab Saat: minus Keimdauer derselben Quelle, sonst minus Keimdauer typ der Art',
     'D6': 'nur eine Grenze aus einem Quellenwert (typ ist der grösste bzw. kleinste Quellenwert): die andere nach D3 (0.8·typ bzw. 1.25·typ)',
+    'D7': 'ernte_ab_d ab Saat ohne Umsetztag derselben Quelle oder aus Direktsaat der Quelle, in der Anlage umgesetzt: minus art.umsetzen_ab_d, fehlt er minus Keimung typ plus Anzucht typ der Art',
     'E1': 'pH- oder EC-Einzelwert: Band ±0.2 um den Wert',
     'E2': 'Band über der Validatorgrenze: auf die Grenze gekürzt',
     'E3': 'EC-Basis nach der Quelle korrigiert (Methodenprüfer)',

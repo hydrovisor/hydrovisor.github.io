@@ -353,3 +353,32 @@ Auftrag `auftrag_runde-11.md`: Kulturform-Felder für den Erntekalender (`erntei
 |---|---|---|---|
 | lactuca_sativa | babyleaf | kulturdauer_max_d | kein Hydroponik-Wert; der einzige Babyleaf-Wert (Cornell GPN, 3 Tage Keimung plus 10 Tage DWC) wurde in Runde 2 wegen Torf/Perlit-Schalen verworfen. Anbauquellen: Purdue nennt für dicht gesäten Babysalat «Rouxai» einen 17-Tage-Zyklus im Vertical Farming (Suchtreffer https://journals.ashs.org/downloadpdf/view/journals/hortsci/60/7/article-p1092.pdf, nicht geprüft) |
 | lactuca_sativa | schnitt | schnitte_max | nur eine Quelle (A, Aquaponik); Blogs ohne Beleg nennen 3 bis 4 |
+
+## Runde 12 (#250)
+
+Auftrag `auftrag_runde-12.md`: Salat `ernte_ab_d` (schnitt, babyleaf, Vorrang), `kulturdauer_max_d` (babyleaf, kopf). Abruf 19.11.2026.
+
+### Suchweg
+
+- JAS 9(1) 64 (2017) erneut gelesen (Volltext ccsenet.org über doi.org): erster Schnitt «five weeks after seeds were sown», Saat direkt in die schwimmenden Vermiculit-Schalen, kein Umsetzen genannt → `schnitt.ernte_ab_d#1` (5 Wochen ab Saat, Direktsaat).
+- Rise Gardens «How Long Does Hydroponic Lettuce Take to Grow from Seed?» (2026, Indoor mit LED, Hersteller B2; `anbaumethode` nft nach dem Befund des Prüfers aus Runde 11, die Seite selbst nennt kein System): erster Blattschnitt «as early as day 21 to 25» (`schnitt.ernte_ab_d#2`), Babyleaf «by day 21» (`babyleaf.ernte_ab_d#3`), Pflücksalat «25–35 days to baby greens» (`babyleaf.kulturdauer_max_d#2` = 35), «30 to 45 days … seed to harvest» (`kopf.kulturdauer_max_d#2` = 45). Dieselbe Seite: «3 to 4 harvests over 6 to 8 weeks» (schnitte_max ist freigegeben, nicht eingereicht).
+- frankiesgarten.de Salat (C): «nach etwa 4 bis 6 Wochen im Tower», Pflücksalat von aussen ernten → `schnitt.ernte_ab_d#3` (4 Wochen ab Umsetzen, untere Grenze).
+- Frontiers Plant Sci 12:645671 (2021, Volltext PMC8117335): Babyleaf-Romana in Perlit-Schalen, Floating und Ebbe-Flut, Ernte 25 Tage ab Saat (Herbst) und 30 Tage ab Saat (Frühjahr); Übertragen der Schalen 6 bis 8 Tage ab Saat → `babyleaf.ernte_ab_d#2` (25 ab Saat), `babyleaf.kulturdauer_max_d#1` (30).
+- UKY CCD-CP-63 Fassung 2026 (neue PDF, eigene `quelle_id` `uky-ccd-cp63-2026`): Umsetzen 14 bis 21 Tage ab Saat, Ernte 21 bis 35 Tage ab Umsetzen → `kopf.kulturdauer_max_d#3` = 56 (obere Grenzen, Rechnung in `fundstelle`); Zeitachse S. 6 ergäbe 3 + 10 + 40 = 53 (nur hier vermerkt).
+
+### Hinweise für die Prüfung
+
+- `schnitt.ernte_ab_d#1` ist Aquaponik (Fischwasser, EC 0.13 mS/cm) wie die freigegebenen Zeilen derselben Quelle.
+- Bereiche: bei `ernte_ab_d` steht die untere, bei `kulturdauer_max_d` die obere Grenze im Wert; der Bereich steht in `fundstelle`.
+- Frontiers 2021: Babyleaf-Romana dicht gesät (1896 Pflanzen je m²); Babyleaf-Kulturform passt, Sorte der Anlage ist eine Babyleaf-Mischung.
+
+### Verworfen
+
+- PMC6804913 (Babyleaf-Salat, Vitamine): Topferde im Gewächshaus.
+- HortScience 60(7) 1092 (Purdue, Babysalat 17 Tage): Volltext nur über eine Skript-Seite, nicht abrufbar.
+- Rise Gardens «How to Harvest Hydroponic Lettuce So It Keeps Growing» (2026): nur Intervall 7–10 Tage und «up to 3 months», keine erste Ernte.
+- getgrowee.com, cropfarming.org, nosoilsolutions.com, soilfreeharvest.com, growlettuceguide.com, truleaf.org: Blogs ohne Beleg.
+
+### Lückenliste Runde 12 (Klasse D)
+
+Keine offene Lücke mehr in den gesuchten Feldern; je Feld mindestens ein Kandidat (Klasse A bis C).
