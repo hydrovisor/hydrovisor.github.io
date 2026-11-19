@@ -351,3 +351,6 @@ tests/e2e/usability-ux6.spec.ts
 # W0 Runde 11 Ernteintervall, Schnitte, Kulturdauer max. (#242)
 tests/unit/w0-runde11.test.ts
 tests/seed/w0-runde11.test.ts
+# W0 Runde 12 Ernte ab und Klasse-D-Lücken (#250)
+tests/unit/w0-runde12.test.ts
+tests/seed/w0-runde12.test.ts
