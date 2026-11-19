@@ -240,3 +240,49 @@ Hinweis: Frontiers 2021 nennt die Schnitte bei 18 und 32 DAT, aber kein Interval
 | Basilikum | `dauerkultur_blatt` | `schnitte_max` | keine Quelle nennt eine Höchstzahl |
 | Basilikum | `dauerkultur_blatt` | `kulturdauer_max_d` | keine hydroponische Zahl; W 844-B: «grown and harvested for many weeks or months» (https://uthort.tennessee.edu/wp-content/uploads/sites/228/2023/11/W844-B.pdf) |
 | Basilikum | `schnitt` | `schnitte_max`, `kulturdauer_max_d` | nur Versuchsplan Frontiers 2021 (2 Schnitte, 47 Tage); weitere Quellen fehlen |
+
+## Runde 12 (#250)
+
+Gesucht: `ernte_ab_d` (Vorrang), `schnitte_max`, `kulturdauer_max_d` für `ocimum_basilicum` `dauerkultur_blatt`; `schnitte_max`, `kulturdauer_max_d` für `schnitt`. Abruf 19.11.2026.
+
+### Suchweg
+
+- Bekannte Quellen erneut gelesen: Frontiers 2021 (Floating Raft, Schnitte 18 und 32 DAT), Proc. FSHS 114 (2001, Table 1 als Bild geprüft), Adv. Hort. Sci. 27 (2013), CAFRE 2020 (Anhang 2 als Bild), Plants 12:486 (PMC), PLOS ONE 2022 (Sämlingsumgebung), Frontiers 2022 (Hydrolysat), Fork Farms Herb Grow Guide 2025.
+- Websuche: «basil hydroponic multiple harvests days after transplanting NFT deep water culture», «hydroponic basil how long does a plant produce before replacing months». Neu gelesen: Agronomy 10(6):830 (2020) über mdpi-res.com, Masterarbeit University of Arkansas 2020 (NFT, DFT, Ebbe-Flut), AeroGarden-FAQ (Scotts Miracle-Gro), Rise Gardens Blog «Best Herbs to Grow Indoors Hydroponically» und «Best Hydroponic Seed Varieties for a Fast First Harvest».
+
+### Neue Kandidaten (art.csv)
+
+| kandidat_id | Wert | Quelle | Klasse |
+|---|---|---|---|
+| `ak.ocimum_basilicum.dauerkultur_blatt.ernte_ab_d#1` | 18 Tage ab Umsetzen (erster Schnitt CT1, Vorblüte) | frontiers-basilikum-raft-sorten-2021 | A |
+| `ak.ocimum_basilicum.dauerkultur_blatt.ernte_ab_d#2` | 13 Tage ab Umsetzen (Table 1; der Text nennt 15 bis 28 für alle Kräuter) | fshs-kraeuter-vertikal-2001 (neu in dieser Gruppe) | A |
+| `ak.ocimum_basilicum.dauerkultur_blatt.ernte_ab_d#3` | 50 Tage ab Umsetzen (gleicher Beleg wie das freigegebene `schnitt.ernte_ab_d#1`) | adv-hort-sci-27-basilikum-nft-2013 | A |
+
+Hinweis für den Lead: Die Werte streuen stark (13, 18, 50). FSHS (Sommer bis Frühling, wöchentliche Ernte ab 6-8 in Stiellänge) und Frontiers (Schnitt in der Vorblüte) ernten früh; Adv. Hort. Sci. ist Herbst-Winter-Anbau in Argentinien.
+
+### Offene Werte (Form passt nicht, kein Kandidat)
+
+| Feld | Wortlaut | Quelle | grund |
+|---|---|---|---|
+| `ernte_ab_d` | «it will take about 6-8 weeks before they are ready for the first harvest» (alle Kräuter, ab Umsetzen, Steinwolle im Turm) | Fork Farms Herb Grow Guide 2025 (B2) | Bereich ohne typischen Wert; nicht artspezifisch |
+| `ernte_ab_d` | «Basil — 28 to 35 days» bzw. «basil can be harvest-ready in as few as 21 days from transplant» | Rise Gardens Blog 2026 (C, System nicht genannt) | Bereich ohne typischen Wert bzw. Mindestwert |
+| `kulturdauer_max_d` | «Herbs typically grow for about 3-4 months and can last 6 months or more.» «Some herbs, such as basil, can last longer than that» | AeroGarden-FAQ, Scotts Miracle-Gro (B2) | Bereich ohne typischen Wert; Zahl gilt für Kräuter allgemein, nicht für Basilikum |
+
+### Verworfen oder ohne geeignete Zahl
+
+| Quelle | Grund |
+|---|---|
+| Agronomy 10(6):830 (2020), Schnitte 47 und 75 Tage nach Umsetzen | Töpfe mit Torf und Perlit 2:1, kein inertes Substrat nach 9.1 (wie Frontiers 2022 in Runde 11) |
+| Plants 12:486 (2023), Ernte 23 DAT | eine einzige, zerstörende Ernte bei 158 Pflanzen je m² (Versuchsende, eher `schnitt`; dort ist `ernte_ab_d` freigegeben) |
+| PLOS ONE 2022 (Sämlingsumgebung), «three weeks after transplant (harvest)» | festes Versuchsende ohne Bezug zur Erntereife |
+| University of Arkansas 2020 (Masterarbeit), Ernte 21 Tage nach Umsetzen bzw. 35 Tage nach Saat | festes Versuchsende zur Datenerhebung, keine Aussage zur ersten Ernte einer Kultur |
+| CAFRE 2020, Anhang 2 «Approximate crop time (weeks)» | Balkendiagramm ohne Zahl im Text (Basil: Produktionsbereich etwa Woche 6 bis 11, Ernte Woche 12); nicht wörtlich belegbar |
+| Adv. Hort. Sci. 27 (2013), zwei Ernten bis 92 DAT | nur Versuchsplan, keine Aussage zur Höchstzahl der Schnitte oder zum Kulturende (gleicher Grund wie Frontiers 2021 in Runde 11) |
+
+### Lückenliste nach Runde 12 (Klasse D)
+
+| Art | Kulturform | Feld | Stand und was Anbauquellen sagen |
+|---|---|---|---|
+| Basilikum | `dauerkultur_blatt` | `schnitte_max` | keine Quelle nennt eine Höchstzahl; Anbauquellen nennen nur fortlaufendes Schneiden bis zur Blüte oder Erschöpfung |
+| Basilikum | `dauerkultur_blatt` | `kulturdauer_max_d` | keine artspezifische Hydroponik-Zahl; AeroGarden nur Kräuter allgemein «3-4 months … 6 months or more» (https://scottsmiraclegro.com/support/help-center/aerogardenfaqs.html); W 844-B «many weeks or months» |
+| Basilikum | `schnitt` | `schnitte_max`, `kulturdauer_max_d` | nur Versuchspläne (Frontiers 2021: 2 Schnitte; Adv. Hort. Sci. 2013: 2 Ernten); keine Empfehlung zur Höchstzahl oder zum Kulturende |
