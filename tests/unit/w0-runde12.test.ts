@@ -1,7 +1,7 @@
 // W250-AK1 [Unit] (Issue #250, W0 Runde 12; 03_import_w0.md Abschnitt 7, V1 bis V13): Der Validator über die echten
 // Dateien in data/ (wie npm run w0:pruefen) meldet keinen Verstoss; die 7 in Runde 12 freigegebenen Zeilen
 // (data/wissensbasis/kandidaten/berichte/lead_entscheide_runde-12.md) stehen mit genau diesen Werten in
-// freigegeben/art.csv; keine Zeile von origin/main ist geändert oder entfernt; Klasse-D-Lücken ohne Quelle erzeugen
+// freigegeben/art.csv; keine Zeile vom Stand vor Runde 12 (Commit c1fdb5c) ist geändert oder entfernt; Klasse-D-Lücken ohne Quelle erzeugen
 // keine Zeile; Kulturdauer typisch ≤ max.
 // Datenpaket: Die Daten sind vor den Tests freigegeben (Commit bda995e), die Tests sind deshalb sofort grün (Plan 250 A2).
 import { execFileSync } from 'node:child_process';
@@ -15,6 +15,8 @@ import { PFAD, tabelle, type Tabelle, type Zeile } from './w0-hilfen.ts';
 type W0Dateien = Parameters<typeof pruefen>[0];
 
 const WURZEL = fileURLToPath(new URL('../..', import.meta.url));
+/** Ausgangsstand der Runde 12: origin/main am 19.11.2026 (Konzept v1.9, #248) */
+const AUSGANGSSTAND = 'c1fdb5c';
 
 const RUNDE12: Record<string, string> = {
   'ak.beta_vulgaris_cicla.schnitt.ernte_ab_d': '19',
@@ -72,11 +74,15 @@ function kulturformen(zeilen: Zeile[]): Map<string, Record<string, string>> {
   return m;
 }
 
-/** art.csv auf origin/main (Prüftor checkt mit fetch-depth 0 aus) */
-function artAufMain(): Tabelle {
-  const text = execFileSync('git', ['show', `origin/main:${PFAD.art}`], { cwd: WURZEL, encoding: 'utf8' });
+/** art.csv auf dem festen Ausgangsstand der Runde 12 (Commit c1fdb5c, Konzept v1.9 #248; Prüftor checkt mit fetch-depth 0 aus) */
+function artVorRunde12(): Tabelle {
+  const text = execFileSync('git', ['show', `${AUSGANGSSTAND}:${PFAD.art}`], {
+    cwd: WURZEL,
+    encoding: 'utf8',
+  });
   const t = csvLesen(PFAD.art, text);
-  if (Array.isArray(t)) throw new Error(`art.csv auf origin/main nicht lesbar: ${JSON.stringify(t)}`);
+  if (Array.isArray(t))
+    throw new Error(`art.csv auf dem Stand ${AUSGANGSSTAND} nicht lesbar: ${JSON.stringify(t)}`);
   return t as unknown as Tabelle;
 }
 
@@ -115,8 +121,8 @@ describe('W250-AK1 W0 Runde 12 in data/wissensbasis/freigegeben', () => {
     }
   });
 
-  it('W250-AK1 keine Zeile von origin/main ist geändert oder entfernt, nur neue Zeilen', () => {
-    const vorher = artAufMain().zeilen;
+  it('W250-AK1 keine Zeile vom Stand vor Runde 12 (c1fdb5c) geändert oder entfernt, nur neue Zeilen', () => {
+    const vorher = artVorRunde12().zeilen;
     expect(vorher.length).toBeGreaterThan(0);
     const jetzt = new Map(art.map((z) => [z['zeile_id'] ?? '', z]));
     for (const alt of vorher) {
