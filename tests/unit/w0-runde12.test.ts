@@ -1,22 +1,22 @@
 // W250-AK1 [Unit] (Issue #250, W0 Runde 12; 03_import_w0.md Abschnitt 7, V1 bis V13): Der Validator über die echten
 // Dateien in data/ (wie npm run w0:pruefen) meldet keinen Verstoss; die 7 in Runde 12 freigegebenen Zeilen
 // (data/wissensbasis/kandidaten/berichte/lead_entscheide_runde-12.md) stehen mit genau diesen Werten in
-// freigegeben/art.csv; keine Zeile vom Stand vor Runde 12 (Commit c1fdb5c) ist geändert oder entfernt; Klasse-D-Lücken ohne Quelle erzeugen
+// freigegeben/art.csv; keine Zeile vom Stand vor Runde 12 (Commit c1fdb5c, Zeilenzahl und Prüfsumme als Konstante) ist geändert oder entfernt; Klasse-D-Lücken ohne Quelle erzeugen
 // keine Zeile; Kulturdauer typisch ≤ max.
 // Datenpaket: Die Daten sind vor den Tests freigegeben (Commit bda995e), die Tests sind deshalb sofort grün (Plan 250 A2).
-import { execFileSync } from 'node:child_process';
-import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { csvLesen } from '../../src/domain/w0/csv.ts';
 import { pruefen } from '../../src/domain/w0/validator.ts';
 import { repository } from './w0-fixture.ts';
-import { PFAD, tabelle, type Tabelle, type Zeile } from './w0-hilfen.ts';
+import { PFAD, tabelle, type Zeile } from './w0-hilfen.ts';
 
 type W0Dateien = Parameters<typeof pruefen>[0];
 
-const WURZEL = fileURLToPath(new URL('../..', import.meta.url));
-/** Ausgangsstand der Runde 12: origin/main am 19.11.2026 (Konzept v1.9, #248) */
-const AUSGANGSSTAND = 'c1fdb5c';
+/**
+ * Ausgangsstand der Runde 12: art.csv auf Commit c1fdb5c (origin/main am 19.11.2026, Konzept v1.9 #248).
+ * Zeilenzahl und Prüfsumme einmalig am 19.11.2026 aus `git show c1fdb5c:data/wissensbasis/freigegeben/art.csv` mit
+ * pruefsumme() unten berechnet; der Test braucht so keine Git-Historie (Job unit checkt flach aus).
+ */
+const AUSGANGSSTAND = { commit: 'c1fdb5c', zeilen: 143, pruefsumme: 'c8babb89a1a29' } as const;
 
 const RUNDE12: Record<string, string> = {
   'ak.beta_vulgaris_cicla.schnitt.ernte_ab_d': '19',
@@ -74,16 +74,28 @@ function kulturformen(zeilen: Zeile[]): Map<string, Record<string, string>> {
   return m;
 }
 
-/** art.csv auf dem festen Ausgangsstand der Runde 12 (Commit c1fdb5c, Konzept v1.9 #248; Prüftor checkt mit fetch-depth 0 aus) */
-function artVorRunde12(): Tabelle {
-  const text = execFileSync('git', ['show', `${AUSGANGSSTAND}:${PFAD.art}`], {
-    cwd: WURZEL,
-    encoding: 'utf8',
+/** cyrb53: einfache, deterministische 53-Bit-Prüfsumme als Hex (kein node:crypto in den Unit-Tests) */
+function cyrb53(text: string): string {
+  let h1 = 0xdeadbeef;
+  let h2 = 0x41c6ce57;
+  for (let i = 0; i < text.length; i++) {
+    const c = text.charCodeAt(i);
+    h1 = Math.imul(h1 ^ c, 2654435761);
+    h2 = Math.imul(h2 ^ c, 1597334677);
+  }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(16);
+}
+
+/** Prüfsumme über die nach zeile_id sortierten Datenzeilen, je Zeile alle Spalten in Dateireihenfolge (null als '') */
+function pruefsumme(spalten: string[], zeilen: Zeile[]): string {
+  const sortiert = [...zeilen].sort((a, b) => {
+    const x = a['zeile_id'] ?? '';
+    const y = b['zeile_id'] ?? '';
+    return x < y ? -1 : x > y ? 1 : 0;
   });
-  const t = csvLesen(PFAD.art, text);
-  if (Array.isArray(t))
-    throw new Error(`art.csv auf dem Stand ${AUSGANGSSTAND} nicht lesbar: ${JSON.stringify(t)}`);
-  return t as unknown as Tabelle;
+  return cyrb53(sortiert.map((z) => JSON.stringify(spalten.map((sp) => z[sp] ?? ''))).join('\n'));
 }
 
 describe('W250-AK1 W0 Runde 12 in data/wissensbasis/freigegeben', () => {
@@ -121,15 +133,13 @@ describe('W250-AK1 W0 Runde 12 in data/wissensbasis/freigegeben', () => {
     }
   });
 
-  it('W250-AK1 keine Zeile vom Stand vor Runde 12 (c1fdb5c) geändert oder entfernt, nur neue Zeilen', () => {
-    const vorher = artVorRunde12().zeilen;
-    expect(vorher.length).toBeGreaterThan(0);
-    const jetzt = new Map(art.map((z) => [z['zeile_id'] ?? '', z]));
-    for (const alt of vorher) {
-      const id = alt['zeile_id'] ?? '';
-      expect(jetzt.has(id), id).toBe(true);
-      expect(jetzt.get(id), id).toEqual(alt);
-    }
+  it('W250-AK1 keine Zeile vom Stand vor Runde 12 (c1fdb5c) geändert oder entfernt, genau 7 Zeilen neu', () => {
+    const spalten = tabelle(d, PFAD.art).spalten;
+    const ohneRunde12 = art.filter((z) => !((z['zeile_id'] ?? '') in RUNDE12));
+    expect(art.length - ohneRunde12.length).toBe(7);
+    expect(art.length).toBe(AUSGANGSSTAND.zeilen + 7);
+    expect(ohneRunde12).toHaveLength(AUSGANGSSTAND.zeilen);
+    expect(pruefsumme(spalten, ohneRunde12), `Stand ${AUSGANGSSTAND.commit}`).toBe(AUSGANGSSTAND.pruefsumme);
   });
 
   it('W250-AK1 Klasse-D-Lücken ohne Quelle erzeugen keine Zeile (z. B. Schnittlauch Schnitt ernte_ab_d)', () => {
