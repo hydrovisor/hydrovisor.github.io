@@ -20,7 +20,7 @@ const AUSGANGSSTAND = 'c1fdb5c';
 
 const RUNDE12: Record<string, string> = {
   'ak.beta_vulgaris_cicla.schnitt.ernte_ab_d': '19',
-  'ak.lactuca_sativa.babyleaf.ernte_ab_d': '9',
+  'ak.lactuca_sativa.babyleaf.ernte_ab_d': '21',
   'ak.lactuca_sativa.babyleaf.kulturdauer_max_d': '30',
   'ak.lactuca_sativa.kopf.kulturdauer_max_d': '45',
   'ak.lactuca_sativa.schnitt.ernte_ab_d': '23',
