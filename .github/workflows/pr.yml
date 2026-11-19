@@ -266,12 +266,13 @@ jobs:
       - env:
           FREIGEGEBEN: ${{ contains(github.event.pull_request.labels.*.name, 'tests-freigegeben') }}
           BASIS_EREIGNIS: ${{ github.event.pull_request.base.sha }}
+          KOPF: ${{ github.event.pull_request.head.sha }}
         run: |
           declare -A geschuetzt; gemeldet=()
-          if git rev-parse -q --verify 'HEAD^2' >/dev/null; then
-            BASIS=$(git rev-parse 'HEAD^1'); SPITZE=$(git rev-parse 'HEAD^2')
+          if [ "$(git rev-parse -q --verify 'HEAD^2' || true)" = "$KOPF" ]; then
+            BASIS=$(git rev-parse 'HEAD^1'); SPITZE="$KOPF"
           else
-            BASIS="$BASIS_EREIGNIS"; SPITZE=$(git rev-parse HEAD)
+            BASIS="$BASIS_EREIGNIS"; SPITZE="$KOPF"
           fi
           echo "Basis $BASIS, Spitze $SPITZE"
           if git cat-file -e "$BASIS:tests/testentwickler.txt" 2>/dev/null; then
