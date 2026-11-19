@@ -14,9 +14,15 @@ type W0Dateien = Parameters<typeof pruefen>[0];
 /**
  * Ausgangsstand der Runde 12: art.csv auf Commit c1fdb5c (origin/main am 19.11.2026, Konzept v1.9 #248).
  * Zeilenzahl und Prüfsumme einmalig am 19.11.2026 aus `git show c1fdb5c:data/wissensbasis/freigegeben/art.csv` mit
- * pruefsumme() unten berechnet; der Test braucht so keine Git-Historie (Job unit checkt flach aus).
+ * pruefsumme() unten berechnet; der Test braucht so keine Git-Historie (Job unit checkt flach aus). Alle 143 Zeilen
+ * tragen dort freigegeben_am 2026-11-12 oder 2026-11-18 (vor der Runde 12 am 2026-11-19).
  */
-const AUSGANGSSTAND = { commit: 'c1fdb5c', zeilen: 143, pruefsumme: 'c8babb89a1a29' } as const;
+const AUSGANGSSTAND = {
+  commit: 'c1fdb5c',
+  zeilen: 143,
+  pruefsumme: 'c8babb89a1a29',
+  runde12Datum: '2026-11-19',
+} as const;
 
 const RUNDE12: Record<string, string> = {
   'ak.beta_vulgaris_cicla.schnitt.ernte_ab_d': '19',
@@ -133,13 +139,18 @@ describe('W250-AK1 W0 Runde 12 in data/wissensbasis/freigegeben', () => {
     }
   });
 
-  it('W250-AK1 keine Zeile vom Stand vor Runde 12 (c1fdb5c) geändert oder entfernt, genau 7 Zeilen neu', () => {
+  it('W250-AK1 Zeilen mit freigegeben_am vor 2026-11-19 entsprechen dem Stand c1fdb5c (unverändert, keine entfernt), Runde 12 trägt 2026-11-19', () => {
     const spalten = tabelle(d, PFAD.art).spalten;
-    const ohneRunde12 = art.filter((z) => !((z['zeile_id'] ?? '') in RUNDE12));
-    expect(art.length - ohneRunde12.length).toBe(7);
-    expect(art.length).toBe(AUSGANGSSTAND.zeilen + 7);
-    expect(ohneRunde12).toHaveLength(AUSGANGSSTAND.zeilen);
-    expect(pruefsumme(spalten, ohneRunde12), `Stand ${AUSGANGSSTAND.commit}`).toBe(AUSGANGSSTAND.pruefsumme);
+    // Teilmenge vor Runde 12: spätere Runden mit nur neuen Zeilen ändern sie nicht; eine korrigierte alte Zeile
+    // trägt ein neues Datum, fällt heraus und macht den Test bewusst rot
+    const vorRunde12 = art.filter((z) => (z['freigegeben_am'] ?? '') < AUSGANGSSTAND.runde12Datum);
+    expect(vorRunde12).toHaveLength(AUSGANGSSTAND.zeilen);
+    expect(pruefsumme(spalten, vorRunde12), `Stand ${AUSGANGSSTAND.commit}`).toBe(AUSGANGSSTAND.pruefsumme);
+    for (const [zeileId, wert] of Object.entries(RUNDE12)) {
+      const z = art.find((x) => x['zeile_id'] === zeileId);
+      expect(z?.['wert'], zeileId).toBe(wert);
+      expect(z?.['freigegeben_am'], zeileId).toBe(AUSGANGSSTAND.runde12Datum);
+    }
   });
 
   it('W250-AK1 Klasse-D-Lücken ohne Quelle erzeugen keine Zeile (z. B. Schnittlauch Schnitt ernte_ab_d)', () => {
