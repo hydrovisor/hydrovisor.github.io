@@ -255,6 +255,9 @@ jobs:
     # Geschützt sind alle Dateien, die der Testentwickler angelegt hat: tests/testentwickler.txt auf main
     # plus die Dateien der «Tests:»-Commits dieses Pull Requests. Spätere Änderungen daran brauchen die
     # Freigabe des Prüfers (Label tests-freigegeben, setzt der Lead nach der Begründung; Konzept 12.4).
+    # Basis ist der aktuelle main: erster Elternteil des Merge-Commits, den checkout für pull_request
+    # auscheckt; pull_request.base.sha bleibt beim Stand des Anlegens stehen und zählte sonst später
+    # gemergte Pull Requests mit (#251, von Tim am 19.11.2026 bestätigt).
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -262,14 +265,21 @@ jobs:
           fetch-depth: 0
       - env:
           FREIGEGEBEN: ${{ contains(github.event.pull_request.labels.*.name, 'tests-freigegeben') }}
-          BASIS: ${{ github.event.pull_request.base.sha }}
+          BASIS_EREIGNIS: ${{ github.event.pull_request.base.sha }}
+          KOPF: ${{ github.event.pull_request.head.sha }}
         run: |
           declare -A geschuetzt; gemeldet=()
+          if [ "$(git rev-parse -q --verify 'HEAD^2' || true)" = "$KOPF" ]; then
+            BASIS=$(git rev-parse 'HEAD^1'); SPITZE="$KOPF"
+          else
+            BASIS="$BASIS_EREIGNIS"; SPITZE="$KOPF"
+          fi
+          echo "Basis $BASIS, Spitze $SPITZE"
           if git cat-file -e "$BASIS:tests/testentwickler.txt" 2>/dev/null; then
             while read -r f; do [ -n "$f" ] && geschuetzt["$f"]=1; done < <(git show "$BASIS:tests/testentwickler.txt" | grep -v '^#')
             geschuetzt["tests/testentwickler.txt"]=1
           fi
-          for c in $(git rev-list --reverse "$BASIS"..HEAD); do
+          for c in $(git rev-list --reverse "$BASIS".."$SPITZE"); do
             betreff=$(git log -1 --format=%s "$c")
             dateien=$(git diff-tree --no-commit-id --name-only -r "$c")
             if [[ "$betreff" == Tests:* ]]; then
