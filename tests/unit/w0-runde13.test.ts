@@ -1,27 +1,32 @@
 // W13-AK1 [Unit] (Issue #258, W0 Runde 13; Plan docs/plaene/258.md, 03_import_w0.md Abschnitt 7, V1 bis V13): Der
-// Validator über die echten Dateien in data/ (wie npm run w0:pruefen) meldet keinen Verstoss; die 11 in Runde 13
+// Validator über die echten Dateien in data/ (wie npm run w0:pruefen) meldet keinen Verstoss; die 12 in Runde 13
 // freigegebenen Zeilen (data/wissensbasis/kandidaten/berichte/lead_entscheide_runde-13.md) stehen mit genau diesen
 // Werten und freigegeben_am 2026-11-21 in freigegeben/art.csv; keine Zeile vom Stand vor Runde 13 (Commit 3e31c0b,
 // Zeilenzahl und Prüfsumme als Konstante) ist geändert oder entfernt; die verbleibenden Klasse-D-Lücken erzeugen
 // keine Zeile; umsetzen_ab_d ≤ umsetzen_bis_d je Art; jede Quelle der neuen Zeilen steht in quelle.csv.
+// Runde 1 des Prüfers (K-mangold-02, Konzept 9.3 Regel 1): Mangold Schnitt ernte_ab_d 28 ersetzt die Fassung 19 aus
+// Runde 12; die alte Zeile ist aus art.csv entfernt (Korrektur als neue Zeile nach Konzept 9.4).
 // Datenpaket: Die Daten sind vor den Tests freigegeben (Commit b0b8f4c), die Tests sind deshalb sofort grün.
 import { describe, expect, it } from 'vitest';
 import { pruefen } from '../../src/domain/w0/validator.ts';
 import { repository } from './w0-fixture.ts';
+import { csvLesen } from '../../src/domain/w0/csv.ts';
 import { PFAD, tabelle, type Zeile } from './w0-hilfen.ts';
 
 type W0Dateien = Parameters<typeof pruefen>[0];
 
 /**
- * Ausgangsstand der Runde 13: art.csv auf Commit 3e31c0b (main am 21.11.2026, Erntekalender #254).
+ * Ausgangsstand der Runde 13: art.csv auf Commit 3e31c0b (main am 21.11.2026, Erntekalender #254) ohne die durch
+ * K-mangold-02 ersetzte Zeile ak.beta_vulgaris_cicla.schnitt.ernte_ab_d (Wert 19, freigegeben_am 2026-11-19).
  * Zeilenzahl und Prüfsumme einmalig am 21.11.2026 aus `git show 3e31c0b:data/wissensbasis/freigegeben/art.csv` mit
- * pruefsumme() unten berechnet; der Test braucht so keine Git-Historie (Job unit checkt flach aus). Alle 150 Zeilen
+ * pruefsumme() unten berechnet, nachdem diese eine Zeile entfernt war; der Test braucht so keine Git-Historie (Job unit
+ * checkt flach aus). Alle 149 Zeilen
  * tragen dort freigegeben_am 2026-11-12, 2026-11-18 oder 2026-11-19 (vor der Runde 13 am 2026-11-21).
  */
 const AUSGANGSSTAND = {
   commit: '3e31c0b',
-  zeilen: 150,
-  pruefsumme: '8bae161ed2a5f',
+  zeilen: 149,
+  pruefsumme: '18e0f3dfec0aa2',
   runde13Datum: '2026-11-21',
 } as const;
 
@@ -31,6 +36,11 @@ interface NeueZeile {
 }
 
 const RUNDE13: Record<string, NeueZeile> = {
+  // K-mangold-02: ersetzt die Fassung 19 aus Runde 12
+  'ak.beta_vulgaris_cicla.schnitt.ernte_ab_d': {
+    wert: '28',
+    quelleId: 'horticulturae-mangold-meerwasser-2022',
+  },
   'ak.solanum_lycopersicum.dauerkultur_frucht.ernteintervall_d': {
     wert: '7',
     quelleId: 'jksus-tomate-salinitaet-hydroponik-2023',
@@ -87,6 +97,29 @@ const KLASSE_D_OHNE_ZEILE: string[] = [
   'ak.beta_vulgaris_cicla.schnitt.kulturdauer_max_d',
 ];
 
+/** In Runde 12 wegen Verlagssperre verworfen, in Runde 13 über die Lesekopie neu geprüft (Abschnitt «Gesperrte Volltexte») */
+const LESEKOPIE_NEU_GEPRUEFT: [string, string][] = [
+  ['ak.beta_vulgaris_cicla.schnitt.ernte_ab_d', '28'],
+  ['ak.beta_vulgaris_cicla.schnitt.ernteintervall_d', '14'],
+  ['ak.spinacia_oleracea.schnitt.ernte_ab_d', '34'],
+  ['ak.spinacia_oleracea.babyleaf.kulturdauer_max_d', '46'],
+];
+
+const KANDIDATEN_PFAD = 'data/wissensbasis/kandidaten/art.csv';
+const KANDIDATEN_ROH = import.meta.glob<string>('/data/wissensbasis/kandidaten/art.csv', {
+  query: '?raw',
+  import: 'default',
+  eager: true,
+});
+
+function kandidaten(): Zeile[] {
+  const text = KANDIDATEN_ROH[`/${KANDIDATEN_PFAD}`];
+  if (text === undefined) throw new Error(`${KANDIDATEN_PFAD} fehlt`);
+  const t = csvLesen(KANDIDATEN_PFAD, text);
+  if (Array.isArray(t)) throw new Error(`${KANDIDATEN_PFAD} nicht lesbar: ${JSON.stringify(t)}`);
+  return (t as unknown as { zeilen: Zeile[] }).zeilen;
+}
+
 /** art_id, kulturform ('' bei art.*) und feld aus einer zeile_id der Form art.<art>.<feld> oder ak.<art>.<form>.<feld> */
 function teile(zeileId: string): { artId: string; kulturform: string; feld: string } {
   const t = zeileId.split('.');
@@ -127,8 +160,8 @@ describe('W13-AK1 W0 Runde 13 in data/wissensbasis/freigegeben', () => {
     expect(pruefen(d as unknown as W0Dateien, { modus: 'freigegeben' }).verstoesse).toEqual([]);
   });
 
-  it('W13-AK1 die 11 Zeilen der Runde 13 stehen mit genau diesen Werten, Quellen und freigegeben_am 2026-11-21 in art.csv', () => {
-    expect(Object.keys(RUNDE13)).toHaveLength(11);
+  it('W13-AK1 die 12 Zeilen der Runde 13 stehen mit genau diesen Werten, Quellen und freigegeben_am 2026-11-21 in art.csv', () => {
+    expect(Object.keys(RUNDE13)).toHaveLength(12);
     for (const [zeileId, { wert, quelleId }] of Object.entries(RUNDE13)) {
       const treffer = art.filter((z) => z['zeile_id'] === zeileId);
       expect(treffer, zeileId).toHaveLength(1);
@@ -142,14 +175,14 @@ describe('W13-AK1 W0 Runde 13 in data/wissensbasis/freigegeben', () => {
     }
   });
 
-  it('W13-AK1 genau die 11 Zeilen der Runde 13 tragen freigegeben_am 2026-11-21', () => {
+  it('W13-AK1 genau die 12 Zeilen der Runde 13 tragen freigegeben_am 2026-11-21', () => {
     const neu = art
       .filter((z) => z['freigegeben_am'] === AUSGANGSSTAND.runde13Datum)
       .map((z) => z['zeile_id']);
     expect([...neu].sort()).toEqual(Object.keys(RUNDE13).sort());
   });
 
-  it('W13-AK1 Zeilen mit freigegeben_am vor 2026-11-21 entsprechen dem Stand 3e31c0b (unverändert, keine entfernt)', () => {
+  it('W13-AK1 Zeilen mit freigegeben_am vor 2026-11-21 entsprechen dem Stand 3e31c0b (ohne die ersetzte Mangold-Zeile, sonst unverändert)', () => {
     const spalten = tabelle(d, PFAD.art).spalten;
     // Teilmenge vor Runde 13: spätere Runden mit nur neuen Zeilen ändern sie nicht; eine korrigierte alte Zeile
     // trägt ein neues Datum, fällt heraus und macht den Test bewusst rot
@@ -198,5 +231,33 @@ describe('W13-AK1 W0 Runde 13 in data/wissensbasis/freigegeben', () => {
     const quellen = new Set(tabelle(d, PFAD.quelle).zeilen.map((z) => z['quelle_id']));
     for (const [zeileId, { quelleId }] of Object.entries(RUNDE13))
       expect(quellen.has(quelleId), zeileId).toBe(true);
+  });
+
+  it('W13-AK1 K-mangold-02: die ersetzte Fassung 19 von Mangold Schnitt ernte_ab_d steht nicht mehr in art.csv', () => {
+    const mangold = art.filter(
+      (z) =>
+        z['art_id'] === 'beta_vulgaris_cicla' && z['kulturform'] === 'schnitt' && z['feld'] === 'ernte_ab_d',
+    );
+    expect(mangold.map((z) => [z['wert'], z['freigegeben_am']])).toEqual([
+      ['28', AUSGANGSSTAND.runde13Datum],
+    ]);
+    expect(
+      art.some((z) => z['zeile_id'] === 'ak.beta_vulgaris_cicla.schnitt.ernte_ab_d' && z['wert'] === '19'),
+    ).toBe(false);
+  });
+
+  it('W13-AK1 Befund 7: die Kandidaten der Runde 12 mit Verlagssperre sind über die Lesekopie neu geprüft und bestätigt', () => {
+    const k = kandidaten();
+    for (const [zeileId, wert] of LESEKOPIE_NEU_GEPRUEFT) {
+      const neu = k.filter(
+        (z) =>
+          z['zeile_id'] === zeileId &&
+          z['wert'] === wert &&
+          (z['fundstelle'] ?? '').startsWith('Lesekopie 21.11.2026 (Artikelseite im Browser)'),
+      );
+      expect(neu, zeileId).toHaveLength(1);
+      expect(neu[0]?.['quellenpruefung'], zeileId).toBe('bestaetigt');
+      expect(neu[0]?.['abgerufen_am'], zeileId).toBe(AUSGANGSSTAND.runde13Datum);
+    }
   });
 });
