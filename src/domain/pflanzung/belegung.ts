@@ -1,8 +1,10 @@
 // Freiprüfung eines Topfs an einem Umsetzdatum (R1.2, R1.7, R8.2, R11.1, R11.2; Plan 25): Vorgänger im Topf, ihr
-// voraussichtliches Ende und die Nachfolge-Regel. Rein: nur Kalendertage als Text 'JJJJ-MM-TT', keine Uhr. Eigenes
-// Modul, damit saeen.ts und duplizieren.ts es ohne Kreisimport nutzen.
+// voraussichtliches Ende und die Nachfolge-Regel. Rein: nur Kalendertage als Text 'JJJJ-MM-TT', keine Uhr; nur
+// ersteErnteAb() (Plan 254) braucht `jetzt` und Zeitzone für phaseAm(). Eigenes Modul, damit saeen.ts und
+// duplizieren.ts es ohne Kreisimport nutzen.
 import { zeilen, type Teile } from '../anlage/teile.ts';
-import { kalendertag, tagPlus, ZEITZONE } from '../zeit.ts';
+import { phaseAm } from '../phasen/prognose.ts';
+import { kalendertag, tagPlus, ZEITZONE, type Zeitzone } from '../zeit.ts';
 
 export type Ernteart = 'einmalig' | 'mehrfach';
 
@@ -133,6 +135,59 @@ export function voraussichtlichesEnde(
         ? undefined
         : tagPlus(satz.saatdatum, umsetzen));
   return bezug === undefined ? { ernteart } : { ernteart, endeAm: tagPlus(bezug, ab) };
+}
+
+/** Suchgrenze für den ersten Prognosetag der Phase Wachstum ab Saat (Plan 254 A3) */
+const WACHSTUM_SUCHE_TAGE = 365;
+
+/**
+ * Erste Ernte einer Mehrfachernte vor dem Umsetzen und ohne Teilernte (Issue #254, Plan 254; R1.2, R1.5, R1.7):
+ * Bezug + «Ernte möglich ab». Bezug: Direktsaat und Keimling die Saat; sonst `bezugUmsetzen` (Umsetztag, geplanter
+ * bzw. vorgegebener Umsetztag der Reservierung); sonst Saat + «Umsetzen ab»; sonst der erste Tag, an dem phaseAm()
+ * Wachstum liefert (Umsetzen am Ende der Anzucht). Einmalernte, fehlendes «Ernte möglich ab» oder kein Bezug:
+ * undefined. Teilernten und Umsetztag prüft der Aufrufer (Plan 254 A2).
+ */
+export function ersteErnteAb(
+  teile: Teile,
+  pflanzungId: string,
+  bezugUmsetzen: string | undefined,
+  jetzt: Date,
+  zeitzone: Zeitzone,
+): string | undefined {
+  const satz = satzVon(teile, pflanzungId);
+  if (!satz) return undefined;
+  const artId = artDerSorte(teile, satz.sorte_id);
+  const ak = artKulturform(teile, artId, satz.kulturform);
+  const ab = zahl(ak?.ernte_ab_d);
+  if (ak?.ernteart !== 'mehrfach' || ab === undefined) return undefined;
+  const bezug =
+    satz.direktsaat_platz_id || satz.kulturform === 'keimling'
+      ? satz.saatdatum
+      : (bezugUmsetzen ?? saatPlusUmsetzen(teile, satz, artId) ?? wachstumAb(teile, satz, jetzt, zeitzone));
+  return bezug === undefined ? undefined : tagPlus(bezug, ab);
+}
+
+function saatPlusUmsetzen(teile: Teile, satz: SatzZeile, artId: string | undefined): string | undefined {
+  const umsetzen = umsetzenAbTage(teile, artId);
+  return umsetzen === undefined ? undefined : tagPlus(satz.saatdatum, umsetzen);
+}
+
+/** erster Tag ab Saat mit Prognose Wachstum; schon am Saattag Wachstum oder später, oder nie: undefined (A4) */
+function wachstumAb(teile: Teile, satz: SatzZeile, jetzt: Date, zeitzone: Zeitzone): string | undefined {
+  const bezug = {
+    satzId: satz.id,
+    sorteId: satz.sorte_id,
+    kulturform: satz.kulturform,
+    saatdatum: satz.saatdatum,
+    direktsaat: satz.direktsaat_platz_id !== null,
+  };
+  for (let i = 0; i <= WACHSTUM_SUCHE_TAGE; i += 1) {
+    const tag = tagPlus(satz.saatdatum, i);
+    const phase = phaseAm(teile, bezug, tag, jetzt, zeitzone);
+    if (phase === 'wachstum') return i === 0 ? undefined : tag;
+    if (phase !== 'keimung' && phase !== 'anzucht') return undefined;
+  }
+  return undefined;
 }
 
 interface KulturEntscheidZeile {

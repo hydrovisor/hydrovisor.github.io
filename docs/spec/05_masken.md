@@ -111,7 +111,7 @@ Schritte 1 bis 3, je ein Tipp, Bildschirm bleibt an: Scan oder Kennung tippen (�
 - Hauptseite «Ernte» der Leiste (`#/ernte`, Regal-Dichte, nur lesen; Entscheid 0026, Plan 232, Vorlage Mockup Variante A «Zeitachse» in `docs/plaene/232-mockup.html`). Kopf «Erntekalender» mit «Do 18.3. · n Sätze», Legende, Achse mit «heute» und den Montagen.
 - Je aktivem Satz eine Zeile (Taste, 68 dp): «Art Sorte» und Ort («R-2.3», alle Anlagen), Phasenbalken über 56 Kalendertage ab Montag der laufenden Woche, Kurzzeile mit dem nächsten Ereignis («Anzucht fällig seit 14.3. · Ernte ab 5.5.»), Kennzeichen «Phase unbestätigt» bzw. «Termine noch offen». Reihenfolge: unbestätigte Wechsel zuerst, dann nach Datum, ohne Termin zuletzt, bei gleichem Datum nach Ort.
 - Ein Tipp wählt den Satz (`#/ernte/<satz>`, ohne Eintrag im Verlauf) und zeigt unten das Feld «Termine des Satzes»: Kulturform, Ort, Saat, Phase mit Tag, Nächstes (Prognose mit «möglich ab», «spätestens»), Ernte («ab …», bei Mehrfachernte nächster Schnitt und Ende, fehlende Werte «Termine noch offen»); «Feld schliessen», «Pflanze öffnen». Ohne Satz: «Kein Satz aktiv. Säen findest du unter Saatgut.» mit «Saatgut öffnen».
-- Termine nur aus `phasenStand()`, `phaseAm()`, `ernteStand()`, `voraussichtlichesEnde()` (`src/domain/phasen/kalender.ts`). **AK:** UC15-AK1 bis AK9.
+- Termine nur aus `phasenStand()`, `phaseAm()`, `ernteStand()`, `voraussichtlichesEnde()` und `ersteErnteAb()` (`src/domain/phasen/kalender.ts`). Mehrfachernte vor dem Umsetzen und ohne Teilernte: «Ernte ab» als Prognose aus `ersteErnteAb()` (Bezug Direktsaat, Reservierung, Saat + «Umsetzen ab» oder erster Prognosetag Wachstum; Issue #254, Plan 254). **AK:** UC15-AK1 bis AK13.
 
 ## 4 Schreibtisch-Masken
 
