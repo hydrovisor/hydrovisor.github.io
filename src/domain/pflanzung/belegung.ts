@@ -1,7 +1,8 @@
 // Freiprüfung eines Topfs an einem Umsetzdatum (R1.2, R1.7, R8.2, R11.1, R11.2; Plan 25): Vorgänger im Topf, ihr
 // voraussichtliches Ende und die Nachfolge-Regel. Rein: nur Kalendertage als Text 'JJJJ-MM-TT', keine Uhr; nur
 // ersteErnteAb() (Plan 254) braucht `jetzt` und Zeitzone für phaseAm(). Eigenes Modul, damit saeen.ts und
-// duplizieren.ts es ohne Kreisimport nutzen.
+// duplizieren.ts es ohne Kreisimport nutzen. Seit Plan 254 importiert es phasen/prognose.ts: prognose.ts, profil.ts
+// und termine.ts dürfen deshalb nichts aus pflanzung/ importieren.
 import { zeilen, type Teile } from '../anlage/teile.ts';
 import { phaseAm } from '../phasen/prognose.ts';
 import { kalendertag, tagPlus, ZEITZONE, type Zeitzone } from '../zeit.ts';

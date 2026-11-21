@@ -210,10 +210,10 @@ function erntefensterVon(
     const ab = stand?.moeglichAb ?? ende.endeAm;
     if (ab) fenster.ernteAb = ab;
   } else if (ernteart === 'mehrfach') {
-    if (stand?.moeglichAb)
+    if (stand?.moeglichAb) {
       if (teilernten > 0) fenster.naechsterSchnitt = stand.moeglichAb;
       else fenster.ernteAb = stand.moeglichAb;
-    else if (teilernten === 0) {
+    } else if (teilernten === 0) {
       // vor dem Umsetzen: erste Ernte als Prognose aus der Domänenfunktion (Issue #254, Plan 254)
       const ab = ersteErnteAb(teile, pflanzungId, bezug, jetzt, zeitzone);
       if (ab) fenster.ernteAb = ab;
