@@ -35,8 +35,9 @@ const RUNDE12: Record<string, string> = {
 };
 
 /** Lücken aus Issue #250, die nach Runde 12 offen bleiben (Klasse D, keine geprüfte Quelle): keine Zeile */
+// Runde 13 (#258) belegt Tomate dauerkultur_frucht ernteintervall_d, Mangold schnitt ernteintervall_d und Spinat
+// babyleaf kulturdauer_max_d; diese drei Felder stehen deshalb nicht mehr in der Liste.
 const KLASSE_D_OHNE_ZEILE: string[] = [
-  'ak.solanum_lycopersicum.dauerkultur_frucht.ernteintervall_d',
   'ak.solanum_lycopersicum.dauerkultur_frucht.schnitte_max',
   'ak.capsicum_annuum.dauerkultur_frucht.schnitte_max',
   'ak.capsicum_annuum.dauerkultur_frucht.kulturdauer_max_d',
@@ -55,13 +56,11 @@ const KLASSE_D_OHNE_ZEILE: string[] = [
   'ak.allium_schoenoprasum.schnitt.kulturdauer_max_d',
   'ak.spinacia_oleracea.schnitt.ernte_ab_d',
   'ak.spinacia_oleracea.schnitt.kulturdauer_max_d',
-  'ak.spinacia_oleracea.babyleaf.kulturdauer_max_d',
   'ak.spinacia_oleracea.kopf.kulturdauer_max_d',
   'ak.beta_vulgaris_conditiva.schnitt.ernte_ab_d',
   'ak.beta_vulgaris_conditiva.schnitt.ernteintervall_d',
   'ak.beta_vulgaris_conditiva.schnitt.schnitte_max',
   'ak.beta_vulgaris_conditiva.schnitt.kulturdauer_max_d',
-  'ak.beta_vulgaris_cicla.schnitt.ernteintervall_d',
   'ak.beta_vulgaris_cicla.schnitt.schnitte_max',
   'ak.beta_vulgaris_cicla.schnitt.kulturdauer_max_d',
 ];
