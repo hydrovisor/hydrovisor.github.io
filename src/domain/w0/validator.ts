@@ -54,6 +54,19 @@ class Pruefung {
     this.kandidaten = optionen.modus === 'kandidaten';
   }
 
+  /** Bestand der Querprüfungen von art.csv (Stammfelder, V11, ernteart je Kulturform). Im Modus kandidaten zählen
+   *  verworfene Kandidaten nicht mit: Sie bleiben als Verlauf in der Datei (03_import_w0.md 3), gehören aber zu
+   *  keinem Bestand, der je freigegeben wird (A, W0-Kandidaten bereinigen). */
+  private querbestand(): W0Dateien {
+    if (!this.kandidaten) return this.d;
+    const t = datei(this.d, 'art');
+    if (!t) return this.d;
+    return {
+      ...this.d,
+      [DATEI.art]: { ...t, zeilen: t.zeilen.filter((z) => wert(z, 'status') !== 'verworfen') },
+    };
+  }
+
   private melde(regel: Regel, wert: string | null, text: string): void {
     this.verstoesse.push({ datei: this.datei, zeileId: this.zeileId, regel, wert, text });
   }
@@ -242,7 +255,8 @@ class Pruefung {
     const t = datei(this.d, 'art');
     if (!t) return;
     this.datei = t.datei;
-    for (const [artId, felder] of artMerkmale(this.d)) {
+    const bestand = this.querbestand();
+    for (const [artId, felder] of artMerkmale(bestand)) {
       for (const s of STAMMFELDER) {
         if (!felder.has(s)) {
           this.zeileId = `art.${artId}.${s}`;
@@ -261,7 +275,7 @@ class Pruefung {
         );
       }
     }
-    for (const formen of artKulturformen(this.d).values()) {
+    for (const formen of artKulturformen(bestand).values()) {
       for (const [kf, felder] of formen) {
         const ernteart = felder.get('ernteart');
         if (!ernteart) {
