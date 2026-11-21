@@ -400,8 +400,16 @@ function vorUmsetzenDazu(t: Teile): void {
   for (const r of t['reservierung'] ?? [])
     if (r['id'] === BASILIKUM_SCHNITT_RESERVIERUNG) {
       r['umsetzen_vorgabe_am'] = '2027-03-24';
-      r['umsetzen_geplant_am'] = '2027-03-19';
+      r['umsetzen_geplant_am'] = '2027-03-24';
     }
+  // geplantes Datum wie die Datenbank aus dem letzten umsetzdatum_geaendert (umsetzSichtenNachrechnen() rechnet
+  // umsetzen_geplant_am daraus nach, sonst gilt die Vorgabe); grund ist Fixture-Wert, die Sicht liest nur «nach»
+  ereignisDazu(t, {
+    typ: 'umsetzdatum_geaendert',
+    pflanzungId: BASILIKUM_SCHNITT,
+    giltAb: '2027-03-15T08:00:00.000Z',
+    daten: { von: '2027-03-24', nach: '2027-03-19', grund: 'morgen' },
+  });
   phaseDazu(t, SATZ_VOR.basilikumSchnitt, 'anzucht', '2027-02-27');
 
   // Basilikum Genoveser schnitt als Direktsaat auf 3.1, ohne Ereignis
