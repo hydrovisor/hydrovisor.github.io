@@ -793,3 +793,10 @@ html:has(.hv-rahmen-leiste .hv-heute-fuss):not(:has(.hv-block)) {
   padding: 0;
   list-style: none;
 }
+
+/* Plan 249: eigene wiederkehrende Aufgaben in der Maske Anlage */
+.hv-eigene-aufgaben {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}

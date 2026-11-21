@@ -5,6 +5,7 @@ import type { Datenart } from './kalibrierung/stand.ts';
 import type { Schritt, Vorgang } from './datenpfad/erfassung.ts';
 import { kalendertag, tagPlus, type Zeitzone } from './zeit.ts';
 import type { Aufgabe, AufgabenArt, AufgabenTyp, Rohaufgabe } from './aufgaben.ts';
+import { EIGENE_TYP, MORGEN_EIGENE } from './aufgaben-eigene.ts';
 import { MORGEN_STROM, STROM_LISTE, STROM_TYPEN, type StromTyp } from './aufgaben-stromausfall.ts';
 
 /** Typen in der Reihenfolge der Tabelle R5.2 (Sortierung am selben Ort) */
@@ -139,9 +140,12 @@ export function morgenErlaubt(
   aufschuebe: readonly AufschubZeile[],
   heute: string,
 ): boolean {
-  const regel: MorgenRegel = STROM_TYPEN.has(roh.typ as StromTyp)
-    ? MORGEN_STROM[roh.typ as StromTyp]
-    : MORGEN[roh.typ as AufgabenTyp];
+  const regel: MorgenRegel =
+    roh.typ === EIGENE_TYP
+      ? MORGEN_EIGENE
+      : STROM_TYPEN.has(roh.typ as StromTyp)
+        ? MORGEN_STROM[roh.typ as StromTyp]
+        : MORGEN[roh.typ as AufgabenTyp];
   const anzahl = verschoben(roh, aufschuebe);
   const morgen = tagPlus(heute, 1);
   if (regel === 'ja') return true;
@@ -232,7 +236,12 @@ export function aufschubVorgang(
  * Aufgaben «Nach Stromausfall» an der Anlage mit anlage_id statt platz_id (Plan 30)
  */
 export function erledigtVorgang(aufgabe: Aufgabe, id: string, jetzt: Date): Vorgang {
-  if (!ERLEDIGT_KNOPF.has(aufgabe.typ) && !STROM_TYPEN.has(aufgabe.typ as StromTyp)) return [];
+  if (
+    !ERLEDIGT_KNOPF.has(aufgabe.typ) &&
+    !STROM_TYPEN.has(aufgabe.typ as StromTyp) &&
+    aufgabe.typ !== EIGENE_TYP
+  )
+    return [];
   return [
     {
       art: 'neu',
@@ -241,7 +250,12 @@ export function erledigtVorgang(aufgabe: Aufgabe, id: string, jetzt: Date): Vorg
         id,
         client_id: id,
         typ: 'aufgabe_erledigt',
-        ...(aufgabe.bezugArt === 'anlage' ? { anlage_id: aufgabe.bezug } : { platz_id: aufgabe.bezug }),
+        // eigene Aufgabe: Bezug ist die Definition, das Ereignis hängt an der Anlage (Plan 249 A5)
+        ...(aufgabe.bezugArt === 'anlage'
+          ? { anlage_id: aufgabe.bezug }
+          : aufgabe.bezugArt === 'eigene_aufgabe'
+            ? { anlage_id: aufgabe.anlageId }
+            : { platz_id: aufgabe.bezug }),
         daten: { aufgabe_schluessel: aufgabe.schluessel },
         war_faellig_am: aufgabe.faelligAm,
         aufgabe_schluessel: aufgabe.schluessel,

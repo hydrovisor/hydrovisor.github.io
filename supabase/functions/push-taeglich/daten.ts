@@ -3,7 +3,7 @@
 // Offline-Bündel) und werden mit derselben teileKuerzen() gekürzt: Heute und Push rechnen dieselbe Liste (R5.1,
 // Prüfer #27 H4). app_version der Serverzeilen ist push-taeglich (Plan 13 A10).
 import type { SupabaseClient } from 'jsr:@supabase/supabase-js@2';
-import { AUFGABEN_TEILE } from '../../../src/domain/aufgaben.ts';
+import { AUFGABEN_TEILE, AUFGABEN_TEILE_ZUSATZ } from '../../../src/domain/aufgaben.ts';
 import { fensterBeginn, teileKuerzen } from '../../../src/domain/datenpfad/buendel.ts';
 import { BUENDEL_TEILE, SEITE, type Buendelteil } from '../../../src/domain/datenpfad/buendel-teile.ts';
 import type { Abo, LaufenderTimer, PushDaten } from './kern.ts';
@@ -17,7 +17,9 @@ function pruefen<T>(r: { data: T | null; error: { message: string } | null }, wa
 }
 
 /** Teile, die die Aufgaben-Rechnung liest, in der Beschreibung des Bündels */
-const PUSH_TEILE: readonly Buendelteil[] = BUENDEL_TEILE.filter((t) => AUFGABEN_TEILE.includes(t.name));
+const PUSH_TEILE: readonly Buendelteil[] = BUENDEL_TEILE.filter(
+  (t) => AUFGABEN_TEILE.includes(t.name) || AUFGABEN_TEILE_ZUSATZ.includes(t.name),
+);
 
 // ungebundene Sicht auf den Client, weil Tabelle und Sicht erst zur Laufzeit feststehen (wie src/daten/buendel.ts)
 interface Abfrage extends PromiseLike<{ data: unknown; error: { message: string } | null }> {

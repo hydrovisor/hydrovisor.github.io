@@ -14,6 +14,7 @@ import {
   verschoben,
   type AufschubZeile,
 } from './aufgaben-aufschub.ts';
+import { EIGENE_TYP, type EigeneTyp } from './aufgaben-eigene.ts';
 import { rohaufgaben } from './aufgaben-regeln.ts';
 import { STROM_TYPEN, type StromTyp } from './aufgaben-stromausfall.ts';
 import { kalendertag, tagKurz, tageZwischen, type Zeitzone } from './zeit.ts';
@@ -43,9 +44,9 @@ export type AufgabenTyp =
   | 'reservierung_pruefen'
   | 'reinigen';
 /** alle Typen mit Stufe 2 «Nach Stromausfall» (Plan 30); AufgabenTyp bleibt die Tabelle R5.2 Stufe 1 */
-export type AufgabenArt = AufgabenTyp | StromTyp;
+export type AufgabenArt = AufgabenTyp | StromTyp | EigeneTyp;
 export type Gewicht = 'ausserhalb' | 'wechsel' | 'routine';
-export type BezugArt = 'platz' | 'satz' | 'messgeraet' | 'anlage';
+export type BezugArt = 'platz' | 'satz' | 'messgeraet' | 'anlage' | 'eigene_aufgabe';
 
 export interface AufgabenOrt {
   platzId: string;
@@ -71,6 +72,8 @@ export interface Rohaufgabe {
   hinweis?: string;
   /** letzter erlaubter Anzeigetag nach «Morgen» bei { bis } (Keimdauer max, Saat + umsetzen_bis + 7) */
   morgenBis?: string;
+  /** eigener Grund der Regel (eigene Aufgabe, Plan 249 A7); sonst aus der Überfälligkeit */
+  grund?: string;
   /** Messen bei Kratky ohne Pumpe: kein festes Intervall im Sinn von R5.3 */
   ohneUeberspringen?: boolean;
   /** R5.6: darf 1 bis 2 Tage vorgezogen werden (Wechsel nach Intervall, Ansatz für Umsetzen; Plan 113) */
@@ -145,6 +148,12 @@ export const AUFGABEN_TEILE: readonly string[] = [
   'einstellung',
 ];
 
+/**
+ * Teile, die die Regeln zusätzlich lesen, deren Fehlen aber als leer zählt (Plan 249 A17: eigene Aufgaben); die Edge
+ * Function lädt sie mit AUFGABEN_TEILE
+ */
+export const AUFGABEN_TEILE_ZUSATZ: readonly string[] = ['eigene_aufgabe'];
+
 export function fehlendeTeile(teile: Teile): string[] {
   return AUFGABEN_TEILE.filter((n) => teile?.[n] === undefined);
 }
@@ -160,7 +169,7 @@ export function einstellungenAus(teile: Teile): AufgabenEinstellungen {
   };
 }
 
-const RANG_TYP = new Map(TYPEN.map((t, i) => [t, i]));
+const RANG_TYP = new Map([...TYPEN, EIGENE_TYP].map((t, i) => [t, i]));
 const RANG_ROLLE = { anzuchtort: 1, gefaess: 2 } as const;
 
 function anzahlText(n: number, was: string): string {
@@ -168,17 +177,19 @@ function anzahlText(n: number, was: string): string {
 }
 
 function mitAufschub(roh: Rohaufgabe, aufschuebe: readonly AufschubZeile[], heute: string): Aufgabe {
-  const { morgenBis, ohneUeberspringen, ...rest } = roh;
+  const { morgenBis, ohneUeberspringen, grund: eigenerGrund, ...rest } = roh;
   const anzahl = verschoben(roh, aufschuebe);
   const ueber = Math.max(0, tageZwischen(roh.faelligAm, heute));
   const grund =
     anzahl >= 2
       ? anzahlText(ueber, 'verschoben')
-      : ueber > 0
-        ? anzahlText(ueber, 'überfällig')
-        : roh.faelligAm === heute
-          ? 'heute fällig'
-          : `fällig ${tagKurz(roh.faelligAm)}`;
+      : eigenerGrund !== undefined
+        ? eigenerGrund
+        : ueber > 0
+          ? anzahlText(ueber, 'überfällig')
+          : roh.faelligAm === heute
+            ? 'heute fällig'
+            : `fällig ${tagKurz(roh.faelligAm)}`;
   return {
     ...rest,
     anzeigeAb: anzeigeAb(roh, aufschuebe),
@@ -189,9 +200,10 @@ function mitAufschub(roh: Rohaufgabe, aufschuebe: readonly AufschubZeile[], heut
       verschoben: anzahl,
       ...(anzahl >= 2 ? { hinweis: 'intervall_anpassen' as const } : {}),
     },
-    ueberspringen: UEBERSPRINGEN.has(roh.typ) && ohneUeberspringen !== true,
+    ueberspringen: (UEBERSPRINGEN.has(roh.typ) || roh.typ === EIGENE_TYP) && ohneUeberspringen !== true,
     pegelOk: roh.typ === 'messen_nachfuellen' && !pegelOkHeute(roh, aufschuebe, heute),
-    erledigtKnopf: ERLEDIGT_KNOPF.has(roh.typ) || STROM_TYPEN.has(roh.typ as StromTyp),
+    erledigtKnopf:
+      ERLEDIGT_KNOPF.has(roh.typ) || STROM_TYPEN.has(roh.typ as StromTyp) || roh.typ === EIGENE_TYP,
   };
 }
 
