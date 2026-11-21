@@ -6,8 +6,8 @@
 #   W0_HEUTE=2026-11-21 python -X utf8 scripts/w0/lead_entscheide_runde13.py --schreiben  Status nachführen, Übertrag nach freigegeben/
 # Nur geprüfte Kandidaten (Methoden- und Quellenprüfung) werden gewählt oder als eigener Wert (Annahme 5) umgerechnet.
 # Klasse D erzeugt keine Zeile (03_import_w0.md Abschnitt 2 Punkt 7): Lücken stehen im Bericht lead_entscheide_runde-13.md.
-# Bereits freigegebene Werte bleiben unverändert (Konflikte mit freigegebenen Werten: Mangold ernte_ab_d, Spinat
-# schnitte_max). Regel D8 (A, neu) für den Umsetztag steht in w0lib.REGELN.
+# Konflikte mit freigegebenen Werten: Mangold ernte_ab_d 19 → 28 (Konzept 9.3 Regel 1, Korrektur als neue Zeile nach
+# 9.4), Spinat schnitte_max 3 bleibt. Regel D8 (A, neu) für den Umsetztag steht in w0lib.REGELN.
 import os
 import sys
 
@@ -110,11 +110,20 @@ W(f'{art}{a}.umsetzen_bis_d', f'{art}{a}.umsetzen_bis_d#1',
 W(f'{ak}{a}.schnitt.ernteintervall_d', f'{ak}{a}.schnitt.ernteintervall_d#3',
   '14 Tage zwischen den Schnitten (Floating, Klasse A; Lesekopie der Artikelseite, Runde 12 wegen Verlagssperre '
   'verworfen); Schnitte 28, 42, 56 Tage nach dem Umsetzen (Fachkritik P15)')
-# K-mangold-02: ernte_ab_d bleibt 19 (Runde 12, Indoor-System mit LED, Klasse B2, näher an der Anlage); #5 (28 ab
-# Umsetzen, Floating im Gewächshaus, Klasse A) bestätigt die Spanne bis zum ersten Schnitt; freigegebene Werte ändert
-# eine Runde nur bei einem Fehler. Mit umsetzen_ab_d 21 ergäbe D7 heute 18 statt 19 (ein Tag, keine Korrektur).
-V(f'{ak}{a}.schnitt.ernte_ab_d#5', 'K-mangold-02: freigegeben bleibt 19 (Runde 12, Indoor-System mit LED, Klasse B2, näher an der Anlage); '
-  '28 ab Umsetzen (Floating im Gewächshaus, Klasse A) bestätigt die Spanne bis zum ersten Schnitt; freigegebene Werte ändert eine Runde nur bei einem Fehler')
+# K-mangold-02 (Konflikt mit dem freigegebenen Wert 19 aus Runde 12; Befund 2 des Prüfers, Runde 1): Konzept 9.3
+# Regel 1 (höhere Klasse vor tieferer) gibt #5 (28 ab Umsetzen, Floating, Klasse A, gemessen) den Vorrang vor dem
+# eigenen Wert 19 (Klasse B2, nach D7 aus «Day 39» ab Saat). 28 liegt im Wachstum 24 bis 38 (19 lag unter min 24,
+# Fachkritik P14) und passt zum Umsetztag 21 derselben Quelle: erste Ernte 21 + 28 = 49 Tage ab Saat wie in der Quelle.
+# Korrektur nach Konzept 9.4 als neue W0-Zeile; der Seed schliesst die alte Fassung (gueltig_bis).
+W(f'{ak}{a}.schnitt.ernte_ab_d', f'{ak}{a}.schnitt.ernte_ab_d#5',
+  'K-mangold-02, Konzept 9.3 Regel 1 (höhere Klasse vor tieferer): 28 Tage ab Umsetzen bis zum ersten Schnitt '
+  '(Floating, Klasse A, gemessen; Lesekopie der Artikelseite, Runde 12 wegen Verlagssperre verworfen) statt 19 aus '
+  'Runde 12 (Klasse B2, eigener Wert nach D7); im Wachstum 24 bis 38 (Fachkritik P14) und mit dem Umsetztag 21 '
+  'derselben Quelle erste Ernte 49 Tage ab Saat wie in der Quelle; die festen Schnitttermine 28, 42, 56 Tage nach dem '
+  'Umsetzen tragen ernte_ab_d und Intervall gleichermassen')
+_, _, alt = finde(b, f'{ak}{a}.schnitt.ernte_ab_d#4')
+alt['notiz_tim'] = notiz(RN + 'ersetzt durch ak.beta_vulgaris_cicla.schnitt.ernte_ab_d#5 (K-mangold-02, Konzept 9.3 '
+                         'Regel 1: Klasse A vor B2); vorher: ' + alt['notiz_tim'].removeprefix('Lead nach Entscheid 0018: '))
 
 # ---------------- Randen ----------------
 a = 'beta_vulgaris_conditiva'
