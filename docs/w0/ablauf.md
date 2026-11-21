@@ -35,7 +35,7 @@ data/wissensbasis/kandidaten/
   saatempfehlung_offen.csv                    zusammengeführt, vom Validator nicht gelesen
 ```
 
-Der Validator prüft im Modus `--kandidaten` jede Zeile unabhängig vom Status. Ein wörtlich belegter Wert, der seine Form nicht erfüllt (Einzelwert, Dauer ohne typischen Wert, Band schmaler als 0.2 oder breiter als 1.2, ausserhalb der Grenzen V3, V4, V7), steht deshalb in `profilwert_offen.csv` mit der Spalte `grund`. Er durchläuft dieselben Prüfungen und erscheint in der Konfliktliste; übernehmen kann ihn nur Tim über «eigener Wert».
+Der Validator prüft im Modus `--kandidaten` jede Zeile unabhängig vom Status. Die Querprüfungen je Art aus `art.csv` (Stammfelder, V11, `ernteart` je Kulturform, Kulturgruppe für V4) zählen verworfene Kandidaten nicht mit (A, #261). Ein wörtlich belegter Wert, der seine Form nicht erfüllt (Einzelwert, Dauer ohne typischen Wert, Band schmaler als 0.2 oder breiter als 1.2, ausserhalb der Grenzen V3, V4, V7), steht deshalb in `profilwert_offen.csv` mit der Spalte `grund`. Er durchläuft dieselben Prüfungen und erscheint in der Konfliktliste; übernehmen kann ihn nur Tim über «eigener Wert».
 
 Spalten und Reihenfolge der Arbeitsdateien sind fest (Abschnitt 6), damit das Zusammenführen ein reines Aneinanderhängen ist. `kulturgruppe.csv` legt der Koordinator aus `03_import_w0.md` 4.2.1 an (Struktur, keine Recherche). Nach `data/wissensbasis/freigegeben/` kommt nichts, bevor der Lead entschieden hat (Entscheid 0018) und der Prüfer die Prüfliste nach Konzept 9.4 ohne offenen Befund abgeschlossen hat.
 

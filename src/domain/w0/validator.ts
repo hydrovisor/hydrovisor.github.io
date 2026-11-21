@@ -54,7 +54,7 @@ class Pruefung {
     this.kandidaten = optionen.modus === 'kandidaten';
   }
 
-  /** Bestand der Querprüfungen von art.csv (Stammfelder, V11, ernteart je Kulturform). Im Modus kandidaten zählen
+  /** Bestand der Querprüfungen von art.csv (Stammfelder, V11, ernteart je Kulturform, Kulturgruppe für V4). Im Modus kandidaten zählen
    *  verworfene Kandidaten nicht mit: Sie bleiben als Verlauf in der Datei (03_import_w0.md 3), gehören aber zu
    *  keinem Bestand, der je freigegeben wird (A, W0-Kandidaten bereinigen). */
   private querbestand(): W0Dateien {
@@ -297,7 +297,7 @@ class Pruefung {
   profilwert(): void {
     const arten = this.ids('art', 'art_id');
     const gruppen = this.ids('kulturgruppe', 'kulturgruppe_id');
-    const artGr = artGruppe(this.d);
+    const artGr = artGruppe(this.querbestand());
     const obergrenze = new Map(
       zeilen(this.d, 'kulturgruppe').map((z) => [
         wert(z, 'kulturgruppe_id') ?? '',
