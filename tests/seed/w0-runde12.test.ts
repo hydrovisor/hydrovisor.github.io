@@ -70,7 +70,8 @@ async function gueltigeKulturformen(tx: Db): Promise<Kulturform[]> {
 
 /** Runde 12 (lead_entscheide_runde-12.md): Art, Kulturform, Spalte, Wert */
 const RUNDE12: [string, string, keyof Kulturform, number][] = [
-  ['beta_vulgaris_cicla', 'schnitt', 'ernte_ab_d', 19],
+  // Runde 13 (#258) K-mangold-02: 28 ersetzt die Fassung 19 aus Runde 12
+  ['beta_vulgaris_cicla', 'schnitt', 'ernte_ab_d', 28],
   ['lactuca_sativa', 'babyleaf', 'ernte_ab_d', 21],
   ['lactuca_sativa', 'babyleaf', 'kulturdauer_max_d', 30],
   ['lactuca_sativa', 'kopf', 'kulturdauer_max_d', 45],

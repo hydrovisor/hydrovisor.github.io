@@ -34,9 +34,15 @@ const RUNDE12: Record<string, string> = {
   'ak.petroselinum_crispum.dauerkultur_blatt.ernte_ab_d': '28',
 };
 
+/** Runde 13 (#258) K-mangold-02: ersetzt die Runde-12-Zeile durch eine neue Fassung mit freigegeben_am 2026-11-21 */
+const ERSETZT_RUNDE13: Record<string, string> = {
+  'ak.beta_vulgaris_cicla.schnitt.ernte_ab_d': '28',
+};
+
 /** Lücken aus Issue #250, die nach Runde 12 offen bleiben (Klasse D, keine geprüfte Quelle): keine Zeile */
+// Runde 13 (#258) belegt Tomate dauerkultur_frucht ernteintervall_d, Mangold schnitt ernteintervall_d und Spinat
+// babyleaf kulturdauer_max_d; diese drei Felder stehen deshalb nicht mehr in der Liste.
 const KLASSE_D_OHNE_ZEILE: string[] = [
-  'ak.solanum_lycopersicum.dauerkultur_frucht.ernteintervall_d',
   'ak.solanum_lycopersicum.dauerkultur_frucht.schnitte_max',
   'ak.capsicum_annuum.dauerkultur_frucht.schnitte_max',
   'ak.capsicum_annuum.dauerkultur_frucht.kulturdauer_max_d',
@@ -55,13 +61,11 @@ const KLASSE_D_OHNE_ZEILE: string[] = [
   'ak.allium_schoenoprasum.schnitt.kulturdauer_max_d',
   'ak.spinacia_oleracea.schnitt.ernte_ab_d',
   'ak.spinacia_oleracea.schnitt.kulturdauer_max_d',
-  'ak.spinacia_oleracea.babyleaf.kulturdauer_max_d',
   'ak.spinacia_oleracea.kopf.kulturdauer_max_d',
   'ak.beta_vulgaris_conditiva.schnitt.ernte_ab_d',
   'ak.beta_vulgaris_conditiva.schnitt.ernteintervall_d',
   'ak.beta_vulgaris_conditiva.schnitt.schnitte_max',
   'ak.beta_vulgaris_conditiva.schnitt.kulturdauer_max_d',
-  'ak.beta_vulgaris_cicla.schnitt.ernteintervall_d',
   'ak.beta_vulgaris_cicla.schnitt.schnitte_max',
   'ak.beta_vulgaris_cicla.schnitt.kulturdauer_max_d',
 ];
@@ -122,7 +126,8 @@ describe('W250-AK1 W0 Runde 12 in data/wissensbasis/freigegeben', () => {
       expect(treffer[0]?.['art_id'], zeileId).toBe(artId);
       expect(treffer[0]?.['kulturform'], zeileId).toBe(kulturform);
       expect(treffer[0]?.['feld'], zeileId).toBe(feld);
-      expect(treffer[0]?.['wert'], zeileId).toBe(wert);
+      // Runde 13 (#258) K-mangold-02: Mangold Schnitt ernte_ab_d gilt seit Runde 13 als 28
+      expect(treffer[0]?.['wert'], zeileId).toBe(ERSETZT_RUNDE13[zeileId] ?? wert);
     }
   });
 
@@ -147,6 +152,8 @@ describe('W250-AK1 W0 Runde 12 in data/wissensbasis/freigegeben', () => {
     expect(vorRunde12).toHaveLength(AUSGANGSSTAND.zeilen);
     expect(pruefsumme(spalten, vorRunde12), `Stand ${AUSGANGSSTAND.commit}`).toBe(AUSGANGSSTAND.pruefsumme);
     for (const [zeileId, wert] of Object.entries(RUNDE12)) {
+      // Runde 13 (#258) K-mangold-02: die ersetzte Fassung 19 vom 2026-11-19 steht nicht mehr in art.csv
+      if (ERSETZT_RUNDE13[zeileId] !== undefined) continue;
       const z = art.find((x) => x['zeile_id'] === zeileId);
       expect(z?.['wert'], zeileId).toBe(wert);
       expect(z?.['freigegeben_am'], zeileId).toBe(AUSGANGSSTAND.runde12Datum);
