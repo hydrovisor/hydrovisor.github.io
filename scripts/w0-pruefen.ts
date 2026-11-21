@@ -14,8 +14,11 @@ for (const [modus, gelesen] of [
   ...(kandidaten ? [['kandidaten', kandidatenLesen(wurzel)] as const] : []),
 ] as const) {
   const { verstoesse, konflikte } = pruefen(gelesen.dateien, { modus });
-  const alle = [...gelesen.verstoesse, ...verstoesse];
-  const vorhanden = Object.keys(gelesen.dateien);
+  // Kandidaten liegen unter dem Schlüssel der freigegebenen Datei (kandidatenLesen, A14); angezeigt wird der echte Pfad.
+  const pfad = (p: string): string =>
+    modus === 'kandidaten' ? p.replace('/wissensbasis/freigegeben/', '/wissensbasis/kandidaten/') : p;
+  const alle = [...gelesen.verstoesse, ...verstoesse].map((v) => ({ ...v, datei: pfad(v.datei) }));
+  const vorhanden = Object.keys(gelesen.dateien).map(pfad);
   console.log(`W0 ${modus}: ${vorhanden.length} Dateien (${vorhanden.join(', ') || 'keine'})`);
   for (const v of alle) console.log(`::error::${verstossText(v)}`);
   for (const k of konflikte) console.log(`::warning::Gegenprobe ${k.datei} ${k.zeileId}: ${k.text}`);
