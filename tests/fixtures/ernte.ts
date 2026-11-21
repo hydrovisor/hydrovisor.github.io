@@ -38,6 +38,15 @@
 //   rechnet): 2.3 heute pH 6.0–6.5, EC 1.2–1.4, 18–22 °C, 4 zählende; ohne Lollo Rossa pH 5.8–6.5, EC 1.0–1.4,
 //   18–22 °C, 2 zählende.
 // - mitY: Anlage Y (Datenart test) mit Direktsaat Lollo Rossa schnitt (Nr. 97) in Y-2.3, gesät 1.2. (→ Ernte 22.2.).
+// - vorUmsetzen (Plan 254, nur mit der Option; Zeilen und Folge ohne Option unverändert): art_kulturform
+//   ocimum_basilicum schnitt mehrfach, Ernte ab 50, Intervall 14, Kulturdauer max. 120; petroselinum_crispum
+//   dauerkultur_blatt mehrfach, Ernte ab 28, Intervall 14, Kulturdauer max. 180 (Fixture-Werte, Plan 254 A6); Basilikum
+//   erlaubt zusätzlich schnitt.
+//   Satz 99 Petersilie Mooskrause dauerkultur_blatt in A3, gesät 15.2., ohne Reservierung, Anzucht «ja» am 1.3.
+//   (Anzucht typ 28 → Wachstum 29.3.; umsetzen_ab_d der Petersilie leer).
+//   Satz 100 Basilikum Genoveser schnitt in A3, gesät 22.2., Anzucht «ja» am 27.2. (typ 21 → Wachstum 20.3.), Zieltopf
+//   2.3.5 mit umsetzen_geplant_am 19.3. und umsetzen_vorgabe_am 24.3.
+//   Satz 101 Basilikum Genoveser schnitt als Direktsaat auf 3.1, gesät 22.2., ohne Ereignis.
 import { ANLAGE_R, netztopfId, platzId, uid, vereinen, weitereAnlage, type Teile } from './regal.ts';
 import { pflanzungId, reservierungId, satzAnlegen } from './keimung.ts';
 import { dauerSetzen, merkmalSetzen, phasenTeile, SORTE, SORTE_W1 } from './phasen.ts';
@@ -83,6 +92,17 @@ export const SCHNITTLAUCH = pflanzungId(NR.schnittlauch, 1);
 export const TOMATE = pflanzungId(NR.tomate, 1);
 export const EICHBLATT = [0, 1, 2].map((i) => pflanzungId(NR.eichblatt, i));
 export const LOLLO_Y = pflanzungId(NR.lolloY, 1);
+/** Sätze der Option vorUmsetzen (Plan 254) */
+export const NR_VOR = { petersilie: 99, basilikumSchnitt: 100, basilikumDirekt: 101 } as const;
+export const SATZ_VOR = Object.fromEntries(
+  Object.entries(NR_VOR).map(([k, n]) => [k, uid('27', n)]),
+) as Record<keyof typeof NR_VOR, string>;
+export const PETERSILIE = pflanzungId(NR_VOR.petersilie, 1);
+export const BASILIKUM_SCHNITT = pflanzungId(NR_VOR.basilikumSchnitt, 1);
+export const BASILIKUM_DIREKT = pflanzungId(NR_VOR.basilikumDirekt, 1);
+/** Reservierung des Basilikums Schnitt (Satz 100) auf 2.3.5 */
+export const BASILIKUM_SCHNITT_RESERVIERUNG = reservierungId(NR_VOR.basilikumSchnitt, 1);
+
 /** Reservierung des Eichblatts k (1 → 2.1.3, 2 → 2.1.4) */
 export const eichblattReservierung = (k: number) => reservierungId(NR.eichblatt, k);
 
@@ -321,6 +341,80 @@ export interface ErnteOptionen {
   stationsrest?: boolean;
   /** Anlage Y mit Direktsaat Lollo Rossa (Vorgabe nein) */
   mitY?: boolean;
+  /** Mehrfachernten vor dem Umsetzen, Sätze 99 bis 101 (Plan 254, Vorgabe nein) */
+  vorUmsetzen?: boolean;
+}
+
+/** zusätzliche art_kulturform-Zeilen der Option vorUmsetzen (Plan 254 A6) */
+const ART_KULTURFORM_VOR: typeof ART_KULTURFORM = [
+  ['ocimum_basilicum', 'schnitt', 'mehrfach', 50, 14, null, 120],
+  ['petroselinum_crispum', 'dauerkultur_blatt', 'mehrfach', 28, 14, null, 180],
+];
+
+/** Option vorUmsetzen: Wissen und Sätze 99 bis 101 (siehe Kopf) */
+function vorUmsetzenDazu(t: Teile): void {
+  t['art_kulturform'] = [
+    ...(t['art_kulturform'] ?? []),
+    ...ART_KULTURFORM_VOR.map(([art, form, ernteart, ab, intervall, schnitte, max], i) => ({
+      id: uid('37', 40 + ART_KULTURFORM.length + i),
+      art_id: art,
+      kulturform: form,
+      ernteart,
+      ernte_ab_d: ab,
+      ernteintervall_d: intervall,
+      schnitte_max: schnitte,
+      kulturdauer_max_d: max,
+      kulturdauer_typisch_d: null,
+      entspitzen: false,
+      ...gueltig,
+    })),
+  ];
+  for (const a of t['art'] ?? [])
+    if (a['art_id'] === 'ocimum_basilicum') a['kulturformen_erlaubt'] = ['dauerkultur_blatt', 'schnitt'];
+
+  // Petersilie Mooskrause dauerkultur_blatt in A3, ohne Reservierung, Anzucht bestätigt 1.3.
+  satzAnlegen(t, {
+    nr: NR_VOR.petersilie,
+    sorteId: SORTE.mooskrause,
+    saatgutId: PACKUNG.mooskrause,
+    kulturform: 'dauerkultur_blatt',
+    box: 'A3',
+    schwaemme: 1,
+    samen: 1,
+    saatdatum: '2027-02-15',
+  });
+  phaseDazu(t, SATZ_VOR.petersilie, 'anzucht', '2027-03-01');
+
+  // Basilikum Genoveser schnitt in A3, Zieltopf 2.3.5 (geplant 19.3., Vorgabe 24.3.), Anzucht bestätigt 27.2.
+  satzAnlegen(t, {
+    nr: NR_VOR.basilikumSchnitt,
+    sorteId: SORTE_E.basilikum,
+    saatgutId: null,
+    kulturform: 'schnitt',
+    box: 'A3',
+    schwaemme: 1,
+    samen: 1,
+    saatdatum: '2027-02-22',
+    zieltoepfe: ['2.3.5'],
+  });
+  for (const r of t['reservierung'] ?? [])
+    if (r['id'] === BASILIKUM_SCHNITT_RESERVIERUNG) {
+      r['umsetzen_vorgabe_am'] = '2027-03-24';
+      r['umsetzen_geplant_am'] = '2027-03-19';
+    }
+  phaseDazu(t, SATZ_VOR.basilikumSchnitt, 'anzucht', '2027-02-27');
+
+  // Basilikum Genoveser schnitt als Direktsaat auf 3.1, ohne Ereignis
+  satzAnlegen(t, {
+    nr: NR_VOR.basilikumDirekt,
+    sorteId: SORTE_E.basilikum,
+    saatgutId: null,
+    kulturform: 'schnitt',
+    direktsaat: '3.1',
+    schwaemme: 1,
+    samen: 1,
+    saatdatum: '2027-02-22',
+  });
 }
 
 /** Regal R mit den Sätzen 90 bis 96 (siehe Kopf); Sichten nachgerechnet */
@@ -555,6 +649,8 @@ export function ernteTeile(e: ErnteOptionen = {}): Teile {
       r['umsetzen_vorgabe_am'] = '2027-03-31';
       r['umsetzen_geplant_am'] = '2027-03-31';
     }
+
+  if (e.vorUmsetzen) vorUmsetzenDazu(t);
 
   if (e.mitY) {
     t = vereinen(t, weitereAnlage('Y', 'test'));
