@@ -6,7 +6,7 @@ Private PWA mit Supabase für Tims Hydroponikregal; einziger Nutzer Tim, bedient
 
 | Was | Wo |
 |---|---|
-| Fachkonzept (massgebend) | `docs/input/konzept_v1.9.md` (Fassung 1.9 vom 18.11.2026 mit E17 bis E22, von Tim am 18.11.2026 im Chat bestätigt; E16 Erntekalender beauftragt am 14.11.2026); Änderungen nur als neue Fassung mit Eintrag in Anhang B.2 |
+| Fachkonzept (massgebend) | `docs/input/konzept_v1.10.md` (Fassung 1.10 vom 21.11.2026 mit E23, von Tim am 21.11.2026 im Chat beauftragt; E17 bis E22 bestätigt am 18.11.2026; E16 Erntekalender beauftragt am 14.11.2026); Änderungen nur als neue Fassung mit Eintrag in Anhang B.2 |
 | Rangfolge bei Widerspruch | Konzept vor `docs/input/use_cases_f4.md` vor `docs/input/duengeplan_v1.6.md` vor W0 |
 | Spezifikation (abgenommen 1.11.2026) | `docs/spec/` (Fachregeln, Datenmodell, Import W0, Architektur, Masken, Tests, Glossar) |
 | Entscheide | `docs/spec/00_rueckfragen.md` (Auftrag 1) und `docs/entscheide/` (je Entscheid eine Datei) |
@@ -139,7 +139,8 @@ Vorschau: Cloudflare Pages `hydrovisor-vorschau` baut jeden Zweig (`<zweig>.hydr
 - [0026 Erntekalender als Ziel der Leiste, Säen in Saatgut](docs/entscheide/0026-erntekalender-und-leiste.md)
 - [0027 Spülen des Messbechers steht in der Dosierzeile](docs/entscheide/0027-spuelen-in-der-dosierzeile.md)
 - [0028 Passung an den Zielen beim Säen](docs/entscheide/0028-passung-an-den-zielen.md)
-- [0029 Eigene wiederkehrende Aufgaben vor M2](docs/entscheide/0029-eigene-aufgaben-vor-m2.md)
+- [0029 W0-Regeln D7 (Ernte ab Saat) und D8 (Umsetztag)](docs/entscheide/0029-w0-regeln-d7-d8.md)
+- [0030 Eigene wiederkehrende Aufgaben vor M2](docs/entscheide/0030-eigene-aufgaben-vor-m2.md)
 - Übrige Entscheide vom 1.11.2026: `docs/spec/00_rueckfragen.md` (R1 bis R13, W1 bis W14, Annahmen 1 bis 16)
 
 ## Arbeitsweise in der Sitzung

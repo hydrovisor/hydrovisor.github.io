@@ -1,9 +1,9 @@
 // Erntekalender (UC15, Plan 232; Konzept v1.8 6.1, Entscheid 0026): je aktivem Satz Phasenabschnitte über acht Wochen
 // ab Montag der laufenden Woche, Erntefenster, Kennzeichen und Sortierung. Rein: `jetzt` und Zeitzone als Parameter,
 // Kalendertage in Zürich (G1, G2). Keine eigene Terminrechnung: das Modul setzt nur zusammen aus phasenStand(),
-// phaseAm(), ernteStand() und voraussichtlichesEnde() (R1.5, R1.7, R11.1).
+// phaseAm(), ernteStand(), voraussichtlichesEnde() und ersteErnteAb() (R1.5, R1.7, R11.1; Plan 254).
 import { zeilen, type Teile } from '../anlage/teile.ts';
-import { umsetzTag, voraussichtlichesEnde, type Ernteart } from '../pflanzung/belegung.ts';
+import { ersteErnteAb, umsetzTag, voraussichtlichesEnde, type Ernteart } from '../pflanzung/belegung.ts';
 import { KULTURFORM_NAME } from '../pflanzung/saeen.ts';
 import { kalendertag, tagKurz, tagPlus, type Zeitzone } from '../zeit.ts';
 import { ernteStand, ortVon } from './ernte.ts';
@@ -51,7 +51,10 @@ export interface ErnteTermin {
 
 export interface Erntefenster {
   ernteart?: Ernteart;
-  /** erste Ernte: ernteStand().moeglichAb ohne Teilernte; einmalig vor dem Umsetzen voraussichtlichesEnde().endeAm */
+  /**
+   * erste Ernte: ernteStand().moeglichAb ohne Teilernte; vor dem Umsetzen einmalig voraussichtlichesEnde().endeAm,
+   * mehrfach ersteErnteAb() (Plan 254)
+   */
   ernteAb?: string;
   /** nur mehrfach nach mindestens einer Teilernte: ernteStand().moeglichAb (letzte Teilernte + Intervall) */
   naechsterSchnitt?: string;
@@ -207,9 +210,14 @@ function erntefensterVon(
     const ab = stand?.moeglichAb ?? ende.endeAm;
     if (ab) fenster.ernteAb = ab;
   } else if (ernteart === 'mehrfach') {
-    if (stand?.moeglichAb)
+    if (stand?.moeglichAb) {
       if (teilernten > 0) fenster.naechsterSchnitt = stand.moeglichAb;
       else fenster.ernteAb = stand.moeglichAb;
+    } else if (teilernten === 0) {
+      // vor dem Umsetzen: erste Ernte als Prognose aus der Domänenfunktion (Issue #254, Plan 254)
+      const ab = ersteErnteAb(teile, pflanzungId, bezug, jetzt, zeitzone);
+      if (ab) fenster.ernteAb = ab;
+    }
   }
   if (ende.endeAm) fenster.endeAm = ende.endeAm;
   return fenster;

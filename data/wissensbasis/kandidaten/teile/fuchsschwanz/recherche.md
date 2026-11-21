@@ -276,3 +276,125 @@ Hinweise für den Lead: Cornell S. 3-2 ist die Stelle, die der Methodenprüfer b
 | spinacia_oleracea | kopf | kulturdauer_max_d | kein Hydroponik-Wert für das Kulturende; vorhanden nur `kulturdauer_typisch_d` 64 (MedAgrSci 2022). UGA C1304 (DWC, B1) nennt nur Bereiche in Wochen: «seedlings needed 2–3 weeks after sowing before transplanting into the DWC system», «The crop was harvested after 3–4 weeks» (also 5 bis 7 Wochen ab Saat, nicht erfasst, Bereich ohne Einzelwert; [UGA C1304](https://fieldreport.caes.uga.edu/publications/C1304/how-to-grow-greenhouse-spinach-during-georgia-summers-using-hydroponics/)). |
 | beta_vulgaris_conditiva | schnitt | ernteintervall_d, schnitte_max, kulturdauer_max_d | kein Hydroponik-Wert; frankiesgarten nur «laufend ernten», Rise Gardens nur einmalige Ernte der Knolle; Knollenernte nach 8 bis 10 Wochen ([frankiesgarten Rote Bete](https://frankiesgarten.de/anleitungen/gemueseanbau/rote-bete-hydroponik/)). |
 | beta_vulgaris_cicla | schnitt | ernteintervall_d, schnitte_max | nur die Horticulturae-Kandidaten (14 Tage, 3 Schnitte, Versuchsende); weitere Quelle nur Bereich «5-10 harvests» (Rise Gardens). |
+
+## Runde 12 (#250)
+
+Auftrag: Vorrang `ernte_ab_d` und `kulturdauer_max_d`; Spinat (schnitt: `ernte_ab_d`, `kulturdauer_max_d`; babyleaf, kopf: `kulturdauer_max_d`), Randen und Mangold (schnitt: `ernte_ab_d`, `ernteintervall_d`, `schnitte_max`, `kulturdauer_max_d`). Abruf 19.11.2026.
+
+### Suchweg
+
+- Bestehende Quellen erneut gelesen: Agriculture 11(5) 465 und Horticulturae 8(7) 638 als PDF über mdpi-res.com (beide HTTP 200, frei abrufbar), Cornell CEA Spinat 2005 (S. 3-1/3-2, Ratooning-Abschnitt), Agriculture 15 1914 (Randen) als PDF über mdpi-res.com, Rise Gardens Plant Library (Swiss Chard Bright Lights, Spinach Seaside, Beet Touchstone Gold), Rise Gardens Spinat-Blog, Horticultura Brasileira 32(4) 426 (SciELO), Plants 10(9) 1840 (PMC8465728), VT SPES-463 und SPES-466.
+- Websuche: «Swiss chard hydroponic first harvest days after transplanting», «beet greens hydroponic repeated cuts», «spinach hydroponic first harvest days after transplanting regrowth», «acelga hidroponia cortes sucessivos», «beterraba hidropônica folhas colheita dias após o transplante».
+- Europe PMC (nur Open Access): Mangold, Randen und Spinat mit Hydroponik und Ernte bzw. Schnitt.
+- frankiesgarten.de Sitemap: nur Rote Bete, keine Seite zu Spinat oder Mangold.
+
+### Neue Kandidaten (art.csv)
+
+| Kandidat | Wert | Quelle | Hinweis |
+|---|---|---|---|
+| ak.spinacia_oleracea.schnitt.ernte_ab_d#1 | 34 (Tage im Floating-System bis zum 1. Schnitt) | agriculture-spinat-rauke-floating-2021 (A) | 46 Tage ab Saat laut Tabelle 1; Umsetzen der Anzuchtplatten in das Becken beim ersten Laubblatt |
+| ak.spinacia_oleracea.babyleaf.kulturdauer_max_d#2 | 46 | agriculture-spinat-rauke-floating-2021 (A) | wie #1 (Methode zugelassen, Quelle nicht erreichbar); jetzt mit freiem PDF-Weg in `fundstelle` |
+| ak.beta_vulgaris_cicla.schnitt.ernte_ab_d#2 | 28 | horticulturae-mangold-meerwasser-2022 (A) | wie #1 (Methode zugelassen), wörtlicher Satz aus 2.2 S. 4, freier PDF-Weg |
+| ak.beta_vulgaris_cicla.schnitt.ernteintervall_d#2 | 14 | horticulturae-mangold-meerwasser-2022 (A) | wie #1, gleicher Satz |
+| ak.beta_vulgaris_cicla.schnitt.ernte_ab_d#3 | 39 (ab Saat, Umsetztag nicht genannt) | risegardens-library-mangold (B2) | Indoor-System mit LED; Umrechnung durch den Lead |
+| ak.beta_vulgaris_conditiva.schnitt.ernte_ab_d#1 | 21 (30 DAS minus Umsetzen 9 DAS) | hortbras-randen-babyleaf-nft-2014 (A) | NFT, Gewächshaus; im Versuch einmalige Blatternte als Babyleaf bei etwa 15 cm Blattlänge; ob das als erster Schnitt der Kulturform schnitt gilt, entscheidet der Lead |
+
+Hinweis für den Lead: In `quelle.csv` stehen für agriculture-spinat-rauke-floating-2021 und horticulturae-mangold-meerwasser-2022 DOI-Links, die auf mdpi.com (HTTP 403) führen. Bestehende Zeilen nicht geändert (Auftrag); der freie Weg steht in `fundstelle` der neuen Kandidaten:
+- https://mdpi-res.com/d_attachment/agriculture/agriculture-11-00465/article_deploy/agriculture-11-00465.pdf
+- https://mdpi-res.com/d_attachment/horticulturae/horticulturae-08-00638/article_deploy/horticulturae-08-00638.pdf
+
+Keine neue Quelle; `quelle.csv` unverändert.
+
+### Verworfen oder ohne Zahl
+
+| Quelle | Grund |
+|---|---|
+| Cornell CEA Spinat 2005, S. 3-1: «First cutting is 12 to 16 days from seeding» | Bereich ohne typischen Wert (Spinat schnitt `ernte_ab_d`); Ratooning-Abschnitt ohne Tagesangabe zum Kulturende |
+| Rise Gardens Spinat-Blog | nur Bereiche: «baby-leaf harvest stage in 25 to 35 days and full-size leaf harvest in 40 to 50 days from germination», «Bolt-tolerant types buy you 2 to 3 extra weeks of harvest time» |
+| Rise Gardens Spinach Seaside («Ready to harvest: Day 32») | «can only be harvested once»: nicht Kulturform schnitt; babyleaf und kopf `ernte_ab_d` sind schon freigegeben |
+| Rise Gardens Beet Touchstone Gold («Ready to harvest: Day 50») | Knollenernte, einmalig («Rooted plants can only be harvested once»), nicht Blattschnitt |
+| Rise Gardens Swiss Chard: «5-10 harvests» | Bereich, schon in Runde 11 genannt; kein Tageswert für das Kulturende |
+| Agriculture 15 1914 (Randen, 10 und 17 DAP) | Probenahmen («The plants were sampled at 10 and 17 days after planting»), keine Erntetermine; 17 DAP ist Versuchsende |
+| Plants 10(9) 1840 (PMC8465728, Mangold) | «After 21 days, harvested plants were analyzed»: Versuchsende mit Ganzpflanzenernte |
+| PMC12757539 (Mangold in Deep-Flow mit organischem Dünger) | nur Daten «In System» und «Harvest» (Tagesdifferenz wäre eigene Rechnung), Ganzpflanzenernte; allgemeiner Satz «Leafy greens will generally take 20–40 days until harvest» ist ein Bereich ohne Art |
+| HortScience 60(6) 967 (Mangold-Sorten NFT) | Volltext erneut nur Abwehrseite (HTML 1.4 kB), nicht gelesen |
+| VT SPES-463 (NFT) und SPES-466 | keine Angaben zu Mangold oder Randen; Spinat «Harvest 42 d» einmalig (Runde 11) |
+| UNESP-TCC 2026 Floating (10 und 13 DATF) | Koriander, nicht Fuchsschwanzgewächs |
+| scaleandstem, dripcanopy | Praxisseiten ohne erkennbare Quelle |
+
+### Lückenliste Runde 12 (Klasse D)
+
+| Art | Kulturform | Feld | Stand, was Anbauquellen sagen |
+|---|---|---|---|
+| spinacia_oleracea | schnitt | kulturdauer_max_d | kein Hydroponik-Wert für das Kulturende; Agriculture 2021 nur Versuchsende (96, verworfen); Rise Gardens nur «2 to 3 extra weeks» für schossfeste Sorten. |
+| spinacia_oleracea | kopf | kulturdauer_max_d | unverändert (Runde 11): UGA C1304 nur «2–3 weeks» plus «3–4 weeks» ([UGA C1304](https://fieldreport.caes.uga.edu/publications/C1304/how-to-grow-greenhouse-spinach-during-georgia-summers-using-hydroponics/)). |
+| beta_vulgaris_conditiva | schnitt | ernteintervall_d, schnitte_max, kulturdauer_max_d | kein Hydroponik-Wert; Johnny's (Erde, Babyleaf) nennt Nachschnitt nach «5–14 days» ([Johnny's Baby Leaf Beet Greens](https://www.johnnyseeds.com/growers-library/vegetables/beets/baby-leaf-beets-key-growing-information.html)), nicht als Kandidat. |
+| beta_vulgaris_cicla | schnitt | schnitte_max, kulturdauer_max_d | nur Horticulturae-Versuchsplan (3 Schnitte, 77 Tage, verworfen) und Rise Gardens «5-10 harvests» (Bereich). |
+
+## Runde 13 (#258)
+
+Auftrag: Randen (Art `umsetzen_ab_d`/`umsetzen_bis_d`; schnitt `ernte_ab_d`, `ernteintervall_d`, `schnitte_max`, `kulturdauer_max_d`), Mangold (Art `umsetzen_ab_d`/`umsetzen_bis_d`; schnitt `ernteintervall_d`, `schnitte_max`, `kulturdauer_max_d`), Spinat (schnitt `ernte_ab_d`, `kulturdauer_max_d`; babyleaf und kopf `kulturdauer_max_d`); Lesekopien des Koordinators für Horticulturae 8(7) 638 und Agriculture 11(5) 465. Abruf 21.11.2026.
+
+### Suchweg
+
+- Lesekopien gelesen: `horticulturae-mangold-meerwasser-2022.md`, `agriculture-spinat-rauke-floating-2021.md`.
+- Horticultura Brasileira 32(4) 426 erneut gelesen (SciELO, HTML frei über die DOI): Umsetztag Randen 9 DAS.
+- Websuche: «beet hydroponic seedlings transplanted days after sowing rockwool floating NFT», «beterraba hidroponia NFT transplante dias após a semeadura espuma fenólica», «Swiss chard hydroponic deep water culture transplanted days after seeding regrowth», «Swiss chard floating system successive cuts baby leaf», «red beet baby leaf floating system», «spinach hydroponic DWC harvested days after sowing», «HortScience 60(6) 967 Swiss chard NFT».
+- Europe PMC (Open Access): Randen bzw. Mangold mit hydroponic und «days after sowing».
+
+### Kandidaten
+
+| Kandidat | Wert | Quelle | Hinweis |
+|---|---|---|---|
+| art.beta_vulgaris_cicla.umsetzen_ab_d#2 | 21 (Tage ab Saat) | horticulturae-mangold-meerwasser-2022 (A, Lesekopie) | Steinwollstopfen, dann Floating; Einzelwert, daher kein `umsetzen_bis_d` |
+| ak.beta_vulgaris_cicla.schnitt.ernteintervall_d#3 | 14 | horticulturae-mangold-meerwasser-2022 (A, Lesekopie) | Folgeschnitte am selben Bestand, Abschnitt 2.2.2 |
+| ak.beta_vulgaris_cicla.schnitt.ernte_ab_d#5 | 28 (ab Umsetzen) | horticulturae-mangold-meerwasser-2022 (A, Lesekopie) | nicht im Vorrang, aber in der Lesekopie belegt; freigegeben ist #4 (19, Rise Gardens, ab Saat) |
+| ak.spinacia_oleracea.schnitt.ernte_ab_d#2 | 34 (ab Umsetzen ins Becken; 46 ab Saat) | agriculture-spinat-rauke-floating-2021 (A, Lesekopie) | Revegetation-Becken: echter Schnitt mit Nachwuchs (nicht Babyleaf mit Ersatz); Anzucht in Torfplatten, Winter-Gewächshaus |
+| ak.spinacia_oleracea.schnitt.schnitte_max#4 | 5 | agriculture-spinat-rauke-floating-2021 (A, Lesekopie) | gleicher Wert wie #3 (verworfen nur wegen Sperre); Einleitung nennt zusätzlich «four or five successive harvests»; freigegeben ist #2 (3, Cornell) |
+| ak.spinacia_oleracea.babyleaf.kulturdauer_max_d#3 | 46 (ab Saat) | agriculture-spinat-rauke-floating-2021 (A, Lesekopie) | Control-Becken: einmalige Ernte, danach Ersatz; längster von drei Zyklen (46, 43, 28), kein Mittel |
+| art.beta_vulgaris_conditiva.umsetzen_ab_d#2 | 9 (Tage ab Saat) | hortbras-randen-babyleaf-nft-2014 (A) | frei lesbar auf SciELO; Anzucht in Kokosfaser ohne Nährlösung, Umsetzen in NFT beim ersten Laubblatt; Einzelwert, daher kein `umsetzen_bis_d` |
+
+Neue Quellenzeile: `q.agriculture-spinat-rauke-floating-2021` mit Status `entwurf` und Abrufdatum 21.11.2026 (Lesekopie), Link weiterhin die DOI. Sonst keine neue Quelle.
+
+Hinweise für den Lead:
+- Agriculture 11(5) 465: Aus Tabelle 1 liesse sich ein Umsetztag Spinat als Differenz ablesen (46 minus 34 = 12, 43 minus 32 = 11, 28 minus 18 = 10 Tage ab Saat); die Quelle nennt aber nur das Stadium («Upon the first true leaf formation»), daher kein Kandidat (Spinat-Umsetztag ist ohnehin freigegeben, 9).
+- Agriculture 11(5) 465, Einleitung: «20 to 60 days after transplanting» ist ein allgemeiner Bereich (Schnitt «above the ground», nicht hydroponisch belegt), nicht erfasst.
+- Mangold `schnitte_max` (3) und `kulturdauer_max_d` (77): Die Lesekopie enthält nur den Versuchsplan («harvested trice»), keine Aussage zur Kultur; die Methodenprüfung hat diese Werte in Runde 11 deswegen verworfen. Keine neuen Kandidaten.
+- Spinat schnitt `kulturdauer_max_d`: Die Lesekopie nennt nur «in a period of seven weeks» (Versuchsdauer, in Runde 11 verworfen); kein neuer Kandidat.
+
+### Verworfen oder ohne Zahl
+
+| Quelle | Grund |
+|---|---|
+| Bioscience Journal (Randen in Kokosfaser-Töpfen mit Hoagland-Lösung; https://distantreader.org/stacks/journals/bj/bj-8092.pdf) | Umsetzen «Sete dias após a emergência (DAE)»: Tage ab Auflaufen, nicht ab Saat; Probenahmen 15 bis 65 DAT sind Versuchsplan |
+| MedCrave HIJ 2019, Mangold in Sand, Sägemehl, Vermiculit | Setzlinge «Five-weeks old» gekauft und in Kompost angezogen (Anzucht nicht hydroponisch); «harvested 40 days after transplanting» nur Zitat einer Fremdquelle in der Einleitung |
+| JOHR 2023 (doi:10.2478/johr-2023-0022), Mangold «floating» | Töpfe mit Ultisol und Hühnermist (Erde); Umsetzen 14 DAS und Ernten 22, 25, 28 DAT gelten nicht |
+| PMC10486669 (Foods 2023, Landsorten Mangold und Spinat) | Torf bzw. Topf mit Erde, nicht hydroponisch |
+| Hort. J. 85(2) MI-R01 (Floating-Babyleaf, Übersicht, J-STAGE) | Tabelle 1 mit Zyklusdauern nur als Bild; im Text keine Tageswerte für Spinat oder Mangold |
+| truleaf.org Swiss Chard | Ratgeberseite 2026 ohne erkennbare Quelle, Erde und Hydroponik gemischt; nur Bereiche («45-58 days», «every 14-21 days») |
+| HortScience 35(4) 624 und 56(6) 687 (Spinat NFT bzw. DWC in der Klimakammer) | nur Suchauszug: Ernte 14 DAT bzw. nach 19 bis 20 Tagen ist Versuchsende mit Ganzpflanzenernte, keine Aussage zum Kulturende (kein `kulturdauer_max_d` für kopf) |
+| Agriculture 15 1914 (Randen) | MDPI nur PDF; kein anderer Server genutzt (siehe «Nur im Browser lesbar») |
+
+### Lückenliste Runde 13 (Klasse D)
+
+| Art | Kulturform | Feld | Stand, was Anbauquellen sagen |
+|---|---|---|---|
+| beta_vulgaris_conditiva | Art | umsetzen_bis_d | nur Einzelwerte 14 (Agriculture 2025, ohne Prüfung) und 9 (Hort. Bras. 2014); ein brasilianischer Artikel (Erde) nennt Umsetzen zwischen 20 und 40 Tagen nach der Saat ([UFGD Agrarian 3107](https://ojs.ufgd.edu.br/agrarian/article/download/3107/2401/14364)), nicht hydroponisch. |
+| beta_vulgaris_conditiva | schnitt | ernte_ab_d, ernteintervall_d, schnitte_max, kulturdauer_max_d | kein hydroponischer Mehrfachschnitt für Randen gefunden; Hort. Bras. 2014 nur einmalige Babyleaf-Ernte (30 DAS, Runde 12 verworfen); Johnny's (Erde) «cut again when leaves are at desired size (5–14 days)» ([Johnny's Baby Leaf Beet Greens](https://www.johnnyseeds.com/growers-library/vegetables/beets/baby-leaf-beets-key-growing-information.html)). |
+| beta_vulgaris_cicla | Art | umsetzen_bis_d | nur Einzelwert 21 (Horticulturae 2022); Rise Gardens nennt nur das Stadium (zweites Blattpaar). |
+| beta_vulgaris_cicla | schnitt | schnitte_max, kulturdauer_max_d | unverändert: nur Versuchsplan Horticulturae (3 Schnitte, 77 Tage) und Rise Gardens «5-10 harvests» (Bereich). |
+| spinacia_oleracea | schnitt | kulturdauer_max_d | unverändert: nur Versuchsdauer «seven weeks» (Agriculture 2021) und Rise Gardens «2 to 3 extra weeks». |
+| spinacia_oleracea | kopf | kulturdauer_max_d | unverändert: UGA C1304 nur Bereiche «2–3 weeks» plus «3–4 weeks» ([UGA C1304](https://fieldreport.caes.uga.edu/publications/C1304/how-to-grow-greenhouse-spinach-during-georgia-summers-using-hydroponics/)). |
+
+### Nur im Browser lesbar
+
+| Artikelseite | erwartete Fundstelle | gesuchtes Feld |
+|---|---|---|
+| https://www.mdpi.com/2077-0472/15/18/1914 (Agriculture 15, 1914, Randen-Babyleaf in Steinwolle und Tanks; MDPI nur PDF) | Abschnitt 2.1 Plant Material and Growing Conditions: «Transplantation into 13 L hydroponic tanks occurred on 9 October 2023 (14 days after sowing, two-leaf stage).» | `art.beta_vulgaris_conditiva.umsetzen_ab_d` (#1, Wert 14) |
+| https://journals.ashs.org/view/journals/hortsci/60/6/article-p967.xml (HortScience 60(6) 967, doi:10.21273/HORTSCI18556-25, zehn Mangoldsorten in NFT, Oklahoma State; Abruf abgewehrt) | Materials and Methods: Saat, Umsetzen in NFT, Erntetermine bzw. Schnitte | `art.beta_vulgaris_cicla.umsetzen_ab_d`/`umsetzen_bis_d`, Mangold schnitt `ernteintervall_d`, `schnitte_max`, `kulturdauer_max_d` (erledigt, siehe Nachtrag) |
+
+### Nachtrag: Lesekopie HortScience 60(6) 967
+
+- Neue Quelle `hortsci-mangold-nft-2025` (peer_review, nft, Link Artikelseite), Lesekopie des Koordinators vom 21.11.2026.
+- Neuer Kandidat `art.beta_vulgaris_cicla.umsetzen_bis_d#1` = 28 Tage ab Saat (Saat 31 Oct 2023 in Oasis-Würfeln 1.5 cm3, Umsetzen in NFT 28 Nov 2023; Datumsrechnung in `fundstelle`). Als `umsetzen_bis_d` angelegt, weil der Wert später liegt als der Kandidat 21 (Horticulturae, Steinwolle) für `umsetzen_ab_d`; beides sind Einzelwerte aus je einer Quelle, den Konflikt bzw. die Zuordnung entscheidet der Lead.
+- Keine Erntewerte: Die Messung «37 d after transplanting» ist eine einmalige Erhebung am Versuchsende (Ganzpflanzen getrennt in Spross und Wurzel), keine Aussage zu Schnitten oder Kulturende. Mangold schnitt `schnitte_max` und `kulturdauer_max_d` bleiben Klasse D.

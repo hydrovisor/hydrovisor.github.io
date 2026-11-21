@@ -19,14 +19,16 @@ import {
   type ErnteTermin,
   type KalenderZeile,
 } from '../../src/domain/phasen/kalender.ts';
-import { ernteStand } from '../../src/domain/phasen/ernte.ts';
+import { ernteAufgaben, ernteStand } from '../../src/domain/phasen/ernte.ts';
 import { phasenStand, pflanzungVonSatz } from '../../src/domain/phasen/fragen.ts';
 import { phaseAm } from '../../src/domain/phasen/prognose.ts';
 import { KULTURFORM_NAME } from '../../src/domain/pflanzung/saeen.ts';
-import { umsetzTag, voraussichtlichesEnde } from '../../src/domain/pflanzung/belegung.ts';
+import { ersteErnteAb, umsetzTag, voraussichtlichesEnde } from '../../src/domain/pflanzung/belegung.ts';
 import { tagKurz, tagPlus, tageZwischen, ZEITZONE } from '../../src/domain/zeit.ts';
 import {
   BASILIKUM,
+  BASILIKUM_DIREKT,
+  BASILIKUM_SCHNITT,
   EICHBLATT,
   EISSALAT,
   ernteDazu,
@@ -36,14 +38,25 @@ import {
   kulturformSetzen,
   LOLLO,
   PAKCHOI,
+  PETERSILIE,
   phaseDazu,
   platzId,
   SATZ,
+  SATZ_VOR,
   SORTE,
+  SORTE_E,
   um,
+  umsetzenDazu,
 } from '../fixtures/ernte.ts';
 import { pflanzungId, satzAnlegen } from '../fixtures/keimung.ts';
-import { buendelTeile, BUENDEL_JETZT, satzId, welle1Teile, WELLE1_JETZT } from '../fixtures/phasen.ts';
+import {
+  buendelTeile,
+  BUENDEL_JETZT,
+  dauerSetzen,
+  satzId,
+  welle1Teile,
+  WELLE1_JETZT,
+} from '../fixtures/phasen.ts';
 import { uid, type Teile } from '../fixtures/regal.ts';
 
 type Zeile = Record<string, unknown>;
@@ -743,5 +756,331 @@ describe('UC15-AK5 nächstes Ereignis und Reihenfolge', () => {
     const z = zeileVon(erntekalender(t, J, Z), SATZ.eichblatt);
     expect(z.kurz).toBe('Anzucht fällig seit 14.3. · Ernte offen');
     expect(z.naechstes).toEqual({ art: 'wechsel', tag: '2027-03-14', phase: 'anzucht', unbestaetigt: true });
+  });
+});
+
+// ---------------------------------------------------------------------
+// Issue #254, Plan 254: «Ernte ab» bei Mehrfachernte vor dem Umsetzen (ersteErnteAb() neben voraussichtlichesEnde())
+// Fixture ernteTeile({ vorUmsetzen: true }): Sätze 99 (Petersilie dauerkultur_blatt, ohne Reservierung), 100 (Basilikum
+// schnitt, Zieltopf 2.3.5, geplant 19.3., Vorgabe 24.3.) und 101 (Basilikum schnitt, Direktsaat 3.1).
+// ---------------------------------------------------------------------
+
+const vor = (e: { jetzt?: Date } = {}) => ernteTeile({ vorUmsetzen: true, ...e });
+
+/** SatzBezug für phaseAm() aus der Satzzeile */
+const bezugVon = (t: Teile, id: string) => {
+  const s = satzZeile(t, id);
+  return {
+    satzId: id,
+    sorteId: String(s['sorte_id']),
+    kulturform: String(s['kulturform']),
+    saatdatum: String(s['saatdatum']),
+    direktsaat: Boolean(s['direktsaat_platz_id']),
+  };
+};
+
+/** Feld umsetzen_ab_d einer Art setzen */
+const umsetzenAbSetzen = (t: Teile, artId: string, tage: number | null) => {
+  for (const a of t['art'] ?? []) if (a['art_id'] === artId) a['umsetzen_ab_d'] = tage;
+};
+
+/** Reservierung von Satz 100 entfernen und Sichten nachrechnen */
+const ohneReservierung = (t: Teile): Teile => {
+  t['reservierung'] = (t['reservierung'] ?? []).filter((r) => r['pflanzung_id'] !== BASILIKUM_SCHNITT);
+  return ernteSichtenNachrechnen(t);
+};
+
+/** phase_antwort eines Satzes entfernen (wie nie erfasst) und Sichten nachrechnen */
+const ohnePhasenantwort = (t: Teile, id: string): Teile => {
+  t['ereignis'] = (t['ereignis'] ?? []).filter((e) => !(e['typ'] === 'phase_antwort' && e['satz_id'] === id));
+  return ernteSichtenNachrechnen(t);
+};
+
+describe('UC15-AK10 Mehrfachernte vor dem Umsetzen mit Reservierung oder als Direktsaat', () => {
+  it('UC15-AK10 TZ Basilikum Schnitt (Satz 100) vor dem Umsetzen, geplant 19.3.: ernteAb = 19.3. + 50 = 8.5., Marke im Fenster, Ende 22.6. «später»', () => {
+    const t = vor();
+    // Fixture: kein Umsetzen, keine Teilernte, Bezug laut ernteStand() offen
+    expect(umsetzTag(t, BASILIKUM_SCHNITT, Z)).toBeUndefined();
+    expect(ernteStand(t, BASILIKUM_SCHNITT, J, Z)?.moeglichAb).toBeUndefined();
+    // Rechnung über den 28.3. (Sommerzeit) zählt Kalendertage (G2)
+    const ab = tagPlus('2027-03-19', 50);
+    expect(ab).toBe('2027-05-08');
+    expect(ersteErnteAb(t, BASILIKUM_SCHNITT, '2027-03-19', J, Z)).toBe(ab);
+    const z = zeileVon(erntekalender(t, J, Z), SATZ_VOR.basilikumSchnitt);
+    expect(z.ernte).toEqual({
+      ernteart: 'mehrfach',
+      ernteAb: '2027-05-08',
+      endeAm: tagPlus('2027-02-22', 120),
+      teilernten: 0,
+    });
+    expect(z.ernte.endeAm).toBe('2027-06-22');
+    expect(z.marken).toEqual([{ art: 'ernte_ab', tag: '2027-05-08' }]);
+    expect(z.spaeter).toEqual({ art: 'ende', tag: '2027-06-22' });
+  });
+
+  it('UC15-AK10 Basilikum Schnitt: ohne geplantes Datum gilt die Vorgabe 24.3. → ernteAb 13.5. nach dem Fenster («später» ernte_ab)', () => {
+    const t = vor();
+    for (const r of t['v_reservierung_aktiv'] ?? [])
+      if (r['pflanzung_id'] === BASILIKUM_SCHNITT) r['umsetzen_geplant_am'] = null;
+    const z = zeileVon(erntekalender(t, J, Z), SATZ_VOR.basilikumSchnitt);
+    expect(z.ernte.ernteAb).toBe(tagPlus('2027-03-24', 50));
+    expect(z.ernte.ernteAb).toBe('2027-05-13');
+    expect(z.marken).toEqual([]);
+    expect(z.spaeter).toEqual({ art: 'ernte_ab', tag: '2027-05-13' });
+  });
+
+  it('UC15-AK10 Basilikum Schnitt: Kurzzeile «Wachstum ab 20.3. · Ernte ab 8.5.», kein Kennzeichen', () => {
+    const z = zeileVon(erntekalender(vor(), J, Z), SATZ_VOR.basilikumSchnitt);
+    expect(z.kurz).toBe('Wachstum ab 20.3. · Ernte ab 8.5.');
+    expect(z.kennzeichen).toEqual([]);
+    expect(z.naechstes).toEqual({
+      art: 'wechsel',
+      tag: '2027-03-20',
+      phase: 'wachstum',
+      unbestaetigt: false,
+    });
+  });
+
+  it('UC15-AK10 Direktsaat Basilikum Schnitt (Satz 101): ernteAb = Saat + 50 = 13.4. = ernteStand().moeglichAb = ersteErnteAb()', () => {
+    const t = vor();
+    const ab = tagPlus('2027-02-22', 50);
+    expect(ab).toBe('2027-04-13');
+    expect(ernteStand(t, BASILIKUM_DIREKT, J, Z)?.moeglichAb).toBe(ab);
+    expect(ersteErnteAb(t, BASILIKUM_DIREKT, undefined, J, Z)).toBe(ab);
+    const z = zeileVon(erntekalender(t, J, Z), SATZ_VOR.basilikumDirekt);
+    expect(z.ernte.ernteAb).toBe(ab);
+    expect(z.marken).toContainEqual({ art: 'ernte_ab', tag: ab });
+  });
+});
+
+describe('UC15-AK11 Mehrfachernte vor dem Umsetzen ohne Reservierung', () => {
+  it('UC15-AK11 Basilikum Schnitt ohne Reservierung: Bezug Saat + umsetzen_ab_d 28 = 22.3. → ernteAb 11.5.', () => {
+    const t = ohneReservierung(vor());
+    expect((t['v_reservierung_aktiv'] ?? []).some((r) => r['pflanzung_id'] === BASILIKUM_SCHNITT)).toBe(
+      false,
+    );
+    const bezug = tagPlus('2027-02-22', 28);
+    expect(bezug).toBe('2027-03-22');
+    const z = zeileVon(erntekalender(t, J, Z), SATZ_VOR.basilikumSchnitt);
+    expect(z.ernte.ernteAb).toBe(tagPlus(bezug, 50));
+    expect(z.ernte.ernteAb).toBe('2027-05-11');
+    expect(ersteErnteAb(t, BASILIKUM_SCHNITT, undefined, J, Z)).toBe('2027-05-11');
+    expect(z.spaeter).toEqual({ art: 'ernte_ab', tag: '2027-05-11' });
+  });
+
+  it('UC15-AK11 Basilikum Schnitt ohne Reservierung und ohne umsetzen_ab_d: Bezug erster Wachstumstag aus phaseAm() = 20.3. → ernteAb 9.5. als Marke am rechten Rand', () => {
+    const t = ohneReservierung(vor());
+    umsetzenAbSetzen(t, 'ocimum_basilicum', null);
+    const b = bezugVon(t, SATZ_VOR.basilikumSchnitt);
+    // Anzucht bestätigt 27.2. + typ 21 = 20.3.
+    expect(phaseAm(t, b, '2027-03-19', J, Z)).toBe('anzucht');
+    expect(phaseAm(t, b, '2027-03-20', J, Z)).toBe('wachstum');
+    expect(tagPlus('2027-02-27', 21)).toBe('2027-03-20');
+    const ab = tagPlus('2027-03-20', 50);
+    expect(ab).toBe('2027-05-09');
+    expect(ersteErnteAb(t, BASILIKUM_SCHNITT, undefined, J, Z)).toBe(ab);
+    const k = erntekalender(t, J, Z);
+    const z = zeileVon(k, SATZ_VOR.basilikumSchnitt);
+    expect(k.fenster.bis).toBe(ab);
+    expect(z.ernte.ernteAb).toBe(ab);
+    expect(z.marken).toEqual([{ art: 'ernte_ab', tag: '2027-05-09' }]);
+    expect(z.spaeter).toEqual({ art: 'ende', tag: '2027-06-22' });
+  });
+
+  it('UC15-AK11 Petersilie Dauerkultur (Satz 99) in der Anzucht ohne Reservierung: ernteAb = 29.3. + 28 = 26.4., Kurzzeile «Wachstum ab 29.3. · Ernte ab 26.4.», Kennzeichen leer', () => {
+    const t = vor();
+    expect((t['v_reservierung_aktiv'] ?? []).some((r) => r['pflanzung_id'] === PETERSILIE)).toBe(false);
+    const b = bezugVon(t, SATZ_VOR.petersilie);
+    // Anzucht bestätigt 1.3. + typ 28 = 29.3.
+    expect(phaseAm(t, b, '2027-03-28', J, Z)).toBe('anzucht');
+    expect(phaseAm(t, b, '2027-03-29', J, Z)).toBe('wachstum');
+    const ab = tagPlus('2027-03-29', 28);
+    expect(ab).toBe('2027-04-26');
+    expect(ersteErnteAb(t, PETERSILIE, undefined, J, Z)).toBe(ab);
+    const z = zeileVon(erntekalender(t, J, Z), SATZ_VOR.petersilie);
+    expect(z.phase).toBe('anzucht');
+    expect(z.ernte).toEqual({
+      ernteart: 'mehrfach',
+      ernteAb: ab,
+      endeAm: tagPlus('2027-02-15', 180),
+      teilernten: 0,
+    });
+    expect(z.ernte.endeAm).toBe('2027-08-14');
+    expect(z.kurz).toBe('Wachstum ab 29.3. · Ernte ab 26.4.');
+    expect(z.kennzeichen).toEqual([]);
+    expect(z.marken).toEqual([{ art: 'ernte_ab', tag: '2027-04-26' }]);
+  });
+
+  it('UC15-AK11 Petersilie mit umsetzen_ab_d 35 an der Art: Bezug 15.2. + 35 = 22.3. vor phaseAm() → ernteAb 19.4.', () => {
+    const t = vor();
+    umsetzenAbSetzen(t, 'petroselinum_crispum', 35);
+    const bezug = tagPlus('2027-02-15', 35);
+    expect(bezug).toBe('2027-03-22');
+    const ab = tagPlus(bezug, 28);
+    expect(ab).toBe('2027-04-19');
+    expect(ersteErnteAb(t, PETERSILIE, undefined, J, Z)).toBe(ab);
+    expect(zeileVon(erntekalender(t, J, Z), SATZ_VOR.petersilie).ernte.ernteAb).toBe(ab);
+  });
+
+  it('UC15-AK11 Petersilie ohne bestätigte Anzucht (phase_antwort entfernt): Wachstum aus Keimung typ 14 und Anzucht typ 28 = 15.2. + 42 = 29.3. → ernteAb 26.4.', () => {
+    const t = ohnePhasenantwort(vor(), SATZ_VOR.petersilie);
+    const b = bezugVon(t, SATZ_VOR.petersilie);
+    expect(phaseAm(t, b, '2027-03-18', J, Z)).toBe('anzucht');
+    expect(phaseAm(t, b, '2027-03-28', J, Z)).toBe('anzucht');
+    expect(tagPlus('2027-02-15', 42)).toBe('2027-03-29');
+    expect(phaseAm(t, b, '2027-03-29', J, Z)).toBe('wachstum');
+    expect(ersteErnteAb(t, PETERSILIE, undefined, J, Z)).toBe('2027-04-26');
+    expect(zeileVon(erntekalender(t, J, Z), SATZ_VOR.petersilie).ernte.ernteAb).toBe('2027-04-26');
+  });
+
+  it('UC15-AK11 TZ phase_antwort Anzucht am 26.2. 23:30 UTC (= 27.2. 00:30 Zürich) zählt als 27.2.: Basilikum ohne Reservierung und umsetzen_ab_d → 9.5.', () => {
+    const t = vor();
+    const id = uid('4e', 900);
+    t['ereignis'] = (t['ereignis'] ?? []).filter(
+      (e) => !(e['typ'] === 'phase_antwort' && e['satz_id'] === SATZ_VOR.basilikumSchnitt),
+    );
+    t['ereignis'].push({
+      id,
+      client_id: id,
+      typ: 'phase_antwort',
+      pflanzung_id: null,
+      satz_id: SATZ_VOR.basilikumSchnitt,
+      netztopf_id: null,
+      platz_id: null,
+      daten: { phase: 'anzucht', antwort: 'ja', nachgefuehrt: false },
+      gilt_ab: '2027-02-26T23:30:00.000Z',
+      client_zeit: '2027-02-26T23:30:00.000Z',
+      erfasst_am: '2027-02-26T23:30:00.000Z',
+      ersetzt_id: null,
+      storniert_am: null,
+    });
+    ohneReservierung(t);
+    umsetzenAbSetzen(t, 'ocimum_basilicum', null);
+    // nach UTC wäre es der 26.2. → Wachstum 19.3. → 8.5.; in Zürich 27.2. → Wachstum 20.3. → 9.5.
+    const b = bezugVon(t, SATZ_VOR.basilikumSchnitt);
+    expect(phaseAm(t, b, '2027-03-19', J, Z)).toBe('anzucht');
+    expect(phaseAm(t, b, '2027-03-20', J, Z)).toBe('wachstum');
+    expect(ersteErnteAb(t, BASILIKUM_SCHNITT, undefined, J, Z)).toBe('2027-05-09');
+    expect(zeileVon(erntekalender(t, J, Z), SATZ_VOR.basilikumSchnitt).ernte.ernteAb).toBe('2027-05-09');
+  });
+
+  it('UC15-AK11 ohne ernte_ab_d (Petersilie dauerkultur_blatt ernte_ab_d leer): ernteAb undefined, Kurzzeile «Wachstum ab 29.3. · Ernte offen», ersteErnteAb() undefined', () => {
+    const t = vor();
+    kulturformSetzen(t, 'petroselinum_crispum', 'dauerkultur_blatt', { ernte_ab_d: null });
+    expect(ersteErnteAb(t, PETERSILIE, undefined, J, Z)).toBeUndefined();
+    const z = zeileVon(erntekalender(t, J, Z), SATZ_VOR.petersilie);
+    expect(z.ernte.ernteAb).toBeUndefined();
+    expect(z.ernte.endeAm).toBe('2027-08-14');
+    expect(z.kurz).toBe('Wachstum ab 29.3. · Ernte offen');
+  });
+
+  it('UC15-AK11 ohne Anzuchtdauer (dauerSetzen Petersilie anzucht leer): phaseAm() erreicht Wachstum nie → ernteAb undefined', () => {
+    const t = vor();
+    dauerSetzen(t, SORTE.mooskrause, 'anzucht', [null, null, null]);
+    const b = bezugVon(t, SATZ_VOR.petersilie);
+    expect(phaseAm(t, b, tagPlus('2027-02-15', 365), J, Z)).toBe('anzucht');
+    expect(ersteErnteAb(t, PETERSILIE, undefined, J, Z)).toBeUndefined();
+    expect(zeileVon(erntekalender(t, J, Z), SATZ_VOR.petersilie).ernte.ernteAb).toBeUndefined();
+  });
+
+  it('UC15-AK11 Wachstum schon bestätigt ohne Umsetzen (phase_antwort Wachstum am Satz 99): ersteErnteAb() undefined, ernteAb bleibt offen', () => {
+    const t = vor();
+    phaseDazu(t, SATZ_VOR.petersilie, 'wachstum', '2027-03-10');
+    ernteSichtenNachrechnen(t);
+    expect(phaseAm(t, bezugVon(t, SATZ_VOR.petersilie), '2027-02-15', J, Z)).toBe('wachstum');
+    expect(ersteErnteAb(t, PETERSILIE, undefined, J, Z)).toBeUndefined();
+    expect(zeileVon(erntekalender(t, J, Z), SATZ_VOR.petersilie).ernte.ernteAb).toBeUndefined();
+  });
+});
+
+describe('UC15-AK12 nach dem Umsetzen, mit Teilernte und bei Einmalernte unverändert', () => {
+  it('UC15-AK12 nach dem Umsetzen am 16.3. (Satz 100, geplant 19.3.): ernteAb = ernteStand().moeglichAb = 16.3. + 50 = 5.5., nicht 8.5.', () => {
+    const t = vor();
+    umsetzenDazu(t, BASILIKUM_SCHNITT, '2.3.5', '2027-03-16', ['A3', 1]);
+    ernteSichtenNachrechnen(t);
+    expect(umsetzTag(t, BASILIKUM_SCHNITT, Z)).toBe('2027-03-16');
+    const ab = tagPlus('2027-03-16', 50);
+    expect(ab).toBe('2027-05-05');
+    expect(ernteStand(t, BASILIKUM_SCHNITT, J, Z)?.moeglichAb).toBe(ab);
+    expect(ersteErnteAb(t, BASILIKUM_SCHNITT, '2027-03-16', J, Z)).toBe(ab);
+    const z = zeileVon(erntekalender(t, J, Z), SATZ_VOR.basilikumSchnitt);
+    expect(z.ernte.ernteAb).toBe(ab);
+    expect(z.ernte.ernteAb).not.toBe('2027-05-08');
+  });
+
+  it('UC15-AK12 mit Teilernte vor dem Umsetzen (Satz 99, Teilernte 10.3.): naechsterSchnitt = 10.3. + 14 = 24.3., ernteAb undefined; ohne Intervall beide undefined', () => {
+    const t = vor();
+    ernteDazu(t, PETERSILIE, 'teil', '2027-03-10');
+    ernteSichtenNachrechnen(t);
+    const z = zeileVon(erntekalender(t, J, Z), SATZ_VOR.petersilie);
+    expect(z.ernte).toEqual({
+      ernteart: 'mehrfach',
+      naechsterSchnitt: tagPlus('2027-03-10', 14),
+      endeAm: '2027-08-14',
+      teilernten: 1,
+    });
+    expect(z.ernte.naechsterSchnitt).toBe('2027-03-24');
+    expect(z.ernte.ernteAb).toBeUndefined();
+
+    kulturformSetzen(t, 'petroselinum_crispum', 'dauerkultur_blatt', { ernteintervall_d: null });
+    const ohne = zeileVon(erntekalender(t, J, Z), SATZ_VOR.petersilie);
+    expect(ohne.ernte.teilernten).toBe(1);
+    expect(ohne.ernte.naechsterSchnitt).toBeUndefined();
+    expect(ohne.ernte.ernteAb).toBeUndefined();
+  });
+
+  it('UC15-AK12 voraussichtlichesEnde() für Satz 99 und 100 unverändert (Saat + Kulturdauer max.: 14.8., 22.6.); endeAm im Erntefenster gleich', () => {
+    const t = vor();
+    expect(voraussichtlichesEnde(t, PETERSILIE)).toEqual({ ernteart: 'mehrfach', endeAm: '2027-08-14' });
+    expect(voraussichtlichesEnde(t, BASILIKUM_SCHNITT, '2027-03-19')).toEqual({
+      ernteart: 'mehrfach',
+      endeAm: '2027-06-22',
+    });
+    const k = erntekalender(t, J, Z);
+    expect(zeileVon(k, SATZ_VOR.petersilie).ernte.endeAm).toBe('2027-08-14');
+    expect(zeileVon(k, SATZ_VOR.basilikumSchnitt).ernte.endeAm).toBe('2027-06-22');
+    // Gegenprobe: der neue Termin kommt aus ersteErnteAb(), nicht aus voraussichtlichesEnde()
+    expect(ersteErnteAb(t, PETERSILIE, undefined, J, Z)).toBe('2027-04-26');
+  });
+
+  it('UC15-AK12 ernteAufgaben() am 10.5. enthält für Satz 99 und 100 keine Aufgabe «Ernte möglich»; ernteStand().moeglichAb bleibt undefined', () => {
+    const jetzt = um('2027-05-10');
+    const t = vor({ jetzt });
+    // Prognosen liegen am 10.5. in der Vergangenheit (26.4., 8.5.)
+    expect(ersteErnteAb(t, PETERSILIE, undefined, jetzt, Z)).toBe('2027-04-26');
+    expect(ersteErnteAb(t, BASILIKUM_SCHNITT, '2027-03-19', jetzt, Z)).toBe('2027-05-08');
+    const aufgaben = ernteAufgaben(t, jetzt, Z).filter((a) => a.typ === 'ernte_moeglich');
+    for (const id of [SATZ_VOR.petersilie, SATZ_VOR.basilikumSchnitt])
+      expect(
+        aufgaben.some((a) => a.satzId === id),
+        id,
+      ).toBe(false);
+    expect(ernteStand(t, PETERSILIE, jetzt, Z)?.moeglichAb).toBeUndefined();
+    expect(ernteStand(t, BASILIKUM_SCHNITT, jetzt, Z)?.moeglichAb).toBeUndefined();
+  });
+
+  it('UC15-AK12 Einmalernte unverändert: Eichblatt (Satz 96) ernteAb 5.5. aus voraussichtlichesEnde(); ersteErnteAb() für Eichblatt undefined', () => {
+    const t = vor();
+    const eichblatt = EICHBLATT[1] as string;
+    expect(voraussichtlichesEnde(t, eichblatt, '2027-03-31').endeAm).toBe('2027-05-05');
+    expect(zeileVon(erntekalender(t, J, Z), SATZ.eichblatt).ernte.ernteAb).toBe('2027-05-05');
+    expect(ersteErnteAb(t, eichblatt, '2027-03-31', J, Z)).toBeUndefined();
+  });
+
+  it('UC15-AK12 bestehende Sätze 90 bis 96 mit vorUmsetzen: Erntefenster gleich wie ohne Option', () => {
+    const ohne = erntekalender(ernteTeile(), J, Z);
+    const mit = erntekalender(vor(), J, Z);
+    expect(mit.zeilen).toHaveLength(ohne.zeilen.length + 3);
+    for (const z of ohne.zeilen) {
+      const m = zeileVon(mit, z.satzId);
+      expect(m.ernte, z.sorte).toEqual(z.ernte);
+      expect(m.marken, z.sorte).toEqual(z.marken);
+      expect(m.spaeter, z.sorte).toEqual(z.spaeter);
+      expect(m.kurz, z.sorte).toBe(z.kurz);
+      expect(m.kennzeichen, z.sorte).toEqual(z.kennzeichen);
+    }
+    // Basilikum Nr. 92 (dauerkultur_blatt, umgesetzt) bleibt bei ernteStand(); die neue Zeile schnitt wirkt nicht
+    expect(zeileVon(mit, SATZ.basilikum).ernte.ernteAb).toBe(tagPlus('2027-02-04', 28));
+    expect(satzZeile(vor(), SATZ_VOR.basilikumSchnitt)['sorte_id']).toBe(SORTE_E.basilikum);
   });
 });

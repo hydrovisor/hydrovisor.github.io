@@ -1,4 +1,4 @@
--- #249 Eigene wiederkehrende Aufgaben je Anlage (Konzept R5.2 letzte Zeile, R5.3, 8.1 Regel 2; Entscheid 0029).
+-- #249 Eigene wiederkehrende Aufgaben je Anlage (Konzept R5.2 letzte Zeile, R5.3, 8.1 Regel 2; Entscheid 0030).
 -- Additiv: neue nullable Spalte, Constraints und Index auf einer bisher leeren Tabelle; keine Daten geändert.
 alter table public.eigene_aufgabe
   add constraint eigene_aufgabe_id_anlage_key unique (id, anlage_id);

@@ -407,3 +407,129 @@ Hinweise für den Lead: «weekly» ist als 1 Woche eingetragen (Wochenwert, Rege
 | allium_schoenoprasum | dauerkultur_blatt | schnitte_max | kein Wert; Simply Hydroponics nur «after many harvests». |
 | allium_schoenoprasum | schnitt | ernteintervall_d, schnitte_max, kulturdauer_max_d | kein Wert; CAFRE nur «harvested young and replanted» (NFT); Fork Farms bis vier Monate ab Umsetzen (Hinweis oben). |
 | petroselinum_crispum | dauerkultur_blatt | schnitte_max | kein Einzelwert; VT: wöchentlich über sechs Wochen bzw. «until yields begin to diminish». frankiesgarten (hydroponisch, ohne Zahl): zweijährig, Blütenstiel im zweiten Jahr ([frankiesgarten Petersilie](https://frankiesgarten.de/anleitungen/gemueseanbau/petersilie-hydroponik/)). |
+
+## Runde 12 (#250)
+
+Gesucht: Petersilie `dauerkultur_blatt` **ernte_ab_d**, schnitte_max, kulturdauer_max_d; Schnittlauch `dauerkultur_blatt` **ernte_ab_d**, ernteintervall_d, schnitte_max; Schnittlauch `schnitt` **ernte_ab_d**, ernteintervall_d, schnitte_max, kulturdauer_max_d. Abruf 19.11.2026.
+
+### Suchweg
+
+- Bekannte Quellen erneut gelesen: VT SPES-466 (Text, Table 1), Proc. FSHS 114 (2001, Table 1 als Bild geprüft), PLOS ONE 2021 (Dill, Petersilie, Brunnenkresse), Salve Regina Growing Guide Dolores Chive (PDF), Horticultura Brasileira 2022, Fork Farms Herb Grow Guide 2025, CAFRE 2020.
+- Websuche: «chives hydroponic days after transplanting harvest regrowth», «parsley hydroponic floating first harvest days after transplanting», «Allium schoenoprasum floating NFT soilless cuts harvests», «chives hydroponic salinity priming». Neu gelesen: Agronomy 9(7):389 (2019) über mdpi-res.com, Chilean J. Agric. Res. 81(3) 2021 (Schnittlauch in NFT, Salz und H2O2), agrowtronics.com «Hydroponic Chives: The Grow Guide», Rise Gardens Blog «Best Herbs to Grow Indoors Hydroponically». Lettuce Grow (Purly Chives, Italian Parsley) lieferte HTTP 429, nicht gelesen. HortTechnology 34 (Saatdichte Petersilie) liefert ohne JavaScript keinen Text, nicht gelesen.
+
+### Neue Kandidaten (art.csv)
+
+| kandidat_id | Wert | Quelle | Klasse |
+|---|---|---|---|
+| `ak.petroselinum_crispum.dauerkultur_blatt.ernte_ab_d#1` | 21 Tage ab Umsetzen (Table 1: Harvest ab 49 d minus True Leaves 28 d; Umsetzen nach den echten Blättern laut Text) | vt-spes-466-2023 | B1 |
+| `ak.petroselinum_crispum.dauerkultur_blatt.ernte_ab_d#2` | 21 Tage ab Umsetzen (Parsley und Italian Parsley) | fshs-kraeuter-vertikal-2001 | A |
+| `ak.petroselinum_crispum.dauerkultur_blatt.ernte_ab_d#3` | 4 Wochen ab Umsetzen (Ernte bei Marktreife; Umrechnung D4 durch den Lead) | plos-one-dill-petersilie-2021 | A |
+| `ak.allium_schoenoprasum.dauerkultur_blatt.ernte_ab_d#2` | 37 Tage ab Umsetzen (Tag 52 minus Umsetzen Tag 15) | salve-regina-schnittlauch-2023 | B1 |
+| `ak.allium_schoenoprasum.schnitt.ernte_ab_d#1` | 37 Tage ab Umsetzen (gleicher Beleg) | salve-regina-schnittlauch-2023 | B1 |
+
+Hinweise für den Lead: VT Table 1 nennt keinen ausdrücklichen Bezugspunkt; die Spalten Germination, True Leaves, Harvest sind wie in Runde 11 (`kulturdauer_max_d#1`) als Tage ab Saat gelesen. Salve Regina: «First Harvest Day: Day 52 in the Tower 3 System» kann auch Tage im Turm bedeuten (dann 52); die Zeile «Transferred to Grow System on day 15» zählt ab Saat, deshalb 37 eingetragen. Der Wert steht bei beiden Kulturformen, weil die Quelle 5 bis 10 Samen je Würfel setzt und am Grund für Nachwuchs schneidet.
+
+### Offene Werte (Form passt nicht, kein Kandidat)
+
+| Art | Feld | Wortlaut | Quelle | grund |
+|---|---|---|---|---|
+| Schnittlauch | `ernte_ab_d` | «Wait about a month or a little less before you make the first cut. Three to four weeks is usually a safe bet.» | agrowtronics.com (C) | Bereich ohne typischen Wert |
+| Schnittlauch | `ernteintervall_d` | «Chives grow back to be harvested again within two to three weeks.» | agrowtronics.com (C) | Bereich ohne typischen Wert |
+| Kräuter allgemein | `ernte_ab_d` | «it will take about 6-8 weeks before they are ready for the first harvest» | Fork Farms Herb Grow Guide 2025 (B2) | Bereich ohne typischen Wert; nicht artspezifisch |
+| Petersilie | `ernte_ab_d` | «Slower to start (21–28 days to first harvest)» | Rise Gardens Blog 2026 (C, System nicht genannt) | Bereich ohne typischen Wert |
+| Petersilie | `ernteintervall_d` | «Slower herbs like parsley and thyme typically yield a harvest every 14–21 days» | Rise Gardens Blog 2026 | Bereich; Feld ist mit 7 Tagen freigegeben |
+
+### Verworfen oder ohne geeignete Zahl
+
+| Quelle | Grund |
+|---|---|
+| Horticultura Brasileira 2022, Messung 40 DAT | gleicher Grund wie `ak.allium_schoenoprasum.dauerkultur_blatt.ernte_ab_d#1` (Erntezeitpunkt aus der Literatur übernommen, nicht gemessen); nicht erneut eingereicht |
+| Agronomy 9(7):389 (2019), Petersilie «4 weeks after transplanting» in NFT | festes Versuchsende, ganze Pflanze abgeschnitten, ohne Bezug zur Erntereife |
+| Chilean J. Agric. Res. 81(3) 2021, Schnittlauch «after 90 d of cultivation» | Versuchsende für Analysen, keine Ernteangabe |
+| agrowtronics.com «Common chives can live for up to three years» | Lebensdauer der Pflanze allgemein, kein Kulturende in Hydroponik |
+| Fork Farms «continuously harvested up to four months before replanting» | Monate ab Umsetzen, Kräuter allgemein; Saat bis Umsetzen nur als Bereich (5-7 Tage plus «a day or two»), Bezug ab Saat nicht rechenbar |
+| VT SPES-466 «weekly over a course of six weeks» | keine wörtliche Zahl der Schnitte, nur Versuchsdauer |
+
+### Lückenliste nach Runde 12 (Klasse D)
+
+| Art | Kulturform | Feld | Stand und was Anbauquellen sagen |
+|---|---|---|---|
+| allium_schoenoprasum | dauerkultur_blatt | ernteintervall_d | nur Bereiche (agrowtronics «two to three weeks», Fork Farms «weekly, bi-weekly»); Freiland: Johnny's «3-4 times per year» ([Johnny's Chives](https://www.johnnyseeds.com/growers-library/herbs/chives/chives-key-growing-information.html)) |
+| allium_schoenoprasum | dauerkultur_blatt | schnitte_max | kein Wert; Simply Hydroponics nur «after many harvests» |
+| allium_schoenoprasum | schnitt | ernteintervall_d, schnitte_max, kulturdauer_max_d | kein Wert; CAFRE nur «best harvested young and replanted» (NFT) |
+| petroselinum_crispum | dauerkultur_blatt | schnitte_max, kulturdauer_max_d | kein Einzelwert; VT «until yields begin to diminish», FSHS Kulturende «mid-June» ohne Datum, frankiesgarten «über Monate» ([frankiesgarten Petersilie](https://frankiesgarten.de/anleitungen/gemueseanbau/petersilie-hydroponik/)) |
+
+## Runde 13 (#258)
+
+Gesucht: Petersilie `umsetzen_ab_d` (Vorrang), `umsetzen_bis_d`, `dauerkultur_blatt` `schnitte_max`, `kulturdauer_max_d`; Schnittlauch `umsetzen_ab_d` (Vorrang), `umsetzen_bis_d`, `dauerkultur_blatt` `ernte_ab_d` (Vorrang), `ernteintervall_d`, `schnitte_max`, `schnitt` `ernte_ab_d` (Vorrang), `ernteintervall_d`, `schnitte_max`, `kulturdauer_max_d`. Abruf 21.11.2026.
+
+### Suchweg
+
+- Bekannte Quellen erneut auf den Umsetztag gelesen: PLOS ONE 2021 (Dill, Petersilie, Brunnenkresse), Masterarbeit Iowa State 2025 (pH, Bitstream-PDF über die DSpace-Schnittstelle frei), Proc. FSHS 114 (Table 1), VT SPES-466, Simply Hydroponics «Hydroponic Chives», Horticultura Brasileira 2022, Salve Regina (Artikelseite frei, PDF HTTP 403), Gardyn-Hilfeseite Schnittlauch, Upstart University Petersilie, frankiesgarten Petersilie, CAFRE 2020.
+- Iowa State Digital Repository: Dissertation Licht-Kräuter 2019 (Kapitel 3 Basilikum, Dill, Petersilie in DFT).
+- Websuche: «chives Allium schoenoprasum hydroponic seedlings transplanted weeks after sowing», «chives hydroponic LED days after sowing transplanted», «Allium schoenoprasum hydroponic cuts regrowth harvest days after floating», «AeroGarden chives days to first harvest», «extension hydroponic culinary herbs weeks after sowing transplant deep flow». Neu gelesen: Hydroponics for the Home Grower (CRC Press 2015, Kapitel 22, Leseprobe der Kapitelseite), Projektbericht Lettland (laukutikls.lv, NFT im Container).
+
+### Kandidaten
+
+| kandidat_id | Wert | Quelle | Klasse |
+|---|---|---|---|
+| `art.petroselinum_crispum.umsetzen_ab_d#1` | 5 Wochen ab Saat (D4) | plos-one-dill-petersilie-2021 (Steinwolle 2.5 cm, Deep-Flow) | A |
+| `art.petroselinum_crispum.umsetzen_ab_d#2` | 3 Wochen ab Saat (D4) | isu-ph-kraeuter-2025 (Phenolschaum, DFT) | B1 |
+| `art.petroselinum_crispum.umsetzen_ab_d#3` | 3 Wochen ab Saat (D4) | isu-diss-kraeuter-licht-2019 (Phenolschaum, DFT; neu) | B1 |
+| `art.petroselinum_crispum.umsetzen_ab_d#4` | 47 Tage ab Saat | fshs-kraeuter-vertikal-2001 (Perlit-Türme) | A |
+| `art.petroselinum_crispum.umsetzen_ab_d#5` | 28 Tage ab Saat (Spalte True Leaves, Umsetzen nach den echten Blättern) | vt-spes-466-2023 | B1 |
+| `ak.petroselinum_crispum.dauerkultur_blatt.kulturdauer_max_d#2` | 1 Jahr ab Saat (Direktsaat; «easily last a year between crop changes») | crc-hydroponik-heimgaertner-2015 (Perlit-Türme; neu) | C |
+| `art.allium_schoenoprasum.umsetzen_ab_d#1` | 15 Tage («propagate … in approximately 15 days», Artikelseite) | salve-regina-schnittlauch-2023 (Steinwolle, Turm, innen) | B1 |
+| `art.allium_schoenoprasum.umsetzen_ab_d#2` | 4 Wochen ab Saat (D4) | simplyhydro-schnittlauch | C |
+| `art.allium_schoenoprasum.umsetzen_bis_d#1` | 6 Wochen ab Saat (D4) | simplyhydro-schnittlauch | C |
+| `art.allium_schoenoprasum.umsetzen_ab_d#3` | 25 Tage ab Saat (zugekaufte Setzlinge) | hortic-bras-schnittlauch-2022 (NFT) | A |
+
+Hinweise für den Lead: Petersilie streut von 3 Wochen (Phenolschaum in der Klimakammer) über 28 Tage (VT) und 5 Wochen (Steinwolle im Gewächshaus) bis 47 Tage (FSHS, Herbst in Florida). VT nennt ein Stadium mit Tageszahl in derselben Tabelle; nach der Auftragsregel «Stadium ist kein Kandidat» entscheidet der Lead, ob 28 Tage gelten. Schnittlauch: Salve Regina sagt «propagate … in approximately 15 days» ohne ausdrücklichen Bezug ab Saat; der Wortlaut «Transferred to Grow System on day 15» steht nur im PDF (siehe «Nur im Browser lesbar»). Hortic. Bras.: die Setzlinge stammen aus einer Gärtnerei (Substrat nicht genannt), nur der Tag ist belegt. CRC Petersilie: «easily last a year» ist eher eine Mindest- als eine Höchstangabe.
+
+### Offene Werte (Form passt nicht, kein Kandidat)
+
+| Art | Feld | Wortlaut | Quelle | grund |
+|---|---|---|---|---|
+| Schnittlauch | `ernte_ab_d` (Direktsaat, ab Saat) | «They take 75-85 days from sowing to first harvest.» (Pflanztürme mit Perlit, Direktsaat) | crc-hydroponik-heimgaertner-2015, Kapitel 22 (C) | Bereich ohne typischen Wert |
+| Schnittlauch | `kulturdauer_max_d` | «If properly maintained by frequent harvests, thereafter they will continue producing for almost a year.» | crc-hydroponik-heimgaertner-2015, Kapitel 22 (C) | keine bestimmte Zahl («almost a year»), Bezug erste Ernte |
+| Schnittlauch | `ernte_ab_d` (Direktsaat, ab Saat) | «Days to Maturity: 75-85» | gardyn-schnittlauch (B2, Indoor-Turm mit LED) | Bereich ohne typischen Wert |
+| Petersilie | `umsetzen_ab_d` | «Seedlings are ready to transplant a few weeks later when they display their true leaves» | upstart-petersilie-2016 (B2) | keine Zahl |
+
+### Verworfen oder ohne geeignete Zahl
+
+| Quelle | Grund |
+|---|---|
+| Projektbericht Lettland «The Impact of Luminaire Type and Light Intensity on Herb Yield and Uniformity in Hydroponic Systems» (laukutikls.lv, Projekt 22-00-A01612-000018; alle Kräuter «45 days in nursery shelves before transplanting», NFT im Container mit LED) | keine Organisation oder Autorenschaft erkennbar; Einleitung mit nicht prüfbaren Literaturangaben (Verdacht auf KI-Text); Anzucht in «jiffy (25mm)» ohne Angabe des Materials; einheitlicher Tag für alle Arten ist Versuchsplan |
+| Frontiers in Nutrition 2022 (Allium tuberosum, «2-month-old seedlings», DFT mit LED) | Knoblauch-Schnittlauch, andere Art (Regel 4) |
+| frankiesgarten Petersilie | Anzuchtkarte nur mit leeren Feldern («In den Tower nach: Tagen»), Keimung «1 bis 4 Wochen» |
+| CAFRE 2020 (5.9 Chives, Anhang 2) | keine Tage, nur Balkendiagramm |
+| AeroGarden-Blog «What to expect from AeroGarden plants» | HTTP 403; nach Suchauszug nur Kräuter allgemein (Keimung 5-15 Tage, Ernte im Mittel 21 Tage), nicht artspezifisch, daher nicht unter «Nur im Browser» |
+| Johnny's Chives, PlantVillage (Penn State) | Freiland bzw. Erde; «about 4 weeks old» (PlantVillage) nur als Hinweis |
+
+### Lückenliste Runde 13 (Klasse D)
+
+| Art | Kulturform | Feld | Stand und was Anbauquellen sagen |
+|---|---|---|---|
+| petroselinum_crispum | Art | `umsetzen_bis_d` | keine hydroponische Quelle nennt einen spätesten Tag; Upstart nur «a few weeks later» ([Upstart Parsley](https://university.upstartfarmers.com/blog/growing-hydroponic-parsley)) |
+| petroselinum_crispum | `dauerkultur_blatt` | `schnitte_max` | keine Zahl; CRC «Harvest them regularly every few weeks», VT «until yields begin to diminish» |
+| allium_schoenoprasum | `dauerkultur_blatt`, `schnitt` | `ernte_ab_d` | nur Bereiche (CRC und Gardyn 75-85 Tage ab Saat, agrowtronics «Three to four weeks») oder nicht prüfbar (Salve Regina «Day 52», PDF gesperrt) |
+| allium_schoenoprasum | `dauerkultur_blatt`, `schnitt` | `ernteintervall_d` | nur Bereiche (agrowtronics «two to three weeks»); Simply Hydroponics «every three to eight weeks» gilt für Allium tuberosum; Freiland: Johnny's «3-4 times per year» ([Johnny's Chives](https://www.johnnyseeds.com/growers-library/herbs/chives/chives-key-growing-information.html)) |
+| allium_schoenoprasum | `dauerkultur_blatt`, `schnitt` | `schnitte_max` | keine Zahl; Simply Hydroponics «after many harvests» |
+| allium_schoenoprasum | `schnitt` | `kulturdauer_max_d` | keine Zahl für Schnittkultur; CRC «continue producing for almost a year» (Dauerkultur, ohne bestimmte Zahl) |
+
+### Nur im Browser lesbar
+
+| Artikelseite | erwartete Fundstelle | gesuchtes Feld |
+|---|---|---|
+| Salve Regina Hydroponic Growing Guide: Dolores Chive, https://digitalcommons.salve.edu/hydroponic_center/4 (Artikelseite frei, PDF über «Download» liefert HTTP 403) | PDF S. 2, Abschnitt «Propagation»: «Transferred to Grow System on day 15», «First Harvest Day: Day 52 in the Tower 3 System», allenfalls Folgeernten | `art.allium_schoenoprasum.umsetzen_ab_d` (Bestätigung), `ak.allium_schoenoprasum.dauerkultur_blatt.ernte_ab_d`, `ak.allium_schoenoprasum.schnitt.ernte_ab_d`, `ernteintervall_d` |
+| Agronomy 9(7):389 (2019), https://www.mdpi.com/2073-4395/9/7/389 (MDPI, HTTP 403) | Materials and Methods, Pflanzenmaterial: Saat und Umsetzen in NFT (Tage oder Wochen nach Saat) für Petersilie | `art.petroselinum_crispum.umsetzen_ab_d` |
+| HortTechnology 34 (2024), Saatdichte Petersilie, https://doi.org/10.21273/HORTTECH05381-23 (ASHS, Seite lädt nur mit JavaScript) | Materials and Methods: Saat- und Umsetztermin sowie Ernten für Petersilie (Ebbe-Flut) | `art.petroselinum_crispum.umsetzen_ab_d`, `ak.petroselinum_crispum.dauerkultur_blatt.schnitte_max` |
+
+### Nachtrag Runde 13: Lesekopien des Koordinators
+
+| kandidat_id | Wert | Quelle | Klasse |
+|---|---|---|---|
+| `art.petroselinum_crispum.umsetzen_ab_d#6` | 3 Wochen ab Saat (D4) | agronomy-ec-kraeuter-2019 (Phenolschaum, NFT; Lesekopie) | A |
+| `art.petroselinum_crispum.umsetzen_ab_d#7` | 21 Tage ab Saat | horttech-34-saatdichte-petersilie-2024 (Phenolschaum 2.2 cm, DWC; Lesekopie) | A |
+
+Nicht erfasst: Ernte «Four weeks after transplanting» (Agronomy) und Standzeit «28 (parsley) days» im DWC (HortTechnology) sind feste Versuchsenden mit Abschneiden der ganzen Pflanze, keine Zahl für `schnitte_max` oder `kulturdauer_max_d`. Salve Regina bleibt ohne Kandidat (PDF auch im Browser nicht lesbar).

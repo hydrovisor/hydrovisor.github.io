@@ -240,3 +240,112 @@ Hinweis: Frontiers 2021 nennt die Schnitte bei 18 und 32 DAT, aber kein Interval
 | Basilikum | `dauerkultur_blatt` | `schnitte_max` | keine Quelle nennt eine Höchstzahl |
 | Basilikum | `dauerkultur_blatt` | `kulturdauer_max_d` | keine hydroponische Zahl; W 844-B: «grown and harvested for many weeks or months» (https://uthort.tennessee.edu/wp-content/uploads/sites/228/2023/11/W844-B.pdf) |
 | Basilikum | `schnitt` | `schnitte_max`, `kulturdauer_max_d` | nur Versuchsplan Frontiers 2021 (2 Schnitte, 47 Tage); weitere Quellen fehlen |
+
+## Runde 12 (#250)
+
+Gesucht: `ernte_ab_d` (Vorrang), `schnitte_max`, `kulturdauer_max_d` für `ocimum_basilicum` `dauerkultur_blatt`; `schnitte_max`, `kulturdauer_max_d` für `schnitt`. Abruf 19.11.2026.
+
+### Suchweg
+
+- Bekannte Quellen erneut gelesen: Frontiers 2021 (Floating Raft, Schnitte 18 und 32 DAT), Proc. FSHS 114 (2001, Table 1 als Bild geprüft), Adv. Hort. Sci. 27 (2013), CAFRE 2020 (Anhang 2 als Bild), Plants 12:486 (PMC), PLOS ONE 2022 (Sämlingsumgebung), Frontiers 2022 (Hydrolysat), Fork Farms Herb Grow Guide 2025.
+- Websuche: «basil hydroponic multiple harvests days after transplanting NFT deep water culture», «hydroponic basil how long does a plant produce before replacing months». Neu gelesen: Agronomy 10(6):830 (2020) über mdpi-res.com, Masterarbeit University of Arkansas 2020 (NFT, DFT, Ebbe-Flut), AeroGarden-FAQ (Scotts Miracle-Gro), Rise Gardens Blog «Best Herbs to Grow Indoors Hydroponically» und «Best Hydroponic Seed Varieties for a Fast First Harvest».
+
+### Neue Kandidaten (art.csv)
+
+| kandidat_id | Wert | Quelle | Klasse |
+|---|---|---|---|
+| `ak.ocimum_basilicum.dauerkultur_blatt.ernte_ab_d#1` | 18 Tage ab Umsetzen (erster Schnitt CT1, Vorblüte) | frontiers-basilikum-raft-sorten-2021 | A |
+| `ak.ocimum_basilicum.dauerkultur_blatt.ernte_ab_d#2` | 13 Tage ab Umsetzen (Table 1; der Text nennt 15 bis 28 für alle Kräuter) | fshs-kraeuter-vertikal-2001 (neu in dieser Gruppe) | A |
+| `ak.ocimum_basilicum.dauerkultur_blatt.ernte_ab_d#3` | 50 Tage ab Umsetzen (gleicher Beleg wie das freigegebene `schnitt.ernte_ab_d#1`) | adv-hort-sci-27-basilikum-nft-2013 | A |
+
+Hinweis für den Lead: Die Werte streuen stark (13, 18, 50). FSHS (Sommer bis Frühling, wöchentliche Ernte ab 6-8 in Stiellänge) und Frontiers (Schnitt in der Vorblüte) ernten früh; Adv. Hort. Sci. ist Herbst-Winter-Anbau in Argentinien.
+
+### Offene Werte (Form passt nicht, kein Kandidat)
+
+| Feld | Wortlaut | Quelle | grund |
+|---|---|---|---|
+| `ernte_ab_d` | «it will take about 6-8 weeks before they are ready for the first harvest» (alle Kräuter, ab Umsetzen, Steinwolle im Turm) | Fork Farms Herb Grow Guide 2025 (B2) | Bereich ohne typischen Wert; nicht artspezifisch |
+| `ernte_ab_d` | «Basil — 28 to 35 days» bzw. «basil can be harvest-ready in as few as 21 days from transplant» | Rise Gardens Blog 2026 (C, System nicht genannt) | Bereich ohne typischen Wert bzw. Mindestwert |
+| `kulturdauer_max_d` | «Herbs typically grow for about 3-4 months and can last 6 months or more.» «Some herbs, such as basil, can last longer than that» | AeroGarden-FAQ, Scotts Miracle-Gro (B2) | Bereich ohne typischen Wert; Zahl gilt für Kräuter allgemein, nicht für Basilikum |
+
+### Verworfen oder ohne geeignete Zahl
+
+| Quelle | Grund |
+|---|---|
+| Agronomy 10(6):830 (2020), Schnitte 47 und 75 Tage nach Umsetzen | Töpfe mit Torf und Perlit 2:1, kein inertes Substrat nach 9.1 (wie Frontiers 2022 in Runde 11) |
+| Plants 12:486 (2023), Ernte 23 DAT | eine einzige, zerstörende Ernte bei 158 Pflanzen je m² (Versuchsende, eher `schnitt`; dort ist `ernte_ab_d` freigegeben) |
+| PLOS ONE 2022 (Sämlingsumgebung), «three weeks after transplant (harvest)» | festes Versuchsende ohne Bezug zur Erntereife |
+| University of Arkansas 2020 (Masterarbeit), Ernte 21 Tage nach Umsetzen bzw. 35 Tage nach Saat | festes Versuchsende zur Datenerhebung, keine Aussage zur ersten Ernte einer Kultur |
+| CAFRE 2020, Anhang 2 «Approximate crop time (weeks)» | Balkendiagramm ohne Zahl im Text (Basil: Produktionsbereich etwa Woche 6 bis 11, Ernte Woche 12); nicht wörtlich belegbar |
+| Adv. Hort. Sci. 27 (2013), zwei Ernten bis 92 DAT | nur Versuchsplan, keine Aussage zur Höchstzahl der Schnitte oder zum Kulturende (gleicher Grund wie Frontiers 2021 in Runde 11) |
+
+### Lückenliste nach Runde 12 (Klasse D)
+
+| Art | Kulturform | Feld | Stand und was Anbauquellen sagen |
+|---|---|---|---|
+| Basilikum | `dauerkultur_blatt` | `schnitte_max` | keine Quelle nennt eine Höchstzahl; Anbauquellen nennen nur fortlaufendes Schneiden bis zur Blüte oder Erschöpfung |
+| Basilikum | `dauerkultur_blatt` | `kulturdauer_max_d` | keine artspezifische Hydroponik-Zahl; AeroGarden nur Kräuter allgemein «3-4 months … 6 months or more» (https://scottsmiraclegro.com/support/help-center/aerogardenfaqs.html); W 844-B «many weeks or months» |
+| Basilikum | `schnitt` | `schnitte_max`, `kulturdauer_max_d` | nur Versuchspläne (Frontiers 2021: 2 Schnitte; Adv. Hort. Sci. 2013: 2 Ernten); keine Empfehlung zur Höchstzahl oder zum Kulturende |
+
+## Runde 13 (#258)
+
+Gesucht: `art.ocimum_basilicum.umsetzen_ab_d` (Vorrang), `umsetzen_bis_d`; `schnitte_max`, `kulturdauer_max_d` für `dauerkultur_blatt` und `schnitt`. Abruf 21.11.2026.
+
+### Suchweg
+
+- Lesekopie des Koordinators `adv-hort-sci-27-basilikum-nft-2013` gelesen: kein neuer Kandidat. Das Umsetzen steht nur als Stadium («two to three pairs of unfolded leaves»), das Ende (92 DAT, zweite Ernte) ist ein reines Versuchsende ohne Aussage zur Kultur; der bestehende Kandidat `dauerkultur_blatt.ernte_ab_d#3` (50 DAT) ist durch die Lesekopie wörtlich belegt («sample 5 (first harvest and 50 days after transplant)»).
+- Bekannte Quellen erneut auf den Umsetztag gelesen: Frontiers 2021 (Floating Raft), Frontiers 2022 (Hydrolysat), PLOS ONE 2022 (Sämlingsumgebung), Plants 12:486 (PMC), Proc. FSHS 114 (Table 1), OSU Knowledge Bank, Johnny's Basil Guide (Seite und Broschüre), CAFRE 2020, Rise Gardens Blog 2025, frankiesgarten Basilikum.
+- Iowa State Digital Repository über die DSpace-Schnittstelle (`/server/api/pid/find`, `/bundles`, Bitstream-PDF frei): Masterarbeit pH-Kräuter 2025, Dissertation Licht-Kräuter 2019, Masterarbeit Basilikum-Systeme 2015 (Grundlage von HortTechnology 25(5):645).
+- Websuche: «hydroponic basil seedlings transplanted days after sowing deep water culture stone wool», «e-GRO basil transplant», «Grodan herbs basil propagation», «hydroponic basil replace plants after weeks harvest cycle». Daraus Hydroponics for the Home Grower (CRC Press 2015, Kapitel 22 und 24; Text als Leseprobe in der Kapitelseite von Taylor & Francis), Acta Agraria Debreceniensis 2023 (über das Repositorium dea.lib.unideb.hu frei), Folia Horticulturae 36(4) 2024, ACES (Alabama) Transplant Production, Arizona CEAC Kapitel 6, Arizona Propagation Workshop 2026.
+
+### Kandidaten
+
+| kandidat_id | Wert | Quelle | Klasse |
+|---|---|---|---|
+| `art.ocimum_basilicum.umsetzen_ab_d#1` | 15 Tage ab Saat | frontiers-basilikum-raft-sorten-2021 (Floating Raft) | A |
+| `art.ocimum_basilicum.umsetzen_ab_d#2` | 18 Tage ab Saat | frontiers-2022-basilikum-hydrolysat-raft (Floating Raft) | A |
+| `art.ocimum_basilicum.umsetzen_ab_d#3` | 2 Wochen ab Saat (D4) | plos-one-basilikum-saemlingsumgebung-2022 (Steinwolle 2.5 cm, LED-Klimakammer, Deep-Flow) | A |
+| `art.ocimum_basilicum.umsetzen_ab_d#4` | 2 Wochen ab Saat (D4) | isu-ph-kraeuter-2025 (Phenolschaum, DFT; neu in dieser Gruppe) | B1 |
+| `art.ocimum_basilicum.umsetzen_ab_d#5` | 14 Tage ab Saat | isu-diss-kraeuter-licht-2019 (Phenolschaum, DFT; neu) | B1 |
+| `art.ocimum_basilicum.umsetzen_ab_d#6` | 2 Wochen ab Saat (D4) | isu-ms-basilikum-systeme-2015 (Phenolschaum, NFT und DFT; neu) | B1 |
+| `art.ocimum_basilicum.umsetzen_ab_d#7` | 36 Tage ab Saat | fshs-kraeuter-vertikal-2001 (Perlit-Türme) | A |
+| `art.ocimum_basilicum.umsetzen_ab_d#8` | 3 Wochen ab Saat (D4) | crc-hydroponik-heimgaertner-2015 (1-Zoll-Steinwolle, Raft/NFT; neu) | C |
+| `ak.ocimum_basilicum.dauerkultur_blatt.kulturdauer_max_d#1` | 3 Monate, Bezug nicht genannt | crc-hydroponik-heimgaertner-2015 | C |
+| `ak.ocimum_basilicum.schnitt.kulturdauer_max_d#2` | 3 Monate, Bezug nicht genannt | crc-hydroponik-heimgaertner-2015 | C |
+
+Hinweise für den Lead: Die Umsetztage liegen bei 14 bis 18 Tagen (fünf Quellen mit Phenolschaum, Steinwolle oder Floating Raft, «14 d», «15», «18», dreimal «two weeks») und 21 Tagen (CRC); FSHS 2001 mit 36 Tagen ist eine Herbst-Pflanzung in Florida mit Perlit-Türmen. Keine Quelle nennt einen spätesten Tag (`umsetzen_bis_d`). Die CRC-Stellen zum Kulturende nennen keinen Bezug; der Satz «Sow seeds 3 weeks prior to the transplanting date at which you remove the old plants» legt nahe, dass die 3 Monate die Standzeit im System meinen. Die Quelle nennt keine Zahl der Schnitte für Basilikum (die Angabe «up to three, harvests» im selben Kapitel betrifft Salatmischungen, «After three harvests, about 3 months» in Kapitel 24 betrifft Rucola).
+
+### Offene Werte (Form passt nicht, kein Kandidat)
+
+| Feld | Wortlaut | Quelle | grund |
+|---|---|---|---|
+| `umsetzen_ab_d` | «Move seedlings to your hydroponic system when they develop 2-3 sets of true leaves, typically 7-10 days after germination» | Rise Gardens Blog 2025 (B2) | Bezug Keimung, Keimdauer derselben Quelle nur als Bereich «within 3-10 days» |
+| `umsetzen_ab_d`, `umsetzen_bis_d` | «into a plug tray and after 2–3 weeks of growth, transplanted into the retail container to finish» | Johnny's Hydroponic & Container Basil Guide (C) | Umsetzen in den Verkaufstopf (Topfkultur), nicht in ein Hydroponiksystem |
+
+### Verworfen oder ohne geeignete Zahl
+
+| Quelle | Grund |
+|---|---|
+| Plants 12:486 (2023, PMC) | Umsetzen nur als Stadium («2–3 true leaves»), kein Tag ab Saat |
+| OSU Knowledge Bank (pH in DWC) | Umsetzen nur als Stadium («When cotyledons were fully expanded») |
+| HortTechnology 30 (2020, University of Arkansas, NFT; Abstract unter https://scholarworks.uark.edu/hortpub/41) | 14, 21 und 28 Tage ab Saat sind Versuchsstufen, keine Empfehlung; Ergebnis: späteres Umsetzen senkt den Ertrag (spricht gegen einen späten `umsetzen_bis_d`, ohne Zahl) |
+| Hydroponics for the Home Grower, Kapitel 24 (Basilikum «follow the preceding procedures for arugula») | Umsetztag 12-18 bzw. 14-18 Tage gilt wörtlich für Rucola; Gleiche-Art-Regel |
+| Acta Agraria Debreceniensis 2023(2):91-98 (Aquaponik, Folientunnel) | Saat 4. Februar, Pflanzung 1. April nur als Datum; Ersatz alle 6 oder 12 Wochen sind Versuchsstufen; Schluss der Quelle: ein dauernd geschnittener Bestand braucht keinen Ersatz (keine Höchstdauer) |
+| Folia Horticulturae 36(4) 2024 (NGS, erste Ernte 48 Tage nach Umsetzen, zweite 41 Tage danach) | Jungpflanzen aus Gärtnerei, Umsetzen nur als Stadium; zwei Ernten sind Versuchsplan |
+| ACES Alabama «Transplant Production for Hydroponic Greenhouse Systems» | Umsetzen «when they are 2 weeks old» gilt für Salat, Basilikum nicht genannt |
+| Arizona CEAC Kapitel 6, Arizona Propagation Workshop 2026, CAFRE 2020 Anhang 2 | keine Basilikum-Tage (CAFRE nur Balkendiagramm) |
+| Rise Gardens Produktseite Genovese | HTTP 429 |
+
+### Lückenliste Runde 13 (Klasse D)
+
+| Art | Kulturform | Feld | Stand und was Anbauquellen sagen |
+|---|---|---|---|
+| Basilikum | Art | `umsetzen_bis_d` | keine hydroponische Quelle nennt einen spätesten Umsetztag; Johnny's nennt für Topfkultur «after 2–3 weeks of growth» ([Johnny's Basil Guide](https://www.johnnyseeds.com/growers-library/herbs/basil/hydroponic-container-basil-guide.html)) |
+| Basilikum | `dauerkultur_blatt` | `schnitte_max` | keine Quelle nennt eine Höchstzahl; CRC nur fortlaufender Schnitt «every few weeks» bis zum Ersatz nach etwa 3 Monaten |
+| Basilikum | `schnitt` | `schnitte_max` | wie oben; Versuchspläne mit 2 Schnitten (Frontiers 2021, Adv. Hort. Sci. 2013, Folia Hort. 2024) sind keine Höchstzahl |
+
+### Nur im Browser lesbar
+
+| Artikelseite | erwartete Fundstelle | gesuchtes Feld |
+|---|---|---|
+| HortTechnology 25(5):645 (2015), https://journals.ashs.org/view/journals/horttech/25/5/article-p645.xml (Bot-Prüfung) | Materials and Methods: «transplanted seedlings 2 weeks after sowing into either NFT or DFT» (laut Pressetext phys.org); gleicher Inhalt wie die frei lesbare Masterarbeit `isu-ms-basilikum-systeme-2015`, daher nur nötig, wenn der Lead die begutachtete Fassung will | `art.ocimum_basilicum.umsetzen_ab_d` |

@@ -1,5 +1,5 @@
 // Aufgaben-Rechnung, Stufe 2 «Eigene Aufgabe» (Plan 249; Konzept R5.2 letzte Zeile, R5.3, U9, U11, 8.1 Regel 2,
-// Entscheid 0029): eigene wiederkehrende Aufgaben je Anlage mit Name und Intervall. Fälligkeit = jüngste Erledigung
+// Entscheid 0030): eigene wiederkehrende Aufgaben je Anlage mit Name und Intervall. Fälligkeit = jüngste Erledigung
 // (Ereignis aufgabe_erledigt) oder jüngstes «Überspringen» über die Kette ersetzt_id + Intervall, ohne beides der
 // Erfassungstag der ersten Zeile (A1). Nichts wird als Zustand gespeichert; eine Änderung ist Storno plus neue Zeile mit
 // ersetzt_id (A9). Rein; importiert aus den übrigen Aufgaben-Modulen nur Typen (wie aufgaben-stromausfall.ts).

@@ -457,3 +457,88 @@ Gesucht: `ernteintervall_d`, `schnitte_max`, `kulturdauer_max_d` für `solanum_l
 | Tomate | `schnitte_max` | keine Quelle nennt eine Zahl der Pflückgänge (Auftrag: nur dann); Feld leer lassen |
 | Paprika | `schnitte_max` | keine Quelle nennt eine Zahl der Pflückgänge; Feld leer lassen |
 | Paprika | `kulturdauer_max_d` | keine hydroponische Zahl in Tagen oder Wochen. Alberta (Steinwolle/Kokos, B1) nennt Saat «around November 15» und «December is usually the month when crops are pulled» (Jahreskultur, nur Monate; https://www.alberta.ca/production-of-sweet-bell-peppers); La Molina Boletín 46 nennt Saat Mitte Oktober, Ernte bis November (https://www.lamolina.edu.pe/hidroponia/Boletin46/PIMIENTO_HIDROPONICO_RESH.pdf). Nächstliegende Analogie: Jahreskultur wie bei der Tomate (364); Entscheid durch den Lead |
+
+## Runde 12 (#250)
+
+Gesucht: Tomate `ernteintervall_d`, `schnitte_max`; Chili `schnitte_max`, `kulturdauer_max_d` (je `dauerkultur_frucht`). Abruf 19.11.2026. Kein neuer Kandidat.
+
+### Suchweg
+
+- «hydroponic tomato rockwool harvested twice a week / once a week», «tomato soilless a total of harvests», «pepper hydroponic last harvest days after transplanting number of harvests», «greenhouse sweet pepper rockwool end of crop weeks after sowing».
+- CIGR NFT 2025 und Chapingo 2012 (Tomate) erneut gelesen: keine Erntefrequenz, keine Zahl der Pflückgänge.
+
+### Offene Werte (Form passt nicht, kein Kandidat)
+
+| Art, Feld | Wortlaut | Quelle | grund |
+|---|---|---|---|
+| Tomate, `ernteintervall_d` | «Fruits were harvested two times per week.» (Abschnitt «Harvest») | Frontiers Plant Sci 2021, «Organic Waste-Based Fertilizer in Hydroponics Increases Tomato Fruit Size but Reduces Fruit Quality», https://www.frontiersin.org/journals/plant-science/articles/10.3389/fpls.2021.680030/full (Steinwollwürfel, Blähton, Niederdruck-Hydroponik) | Häufigkeit je Woche, kein Intervall in ganzen Tagen |
+| Tomate, `ernteintervall_d` | «Tomatoes are harvested 2-4 times weekly, as they start to ripen.» | U.S. Greenhouse/Hothouse Hydroponic Tomato Timeline (IPM Centers), https://ipmdata.ipmcenters.org/documents/timelines/USgreenhousetomato.PDF | Häufigkeit als Bereich |
+
+### Verworfen
+
+| Quelle | Grund |
+|---|---|
+| Acta Hort. 819 (2009), Tomate auf wiederverwendeten Steinwollmatten («36 harvests» in 171 Tagen laut Suchauszug) | Volltext nur auf ResearchGate bzw. CroRIS mit Warteseite, nicht automatisch abrufbar |
+| Horticulturae 8(3) 272 (Hanffaser und Steinwolle, wöchentliche Ernte über 24 Wochen) | MDPI 403, Kopie bei d-nb.info mit TLS-Fehler nicht abrufbar |
+| Horticulturae 12(6) 655 bzw. Preprint (Capsicum, Hydroponik im Low-Tech-Gewächshaus, sechs Ernten) | Zahl der Ernten im Versuchszeitraum, keine Aussage zur Kultur (Versuchsende) |
+| ScienceDirect «Biquinho»-Paprika (Ende 163 Tage ab Saat) | Versuchsende, Volltext gesperrt |
+| truleaf.org, herbals.co.nz, lanitexhydrogarden.com.au, pepperseeds.ca | Praxisblogs ohne Beleg bzw. Saatgut-Händler |
+
+### Lückenliste Runde 12 (Klasse D)
+
+| Art | Feld | Stand und was Anbauquellen sagen |
+|---|---|---|
+| Tomate | `ernteintervall_d` | nur Häufigkeiten je Woche («2-3 times / week» UA/CEAC, «two times per week» Frontiers 2021, «2-4 times weekly» IPM Centers); Wahl durch den Lead |
+| Tomate | `schnitte_max` | keine Zahl der Pflückgänge je Pflanze; IPM Centers nennt «harvest 20-35 weeks from one plant» (https://ipmdata.ipmcenters.org/documents/timelines/USgreenhousetomato.PDF) |
+| Chili | `schnitte_max` | keine Quelle nennt eine Zahl der Pflückgänge je Pflanze |
+| Chili | `kulturdauer_max_d` | keine hydroponische Zahl in Tagen oder Wochen ab Saat; Alberta (Steinwolle) nennt «approximately 20 weeks (4 months) from seeding the crop to first pick» und «The greenhouses are empty for only 2 or 3 weeks during the year» (Jahreskultur, https://www.alberta.ca/production-of-sweet-bell-peppers) |
+
+## Runde 13 (#258)
+
+Gesucht: Tomate `ernteintervall_d`, `schnitte_max`; Chili `schnitte_max`, `kulturdauer_max_d` (je `dauerkultur_frucht`). Abruf 21.11.2026.
+
+### Suchweg
+
+- «hydroponic tomato "harvested every" days rockwool NFT», «tomato soilless "were harvested at" "day intervals" hydroponic greenhouse», «hydroponic tomato "a total of" harvests pickings perlite NFT», «dwarf tomato vertical farm LED hydroponic harvested every days».
+- Chili: «Capsicum annuum hydroponic harvests days after sowing crop terminated», «chili pepper indoor vertical farm LED hydroponic harvested weekly final harvest», «greenhouse hydroponic hot pepper perlite weeks after seeding crop removed», frankiesgarten.de Chili (nur Erd-Ratgeber gefunden).
+- Gelesen: JKSUS 2023 (Perlit, Volltext frei), IntechOpen 2023 «Hydroponic Production Systems in Greenhouses», VTechWorks-Masterarbeit 2023 «Dwarf Tomatoes in an Indoor Vertical System» (NFT, Steinwollwürfel 25 mm, LED), JABFQ 2015 (Steinwollersatz), Horticultura Brasileira 2014 (Perlit), Virginia Tech SPES-466.
+
+### Kandidaten
+
+| kandidat_id | Wert | Quelle | Klasse |
+|---|---|---|---|
+| `ak.solanum_lycopersicum.dauerkultur_frucht.ernteintervall_d#1` | 7 Tage («Every-seven days … were harvested», Abschnitt 2.2) | JKSUS 35(2) 102515, Perlit-Hydroponik im Glasgewächshaus | A |
+
+### Offene Werte (Form passt nicht, kein Kandidat)
+
+| Art, Feld | Wortlaut | Quelle | grund |
+|---|---|---|---|
+| Tomate, `ernteintervall_d` | «Brix measurements were recorded at the time of each harvest, which took place at two- and three-day intervals» (S. 6, «Data Collection»); S. 5 «harvested twice weekly until the study concluded at 92 days after transplant (DAT)» | VTechWorks, Masterarbeit Virginia Tech 2023 «Dwarf Tomatoes in an Indoor Vertical System», https://vtechworks.lib.vt.edu/items/b4b2537d-6ece-481a-a18e-57fcc4cea71f (NFT indoor mit LED, Anzucht in Grodan-Würfeln 25 mm; entspricht der Anlage) | Bereich 2 bis 3 Tage ohne typischen Wert; Wahl durch den Lead |
+| Tomate, `ernteintervall_d` | «every 3 to 5 days in tomatoes» (Abschnitt 2.2.3 «Plant care measures and harvest»; dieselbe Stelle: «every 10 to 14 days in peppers») | IntechOpen 2023, «Hydroponic Production Systems in Greenhouses», DOI 10.5772/intechopen.113056, https://www.intechopen.com/chapters/88713 | Bereich ohne typischen Wert |
+| Tomate, `ernteintervall_d` | «fruits were collected from 48 plants per treatment 3 times per week» (Material and methods) | Horticultura Brasileira 32 (2014) 385-390, Perlit, https://www.scielo.br/j/hb/a/9xHsqcHqdhpVRfDVgdRJfnr/?lang=en | Häufigkeit je Woche, kein Intervall in Tagen |
+
+### Verworfen
+
+| Quelle | Grund |
+|---|---|
+| JABFQ 88 (2015) 68-77, Steinwollersatz für Tomate | nur «harvested, counted and weighed weekly», keine Tageszahl, keine Zahl der Ernten |
+| Horticultura Brasileira 2014 (Perlit) | Ernte 19.5. bis 20.7. «3 times per week», keine Zahl der Pflückgänge; Kulturende Woche 21 nach Pflanzung (Tomate `kulturdauer_max_d` ist schon freigegeben) |
+| Virginia Tech SPES-466 | Versuch wegen COVID-19 abgebrochen, keine Erntefrequenz und keine Zahl der Ernten |
+| Frontiers Plant Sci 2023 (Capsicum, Steinwolle, 10.3389/fpls.2023.1280314) | Ernte nach Tagen ab Bestäubung für Probenahme, keine Kulturangabe |
+| Bio-Stimulanz-Studie Capsicum (ResearchGate, «seven harvests») | ResearchGate, Versuchszeitraum ohne Aussage zur Kultur |
+| frankiesgarten.de Chili, familie.de, utopia.de, gartenjournal.net (Überwintern) | keine Hydroponik-Quelle bzw. Topf mit Erde |
+
+### Lückenliste Runde 13 (Klasse D)
+
+| Art | Feld | Stand und was Anbauquellen sagen |
+|---|---|---|
+| Tomate | `schnitte_max` | keine hydroponische Quelle nennt eine Zahl der Pflückgänge je Pflanze bis zum Ersatz; Studien nennen nur Häufigkeiten (2 bis 3 je Woche) und Erntezeiträume (Horticultura Brasileira 2014: 19.5. bis 20.7., https://www.scielo.br/j/hb/a/9xHsqcHqdhpVRfDVgdRJfnr/?lang=en) |
+| Chili | `schnitte_max` | keine frei lesbare hydroponische Quelle; Container-Farm-Studie (DWC, LED) laut Suchauszug «harvested weekly over four harvest days» am Kulturende, Volltext gesperrt (siehe unten) |
+| Chili | `kulturdauer_max_d` | keine frei lesbare hydroponische Zahl ab Saat; Alberta (Steinwolle) nur Monate bzw. Wochen bis zur ersten Ernte (https://www.alberta.ca/production-of-sweet-bell-peppers); Container-Farm-Studie gesperrt (siehe unten) |
+
+### Nur im Browser lesbar
+
+| Rang | Artikelseite | erwartete Fundstelle | Feld |
+|---|---|---|---|
+| 1 | «Experimental life cycle assessment of container-based vertical farming of chili pepper under two light intensities and three energy supply scenarios», Resources, Environment and Sustainability 2026, 100342, DOI 10.1016/j.resenv.2026.100342, https://www.sciencedirect.com/science/article/pii/S2666916126000563 (403; TUM-Repositorium mediatum mit Anubis-Sperre) | Methoden, Abschnitt Anbau und Ernte: Saat, Umsetzen, Dauer der Kultur in Tagen bzw. Wochen, Satz «harvested weekly over four harvest days, corresponding to the final four weeks of the cultivation period» (DWC, LED, Sorte 'Sweet Heat') | Chili `schnitte_max`, `kulturdauer_max_d` (auch `ernteintervall_d`) |
+| 2 | «Capsicum annuum in vertical indoor farming: yield and capsaicinoid responses to reduced light and additional UV-A», Scientia Horticulturae 350 (2025) 114364, DOI 10.1016/j.scienta.2025.114364, https://www.sciencedirect.com/science/article/pii/S0304423825004133 | Material und Methoden: Kulturdauer ab Saat, Erntetermine bzw. Zahl der Ernten | Chili `kulturdauer_max_d`, `schnitte_max` |

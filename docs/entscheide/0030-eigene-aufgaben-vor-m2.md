@@ -1,4 +1,4 @@
-# 0029 Eigene wiederkehrende Aufgaben vor M2
+# 0030 Eigene wiederkehrende Aufgaben vor M2
 
 Datum: 18.11.2026 · Entscheid von Tim im Chat · ändert Entscheid 0014 (Entscheid 2, letzter Satz) · Paket Pool P-02,
 Issue #249
