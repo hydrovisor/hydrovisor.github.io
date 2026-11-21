@@ -22,7 +22,7 @@
 //   «Tüte erfassen»; er öffnet #/saeen, Schritt 1 von 3, dort ist «Saatgut» aktiv.
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Locator, type Page } from '@playwright/test';
-import { EISSALAT, ernteTeile, ERNTE_JETZT, SATZ } from '../fixtures/ernte.ts';
+import { EISSALAT, ernteTeile, ERNTE_JETZT, SATZ, SATZ_VOR } from '../fixtures/ernte.ts';
 import type { Teile } from '../fixtures/regal.ts';
 import { saatTeile } from '../fixtures/saeen.ts';
 import { zeileAufnehmen } from '../fixtures/sichten.ts';
@@ -379,4 +379,43 @@ test('UC15-AK3 Erntetermin vor dem Fenster: Eissalat zeigt «← Ernte seit 4.3.
   await expect(eichblatt.locator('.hv-phasenbalken-offen')).toHaveCount(0);
   await expect(eichblatt.locator('.hv-phasenbalken-marke')).toHaveCount(1);
   await expect(eichblatt.locator('.hv-phasenbalken-marke')).toContainText('5.5.');
+});
+
+// ---------------------------------------------------------------------
+// UC15-AK13 (Issue #254, Plan 254): «Ernte ab» bei Mehrfachernte vor dem Umsetzen
+// ernteTeile({ vorUmsetzen: true }): Petersilie Mooskrause dauerkultur_blatt (Satz 99) in A3, gesät 15.2., Anzucht
+// bestätigt 1.3., ohne Reservierung → Wachstum 29.3., Ernte ab 29.3. + 28 = Mo 26.4., Ende 15.2. + 180 = Sa 14.8.
+// «Ernte ab TT.MM.» im Issue heisst in der App «Ernte ab 26.4.» (tagKurz(), ohne führende Null; Plan 254 A9).
+// ---------------------------------------------------------------------
+
+test('UC15-AK13 Petersilie (Dauerkultur Blatt) in der Anzucht ohne Reservierung zeigt «Ernte ab 26.4.» statt «Ernte offen» und kein «Termine noch offen»', async ({
+  page,
+}) => {
+  await oeffnen(page, ernteTeile({ vorUmsetzen: true }), '/#/ernte', J);
+  await expect(kalenderTitel(page)).toBeVisible({ timeout: 15_000 });
+  await expect(zeilen(page)).toHaveCount(10);
+
+  const petersilie = page.getByRole('button', { name: /^Petersilie Mooskrause, R-A3,/ });
+  await expect(petersilie).toHaveCount(1);
+  // Kurzzeile im zugänglichen Namen
+  const name = (await petersilie.getAttribute('aria-label')) ?? '';
+  expect(name).toContain('Wachstum ab 29.3. · Ernte ab 26.4.');
+  expect(name).not.toContain('Ernte offen');
+  expect(name).not.toContain('Termine noch offen');
+  // Marke im Fenster, kein Hinweis «Termine noch offen»
+  const marke = petersilie.locator('.hv-phasenbalken-marke');
+  await expect(marke).toHaveCount(1);
+  await expect(marke).toContainText('26.4.');
+  await expect(petersilie.locator('.hv-phasenbalken-offen')).toHaveCount(0);
+  await expect(petersilie).not.toContainText('Termine noch offen');
+
+  // Feld: Ernte ab Mo 26.4. (Prognose), Ende Sa 14.8.
+  await petersilie.click();
+  await expect(page).toHaveURL(new RegExp(`#/ernte/${esc(SATZ_VOR.petersilie)}$`));
+  await expect(feld(page)).toBeVisible();
+  await expect(feld(page)).toContainText('Petersilie Mooskrause');
+  await expect(feld(page)).toContainText('ab Mo 26.4. (Prognose)');
+  await expect(feld(page)).toContainText('Ende Sa 14.8.');
+  await expect(feld(page)).not.toContainText('Termine noch offen');
+  await ohneWaagrechtesScrollen(page);
 });
