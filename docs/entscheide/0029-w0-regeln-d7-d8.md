@@ -16,3 +16,7 @@ Konzept 9.3 und Entscheid 0018 lassen den Lead Konflikte und Klasse-D-Lücken mi
 
 - Massgebend bleibt `scripts/w0/w0lib.py` (`REGELN`); die Berichte führen die Tabelle mit.
 - Nachführung in der nächsten Konzeptfassung (Anhang B.2, Stelle 9.3) zusammen mit D1 bis D6.
+
+## Nachtrag 21.11.2026
+
+Nachgeführt in Konzept v1.11, 9.3 (E24, #263): Tabelle D1 bis D8 und E1 bis E3, Korrektur als neue W0-Zeile, Lesekopie.
