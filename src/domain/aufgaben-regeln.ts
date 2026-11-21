@@ -25,6 +25,7 @@ import { kalibrierStand, type GeraeteEreignis, type KalibrierZeile } from './kal
 import { messFaelligkeit } from './messung/faelligkeit.ts';
 import { keimTermine, type KeimTermin } from './pflanzung/keimung.ts';
 import { aufgabenSchluessel, erfassungOderUebersprungen, type AufschubZeile } from './aufgaben-aufschub.ts';
+import { eigeneAufgaben } from './aufgaben-eigene.ts';
 import { stromausfallAufgaben } from './aufgaben-stromausfall.ts';
 import { kalendertag, tagPlus, tageZwischen, type Zeitzone } from './zeit.ts';
 import type {
@@ -731,5 +732,6 @@ export function rohaufgaben(
     ...satzregeln(k, orte),
     ...lagen.flatMap((l) => ortAufgaben(k, l)),
     ...stromausfallAufgaben(k, orte),
+    ...eigeneAufgaben(k),
   ];
 }

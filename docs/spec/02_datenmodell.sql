@@ -1104,9 +1104,24 @@ create table public.eigene_aufgabe (
   letzte_erledigung date,
   erfasst_am timestamptz not null default now(),
   app_version text not null,
-  storniert_am timestamptz
+  storniert_am timestamptz,
+  ersetzt_id uuid,
+  constraint eigene_aufgabe_id_anlage_key unique (id, anlage_id),
+  constraint eigene_aufgabe_ersetzt_fk foreign key (ersetzt_id, anlage_id)
+    references public.eigene_aufgabe (id, anlage_id) on delete set null (ersetzt_id),
+  constraint eigene_aufgabe_ersetzt_nicht_selbst check (ersetzt_id is distinct from id)
 );
-comment on table public.eigene_aufgabe is 'Leere Hülle für den Pool-Posten «eigene wiederkehrende Aufgaben» (B.4).';
+create index eigene_aufgabe_ersetzt_id_idx on public.eigene_aufgabe (ersetzt_id);
+comment on table public.eigene_aufgabe is
+  'Eigene wiederkehrende Aufgabe je Anlage (R5.2 letzte Zeile, Pool, #249): Name und Intervall. Fälligkeit = letzte '
+  'Erledigung (ereignis aufgabe_erledigt) bzw. jüngstes Überspringen (aufschub) über die Kette ersetzt_id + '
+  'intervall_d, ohne beides der Tag von erfasst_am der ersten Zeile (A1). Korrektur = Storno plus neue Zeile mit '
+  'ersetzt_id (8.1 Regel 2).';
+comment on column public.eigene_aufgabe.ersetzt_id is
+  'Vorgänger derselben Anlage bei einer Korrektur (zusammengesetzter Fremdschlüssel mit anlage_id); die Fälligkeit '
+  'rechnet über die Kette weiter.';
+comment on column public.eigene_aufgabe.letzte_erledigung is
+  'Ungenutzt und leer (#249 A3, 8.1 Regel 2): die letzte Erledigung kommt aus den Ereignissen aufgabe_erledigt.';
 
 create table public.auswertung_fenster (
   id uuid primary key default gen_random_uuid(),

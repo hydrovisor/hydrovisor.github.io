@@ -1,5 +1,6 @@
 // Anlagenübersicht als Regalbild (UC1, E-F4-1, 05_masken.md 4 «Anlage»; Plan 20): Kontext Schreibtisch, ohne
 // Scrollen auf 360 × 640; Auswahl, sobald es mehr als eine Anlage gibt (A5). Ein Tipp öffnet Gefäss oder Messen.
+// Darunter (darf scrollen) die eigenen wiederkehrenden Aufgaben der Anlage (Plan 249).
 import { useState } from 'react';
 import { kuerzelAenderbar } from '../../domain/anlage/kuerzel.ts';
 import { anlagenAus } from '../../domain/anlage/teile.ts';
@@ -8,6 +9,7 @@ import { ZEITZONE } from '../../domain/zeit.ts';
 import { StatusBadge } from '../bausteine/StatusBadge.tsx';
 import { OrtKachel } from '../bausteine/Tile.tsx';
 import { useBuendel } from '../buendel.tsx';
+import { EigeneAufgaben } from './EigeneAufgaben.tsx';
 import { hashZu } from '../router.ts';
 
 const DATENART = { echt: '', demo: 'Demo', test: 'Test' } as const;
@@ -96,6 +98,7 @@ export function Anlage({ kuerzel }: { kuerzel?: string }) {
           </a>
         </div>
       ) : null}
+      {anlage ? <EigeneAufgaben teile={teile} anlageId={anlage.id} jetzt={jetzt} /> : null}
       <a className="hv-btn hv-btn-secondary" href={hashZu({ name: 'anlage-neu' })}>
         Anlage anlegen
       </a>

@@ -140,6 +140,7 @@ Vorschau: Cloudflare Pages `hydrovisor-vorschau` baut jeden Zweig (`<zweig>.hydr
 - [0027 Spülen des Messbechers steht in der Dosierzeile](docs/entscheide/0027-spuelen-in-der-dosierzeile.md)
 - [0028 Passung an den Zielen beim Säen](docs/entscheide/0028-passung-an-den-zielen.md)
 - [0029 W0-Regeln D7 (Ernte ab Saat) und D8 (Umsetztag)](docs/entscheide/0029-w0-regeln-d7-d8.md)
+- [0030 Eigene wiederkehrende Aufgaben vor M2](docs/entscheide/0030-eigene-aufgaben-vor-m2.md)
 - Übrige Entscheide vom 1.11.2026: `docs/spec/00_rueckfragen.md` (R1 bis R13, W1 bis W14, Annahmen 1 bis 16)
 
 ## Arbeitsweise in der Sitzung

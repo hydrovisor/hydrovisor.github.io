@@ -125,6 +125,8 @@ export const BUENDEL_TEILE: readonly Buendelteil[] = [
     typen: ['phase_antwort'],
   },
   tabelle('aufschub', { ohneStorno: true }),
+  // Plan 249 A10: eigene Aufgaben mit stornierten Vorgängern für die Kette ersetzt_id
+  tabelle('eigene_aufgabe'),
   // Geräte-Ereignisse für Kalibrierstand und «unsicher» ohne Netz (R10.3, R5.2; Plan 12)
   tabelle('ereignis', { ohneStorno: true, typen: ['sonde_gereinigt', 'als_unsicher_markiert'] }),
   // Ereignisse am Platz für Prüfstatus, Prüfprotokoll, «entfernt am» und Wiederherstellen (Plan 21 A13)
