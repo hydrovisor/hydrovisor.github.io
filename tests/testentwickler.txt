@@ -354,3 +354,5 @@ tests/seed/w0-runde11.test.ts
 # W0 Runde 12 Ernte ab und Klasse-D-Lücken (#250)
 tests/unit/w0-runde12.test.ts
 tests/seed/w0-runde12.test.ts
+# W0 Runde 13 Umsetzfenster und Intervalle (#258)
+tests/unit/w0-runde13.test.ts
