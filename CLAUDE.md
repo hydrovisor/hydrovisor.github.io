@@ -6,7 +6,7 @@ Private PWA mit Supabase für Tims Hydroponikregal; einziger Nutzer Tim, bedient
 
 | Was | Wo |
 |---|---|
-| Fachkonzept (massgebend) | `docs/input/konzept_v1.10.md` (Fassung 1.10 vom 21.11.2026 mit E23, von Tim am 21.11.2026 im Chat beauftragt; E17 bis E22 bestätigt am 18.11.2026; E16 Erntekalender beauftragt am 14.11.2026); Änderungen nur als neue Fassung mit Eintrag in Anhang B.2 |
+| Fachkonzept (massgebend) | `docs/input/konzept_v1.11.md` (Fassung 1.11 vom 21.11.2026 mit E24 und E25 bestätigt am 22.11.2026; E23 beauftragt am 21.11.2026; E17 bis E22 bestätigt am 18.11.2026; E16 Erntekalender beauftragt am 14.11.2026); Änderungen nur als neue Fassung mit Eintrag in Anhang B.2 |
 | Rangfolge bei Widerspruch | Konzept vor `docs/input/use_cases_f4.md` vor `docs/input/duengeplan_v1.6.md` vor W0 |
 | Spezifikation (abgenommen 1.11.2026) | `docs/spec/` (Fachregeln, Datenmodell, Import W0, Architektur, Masken, Tests, Glossar) |
 | Entscheide | `docs/spec/00_rueckfragen.md` (Auftrag 1) und `docs/entscheide/` (je Entscheid eine Datei) |
