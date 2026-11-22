@@ -257,7 +257,8 @@ jobs:
     # Freigabe des Prüfers (Label tests-freigegeben, setzt der Lead nach der Begründung; Konzept 12.4).
     # Basis ist der aktuelle main: erster Elternteil des Merge-Commits, den checkout für pull_request
     # auscheckt; pull_request.base.sha bleibt beim Stand des Anlegens stehen und zählte sonst später
-    # gemergte Pull Requests mit (#251, von Tim am 19.11.2026 bestätigt).
+    # gemergte Pull Requests mit (#251, von Tim am 19.11.2026 bestätigt). Merge-Commits im Zweig melden
+    # über --remerge-diff die Dateien, deren Lösung vom automatischen Merge abweicht (#265, Tim 22.11.2026).
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -281,7 +282,11 @@ jobs:
           fi
           for c in $(git rev-list --reverse "$BASIS".."$SPITZE"); do
             betreff=$(git log -1 --format=%s "$c")
-            dateien=$(git diff-tree --no-commit-id --name-only -r "$c")
+            if git rev-parse -q --verify "$c^2" >/dev/null; then
+              dateien=$(git show --remerge-diff --no-renames --format= --name-only "$c")
+            else
+              dateien=$(git diff-tree --no-commit-id --name-only -r "$c")
+            fi
             if [[ "$betreff" == Tests:* ]]; then
               for f in $dateien; do geschuetzt["$f"]=1; done
             else
