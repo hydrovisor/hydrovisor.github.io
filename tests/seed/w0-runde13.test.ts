@@ -1,6 +1,6 @@
 // W13-AK2 [SQL] (Issue #258, W0 Runde 13; Plan docs/plaene/258.md, 03_import_w0.md Abschnitt 8): Nach dem scharfen
 // Seed aus data/ stehen die Umsetztage der Runde 13 in art und die Erntewerte in art_kulturform (gültige Fassungen);
-// Basilikum und Randen umsetzen_bis_d bleiben leer. K-mangold-02 (Konzept 9.3 Regel 1, 9.4): Mangold Schnitt
+// Basilikum umsetzen_bis_d bleibt leer (Randen seit Runde 14, #266: 25). K-mangold-02 (Konzept 9.3 Regel 1, 9.4): Mangold Schnitt
 // ernte_ab_d ist 28; nach einem Vorlauf mit dem Stand vor Runde 13 (Fassung 19) schliesst der Seed die alte Fassung.
 // Der Erntekalender rechnet mit den geseedeten Werten: ersteErnteAb() = Saat + umsetzen_ab_d + ernte_ab_d.
 // Vitest gegen die lokale Datenbank (supabase start); der Seed läuft mit dem kern des Ladeskripts in einer
@@ -111,7 +111,7 @@ const UMSETZEN: [string, number, number | null][] = [
   ['petroselinum_crispum', 21, 35],
   ['allium_schoenoprasum', 28, 42],
   ['beta_vulgaris_cicla', 21, 28],
-  ['beta_vulgaris_conditiva', 9, null],
+  ['beta_vulgaris_conditiva', 9, 25],
 ];
 
 /** Runde 13 in art_kulturform: Art, Kulturform, Spalte, Wert */
@@ -152,7 +152,7 @@ function teileFuer(arten: ArtZeile[], formen: Kulturform[], artId: string, kultu
 }
 
 describe('W13-AK2 W0 Runde 13 nach dem Seed in art und art_kulturform', () => {
-  it('W13-AK2 Umsetztage der Runde 13 stehen in den gültigen Zeilen von art, Basilikum und Randen ohne umsetzen_bis_d', async () => {
+  it('W13-AK2 Umsetztage der Runde 13 stehen in den gültigen Zeilen von art, Basilikum ohne umsetzen_bis_d', async () => {
     await inTransaktion(async (tx) => {
       await seed(tx, ausData(), JETZT, 'test258');
       const arten = await gueltigeArten(tx);

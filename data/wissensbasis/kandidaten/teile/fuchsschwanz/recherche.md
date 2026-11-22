@@ -398,3 +398,62 @@ Hinweise für den Lead:
 - Neue Quelle `hortsci-mangold-nft-2025` (peer_review, nft, Link Artikelseite), Lesekopie des Koordinators vom 21.11.2026.
 - Neuer Kandidat `art.beta_vulgaris_cicla.umsetzen_bis_d#1` = 28 Tage ab Saat (Saat 31 Oct 2023 in Oasis-Würfeln 1.5 cm3, Umsetzen in NFT 28 Nov 2023; Datumsrechnung in `fundstelle`). Als `umsetzen_bis_d` angelegt, weil der Wert später liegt als der Kandidat 21 (Horticulturae, Steinwolle) für `umsetzen_ab_d`; beides sind Einzelwerte aus je einer Quelle, den Konflikt bzw. die Zuordnung entscheidet der Lead.
 - Keine Erntewerte: Die Messung «37 d after transplanting» ist eine einmalige Erhebung am Versuchsende (Ganzpflanzen getrennt in Spross und Wurzel), keine Aussage zu Schnitten oder Kulturende. Mangold schnitt `schnitte_max` und `kulturdauer_max_d` bleiben Klasse D.
+
+## Runde 14 (#266)
+
+Auftrag: Vorrang Spinat schnitt `ernte_ab_d` (Schnittkultur bei üblicher Wassertemperatur oder LED); dann Spinat schnitt und kopf `kulturdauer_max_d`, Randen `umsetzen_bis_d` und alle Schnitt-Felder, Mangold schnitt `schnitte_max` und `kulturdauer_max_d`. Neue Bereichsregel (untere Grenze für `ernte_ab_d`, obere für `schnitte_max` und `kulturdauer_max_d`). Abruf 22.11.2026.
+
+### Suchweg
+
+- Bestehende Quellen erneut gelesen: Cornell CEA Spinat 2005 (Kapitel 1 und 3; S. 3-1 jetzt mit Bereichsregel), UGA C1304 (Bereiche jetzt mit Bereichsregel), Rise Gardens Swiss Chard Bright Lights (Stage 7 «Remove plant»).
+- Websuche: «spinach hydroponic successive harvests regrowth first cut days after transplanting LED», «spinach regrowth ratooning plant factory», «espinafre hidropônico cortes sucessivos rebrota», «Lettuce Grow spinach first harvest final harvest», «Gardyn spinach», «beterraba hidroponia NFT transplantio dias após a semeadura», «red beet baby leaf floating successive cuts», «hydroponic Swiss chard harvest months replace».
+- Europe PMC (Open Access): Spinat mit regrowth, ratoon oder successive harvest und Hydroponik; Randen mit Hydroponik und transplant.
+- Herstellerseiten: Lettuce Grow (Giant Spinach), Gardyn (Perpetual Spinach), Rise Gardens (Mangold); Hochschul-PDF CAFRE «Hydroponic production of leafy salads and herbs».
+
+### Kandidaten
+
+| Kandidat | Wert | Quelle | Hinweis |
+|---|---|---|---|
+| ak.spinacia_oleracea.schnitt.ernte_ab_d#3 | 12 (Bereich 12 bis 16 Tage ab Saat) | cornell-cea-spinat-2005 (B1) | Direktsaat in Endabstand ohne Umsetzen, Deep-flow-Teich; in Runde 12 als Bereich verworfen, jetzt nach der Bereichsregel; Folgeschnitte am selben Bestand im Folgesatz |
+| ak.spinacia_oleracea.schnitt.ernte_ab_d#4 | 30 (Tage ab Saat, Direktsaat) | smgardener-spinat-kratky-2022 (C, neu) | Kratky, Saat in Kokosfaser im Netztopf direkt im Behälter (kein Umsetzen); Schnitt aller Blätter mit zwei weiteren Ernten im Abstand von 7 bis 10 Tagen; Praxisbericht mit eigenem Anbau, ohne Angaben zu Licht und Wassertemperatur |
+| ak.spinacia_oleracea.schnitt.ernte_ab_d#5 | 3 (Wochen ab Umsetzen) | lettucegrow-giant-spinach (B2, neu) | Herstellerseite zum Hydroponik-Turm Farmstand; «First harvest 3 weeks», gezählt ab Lieferung des bewurzelten Setzlings («From delivery to harvest in about 3 weeks»); Harvest method «Cut and Come Again»; die Produktseite selbst nennt das Wort hydroponisch nicht (nur die Systemseite), Art nur als «Giant Spinach» |
+| ak.spinacia_oleracea.kopf.kulturdauer_max_d#1 | 7 (Wochen ab Saat; obere Grenze 3 plus 4) | uga-c1304-spinat-2024 (B1) | «2–3 weeks after sowing before transplanting» plus «harvested after 3–4 weeks», DWC im Gewächshaus; Summe der beiden oberen Grenzen aus demselben Absatz, in `fundstelle` gerechnet; ob die Addition zweier Bereiche zulässig ist, entscheidet der Lead |
+| art.beta_vulgaris_conditiva.umsetzen_bis_d#1 | 25 (Tage ab Saat) | actasci-randen-mudas-floating-2005 (A, neu) | Setzlinge in Styroporplatten im Floating mit Nährlösung, Umsetzen 25 DAS; danach Feldanbau (nur die Anzucht ist hydroponisch); Substrat Plantmax-HT (Rinde) bzw. Zuckerrohrbagasse; Einzelwert |
+| ak.beta_vulgaris_cicla.schnitt.schnitte_max#2 | 10 (Bereich 5 bis 10 Ernten, obere Grenze) | risegardens-library-mangold (B2) | Stage 7 «Remove plant»: Kulturende nach 5 bis 10 Ernten, danach Ersatz (Aussage zur Kultur, kein Versuchsplan); in Runde 11 und 12 als Bereich nicht erfasst |
+
+Neue Quellen: `smgardener-spinat-kratky-2022` (praxis, kratky), `lettucegrow-giant-spinach` (hersteller, nft; Farmstand ist ein vertikaler Turm mit herabrieselnder Lösung, die Aufzählung kennt kein «aeroponisch», daher nft wie der Hydro-Tower bei frankiesgarten), `actasci-randen-mudas-floating-2005` (peer_review, dwc; Redalyc-PDF frei, die Kopfzeile nennt fälschlich «Biological Sciences», die Seitenfusszeile «Acta Sci. Agron.»).
+
+Hinweise für den Lead:
+- Lettuce Grow Giant Spinach nennt auch «Final harvest 6 weeks» und «Week 6+ · replant», gezählt ab Lieferung des Setzlings (Umsetzen). Für `kulturdauer_max_d` (ab Saat) fehlt der Saattag in derselben Quelle, daher kein Kandidat; mit dem freigegebenen Umsetztag 9 könnte der Lead daraus selbst einen Wert ableiten.
+- SMgardener Kratky: «two more harvests each at 7-10 day interval» stützt Spinat schnitt `ernteintervall_d` (Bereich 7 bis 10) und `schnitte_max` 3; beide Felder sind schon freigegeben und nicht im Auftrag, daher keine Kandidaten.
+
+### Verworfen oder ohne Zahl
+
+| Quelle | Grund |
+|---|---|
+| hydroponics360, agrifarming.in, hydroponicplans, dripcanopy, growwithhydroponics, farmergrows, pocketgreenguides, hightechgardening, hydronurture, edengreen, ALTO Garden (Spinat) | Ratgeberseiten ohne eigenen Anbau oder erkennbare Quelle, nur Bereiche («25 to 35 days after transplanting», «2 - 3 additional weeks») |
+| SMgardener NFT-Spinat | «re grows so in a couple of days» ohne Zahl; Erntezeit nur allgemeiner Bereich «35-60 days» |
+| Gardyn Perpetual Spinach (Help Center und Plant Book) | Lateinname «Beta vulgaris» (Mangold, nicht Spinat); keine Angabe zu Schnitten oder Kulturende; nennt Hydroponik nicht (wie Gardyn Schnittlauch verworfen) |
+| Lettuce Grow Bright Lights Swiss Chard | Mangold `ernte_ab_d` schon freigegeben; «Final harvest» ab Lieferung, kein Saattag (siehe Hinweis oben) |
+| Horticulturae 5(1) 20 (Babyspinat in DWC, Saatmuster) | einmalige Ernte, keine Folgeschnitte |
+| PMC7238427 (Spinat unter LED in der Pflanzenfabrik) | Lichtversuch mit einmaliger Ernte, keine Folgeschnitte |
+| CAFRE «Hydroponic production of leafy salads and herbs» | Anhang 2 «Approximate crop time (weeks)» für Mangold nur als Balkengrafik ohne Zahl im Text; kein Spinat, keine Randen |
+| UNESP-Dissertation 2024 (Spinat in NFT mit *Pseudomonas*) | Probenahme 30 Tage nach dem Umsetzen als Versuchsende, einmalige Ernte |
+| Revista Brasileira de Ciências Agrárias (Behandlung von Phenolschaum) | Salat, nicht Randen |
+| UTFPR-Dissertation 2011 (Randen-Setzlinge in Substraten) | Anzucht in Substraten ohne Hydroponik, danach Feld |
+| scaleandstem.pages.dev (Mangold «3–6 months») | Praxisseite ohne erkennbare Quelle (wie Runde 12) |
+
+### Lückenliste Runde 14 (Klasse D)
+
+| Art | Kulturform | Feld | Stand, was Anbauquellen sagen |
+|---|---|---|---|
+| spinacia_oleracea | schnitt | kulturdauer_max_d | kein Hydroponik-Wert ab Saat; Lettuce Grow nur «Week 6+ · replant» ab Lieferung des Setzlings ([Lettuce Grow Giant Spinach](https://www.lettucegrow.com/products/giant-spinach)); Rise Gardens nur «2 to 3 extra weeks» (Runde 12). |
+| beta_vulgaris_conditiva | schnitt | ernteintervall_d, schnitte_max, kulturdauer_max_d (dazu weitere Quelle für ernte_ab_d) | kein frei lesbarer hydroponischer Mehrfachschnitt; eine Konferenzarbeit zu Beta vulgaris in vertikaler Hydroponik nennt laut Fachpresse «the leaves are cut about 4–6 times from each container» ([Vertical Farm Daily](https://www.verticalfarmdaily.com/article/9392362/growing-beetroot-microgreens-in-a-vertical-hydroponic-system/)), Volltext gesperrt (siehe unten); Johnny's (Erde) «5–14 days» (Runde 12). |
+| beta_vulgaris_cicla | schnitt | kulturdauer_max_d | kein Hydroponik-Wert ab Saat; Rise Gardens nennt nur die Zahl der Ernten, keine Tage; scaleandstem «3–6 months» ohne Quelle. |
+| beta_vulgaris_conditiva | Art | umsetzen_bis_d (weitere Quelle) | nur der neue Einzelwert 25 (Floating-Anzucht, danach Feld); Bioscience Journal zählt ab Auflaufen (Runde 13). |
+
+### Nur im Browser lesbar
+
+| Artikelseite | erwartete Fundstelle | gesuchtes Feld |
+|---|---|---|
+| https://iopscience.iop.org/article/10.1088/1755-1315/954/1/012035 (IOP Conf. Ser.: Earth Environ. Sci. 954, 012035, 2022, Omsk State Agrarian University, «Agrotechnological peculiarities of crop combination in Beta vulgaris subsp. vulgaris cultivation in vertical hydroponics»; PDF-Abruf HTTP 403) | Methods bzw. Results: Keimung «7 days», Schnitt der «Baby greens» (laut Fachpresse nach drei Wochen bzw. «3–4 months»), «the leaves are cut about 4–6 times from each container, after that a turnover is performed»; zu prüfen, ob Randen (Rote Bete) oder Mangold gemeint ist | Randen schnitt `ernte_ab_d`, `ernteintervall_d`, `schnitte_max` (obere Grenze 6), `kulturdauer_max_d` |

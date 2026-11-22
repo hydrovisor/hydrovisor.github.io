@@ -52,21 +52,15 @@ const KLASSE_D_OHNE_ZEILE: string[] = [
   'ak.ocimum_basilicum.schnitt.kulturdauer_max_d',
   'ak.petroselinum_crispum.dauerkultur_blatt.schnitte_max',
   'ak.petroselinum_crispum.dauerkultur_blatt.kulturdauer_max_d',
-  'ak.allium_schoenoprasum.dauerkultur_blatt.ernte_ab_d',
-  'ak.allium_schoenoprasum.dauerkultur_blatt.ernteintervall_d',
   'ak.allium_schoenoprasum.dauerkultur_blatt.schnitte_max',
-  'ak.allium_schoenoprasum.schnitt.ernte_ab_d',
-  'ak.allium_schoenoprasum.schnitt.ernteintervall_d',
   'ak.allium_schoenoprasum.schnitt.schnitte_max',
   'ak.allium_schoenoprasum.schnitt.kulturdauer_max_d',
-  'ak.spinacia_oleracea.schnitt.ernte_ab_d',
   'ak.spinacia_oleracea.schnitt.kulturdauer_max_d',
   'ak.spinacia_oleracea.kopf.kulturdauer_max_d',
   'ak.beta_vulgaris_conditiva.schnitt.ernte_ab_d',
   'ak.beta_vulgaris_conditiva.schnitt.ernteintervall_d',
   'ak.beta_vulgaris_conditiva.schnitt.schnitte_max',
   'ak.beta_vulgaris_conditiva.schnitt.kulturdauer_max_d',
-  'ak.beta_vulgaris_cicla.schnitt.schnitte_max',
   'ak.beta_vulgaris_cicla.schnitt.kulturdauer_max_d',
 ];
 
@@ -160,8 +154,8 @@ describe('W250-AK1 W0 Runde 12 in data/wissensbasis/freigegeben', () => {
     }
   });
 
-  it('W250-AK1 Klasse-D-Lücken ohne Quelle erzeugen keine Zeile (z. B. Schnittlauch Schnitt ernte_ab_d)', () => {
-    expect(KLASSE_D_OHNE_ZEILE).toContain('ak.allium_schoenoprasum.schnitt.ernte_ab_d');
+  it('W250-AK1 Klasse-D-Lücken ohne Quelle erzeugen keine Zeile (z. B. Schnittlauch Schnitt kulturdauer_max_d)', () => {
+    expect(KLASSE_D_OHNE_ZEILE).toContain('ak.allium_schoenoprasum.schnitt.kulturdauer_max_d');
     const ids = new Set(art.map((z) => z['zeile_id']));
     for (const id of KLASSE_D_OHNE_ZEILE) expect(ids.has(id), id).toBe(false);
   });
