@@ -2,16 +2,16 @@
 
 Stand 22.11.2026 (vorgezogene Zwischenprognose, #268) · Lead · Grundlage Konzept v1.11 Kapitel 13.5 (sechs Bedingungen) und RR13 in `risiken.md`. Tim am 22.11.2026 im Chat: «wenn alle Bedingungen erfüllt sind kannst du auch den Prüfpunkt vom 30.11 bereits vorziehen». Erste Fassung vom 8.11.2026 (#150) im Git-Verlauf.
 
-**Ergebnis 22.11.: nicht vorgezogen.** Drei Bedingungen sind erfüllt, Bedingung 3 hält bisher, die Bedingungen 4 und 6 sind offen. Bedingung 6 hängt an Tims Handgriff: Fehlt `data/eval/tueten_referenz.csv` am 30.11., gilt ab 1.12. die Rückfallebene Z2 (13.1). Am 30.11. trägt der Lead die Endwerte ein und hält das Ergebnis als Protokollzeile in `risiken.md` fest.
+**Ergebnis 22.11.: nicht vorgezogen.** Drei Bedingungen sind erfüllt, Bedingung 3 hält bisher, Bedingung 4 ist offen, Bedingung 6 ist nicht erfüllt (Tims Handgriff). Bedingung 6 hängt an Tims Handgriff: Fehlt `data/eval/tueten_referenz.csv` am 30.11., gilt ab 1.12. die Rückfallebene Z2 (13.1). Am 30.11. trägt der Lead die Endwerte ein und hält das Ergebnis als Protokollzeile in `risiken.md` fest.
 
 ## Bedingungen
 
 | Nr. | Bedingung (13.5) | Stand 22.11. | Quelle | Offen bis 30.11. |
 |---|---|---|---|---|
-| 1 | Spezifikation am 11.11. und Plan am 13.11. abgenommen (höchstens drei Tage Verzug) | erfüllt: Spezifikation am 1.11.2026 abgenommen, Plan am 13.11. eingefroren | `CLAUDE.md`, `pakete.md` Kopf | nichts |
-| 2 | I0 zu mindestens zwei Dritteln zusammengeführt (rund 5.5 von 8 PT), Durchsatz hochgerechnet mindestens 3.6 PT je Woche netto | erfüllt: alle Pakete I0 bis I2 (ohne I2-07) und beide Pool-Pakete vor M2 zusammengeführt (rund 38.25 PT, siehe unten) | gemergte Pull Requests bis #264 | nichts |
+| 1 | Spezifikation am 11.11. und Plan am 13.11. abgenommen (höchstens drei Tage Verzug) | erfüllt: Spezifikation und Plan am 1.11.2026 abgenommen (`pakete.md` Kopf: eingefroren mit Tims Abnahme von Auftrag 3, Frist 13.11.) | `CLAUDE.md`, `pakete.md` Kopf | nichts |
+| 2 | I0 zu mindestens zwei Dritteln zusammengeführt (rund 5.5 von 8 PT) und der gemessene Durchsatz hochgerechnet mindestens 3.6 PT je Woche netto (4.5 mit Zuschlag, 13.4) | erfüllt: alle Pakete I0 bis I2 (ohne I2-07) und beide Pool-Pakete vor M2 zusammengeführt (rund 38.25 PT, siehe unten) | gemergte Pull Requests bis #264 | nichts |
 | 3 | Kontingent in den Kalenderwochen 47 und 48 höchstens 80 % ohne Ausweichen auf Sonnet | hält bisher: Wochenfenster 17.11. bis 24.11. (11:00) am 22.11. um 9 Uhr bei 65 % (alle Modelle), Fable 80 %; kein Ausweichen auf Sonnet | `get_usage` | Endwert des Fensters bis 24.11. und Fenster 24.11. bis 1.12. (KW 48) messen; bis dahin nur kleine Pakete (W0-Runde 14, Prüftor) |
-| 4 | Tims Ist-Zeit im November höchstens 115 % des Plans (48 h, 13.3) | offen | Tims Zeiterfassung | Tim meldet seine Novemberstunden am 30.11. |
+| 4 | Tims Ist-Zeit im November höchstens 115 % des Plans (13.3; Plan rund 48 h) | offen | Tims Zeiterfassung | Tim meldet seine Novemberstunden am 30.11. |
 | 5 | im Mittel höchstens 1.5 Nachbesserungsrunden je Paket | erfüllt: 49 Runden auf 104 umgesetzte Pakete = 0.47 (A) | Labels `runde-1` und `runde-2` auf geschlossenen Issues der Klassen `routine`, `fachlogik`, `kern` (Abschluss «completed») | Zählung am 30.11. wiederholen |
 | 6 | Referenzdatei Düngerrechner und `tueten_referenz.csv` liegen vor | **nicht erfüllt:** `tests/golden/duengerrechner_referenz.csv` liegt vor (Hash `REFERENZ_HASH_RECHNER` gesetzt); `data/eval/tueten_referenz.csv` fehlt im Repository, `REFERENZ_HASH_TUETEN` ist nicht gesetzt | `git ls-files`, `gh variable list` | Tim legt `data/eval/tueten_referenz.csv` an und setzt `REFERENZ_HASH_TUETEN` (CLAUDE.md Regel 7) |
 
@@ -26,12 +26,12 @@ Stand 22.11.2026 (vorgezogene Zwischenprognose, #268) · Lead · Grundlage Konze
 | I1b inkl. Folgepakete I1b-08 und I1b-09 | 9.75 | 7.11. |
 | I2 ohne I2-07 (geschlossen, Entscheid 0014) | 10.75 | 7.11. |
 | Pool Wechselblock (#139) | 0.5 | 8.11. |
-| Pool eigene wiederkehrende Aufgaben (#249, Entscheid 0030) | 0.5 | 22.11. |
+| Pool eigene wiederkehrende Aufgaben (#249, Entscheid 0030) | 0.5 | 21.11. |
 | **Summe** | **38.25** | |
 
 Seit dem 14.11. kamen Pakete ausserhalb der Summen dazu (Navigation N1 bis N4, Usability UX1 bis UX8, Erntekalender UC15, W0-Runden 11 bis 13, Konzept v1.7 bis v1.11, Prüftor #251).
 
-Das Fenster der Messung in `pakete.md` (14.11. bis 30.11.) liegt nach der tatsächlichen Arbeit; der Durchsatz ab 1.11. liegt mit rund 37.75 PT in gut einer Woche ein Vielfaches über 3.6 PT je Woche (A).
+Das Fenster der Messung in `pakete.md` (14.11. bis 30.11.) liegt nach der tatsächlichen Arbeit; der Durchsatz ab 1.11. liegt mit rund 38.25 PT in gut einer Woche ein Vielfaches über 3.6 PT je Woche (A).
 
 ## Folgerung für November und Dezember (Stand 8.11.2026)
 
