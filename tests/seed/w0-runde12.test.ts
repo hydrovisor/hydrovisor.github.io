@@ -82,10 +82,10 @@ const RUNDE12: [string, string, keyof Kulturform, number][] = [
 
 /** Klasse-D-Lücken ohne Quelle nach Runde 12 (Auswahl): Spalte bleibt null */
 const OHNE_WERT: [string, string, keyof Kulturform][] = [
-  ['allium_schoenoprasum', 'schnitt', 'ernte_ab_d'],
-  ['allium_schoenoprasum', 'dauerkultur_blatt', 'ernte_ab_d'],
+  ['allium_schoenoprasum', 'schnitt', 'kulturdauer_max_d'],
+  ['allium_schoenoprasum', 'dauerkultur_blatt', 'schnitte_max'],
   ['beta_vulgaris_conditiva', 'schnitt', 'ernte_ab_d'],
-  ['spinacia_oleracea', 'schnitt', 'ernte_ab_d'],
+  ['spinacia_oleracea', 'schnitt', 'kulturdauer_max_d'],
   ['ocimum_basilicum', 'dauerkultur_blatt', 'kulturdauer_max_d'],
 ];
 
