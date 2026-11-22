@@ -349,3 +349,47 @@ Hinweise für den Lead: Die Umsetztage liegen bei 14 bis 18 Tagen (fünf Quellen
 | Artikelseite | erwartete Fundstelle | gesuchtes Feld |
 |---|---|---|
 | HortTechnology 25(5):645 (2015), https://journals.ashs.org/view/journals/horttech/25/5/article-p645.xml (Bot-Prüfung) | Materials and Methods: «transplanted seedlings 2 weeks after sowing into either NFT or DFT» (laut Pressetext phys.org); gleicher Inhalt wie die frei lesbare Masterarbeit `isu-ms-basilikum-systeme-2015`, daher nur nötig, wenn der Lead die begutachtete Fassung will | `art.ocimum_basilicum.umsetzen_ab_d` |
+
+## Runde 14 (#266)
+
+Gesucht: `art.ocimum_basilicum.umsetzen_bis_d` (Regel D8: nur Klasse A oder B1, mindestens 27 Tage ab Saat); `schnitte_max`, `kulturdauer_max_d` für `dauerkultur_blatt` und `schnitt`. Abruf 22.11.2026.
+
+### Suchweg
+
+- CRC Kapitel 22 erneut gelesen (Leseprobe der Kapitelseite): Abschnitt Kräuter in Pflanztürmen mit Perlit, Absätze zu Direktsaat und Ersatz.
+- Tower Garden Basil Plant Guide und «General Guidelines – Harvesting» (PDF des Herstellers, über schools.towergarden.com verlinkt).
+- Websuche: «basil seedlings transplanted 28 days after sowing hydroponic», «Ocimum basilicum floating NFT transplanted 30/35 days after sowing», «hydroponic basil production extension ready to transplant 3 to 4 weeks», «hydroponic basil replace plants after harvests crop schedule». Gelesen: Plants 12(6):1355 (2023, PMC10053589, Floating Raft hydroponisch und aquaponisch, zwei Schnitte), Sci. Rep. 2021 (PMC8211801, aeroponisch, hydroponisch, Torfmatten), Rise Gardens «How Long Do Hydroponic Plants Live Before You Replant?».
+
+### Kandidaten
+
+| kandidat_id | Wert | Quelle | Klasse |
+|---|---|---|---|
+| `ak.ocimum_basilicum.dauerkultur_blatt.kulturdauer_max_d#2` | 4 Monate (Bereich 3 bis 4 Monate, obere Grenze), ab Saat (Direktsaat in Pflanztürme) | crc-hydroponik-heimgaertner-2015 | C |
+| `ak.ocimum_basilicum.schnitt.kulturdauer_max_d#3` | 4 Monate (gleicher Beleg) | crc-hydroponik-heimgaertner-2015 | C |
+
+Hinweis für den Lead: Anders als `dauerkultur_blatt.kulturdauer_max_d#1` und `schnitt.kulturdauer_max_d#2` (Absatz über Basilikum, «after about 3 months», Bezug offen, verworfen) steht der neue Satz im Absatz über die Pflanztürme. Dort werden alle Kräuter ausser Lavendel, Rosmarin und Thymian direkt in die Turmtöpfe gesät («Sow the others directly into the substrate of the plant tower pot corners»). Damit zählen die Monate ab Saat. Einschränkung: Die Quelle empfiehlt für Basilikum eher NFT («it is preferable to grow basil in NFT to avoid the lodging»).
+
+### Verworfen oder ohne geeignete Zahl
+
+| Quelle | Grund |
+|---|---|
+| Plants 12(6):1355 (2023), Schnitte 35 und 79 Tage nach Pflanzung | zwei Schnitte und Versuchsende sind Versuchsplan (wie Frontiers 2021 in Runde 11) |
+| Sci. Rep. 2021 (PMC8211801) | Anzucht in Torf, Messungen 4 und 7 Wochen nach Umsetzen sind Probenahmen, kein Umsetz- oder Erntewert |
+| Tower Garden Basil Plant Guide | «TIME TO HARVEST 5-6 weeks» ohne Bezug, «ready for transplant (about 1-3 weeks)» Bereich ohne Klasse A oder B1 (Hersteller, B2); nichts zu Schnittzahl oder Ersatz |
+| Tower Garden «General Guidelines – Harvesting» | Ersatz «Once the plant bolts», keine Zahl |
+| Rise Gardens «How Long Do Hydroponic Plants Live Before You Replant?» | «ready to harvest and replace in as little as 30 days» ist eine Mindestangabe für Basilikum und Koriander zusammen |
+| University of Arkansas (Masterarbeit 2020, HortTechnology 30), Umsetzen 14, 21, 28 Tage | Versuchsstufen; bereits in Runde 12 und 13 verworfen, nicht erneut angelegt |
+| Notulae Botanicae 43(1) 2015 (Floating-Anzucht Basilikum, Minze) | Anzucht im Float-System mit Torfsubstrat in Schalen; laut Abstract keine Umsetzzeit in Tagen; nicht weiter verfolgt |
+| Upstart «Growing basil in hydroponics: read this first» | nur als Spiegel auf einem fremden Server gefunden (plantgrower.org), Original nicht auffindbar; nicht gelesen |
+| growai.shop, soilfreeharvest, truleaf, ponicslife, hydrohowto, smartgardenhome | Seiten ohne erkennbare Quelle, Verdacht auf KI-Texte (Konzept 9.1) |
+
+### Lückenliste Runde 14 (Klasse D)
+
+| Art | Kulturform | Feld | Stand und was Anbauquellen sagen |
+|---|---|---|---|
+| Basilikum | Art | `umsetzen_bis_d` | keine Quelle der Klasse A oder B1 mit mindestens 27 Tagen ab Saat; die Hydroponik-Studien setzen nach 14 bis 18 Tagen um, späteres Umsetzen senkt laut University of Arkansas den Ertrag ([HortTechnology 30, Abstract](https://scholarworks.uark.edu/hortpub/41/)); Johnny's (Topfkultur) «after 2–3 weeks of growth» ([Johnny's Basil Guide](https://www.johnnyseeds.com/growers-library/herbs/basil/hydroponic-container-basil-guide.html)) |
+| Basilikum | `dauerkultur_blatt`, `schnitt` | `schnitte_max` | keine Quelle nennt eine Höchstzahl; CRC «Basils need to be cut often, usually every few weeks» bis zum Ersatz; Tower Garden «harvest basil continuously» ([Tower Garden Basil](https://cdn.shopify.com/s/files/1/0685/8981/3990/files/Basil_Plant_Guide_-_US_-_English.pdf)) |
+
+### Nur im Browser lesbar
+
+Keine neuen Einträge.

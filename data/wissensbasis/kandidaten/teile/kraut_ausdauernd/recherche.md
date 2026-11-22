@@ -533,3 +533,75 @@ Hinweise für den Lead: Petersilie streut von 3 Wochen (Phenolschaum in der Klim
 | `art.petroselinum_crispum.umsetzen_ab_d#7` | 21 Tage ab Saat | horttech-34-saatdichte-petersilie-2024 (Phenolschaum 2.2 cm, DWC; Lesekopie) | A |
 
 Nicht erfasst: Ernte «Four weeks after transplanting» (Agronomy) und Standzeit «28 (parsley) days» im DWC (HortTechnology) sind feste Versuchsenden mit Abschneiden der ganzen Pflanze, keine Zahl für `schnitte_max` oder `kulturdauer_max_d`. Salve Regina bleibt ohne Kandidat (PDF auch im Browser nicht lesbar).
+
+## Runde 14 (#266)
+
+Gesucht: Schnittlauch `dauerkultur_blatt` **ernte_ab_d**, ernteintervall_d, schnitte_max; Schnittlauch `schnitt` **ernte_ab_d**, ernteintervall_d, schnitte_max, kulturdauer_max_d; Petersilie `dauerkultur_blatt` schnitte_max, kulturdauer_max_d. Neue Bereichsregel angewendet (ein Kandidat je Bereich, untere Grenze bei Ernte und Intervall, obere bei Kulturdauer). Abruf 22.11.2026.
+
+### Suchweg
+
+- Bekannte Quellen erneut gelesen: CRC Kapitel 22 (Leseprobe der Kapitelseite; dabei der Absatz zu Direktsaat und Ersatz in den Pflanztürmen), agrowtronics «Hydroponic Chives: The Grow Guide» (in Runde 12 nur offen, jetzt mit Bereichsregel).
+- Tower Garden: Seite «Growing Guidance» der Schulen (schools.towergarden.com) verlinkt die Pflanzenleitfäden als PDF auf dem Shopify-Speicher des Herstellers; Schnittlauch-Leitfaden frei lesbar (der Blogartikel `tower-garden-schnittlauch` bleibt gesperrt).
+- Websuche: «chives hydroponic first harvest weeks transplant», «Allium schoenoprasum hydroponic LED harvest days after transplanting regrowth», «hydroponic chives harvests before replanting», «hydroponic parsley how long productive months replace», «AeroGarden chives days harvest». Europe PMC: «Allium schoenoprasum» mit hydroponic, soilless, NFT, floating, aeroponic.
+- Neu gelesen: IGWorks «Growing Hydroponic Chives» (Hersteller iHarvest), Tower Garden Chives Plant Guide, Tower Garden «General Guidelines – Harvesting» und «The Best Herbs to Grow», Rise Gardens «How Long Do Hydroponic Plants Live Before You Replant?», Heliyon 2019 (Schnittlauch mit *Beauveria*).
+
+### Kandidaten
+
+| kandidat_id | Wert | Quelle | Klasse |
+|---|---|---|---|
+| `ak.allium_schoenoprasum.dauerkultur_blatt.ernte_ab_d#3` | 75 (Bereich 75 bis 85 Tage ab Saat, Direktsaat, Umsetztag nicht genannt) | crc-hydroponik-heimgaertner-2015 (Perlit-Türme) | C |
+| `ak.allium_schoenoprasum.dauerkultur_blatt.ernte_ab_d#4` | 3 (Bereich 3 bis 4 Wochen ab Umsetzen) | agrowtronics-schnittlauch-2021 (neu) | C |
+| `ak.allium_schoenoprasum.dauerkultur_blatt.ernte_ab_d#5` | 4 (Bereich 4 bis 5 Wochen, als ab Saat gelesen) | igworks-schnittlauch (neu) | B2 |
+| `ak.allium_schoenoprasum.dauerkultur_blatt.ernte_ab_d#6` | 2 (Bereich 2 bis 3 Wochen, ab Umsetzen aus dem Zusammenhang) | tower-garden-schnittlauch-leitfaden (neu) | B2 |
+| `ak.allium_schoenoprasum.schnitt.ernte_ab_d#2` bis `#5` | wie `dauerkultur_blatt` #3 bis #6 (75, 3, 4, 2) | dieselben | C, C, B2, B2 |
+| `ak.allium_schoenoprasum.dauerkultur_blatt.ernteintervall_d#1` | 2 (Bereich 2 bis 3 Wochen) | agrowtronics-schnittlauch-2021 | C |
+| `ak.allium_schoenoprasum.schnitt.ernteintervall_d#1` | 2 (Bereich 2 bis 3 Wochen) | agrowtronics-schnittlauch-2021 | C |
+| `ak.allium_schoenoprasum.schnitt.kulturdauer_max_d#1` | 1 Jahr ab Saat (Direktsaat; «continue growing well for a year provided they are frequently cut back») | crc-hydroponik-heimgaertner-2015 | C |
+| `ak.petroselinum_crispum.dauerkultur_blatt.kulturdauer_max_d#3` | 1 Jahr ab Saat (gleicher Satz, gilt für «parsleys») | crc-hydroponik-heimgaertner-2015 | C |
+
+Hinweise für den Lead:
+- CRC: Der Absatz «Sow the others directly into the substrate of the plant tower pot corners» belegt Direktsaat für Schnittlauch, Petersilie und Basilikum in den Türmen (nur Lavendel, Rosmarin, Thymian werden umgesetzt). Damit zählen «75-85 days from sowing» und die Ersatzangaben ab Saat; D7 zieht für `ernte_ab_d` den Umsetztag 28 ab.
+- CRC-Kulturdauer: Der neue Satz steht im selben Absatz wie die Ersatzregel («Replace thyme after 6 months, and basils … after 3-4 months»), anders als `petroselinum_crispum…kulturdauer_max_d#2` («easily last a year», verworfen). Ob «for a year» als Kulturende gilt, prüft die Methodenprüfung. Für Schnittlauch `dauerkultur_blatt` ist `kulturdauer_max_d` schon freigegeben (730); den Satz habe ich dort nicht angelegt.
+- IGWorks: Der Bezug von «4-5 weeks» steht nicht ausdrücklich da. Weil die Keimlinge «after only a few days» umgesetzt werden, habe ich nach der Regel im Auftrag «ab Saat, Umsetztag nicht genannt» eingetragen. Das System iHarvest (vertikal, Wurzeln in Nährlösung) ist als `substrat_inert` erfasst, das Medium nennt die Seite nicht.
+- Tower Garden: «TIME TO HARVEST 2-3 weeks» ist eine Kopfangabe ohne Bezug; ab Saat ist sie unmöglich (davor Keimung «roughly 1-2 weeks» und Umsetzen «about 1-2 weeks»), deshalb als ab Umsetzen gelesen. Die Methodenprüfung kann sie wegen des fehlenden ausdrücklichen Bezugs verwerfen.
+- Die Werte streuen ab Umsetzen von 2 bis 4 Wochen (Tower Garden 2-3, agrowtronics 3-4, IGWorks 4-5) und ab Saat 75 bis 85 Tage (CRC, Perlit-Türme, Gewächshaus).
+
+### Offene Werte (Form passt nicht, kein Kandidat)
+
+| Art | Feld | Wortlaut | Quelle | grund |
+|---|---|---|---|---|
+| Schnittlauch | `ernteintervall_d` | «Then, in two to three weeks, you can start harvesting» | agrowtronics (C) | gilt für Pflanzung aus geteilten Horsten, nicht für Folgeschnitte; nicht erfasst |
+
+### Verworfen oder ohne geeignete Zahl
+
+| Quelle | Grund |
+|---|---|
+| Tower Garden «General Guidelines – Harvesting» | Ersatz «once the plant bolts», keine Zahl; «Repeat every 2-3 days» gilt für Blattsalate |
+| Rise Gardens «How Long Do Hydroponic Plants Live Before You Replant?» | nur Kräuter allgemein («30 days (herbs and greens)», «start new seed pods for herbs every 3 weeks»), kein Schnittlauch, keine Petersilie |
+| Bright Agrotech (Medium, 2015) «Growing Chives in Hydroponics» | HTTP 403; laut Suchauszug Pflanzung aus Teilung, «after a couple of weeks» ohne Zahl; nicht unter «Nur im Browser», weil keine Zahl erwartet wird |
+| Heliyon 2019 (PMC6928240) | Töpfe mit Sand, Vermiculit, Perlit; Versuchsende drei Wochen nach Impfung, keine Ernteangabe |
+| AeroGarden (Scotts Miracle-Gro) Blog und FAQ | Kräuter allgemein (Ernte im Mittel 21 Tage, Kit «Harvest in 4-6 Weeks»), kein Schnittlauch |
+| dripcanopy, hydroponicsup, urbanhydrospace, scaleandstem, lanitexhydrogarden, hydroleopard, hortivinyl, growwithhydroponics, rootlessfarm, urbangrownhome, lifetips.alibaba | Seiten ohne erkennbare Quelle, Verdacht auf KI-Texte (Konzept 9.1) |
+| letpot «hydroponic garlic chives», Simply Hydroponics «every three to eight weeks» | *Allium tuberosum*, andere Art (Regel 4) |
+
+### Lückenliste Runde 14 (Klasse D)
+
+| Art | Kulturform | Feld | Stand und was Anbauquellen sagen |
+|---|---|---|---|
+| allium_schoenoprasum | `dauerkultur_blatt`, `schnitt` | `schnitte_max` | keine hydroponische Quelle nennt eine Zahl der Schnitte; Simply Hydroponics «after many harvests», CRC Ersatz nach einem Jahr ohne Schnittzahl; Freiland: Johnny's «3-4 times per year» ([Johnny's Chives](https://www.johnnyseeds.com/growers-library/herbs/chives/chives-key-growing-information.html)) |
+| petroselinum_crispum | `dauerkultur_blatt` | `schnitte_max` | keine Zahl; CRC «Harvest them regularly every few weeks», VT «until yields begin to diminish» ([VT SPES-466](https://www.pubs.ext.vt.edu/content/pubs_ext_vt_edu/en/SPES/spes-466/spes-466.html)) |
+
+### Nur im Browser lesbar
+
+| Artikelseite | erwartete Fundstelle | gesuchtes Feld |
+|---|---|---|
+| Lettuce Grow «Purly Chives», https://www.lettucegrow.com/products/purly-chives (HTTP 429 bei jedem Abruf, auch in Runde 12) | Kasten zur Sorte: Tage bis zur Ernte bzw. Zeit im Farmstand, Ernteintervall, Ersatz der Pflanze (aeroponischer Turm, Hersteller B2) | `ak.allium_schoenoprasum.*.ernte_ab_d`, `ernteintervall_d`, `schnitte_max`, `kulturdauer_max_d` |
+
+### Nachtrag Runde 14: Lesekopie des Koordinators (Lettuce Grow)
+
+| kandidat_id | Wert | Quelle | Klasse |
+|---|---|---|---|
+| `ak.allium_schoenoprasum.dauerkultur_blatt.ernte_ab_d#7` | 4 Wochen ab Umsetzen (Lieferung des bewurzelten Setzlings, «From delivery to harvest in about 4 weeks») | lettucegrow-schnittlauch (neu) | B2 |
+| `ak.allium_schoenoprasum.schnitt.ernte_ab_d#6` | 4 Wochen ab Umsetzen (gleicher Beleg) | lettucegrow-schnittlauch | B2 |
+
+Hinweise: Die Seite nennt das System nicht; Klasse B2 (Hersteller) und `anbaumethode = substrat_inert` stammen aus meiner Kenntnis des Farmstand-Systems (vertikaler Turm, Nährlösung rieselt über die Wurzeln, Setzlinge im Anzuchtpfropfen), analog zu Tower Garden. Ab Saat ist nichts ableitbar, weil das Alter der gelieferten Setzlinge unbekannt ist. Nicht angelegt: «Week 7+ · replant» (`kulturdauer_max_d` verlangt Tage ab Saat; der Wert zählt ab Lieferung) und «Weeks 4–7 · peak freshness» (kein Ernteintervall, keine Schnittzahl). «Growing details» liess sich nicht aufklappen.

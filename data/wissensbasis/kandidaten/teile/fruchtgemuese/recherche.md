@@ -542,3 +542,61 @@ Gesucht: Tomate `ernteintervall_d`, `schnitte_max`; Chili `schnitte_max`, `kultu
 |---|---|---|---|
 | 1 | «Experimental life cycle assessment of container-based vertical farming of chili pepper under two light intensities and three energy supply scenarios», Resources, Environment and Sustainability 2026, 100342, DOI 10.1016/j.resenv.2026.100342, https://www.sciencedirect.com/science/article/pii/S2666916126000563 (403; TUM-Repositorium mediatum mit Anubis-Sperre) | Methoden, Abschnitt Anbau und Ernte: Saat, Umsetzen, Dauer der Kultur in Tagen bzw. Wochen, Satz «harvested weekly over four harvest days, corresponding to the final four weeks of the cultivation period» (DWC, LED, Sorte 'Sweet Heat') | Chili `schnitte_max`, `kulturdauer_max_d` (auch `ernteintervall_d`) |
 | 2 | «Capsicum annuum in vertical indoor farming: yield and capsaicinoid responses to reduced light and additional UV-A», Scientia Horticulturae 350 (2025) 114364, DOI 10.1016/j.scienta.2025.114364, https://www.sciencedirect.com/science/article/pii/S0304423825004133 | Material und Methoden: Kulturdauer ab Saat, Erntetermine bzw. Zahl der Ernten | Chili `kulturdauer_max_d`, `schnitte_max` |
+
+## Runde 14 (#266)
+
+Gesucht: Tomate `schnitte_max`; Chili `schnitte_max`, `kulturdauer_max_d` (je `dauerkultur_frucht`). Abruf 22.11.2026.
+
+### Suchweg
+
+- «hydroponic sweet pepper rockwool weeks after sowing last harvest crop removed», «sweet pepper greenhouse rockwool year-round crop cycle weeks», «hydroponic greenhouse pepper crop is terminated plants are removed», «hydroponic chili pepper flushes harvests before replacing indoor LED».
+- Hersteller hydroponischer Indoor-Systeme: LetPot (DWC-Anleitung Paprika), Gardyn Help Center, AeroGarden-FAQ (Scotts Miracle-Gro), Rise Gardens.
+- Spanischsprachige Hydroponik-Literatur zu Kulturzyklen: «chile pimiento invernadero hidroponia cortes ciclo de cultivo», «tomate hidropónico ciclo largo cortes número de cortes por ciclo»; gelesen: Agric. Téc. Méx. 35(1) 2009 (PDF scielo.org.mx), Agrociencia 51(4) 2017, Agrociencia 48(2) 2014 (PDF scielo.org.mx), Span. J. Agric. Res. 6(3) 2008 (PDF dialnet).
+
+### Kandidaten
+
+| kandidat_id | Wert | Quelle | Klasse |
+|---|---|---|---|
+| `ak.capsicum_annuum.dauerkultur_frucht.kulturdauer_max_d#2` | 12 Monate («average lifespan for fruiting vegetables is about 12 months», Paprika ausdrücklich genannt; Zählbeginn nicht genannt) | AeroGarden-FAQ | B2 |
+| `ak.capsicum_annuum.dauerkultur_frucht.kulturdauer_max_d#3` | 213 Tage ab Saat (55 dds Umsetzen plus 158 Tage bis Ende der Ernte) | Agric. Téc. Méx. 2009, Tezontle mit Nährlösung | A |
+| `ak.capsicum_annuum.dauerkultur_frucht.kulturdauer_max_d#4` | 10 Monate (langer Jahreszyklus; kurzer Zyklus 6 Monate; Zählbeginn nicht genannt) | Span. J. Agric. Res. 2008, Steinwolle | A |
+| `ak.capsicum_annuum.dauerkultur_frucht.schnitte_max#1` | 11 («11 cortes … durante 61 días de cosecha», danach Zyklusende) | Agric. Téc. Méx. 2009 | A |
+| `ak.solanum_lycopersicum.dauerkultur_frucht.schnitte_max#1` | 5 («Los cortes de fruto fueron cinco», Zyklus nach 114 ddt abgeschlossen) | Agrociencia 2014, Tezontle mit Nährlösung | A |
+
+### Hinweise für Methodenprüfung und Lead
+
+- Die beiden mexikanischen Studien beschreiben ein **Kurzzyklus-System** (entspitzte Pflanzen, hohe Dichte, eine Ernteperiode, danach Ersatz; 2.3 bzw. 3 Zyklen je Jahr). Das ist eine Aussage zur Kultur (Zyklus abgeschlossen, neue Pflanzen), nicht nur ein Versuchsende; es ist aber keine langlaufende Dauerkultur wie im Regal. Passt die Kulturform nicht, sind `kulturdauer_max_d#3`, `schnitte_max#1` (Chili) und `schnitte_max#1` (Tomate) zu verwerfen. Die Tomate-Zahl 5 widerspricht der freigegebenen Tomate-Kulturdauer 364 Tage mit Intervall 7 Tage (Langzyklus).
+- AeroGarden: `anbaumethode` als `dwc` geführt (Wurzeln im Wassertank mit Flüssignährstoff, Seite nennt «indoor hydroponic system»; die Seite nennt den Systemtyp nicht wörtlich). Die Angabe gilt für Fruchtgemüse allgemein mit «tomatoes or peppers» als Beispiele; ob das Konzept 9.3 Regel 4 (gleiche Art) genügt, entscheidet die Methodenprüfung.
+- Span. J. Agric. Res. 2008: Die 10 Monate stehen in der Einleitung als Praxis im beheizten Gewächshaus; der Versuch selbst lief auf Steinwolle mit Nährlösung (Zyklen von etwa 6 Monaten «Following the cultural practices of the local growers»). Klasse A nach Studientyp; kein gemessener Wert für die 10 Monate.
+
+### Offene Werte (Form passt nicht, kein Kandidat)
+
+| Art, Feld | Wortlaut | Quelle | grund |
+|---|---|---|---|
+| Chili, `kulturdauer_max_d` | «En ambos sistemas, el ciclo de cultivo dura de 8 a 10 meses del trasplante a la cosecha, más 45 a 60 d que la plántula se desarrolla en el semillero» (Einleitung, Holländisches und Spanisches System) | Agrociencia 51(4) 2017, «Producción de pimiento morrón (Capsicum annuum L.) en ciclos cortos», https://www.scielo.org.mx/scielo.php?script=sci_arttext&pid=S1405-31952017000400437 | zwei Bereiche in verschiedenen Einheiten (Monate und Tage); Satz nennt kein Hydroponik-System (Zitat aus Literatur) |
+| Chili, `kulturdauer_max_d` | «Un ciclo de cultivo dura cuatro meses, si el fruto se cosecha con su color final, a partir del trasplante de plántulas de 60 d» (Diskussion) | Agrociencia 51(4) 2017 (Tezontle-Hydroponik) | Monate ab Umsetzen plus Tage Anzucht gemischt; Zitat aus anderer Arbeit; Kurzzyklus |
+| Chili, `kulturdauer_max_d` | «el ciclos de cultivo es de 9 a 11 meses» (Einleitung, holländischer Schnitt) | Agric. Téc. Méx. 2009 | Satz nennt kein Hydroponik-System, Zitat aus Literatur, Zählbeginn nicht genannt |
+
+### Verworfen
+
+| Quelle | Grund |
+|---|---|
+| LetPot «How to grow Hydroponic Bell Peppers indoors» | nur «60 to 90 days after planting» bis Reife, keine Zahl zu Ernten oder Kulturende |
+| Gardyn Help Center «How do I know when to remove a plant» | nur «several months», keine Zahl |
+| Rise Gardens «All about peppers» | nur Tage bis zur ersten Ernte, keine Zahl zu Ernten oder Ende |
+| SDSU Extension P-00337 (Hydroponik-Leitfaden 2025) | keine Angaben zu Ernten oder Kulturende bei Tomate und Paprika |
+| dutchgreenhouses.com «Sweet pepper» | «long-cycle crop planted once and carried through most of the year» ohne Zahl; Substrat ohne Nährlösungsangabe |
+| UGA Extension B1182 «Greenhouse Vegetable Production» | Tomate «Over the 10 months the plants are in production» (Tomate `kulturdauer_max_d` ist schon freigegeben); Paprika ohne Zahl |
+| hydroenv.com.mx (Jitomate-Leitfaden, laut Suchauszug Ersatz «cada cinco meses») | Cloudflare-Sperre; betrifft nur Tomate `kulturdauer_max_d` (schon freigegeben), daher nicht unter «Nur im Browser lesbar» |
+| Hobby- und Ratgeberseiten (peppergeek, hackaday, thehotpepper, mayfairfarms, hydrogreenspace, newsbytesapp) | Foren bzw. Praxisblogs ohne Beleg |
+
+### Lückenliste Runde 14 (Klasse D)
+
+| Art | Feld | Stand und was Anbauquellen sagen |
+|---|---|---|
+| Tomate | `schnitte_max` | für den Langzyklus keine Zahl der Pflückgänge je Pflanze; nur der Kurzzyklus-Kandidat (5, entspitzt über drei Trauben) |
+| Chili | `schnitte_max` | für den Langzyklus keine Zahl; nur der Kurzzyklus-Kandidat (11); Span. J. Agric. Res. 2008 nennt «Hand harvests … twice weekly until the following crop cycle» ohne Gesamtzahl |
+
+### Nur im Browser lesbar
+
+Keine neuen Einträge; die zwei Einträge aus Runde 13 (Container-Farm-Studie Chili, Scientia Horticulturae 2025) gelten weiter.
