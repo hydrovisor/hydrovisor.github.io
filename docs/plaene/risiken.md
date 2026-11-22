@@ -32,3 +32,4 @@ Stand 1.11.2026 · Grundlage Konzept v1.2 Kapitel 13.6 · Durchsicht wöchentlic
 | 12.11.2026 | RR16 neu: W0-Wissen fehlt im Repository (Befund beim Durchspielen der Inbetriebnahme, #174) |
 | 13.11.2026 | RR16 erledigt (W0 in Produktion, #190, #193); RR15 beobachten (Auslöser W0 in dev noch nicht eingetreten; Folgepaket Demo-Fixtures) |
 | 13.11.2026 | RR15 erledigt mit #199 (Demo auf echten Sorten, Entscheid 0020) |
+| 22.11.2026 | RR13: vorgezogene Zwischenprognose zum Prüfpunkt 30.11. (#268, `pruefpunkt_2026-11-30.md`): Bedingungen 1, 2, 5 erfüllt, 3 hält bisher (65 %, Fable 80 %), 4 offen (Tims Novemberstunden), 6 nicht erfüllt (`data/eval/tueten_referenz.csv` fehlt, Tims Handgriff); Prüfpunkt deshalb nicht vorgezogen, Entscheid am 30.11. |
