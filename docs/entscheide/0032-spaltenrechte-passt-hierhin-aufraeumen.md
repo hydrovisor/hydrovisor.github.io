@@ -25,6 +25,7 @@ Datum 28.11.2026 · Entscheid von Tim auf Empfehlung des Lead
 
 ## 3. Alte Worktrees: gelöscht durch den Lead (Ausnahme zu CLAUDE.md Regel 5, endgültiges Löschen)
 
+- **Empfehlung des Lead (Chat 28.11.2026, Punkt 3 der Empfehlungen):** löschen. Tims Satz oben bezieht sich auf diese Empfehlung; gelöscht wurde erst danach.
 - Gelöscht sind neun registrierte Worktrees unter `.claude/worktrees/` und deren Reste aus abgebrochenen Entfernungen.
 - Alle Zweige waren gemergt oder als Remote-Zweig gesichert; geprüft mit `git worktree list`, `git status` und `git branch -r --contains`.
 - Verloren ging nur eine nicht versionierte `.claude/launch.json` (Startkonfiguration des Dev-Servers) in einem der Worktrees.
