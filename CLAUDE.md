@@ -143,6 +143,7 @@ Vorschau: Cloudflare Pages `hydrovisor-vorschau` baut jeden Zweig (`<zweig>.hydr
 - [0030 Eigene wiederkehrende Aufgaben vor M2](docs/entscheide/0030-eigene-aufgaben-vor-m2.md)
 - [0031 Referenzdatei Tüten ins Repository durch den Lead (Ausnahme)](docs/entscheide/0031-tuetenreferenz-durch-den-lead.md)
 - [0032 Spaltenrechte gestrichen, «Passt hierhin» bis 21.1., alte Worktrees gelöscht](docs/entscheide/0032-spaltenrechte-passt-hierhin-aufraeumen.md)
+- [0033 Belegungsplan Runde 1: Umsetztag beim Säen, Petersilie, Schnittsalat, Babyleaf](docs/entscheide/0033-belegungsplan-runde-1.md)
 - Übrige Entscheide vom 1.11.2026: `docs/spec/00_rueckfragen.md` (R1 bis R13, W1 bis W14, Annahmen 1 bis 16)
 
 ## Arbeitsweise in der Sitzung
