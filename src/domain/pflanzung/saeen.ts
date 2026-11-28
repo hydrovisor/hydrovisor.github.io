@@ -777,11 +777,12 @@ function satzVorschlag(
   const umsetzenAb = zahl(art?.umsetzen_ab_d);
   const fenster =
     !direktsaat && s.zieltopfIds.length > 0 ? umsetzFensterSorte(teile, s.sorteId, e.saatdatum) : undefined;
-  const umsetzen = fenster ? { ...fenster, gewaehlt: s.umsetzenGeplantAm ?? fenster.vorschlag } : undefined;
+  // Prüfer Runde 1 Befund 4: gewählt = gültige Wahl, sonst Vorschlag (die Prüfung meldet die ungültige Wahl)
+  const umsetzen = fenster ? { ...fenster, gewaehlt: geplanterTag(fenster, s.umsetzenGeplantAm) } : undefined;
   const umsetzenAm = direktsaat
     ? e.saatdatum
     : umsetzen
-      ? geplanterTag(umsetzen, umsetzen.gewaehlt)
+      ? umsetzen.gewaehlt
       : umsetzenAb === undefined
         ? undefined
         : tagPlus(e.saatdatum, umsetzenAb);
@@ -804,7 +805,7 @@ function satzVorschlag(
     keimtemp: wahl.keimtemp,
     ...(umsetzenAm ? { umsetzenAm } : {}),
     ...(umsetzen ? { umsetzen } : {}),
-    ...passungVon(teile, e, s, jetzt, zeitzone),
+    ...passungVon(teile, e, s, jetzt, zeitzone, umsetzen?.gewaehlt),
   };
 }
 
@@ -815,13 +816,16 @@ function passungVon(
   s: SatzEingabe,
   jetzt: Date,
   zeitzone: Zeitzone,
+  /** Plan 278: gewählter Umsetztag; Einstufung und Rang an diesem Tag (R3.1), die übrigen Sorten am Vorschlag */
+  umsetzenAm?: string,
 ): { passung?: Passung; rang?: number } {
   if (!e.zielPlatzId || !/^\d{4}-\d{2}-\d{2}$/.test(e.saatdatum)) return {};
   // Plan 215 A9: Rang unter denselben vorrätigen Sorten, die Säen zeigt
   const sorten = sortenAuswahl(teile, jetzt).map((w) =>
     w.sorteId === s.sorteId ? { ...w, kulturform: s.kulturform as Kulturform } : w,
   );
-  const x = sortenPassung(teile ?? {}, sorten, e.zielPlatzId, e.saatdatum, jetzt, zeitzone).find(
+  const tage = umsetzenAm ? new Map([[s.sorteId, umsetzenAm]]) : undefined;
+  const x = sortenPassung(teile ?? {}, sorten, e.zielPlatzId, e.saatdatum, jetzt, zeitzone, tage).find(
     (w) => w.sorteId === s.sorteId,
   );
   return x ? { passung: x.passung, rang: x.rang } : {};
