@@ -72,7 +72,9 @@ const RUNDE11: [string, string, keyof Kulturform, number][] = [
   ['brassica_rapa_chinensis', 'kopf', 'kulturdauer_max_d', 60],
   ['capsicum_annuum', 'dauerkultur_frucht', 'ernteintervall_d', 7],
   ['lactuca_sativa', 'schnitt', 'ernteintervall_d', 7],
-  ['lactuca_sativa', 'schnitt', 'kulturdauer_max_d', 42],
+  // #277 (Korrektur C, Tims Entscheid 28.11.2026): 42 Tage zählten ab Umsetzen; neue Fassung 56 Tage ab Saat
+  // (42 + 14 Tage Plantag), die Fassung 42 schliesst der Seed (tests/seed/w0-korrektur-1128.test.ts)
+  ['lactuca_sativa', 'schnitt', 'kulturdauer_max_d', 56],
   ['lactuca_sativa', 'schnitt', 'schnitte_max', 2],
   ['ocimum_basilicum', 'dauerkultur_blatt', 'ernteintervall_d', 21],
   ['ocimum_basilicum', 'schnitt', 'ernteintervall_d', 21],

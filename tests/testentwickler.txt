@@ -367,3 +367,6 @@ tests/seed/w0-runde13.test.ts
 # W0 Runde 14 Ernte ab Schnittlauch und Spinat Schnitt (#266)
 tests/unit/w0-runde14.test.ts
 tests/seed/w0-runde14.test.ts
+# W0-Korrekturen C und F, Basilikum-Nachkontrolle (#277)
+tests/unit/w0-korrektur-1128.test.ts
+tests/seed/w0-korrektur-1128.test.ts

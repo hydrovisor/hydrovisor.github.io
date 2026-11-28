@@ -15,7 +15,9 @@ const RUNDE11: Record<string, string> = {
   'ak.brassica_rapa_chinensis.kopf.kulturdauer_max_d': '60',
   'ak.capsicum_annuum.dauerkultur_frucht.ernteintervall_d': '7',
   'ak.lactuca_sativa.schnitt.ernteintervall_d': '7',
-  'ak.lactuca_sativa.schnitt.kulturdauer_max_d': '42',
+  // #277 (Korrektur C, Tims Entscheid 28.11.2026): 42 Tage zählten ab Umsetzen; neue Zeile 56 Tage ab Saat
+  // (42 + 14 Tage Plantag) mit freigegeben_am 2026-11-28 (tests/unit/w0-korrektur-1128.test.ts)
+  'ak.lactuca_sativa.schnitt.kulturdauer_max_d': '56',
   'ak.lactuca_sativa.schnitt.schnitte_max': '2',
   'ak.ocimum_basilicum.dauerkultur_blatt.ernteintervall_d': '21',
   'ak.ocimum_basilicum.schnitt.ernteintervall_d': '21',
