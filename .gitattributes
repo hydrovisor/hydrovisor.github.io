@@ -1,3 +1,5 @@
 * text=auto eol=lf
 *.woff2 binary
 *.png binary
+# Tims Referenzdatei byte-gleich lassen (CRLF), sonst weicht der Hash im Prüftor ab (Entscheid 0031)
+data/eval/tueten_referenz.csv -text
