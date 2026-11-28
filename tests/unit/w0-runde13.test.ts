@@ -25,10 +25,22 @@ type W0Dateien = Parameters<typeof pruefen>[0];
  */
 const AUSGANGSSTAND = {
   commit: '3e31c0b',
-  zeilen: 149,
-  pruefsumme: '18e0f3dfec0aa2',
+  // #277: vorher 149 Zeilen und '18e0f3dfec0aa2' (mit den zwei korrigierten Zeilen)
+  zeilen: 147,
+  pruefsumme: '1b2d83682248a',
   runde13Datum: '2026-11-21',
 } as const;
+
+/**
+ * #277 (W0-Korrekturen C und F, 28.11.2026): Die zwei Zeilen tragen seit der Korrektur neue Werte (56 bzw. 51) und
+ * freigegeben_am 2026-11-28 und fallen aus der Teilmenge vor dieser Runde. Sie sind deshalb auch im Ausgangsstand
+ * ausgenommen; Zeilenzahl und Prüfsumme am 28.11.2026 aus demselben Commit ohne diese zwei Zeilen neu berechnet
+ * (Vorgehen wie bei K-mangold-02 in w0-runde13.test.ts). Ihren neuen Stand prüft tests/unit/w0-korrektur-1128.test.ts.
+ */
+const KORRIGIERT_277 = new Set([
+  'ak.lactuca_sativa.schnitt.kulturdauer_max_d',
+  'ak.valerianella_locusta.kopf.ernte_ab_d',
+]);
 
 interface NeueZeile {
   wert: string;
@@ -179,7 +191,11 @@ describe('W13-AK1 W0 Runde 13 in data/wissensbasis/freigegeben', () => {
     const spalten = tabelle(d, PFAD.art).spalten;
     // Teilmenge vor Runde 13: spätere Runden mit nur neuen Zeilen ändern sie nicht; eine korrigierte alte Zeile
     // trägt ein neues Datum, fällt heraus und macht den Test bewusst rot
-    const vorRunde13 = art.filter((z) => (z['freigegeben_am'] ?? '') < AUSGANGSSTAND.runde13Datum);
+    // #277: die zwei korrigierten Zeilen sind ausgenommen (KORRIGIERT_277)
+    const vorRunde13 = art.filter(
+      (z) =>
+        (z['freigegeben_am'] ?? '') < AUSGANGSSTAND.runde13Datum && !KORRIGIERT_277.has(z['zeile_id'] ?? ''),
+    );
     expect(vorRunde13).toHaveLength(AUSGANGSSTAND.zeilen);
     expect(pruefsumme(spalten, vorRunde13), `Stand ${AUSGANGSSTAND.commit}`).toBe(AUSGANGSSTAND.pruefsumme);
   });
