@@ -3,9 +3,10 @@
 // Annahmen (A): Auflösung der Sollwerte Art vor Kulturgruppe vor Standard (wie v_sollwert; die Ebene Sorte hat in W0
 // keine Zeilen und ist nicht nachgebildet); EC-Basis «zuwachs» plus ECWasser 0.5 (W0 hat keine solche Zeile); u_EC 0.10
 // (Standard ohne Geräteprüfung); Bereiche mit den Startwerten aus Konzept 5.2 (15 h Licht, nutzbare Höhe 450, 200,
-// 150, 150 mm); ein Loch frei, keine gemessene Wassertemperatur. Die Phase wird nicht aus dem Umsetzdatum gerechnet:
-// Abschnitt 2 rechnet die Phasen im Zielgefäss ab Wachstum (die App bewertet am Umsetzdatum, Direktsaat im Wachstum).
-// Jede Kultur zählt gegen alle übrigen Töpfe ihres Gefässes nach der Topfzahl aus Konzept 5.5, auch der eigenen Art.
+// 150, 150 mm); ein Loch frei, keine gemessene Wassertemperatur. Abschnitt 2 rechnet am geplanten Umsetztag aus Konzept
+// 14.1 mit der Phase nach dem Alter (Wachstum ab Keimung + Anzucht, typische Dauern aus W0; die App nutzt phaseAm()) und
+// zusätzlich «später» mit allen im Wachstum. Jede Kultur zählt gegen alle übrigen Töpfe ihres Gefässes nach der
+// Topfzahl aus Konzept 5.5, auch der eigenen Art.
 import { dateienLesen } from '../seed/dateien.ts';
 import { artAuswahl } from '../../src/domain/w0/auswahl.ts';
 import { ladeplan, type Zielzeile } from '../../src/domain/w0/abbildung.ts';
@@ -67,13 +68,18 @@ interface Pflanze {
   kf: Kulturform;
   /** Töpfe im Gefäss nach Konzept 5.5 */
   toepfe: number;
+  /** Saat und geplantes Umsetzen in Tagen ab 7.1.2027 (Konzept 14.1); ohne Umsetzen: Direktsaat */
+  saat: number;
+  umsetzen?: number;
 }
-const P = (name: string, artName: string, kf: Kulturform, toepfe: number): Pflanze => ({
-  name,
-  art: art(artName),
-  kf,
-  toepfe,
-});
+const P = (
+  name: string,
+  artName: string,
+  kf: Kulturform,
+  toepfe: number,
+  saat = 0,
+  umsetzen?: number,
+): Pflanze => ({ name, art: art(artName), kf, toepfe, saat, ...mit('umsetzen', umsetzen) });
 
 function kandidat(p: Pflanze, phase: Phase, ohneSystem = false): PassungKontext['kandidat'] {
   const a = p.art;
@@ -129,7 +135,7 @@ const G: Gefaess[] = [
     loecher: 4,
     ebene: 1,
     leitkultur: 'Tomate',
-    pflanzen: [P('Tomate', 'Tomate', 'dauerkultur_frucht', 4)],
+    pflanzen: [P('Tomate', 'Tomate', 'dauerkultur_frucht', 4, 0, 21)],
   },
   {
     kennung: '1.2',
@@ -139,7 +145,7 @@ const G: Gefaess[] = [
     loecher: 4,
     ebene: 1,
     leitkultur: 'Chili',
-    pflanzen: [P('Chili', 'Chili', 'dauerkultur_frucht', 4)],
+    pflanzen: [P('Chili', 'Chili', 'dauerkultur_frucht', 4, 0, 21)],
   },
   {
     kennung: '2.1',
@@ -149,7 +155,10 @@ const G: Gefaess[] = [
     loecher: 6,
     ebene: 2,
     leitkultur: 'Basilikum',
-    pflanzen: [P('Basilikum', 'Basilikum', 'dauerkultur_blatt', 3), P('Pak Choi', 'Pak Choi', 'kopf', 3)],
+    pflanzen: [
+      P('Basilikum', 'Basilikum', 'dauerkultur_blatt', 3, 28, 48),
+      P('Pak Choi', 'Pak Choi', 'kopf', 3, 28, 42),
+    ],
   },
   {
     kennung: '2.2',
@@ -160,8 +169,8 @@ const G: Gefaess[] = [
     ebene: 2,
     leitkultur: 'Petersilie',
     pflanzen: [
-      P('Petersilie', 'Petersilie', 'dauerkultur_blatt', 1),
-      P('Schnittlauch', 'Schnittlauch', 'dauerkultur_blatt', 1),
+      P('Petersilie', 'Petersilie', 'dauerkultur_blatt', 1, 0, 35),
+      P('Schnittlauch', 'Schnittlauch', 'dauerkultur_blatt', 1, 0, 28),
     ],
   },
   {
@@ -172,7 +181,7 @@ const G: Gefaess[] = [
     loecher: 6,
     ebene: 2,
     leitkultur: 'Salat',
-    pflanzen: [P('Schnittsalat (Lollo Rossa, Eissalat, Eichblatt)', 'Salat', 'schnitt', 6)],
+    pflanzen: [P('Schnittsalat (Lollo Rossa, Eissalat, Eichblatt)', 'Salat', 'schnitt', 6, 0, 14)],
   },
   {
     kennung: '3.1',
@@ -212,10 +221,11 @@ function kontext(
   g: Gefaess,
   andere: Pflanze[],
   ohneGefaess = false,
+  phaseVon: (p: Pflanze) => Phase = () => phase,
 ): PassungKontext {
   const baender = (gr: string) =>
     andere
-      .map((p) => band(p.art, phase, gr))
+      .map((p) => band(p.art, phaseVon(p), gr))
       .reduce<Band | undefined>((s, b) => (s && b ? bandSchnitt(s, b) : (s ?? b)), undefined);
   const leit = andere.find((p) => p.art['name_de'] === g.leitkultur) ?? andere[0];
   const leitKf = leit ? kulturform(String(leit.art['art_id']), leit.kf) : undefined;
@@ -252,7 +262,7 @@ function kontext(
             kulturgruppeId: String(leit.art['kulturgruppe_id'] ?? ''),
             ...mit('kulturdauerTypischD', zahl(leitKf?.['kulturdauer_typisch_d'])),
             ...mit('wuchshoeheMm', zahl(leit.art['wuchshoehe_max_mm'])),
-            ...mit('ec', band(leit.art, phase, 'ec')),
+            ...mit('ec', band(leit.art, phaseVon(leit), 'ec')),
           },
         }
       : {}),
@@ -291,7 +301,7 @@ w();
 const ecZeilen = T.profilwert.filter((z) => z['groesse'] === 'ec');
 const ecUnbekannt = ecZeilen.filter((z) => (z['ec_basis_quelle'] ?? 'unbekannt') === 'unbekannt').length;
 w(
-  `Annahmen (A): Sollwerte der Art, sonst der Kulturgruppe, sonst der Standard (die Ebene Sorte hat in W0 keine Zeilen); EC-Basis «Zuwachs» plus ECWasser 0.5 (W0 hat keine solche Zeile; ${String(ecUnbekannt)} von ${String(ecZeilen.length)} EC-Zeilen tragen die Basis «unbekannt», die App zeigt dazu «EC-Basis unklar»); u_EC 0.10; Bereiche mit den Startwerten aus Konzept 5.2 (15 h Licht, nutzbare Höhe 45, 20, 15, 15 cm); keine gemessene Wassertemperatur. Die Phase wird nicht aus dem Umsetzdatum gerechnet. «nicht geprüft» nennt die Zeilen von R3.2, für die in W0 ein Stammwert fehlt; sie werten nicht ab (Fachregeln R3.4).`,
+  `Annahmen (A): Sollwerte der Art, sonst der Kulturgruppe, sonst der Standard (die Ebene Sorte hat in W0 keine Zeilen); EC-Basis «Zuwachs» plus ECWasser 0.5 (W0 hat keine solche Zeile; ${String(ecUnbekannt)} von ${String(ecZeilen.length)} EC-Zeilen tragen die Basis «unbekannt», die App zeigt dazu «EC-Basis unklar»); u_EC 0.10; Bereiche mit den Startwerten aus Konzept 5.2 (15 h Licht, nutzbare Höhe 45, 20, 15, 15 cm); keine gemessene Wassertemperatur. Die Phase am Umsetztag folgt dem Alter nach den typischen Dauern aus W0, ohne bestätigte Phasen. «nicht geprüft» nennt die Zeilen von R3.2, für die in W0 ein Stammwert fehlt; sie werten nicht ab (Fachregeln R3.4).`,
 );
 w();
 w(
@@ -315,27 +325,56 @@ w();
 w('## 2 Mix je Gefäss nach Konzept 5.5');
 w();
 w(
-  'Jede Kultur wird gegen alle übrigen Töpfe ihres Gefässes gerechnet, nach der Topfzahl aus Konzept 5.5 und auch gegen die der eigenen Art. Gerechnet sind die Phasen im Zielgefäss: Die App bewertet am Umsetzdatum, die Anzucht läuft auf den Stationen 4.2 bis 4.4, Direktsaat (3.1 bis 3.3) zählt im Wachstum.',
+  'Jede Kultur wird gegen alle übrigen Töpfe ihres Gefässes gerechnet, nach der Topfzahl aus Konzept 5.5 und auch gegen die der eigenen Art. Zeile «Umsetztag»: wie die App beim Säen, am geplanten Umsetztag aus Konzept 14.1, jede Pflanze in der Phase ihres Alters an diesem Tag (Wachstum ab Keimung + Anzucht nach den typischen Dauern in W0, davor Anzucht). Zeile «später»: alle im Wachstum, bei Fruchtgemüse auch Blüte und Fruchtbildung (A, unabhängig vom Datum). Direktsaat (3.1 bis 3.3) zählt in der App immer im Wachstum.',
 );
 w();
 w(
-  '| Gefäss | Kultur (Töpfe) | Phase | Urteil | Gemeinsamer Bereich pH | Gemeinsamer Bereich EC | nicht geprüft |',
+  '| Gefäss | Kultur (Töpfe) | Zeitpunkt und Phase | Urteil | Gemeinsamer Bereich pH | Gemeinsamer Bereich EC | nicht geprüft |',
 );
 w('|---|---|---|---|---|---|---|');
+const typ = (p: Pflanze, phase: string) => zahl(sollwert(p.art, phase, 'dauer')?.z['wert_typ']) ?? 0;
+const wachstumAb = (p: Pflanze) => typ(p, 'keimung') + typ(p, 'anzucht');
+const phaseAmTag = (p: Pflanze, tag: number): Phase =>
+  p.umsetzen === undefined || tag - p.saat >= wachstumAb(p) ? 'wachstum' : 'anzucht';
+const datum = (tag: number) => {
+  const d = new Date(Date.UTC(2027, 0, 7 + tag));
+  return `${String(d.getUTCDate())}.${String(d.getUTCMonth() + 1)}.`;
+};
 for (const g of G)
   for (const k of g.pflanzen) {
     const andere = g.pflanzen.flatMap((p) => Array<Pflanze>(p === k ? p.toepfe - 1 : p.toepfe).fill(p));
-    const phasen: Phase[] =
-      k.kf === 'dauerkultur_frucht' ? ['wachstum', 'bluete', 'fruchtbildung_reife'] : ['wachstum'];
-    for (const ph of phasen) {
-      const kx = kontext(k, ph, g, andere);
+    const zeile = (titel: string, ph: Phase, phaseVon?: (p: Pflanze) => Phase) => {
+      const kx = kontext(k, ph, g, andere, false, phaseVon);
       const p = passung(kx);
       const phS = bandSchnitt(kx.kandidat.ph, kx.zielbereich.ph) ?? kx.kandidat.ph;
       const ecS = bandSchnitt(kx.kandidat.ec, kx.zielbereich.ec) ?? kx.kandidat.ec;
       w(
-        `| ${g.kennung} | ${k.name} (${String(k.toepfe)}) | ${PHASE[ph] as string} | ${urteil(p)} | ${b(phS)} | ${b(ecS)} | ${p.nichtGeprueft.join(', ') || '–'} |`,
+        `| ${g.kennung} | ${k.name} (${String(k.toepfe)}) | ${titel} | ${urteil(p)} | ${b(phS)} | ${b(ecS)} | ${p.nichtGeprueft.join(', ') || '–'} |`,
       );
+    };
+    if (k.umsetzen === undefined) {
+      zeile('Direktsaat: Wachstum', 'wachstum');
+      continue;
     }
+    const tag = k.umsetzen;
+    const amTag = phaseAmTag(k, tag);
+    const mit2 = g.pflanzen
+      .filter((p) => p !== k)
+      .map((p) => `${p.name} ${PHASE[phaseAmTag(p, tag)] as string}`);
+    zeile(
+      `Umsetztag ${datum(tag)} (Tag ${String(tag - k.saat)}, Wachstum ab Tag ${String(wachstumAb(k))}): ${PHASE[amTag] as string}${mit2.length > 0 ? `; ${mit2.join(', ')}` : ''}`,
+      amTag,
+      (p) => phaseAmTag(p, tag),
+    );
+    const spaeter: Phase[] =
+      k.kf === 'dauerkultur_frucht' ? ['wachstum', 'bluete', 'fruchtbildung_reife'] : ['wachstum'];
+    for (const ph of spaeter)
+      if (!(
+        ph === 'wachstum' &&
+        amTag === 'wachstum' &&
+        g.pflanzen.every((p) => phaseAmTag(p, tag) === 'wachstum')
+      ))
+        zeile(`später: ${PHASE[ph] as string}`, ph);
   }
 w();
 w('## 3 Matrix Art gegen Art');
@@ -346,7 +385,13 @@ w(
 const alle: Pflanze[] = T.art.map((a) => {
   const kf = String(a['kulturform_vorgabe'] ?? 'kopf') as Kulturform;
   return (
-    runde.find((p) => p.art === a && p.kf === kf) ?? { name: String(a['name_de']), art: a, kf, toepfe: 1 }
+    runde.find((p) => p.art === a && p.kf === kf) ?? {
+      name: String(a['name_de']),
+      art: a,
+      kf,
+      toepfe: 1,
+      saat: 0,
+    }
   );
 });
 const neutral: Gefaess = {
@@ -381,19 +426,31 @@ w();
 w('## 4 Befunde (Lead, 28.11.2026)');
 w();
 w(
-  '1. **2.1 Basilikum mit Pak Choi: «Nicht empfohlen».** Im Wachstum bleibt als gemeinsame EC nur 1.5 bis 1.6 (Basilikum 1.0 bis 1.6, Pak Choi 1.5 bis 2.0), schmaler als die Mindestbreite 0.3; beide EC-Bänder tragen in W0 die Basis «unbekannt». Die App zeigt die Einstufung beim Säen an. In der Anzucht hätten die beiden keine gemeinsame EC (0.4 bis 0.8 gegen 1.0 bis 1.4); das bleibt ohne Folge für 2.1, weil die Anzucht auf den Stationen läuft. Tim entscheidet den Mix: (a) lassen; beim Ansatz verlangt die App dann den Mischentscheid nach R2.4, entweder Leitkultur Basilikum (EC 1.0 bis 1.6, Pak Choi höchstens «Knapp daneben») oder Kompromiss (Mittel der Bandmitten 1.3 und 1.75 ± 0.15, rund 1.38 bis 1.68); (b) Pak Choi tauschen: im Wachstum ist er zu Randen «Empfohlen», zu Spinat (P8) und Chili (P10) «Möglich»; (c) Basilikum behalten und einen Partner wählen, der passt: zu Basilikum sind im Wachstum Salat, Nüsslisalat, Chili, Petersilie, Schnittlauch und Mangold «Empfohlen».',
+  '1. **2.1 Basilikum mit Pak Choi: «Nicht empfohlen».** Am Umsetztag gibt es keine gemeinsame EC: am 18.2. stehen beide in der Anzucht (Basilikum 0.4 bis 0.8, Pak Choi 1.0 bis 1.4), am 24.2. ist Pak Choi im Wachstum (1.5 bis 2.0) und Basilikum noch in der Anzucht. Später, beide im Wachstum, bleibt nur 1.5 bis 1.6 (Basilikum 1.0 bis 1.6), schmaler als die Mindestbreite 0.3. Beide EC-Bänder tragen in W0 die Basis «unbekannt». Die App zeigt die Einstufung beim Säen an. Tim entscheidet den Mix: (a) lassen; bei jedem Ansatz verlangt die App dann den Mischentscheid nach R2.4 zwischen Leitkultur (Basilikum, im Wachstum EC 1.0 bis 1.6, Pak Choi höchstens «Knapp daneben»), anderer Phase und Kompromiss (im Wachstum Mittel der Bandmitten 1.3 und 1.75 ± 0.15, rund 1.38 bis 1.68); (b) Pak Choi tauschen: im Wachstum ist er zu Randen «Empfohlen», zu Spinat (P8) und Chili (P10) «Möglich»; (c) Basilikum behalten und einen Partner wählen, der passt: zu Basilikum sind im Wachstum Salat, Nüsslisalat, Chili, Petersilie, Schnittlauch und Mangold «Empfohlen».',
 );
 w(
   '2. **Systemeignung in W0 widerspricht der Startbelegung.** Tomate trägt nur «kratky» (Quelle zu Kratky-Tomaten), die App meldet in 1.1 «nicht für DWC». Nüsslisalat und Spinat tragen nur «dwc» (Quellen mit Floating-System), die App meldet in 3.1 und 3.2 «nicht für Kratky». Für Chili und Schnittlauch fehlt der Wert (nicht geprüft). Folge: W0-Nachrecherche der Systemeignung durch den Lead (Entscheid 0018) vor der Gesamtfreigabe. Findet sie für Nüsslisalat und Spinat keine Kratky-Quelle, entscheidet Tim, ob «Kratky belüftet» fachlich wie DWC gilt (Konzept 8.1 Regel 8 ordnet es Kratky zu).',
 );
 w(
-  '3. **Tomate: zwei Bänder schmaler als die Mindestbreite.** Im Wachstum ist die EC 1.2 bis 1.4 nur 0.2 breit; ab dem zweiten Topf meldet die App in 1.1 deshalb zusätzlich «EC bleibt 1.2 bis 1.4, schmaler als 0.3», und der Ansatz verlangt den Mischentscheid nach R2.4. Der Lead prüft das Band in der W0-Nachrecherche (Entscheid 0018). In der Anzucht ist der pH 5.6 bis 5.8 ebenfalls nur 0.2 breit (Abschnitt 1); das bleibt ohne Folge, weil die Anzucht auf den Stationen 4.2 und 4.3 läuft und die App in 1.1 am Umsetzdatum im Wachstum mit pH 5.8 bis 6.2 rechnet.',
+  '3. **Tomate in 1.1: zwei Bänder schmaler als die Mindestbreite.** Am Umsetztag 28.1. steht Tomate noch in der Anzucht; der pH 5.6 bis 5.8 ist nur 0.2 breit, ab dem zweiten Topf meldet die App «pH bleibt 5.6 bis 5.8, schmaler als 0.3». Im Wachstum ist die EC 1.2 bis 1.4 ebenfalls nur 0.2 breit, mit derselben Folge und dem Mischentscheid nach R2.4 bei jedem Ansatz. Der Lead prüft beide Bänder in der W0-Nachrecherche (Entscheid 0018).',
 );
 w(
-  '4. **1.2, 2.2, 2.3 und 3.3 sind «Empfohlen».** Petersilie und Schnittlauch teilen pH 5.5 bis 6.0 und EC 1.0 bis 1.3. Die Restbreite EC ist genau die Mindestbreite 0.3 ohne Reserve; liegt u_EC aus der Geräteprüfung über 0.15, wird 2.2 zum Konfliktfall (Konzept, Risiko u_EC). Dasselbe gilt für Salat in 2.3 und 3.3 (EC 1.2 bis 1.5).',
+  '4. **2.2 Petersilie mit Schnittlauch: am Umsetztag des Schnittlauchs «Nicht empfohlen».** Am 4.2. steht Schnittlauch nach W0 noch in der Anzucht (EC 0.4 bis 0.8), Petersilie zählt als reservierte Pflanze im Wachstum (1.0 bis 1.3): keine gemeinsame EC. Sind beide im Wachstum, ist 2.2 «Empfohlen» mit pH 5.5 bis 6.0 und EC 1.0 bis 1.3. Tim kann den Umsetztag des Schnittlauchs beim Säen ab Tag 31 (7.2.) wählen, das Fenster reicht bis 18.2.; der Lead prüft Umsetzfenster und Anzuchtdauer in W0 (Befund 5).',
+);
+const frueh = runde
+  .filter((p) => p.umsetzen !== undefined && (zahl(p.art['umsetzen_ab_d']) ?? 0) < wachstumAb(p))
+  .map(
+    (p) =>
+      `${String(p.art['name_de'])} (Umsetzen ab Tag ${String(zahl(p.art['umsetzen_ab_d']))}, Wachstum ab Tag ${String(wachstumAb(p))})`,
+  );
+w(
+  `5. **Umsetzfenster vor dem Ende der Anzucht.** Bei ${String(frueh.length)} Arten beginnt «Umsetzen ab» in W0 vor Keimung + Anzucht nach den typischen Dauern: ${frueh.join(', ')}. Die App bewertet diese Kulturen am Umsetztag mit den Sollwerten der Anzucht, obwohl sie dann im Zielgefäss stehen. Der Lead prüft in der W0-Nachrecherche, ob Umsetzfenster und Phasendauern zusammenpassen (Entscheid 0018).`,
 );
 w(
-  '5. **Fehlende Stammwerte:** Die Wuchshöhe (P5, P9) fehlt bei allen Arten und Sorten, die Wuchsform «hängend» bei Tumbling Tom und Ampelo Gelb; Pythium (P7), «Kulturdauer typisch» (P8) und der Wasserbedarf je Pflanze (P11) fehlen bei mehreren Arten. Diese Zeilen werten nicht ab; sie gehören zur Vollständigkeit der Gesamtfreigabe (Konzept 9.5 Schritt 5).',
+  '6. **1.2, 2.3 und 3.3 sind «Empfohlen».** In 2.3 und 3.3 (Salat, EC 1.2 bis 1.5) und in 2.2 (EC 1.0 bis 1.3) ist die Restbreite EC genau die Mindestbreite 0.3 ohne Reserve; liegt u_EC aus der Geräteprüfung über 0.15, werden sie zum Konfliktfall (Konzept, Risiko u_EC).',
+);
+w(
+  '7. **Fehlende Stammwerte:** Die Wuchshöhe (P5, P9) fehlt bei allen Arten und Sorten, die Wuchsform «hängend» bei Tumbling Tom und Ampelo Gelb; Pythium (P7), «Kulturdauer typisch» (P8) und der Wasserbedarf je Pflanze (P11) fehlen bei mehreren Arten. Diese Zeilen werten nicht ab; sie gehören zur Vollständigkeit der Gesamtfreigabe (Konzept 9.5 Schritt 5).',
 );
 w();
 console.log(out.join('\n'));
