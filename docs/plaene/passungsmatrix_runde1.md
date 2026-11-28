@@ -2,7 +2,7 @@
 
 Stand 28.11.2026 · Lead · gerechnet mit `scripts/w0/passungsmatrix.ts` aus `data/wissensbasis/freigegeben/` (381 Profilwerte, 11 Arten) und der Entscheidungstabelle R3.2 der App (`passung()`). Tim bestätigt damit den Mix je Gefäss aus Konzept 5.5 oder passt ihn an.
 
-Annahmen (A): Sollwerte der Art, sonst der Kulturgruppe, sonst der Standard; EC-Basis «Zuwachs» plus ECWasser 0.5; u_EC 0.10; Bereiche mit den Startwerten aus Konzept 5.2 (15 h Licht, nutzbare Höhe 45, 20, 15, 15 cm); keine gemessene Wassertemperatur. «nicht geprüft» nennt die Zeilen von R3.2, für die in W0 ein Stammwert fehlt; sie werten nicht ab (Fachregeln R3.4).
+Annahmen (A): Sollwerte der Art, sonst der Kulturgruppe, sonst der Standard (die Ebene Sorte hat in W0 keine Zeilen); EC-Basis «Zuwachs» plus ECWasser 0.5 (W0 hat keine solche Zeile; 29 von 40 EC-Zeilen tragen die Basis «unbekannt», die App zeigt dazu «EC-Basis unklar»); u_EC 0.10; Bereiche mit den Startwerten aus Konzept 5.2 (15 h Licht, nutzbare Höhe 45, 20, 15, 15 cm); keine gemessene Wassertemperatur. Die Phase wird nicht aus dem Umsetzdatum gerechnet. «nicht geprüft» nennt die Zeilen von R3.2, für die in W0 ein Stammwert fehlt; sie werten nicht ab (Fachregeln R3.4).
 
 Codes: P1 Systemeignung, P2 Restbreite pH oder EC, P3 freies Loch, P4 Licht und Schossen, P5 Höhe, P6 Wassertemperatur, P7 Pythium, P8 Kulturdauer gegen Leitkultur, P9 Beschattung, P10 EC-Mitte, P11 Liter je Pflanze.
 
@@ -35,40 +35,30 @@ Codes: P1 Systemeignung, P2 Restbreite pH oder EC, P3 freies Loch, P4 Licht und 
 
 ## 2 Mix je Gefäss nach Konzept 5.5
 
-Jede Kultur wird gegen die übrigen Kulturen ihres Gefässes gerechnet; in einem Gefäss mit einer Art gelten nur die Zeilen P1 und P3 bis P6 (leeres Gefäss).
+Jede Kultur wird gegen alle übrigen Töpfe ihres Gefässes gerechnet, nach der Topfzahl aus Konzept 5.5 und auch gegen die der eigenen Art. Gerechnet sind die Phasen im Zielgefäss: Die App bewertet am Umsetzdatum, die Anzucht läuft auf den Stationen 4.2 bis 4.4, Direktsaat (3.1 bis 3.3) zählt im Wachstum.
 
-| Gefäss | Kultur | Phase | Urteil | Gemeinsamer Bereich pH | Gemeinsamer Bereich EC | nicht geprüft |
+| Gefäss | Kultur (Töpfe) | Phase | Urteil | Gemeinsamer Bereich pH | Gemeinsamer Bereich EC | nicht geprüft |
 |---|---|---|---|---|---|---|
-| 1.1 | Tomate | Anzucht | **Nicht empfohlen** · nicht für DWC | 5.6 bis 5.8 | 0.4 bis 1.3 | P5 |
-| 1.1 | Tomate | Wachstum | **Nicht empfohlen** · nicht für DWC | 5.8 bis 6.2 | 1.2 bis 1.4 | P5 |
-| 1.1 | Tomate | Blüte | **Nicht empfohlen** · nicht für DWC | 5.8 bis 6.2 | 2.0 bis 2.5 | P5 |
-| 1.1 | Tomate | Fruchtbildung und Reife | **Nicht empfohlen** · nicht für DWC | 5.8 bis 6.2 | 2.0 bis 2.5 | P5 |
-| 1.2 | Chili | Anzucht | **Empfohlen** · passt: pH 5.5 bis 6.0, EC 0.5 bis 1.0 | 5.5 bis 6.0 | 0.5 bis 1.0 | P1, P5 |
-| 1.2 | Chili | Wachstum | **Empfohlen** · passt: pH 5.5 bis 6.0, EC 0.8 bis 1.8 | 5.5 bis 6.0 | 0.8 bis 1.8 | P1, P5 |
-| 1.2 | Chili | Blüte | **Empfohlen** · passt: pH 5.5 bis 6.0, EC 1.8 bis 2.2 | 5.5 bis 6.0 | 1.8 bis 2.2 | P1, P5 |
-| 1.2 | Chili | Fruchtbildung und Reife | **Empfohlen** · passt: pH 5.5 bis 6.0, EC 1.8 bis 2.2 | 5.5 bis 6.0 | 1.8 bis 2.2 | P1, P5 |
-| 2.1 | Basilikum | Anzucht | **Nicht empfohlen** · EC: keine Schnittmenge mit 1.0 bis 1.4 | 6.0 bis 6.5 | leer | P4, P8, P9 |
-| 2.1 | Basilikum | Wachstum | **Nicht empfohlen** · EC bleibt 1.5 bis 1.6, schmaler als 0.3 | 5.5 bis 6.0 | 1.5 bis 1.6 | P8, P9 |
-| 2.1 | Pak Choi | Anzucht | **Nicht empfohlen** · EC: keine Schnittmenge mit 0.4 bis 0.8 | 6.0 bis 6.5 | leer | P5, P7, P8, P9 |
-| 2.1 | Pak Choi | Wachstum | **Nicht empfohlen** · EC bleibt 1.5 bis 1.6, schmaler als 0.3 | 5.5 bis 6.0 | 1.5 bis 1.6 | P5, P7, P8, P9 |
-| 2.2 | Petersilie | Anzucht | **Empfohlen** · passt: pH 5.5 bis 6.0, EC 0.4 bis 0.8 | 5.5 bis 6.0 | 0.4 bis 0.8 | P5, P7, P8, P9 |
-| 2.2 | Petersilie | Wachstum | **Empfohlen** · passt: pH 5.5 bis 6.0, EC 1.0 bis 1.3 | 5.5 bis 6.0 | 1.0 bis 1.3 | P4, P5, P7, P8, P9 |
-| 2.2 | Schnittlauch | Anzucht | **Empfohlen** · passt: pH 5.5 bis 6.0, EC 0.4 bis 0.8 | 5.5 bis 6.0 | 0.4 bis 0.8 | P1, P5, P6, P7, P8, P9 |
-| 2.2 | Schnittlauch | Wachstum | **Empfohlen** · passt: pH 5.5 bis 6.0, EC 1.0 bis 1.3 | 5.5 bis 6.0 | 1.0 bis 1.3 | P1, P5, P7, P8, P9 |
-| 2.3 | Schnittsalat (Lollo Rossa, Eissalat, Eichblatt) | Anzucht | **Empfohlen** · passt: pH 5.5 bis 6.5, EC 0.5 bis 1.0 | 5.5 bis 6.5 | 0.5 bis 1.0 | – |
-| 2.3 | Schnittsalat (Lollo Rossa, Eissalat, Eichblatt) | Wachstum | **Empfohlen** · passt: pH 5.6 bis 6.0, EC 1.2 bis 1.5 | 5.6 bis 6.0 | 1.2 bis 1.5 | – |
-| 3.1 | Nüsslisalat | Anzucht | **Nicht empfohlen** · nicht für Kratky | 5.8 bis 6.2 | 1.2 bis 1.6 | P4, P5, P6 |
-| 3.1 | Nüsslisalat | Wachstum | **Nicht empfohlen** · nicht für Kratky | 5.6 bis 6.0 | 1.2 bis 1.6 | P4, P5 |
-| 3.2 | Spinat Babyleaf | Anzucht | **Nicht empfohlen** · nicht für Kratky | 6.0 bis 7.0 | 1.6 bis 1.8 | P6 |
-| 3.2 | Spinat Babyleaf | Wachstum | **Nicht empfohlen** · nicht für Kratky | 6.0 bis 7.0 | 1.4 bis 2.0 | – |
-| 3.3 | Babyleaf-Mischung | Anzucht | **Empfohlen** · passt: pH 5.5 bis 6.5, EC 0.5 bis 1.0 | 5.5 bis 6.5 | 0.5 bis 1.0 | – |
-| 3.3 | Babyleaf-Mischung | Wachstum | **Empfohlen** · passt: pH 5.6 bis 6.0, EC 1.2 bis 1.5 | 5.6 bis 6.0 | 1.2 bis 1.5 | – |
+| 1.1 | Tomate (4) | Wachstum | **Nicht empfohlen** · nicht für DWC · EC bleibt 1.2 bis 1.4, schmaler als 0.3 | 5.8 bis 6.2 | 1.2 bis 1.4 | P5, P7, P8, P9 |
+| 1.1 | Tomate (4) | Blüte | **Nicht empfohlen** · nicht für DWC | 5.8 bis 6.2 | 2.0 bis 2.5 | P5, P7, P8, P9 |
+| 1.1 | Tomate (4) | Fruchtbildung und Reife | **Nicht empfohlen** · nicht für DWC | 5.8 bis 6.2 | 2.0 bis 2.5 | P5, P7, P8, P9 |
+| 1.2 | Chili (4) | Wachstum | **Empfohlen** · passt: pH 5.5 bis 6.0, EC 0.8 bis 1.8 | 5.5 bis 6.0 | 0.8 bis 1.8 | P1, P5, P7, P8, P9 |
+| 1.2 | Chili (4) | Blüte | **Empfohlen** · passt: pH 5.5 bis 6.0, EC 1.8 bis 2.2 | 5.5 bis 6.0 | 1.8 bis 2.2 | P1, P5, P7, P8, P9 |
+| 1.2 | Chili (4) | Fruchtbildung und Reife | **Empfohlen** · passt: pH 5.5 bis 6.0, EC 1.8 bis 2.2 | 5.5 bis 6.0 | 1.8 bis 2.2 | P1, P5, P7, P8, P9 |
+| 2.1 | Basilikum (3) | Wachstum | **Nicht empfohlen** · EC bleibt 1.5 bis 1.6, schmaler als 0.3 | 5.5 bis 6.0 | 1.5 bis 1.6 | P8, P9 |
+| 2.1 | Pak Choi (3) | Wachstum | **Nicht empfohlen** · EC bleibt 1.5 bis 1.6, schmaler als 0.3 | 5.5 bis 6.0 | 1.5 bis 1.6 | P5, P7, P8, P9 |
+| 2.2 | Petersilie (1) | Wachstum | **Empfohlen** · passt: pH 5.5 bis 6.0, EC 1.0 bis 1.3 | 5.5 bis 6.0 | 1.0 bis 1.3 | P4, P5, P7, P8, P9 |
+| 2.2 | Schnittlauch (1) | Wachstum | **Empfohlen** · passt: pH 5.5 bis 6.0, EC 1.0 bis 1.3 | 5.5 bis 6.0 | 1.0 bis 1.3 | P1, P5, P7, P8, P9 |
+| 2.3 | Schnittsalat (Lollo Rossa, Eissalat, Eichblatt) (6) | Wachstum | **Empfohlen** · passt: pH 5.6 bis 6.0, EC 1.2 bis 1.5 | 5.6 bis 6.0 | 1.2 bis 1.5 | P7, P8, P9 |
+| 3.1 | Nüsslisalat (8) | Wachstum | **Nicht empfohlen** · nicht für Kratky | 5.6 bis 6.0 | 1.2 bis 1.6 | P4, P5, P7, P9, P11 |
+| 3.2 | Spinat Babyleaf (6) | Wachstum | **Nicht empfohlen** · nicht für Kratky | 6.0 bis 7.0 | 1.4 bis 2.0 | P9, P11 |
+| 3.3 | Babyleaf-Mischung (8) | Wachstum | **Empfohlen** · passt: pH 5.6 bis 6.0, EC 1.2 bis 1.5 | 5.6 bis 6.0 | 1.2 bis 1.5 | P7, P8, P9, P11 |
 
 ## 3 Matrix Art gegen Art
 
 Zeile: Kultur, die dazukommt. Spalte: Kultur, die schon im Gefäss steht (Leitkultur). Gerechnet in einem DWC-Gefäss ohne Angaben zu Bereich und Systemeignung, also nur die Zeilen, die vom Paar abhängen (P2, P6, P7, P8, P10). E = Empfohlen, M = Möglich, N = Nicht empfohlen, mit den Codes der Gründe.
 
-### Phase Anzucht
+### Phase Anzucht (nur zum Vergleich; im Zielgefäss bewertet die App ab Wachstum)
 
 | dazu ↓ / steht → | Salat | Nüsslisalat | Tomate | Chili | Pak Choi | Basilikum | Petersilie | Schnittlauch | Spinat | Mangold | Randen |
 |---|---|---|---|---|---|---|---|---|---|---|---|
@@ -102,9 +92,9 @@ Zeile: Kultur, die dazukommt. Spalte: Kultur, die schon im Gefäss steht (Leitku
 
 ## 4 Befunde (Lead, 28.11.2026)
 
-1. **2.1 Basilikum mit Pak Choi: «Nicht empfohlen».** Im Wachstum bleibt als gemeinsame EC nur 1.5 bis 1.6 (Basilikum 1.0 bis 1.6, Pak Choi 1.5 bis 2.0), schmaler als die Mindestbreite 0.3. Die App zeigt das beim Säen an. Tim entscheidet den Mix: (a) lassen, 2.1 mit EC 1.5 bis 1.6 fahren und die Einstufung als begründete Ausnahme wählen; (b) Pak Choi tauschen (im Wachstum passt er zu Spinat und Randen, zu Chili «Möglich»); (c) Basilikum allein in 2.1.
+1. **2.1 Basilikum mit Pak Choi: «Nicht empfohlen».** Im Wachstum bleibt als gemeinsame EC nur 1.5 bis 1.6 (Basilikum 1.0 bis 1.6, Pak Choi 1.5 bis 2.0), schmaler als die Mindestbreite 0.3; beide EC-Bänder tragen in W0 die Basis «unbekannt». Die App zeigt die Einstufung beim Säen an. In der Anzucht hätten die beiden keine gemeinsame EC (0.4 bis 0.8 gegen 1.0 bis 1.4); das bleibt ohne Folge für 2.1, weil die Anzucht auf den Stationen läuft. Tim entscheidet den Mix: (a) lassen; beim Ansatz verlangt die App dann den Mischentscheid nach R2.4, entweder Leitkultur Basilikum (EC 1.0 bis 1.6, Pak Choi höchstens «Knapp daneben») oder Kompromiss (Mittel der Bandmitten 1.3 und 1.75 ± 0.15, rund 1.38 bis 1.68); (b) Pak Choi tauschen: im Wachstum ist er zu Randen «Empfohlen», zu Spinat (P8) und Chili (P10) «Möglich»; (c) Basilikum behalten und einen Partner wählen, der passt: zu Basilikum sind im Wachstum Salat, Nüsslisalat, Chili, Petersilie, Schnittlauch und Mangold «Empfohlen».
 2. **Systemeignung in W0 widerspricht der Startbelegung.** Tomate trägt nur «kratky» (Quelle zu Kratky-Tomaten), die App meldet in 1.1 «nicht für DWC». Nüsslisalat und Spinat tragen nur «dwc» (Quellen mit Floating-System), die App meldet in 3.1 und 3.2 «nicht für Kratky». Für Chili und Schnittlauch fehlt der Wert (nicht geprüft). Folge: W0-Nachrecherche der Systemeignung durch den Lead (Entscheid 0018) vor der Gesamtfreigabe. Findet sie für Nüsslisalat und Spinat keine Kratky-Quelle, entscheidet Tim, ob «Kratky belüftet» fachlich wie DWC gilt (Konzept 8.1 Regel 8 ordnet es Kratky zu).
-3. **Tomate in der Anzucht:** pH 5.6 bis 5.8 ist nur 0.2 breit; jede Mischung mit Tomate wäre «Nicht empfohlen». In 1.1 steht Tomate allein, ohne Folge für die erste Runde.
-4. **2.2, 2.3, 3.3 und 1.2 sind «Empfohlen».** Petersilie und Schnittlauch teilen pH 5.5 bis 6.0 und EC 1.0 bis 1.3.
-5. **Fehlende Stammwerte:** Wuchshöhe (P5) fehlt bei den meisten Arten, Pythium (P7) und «Kulturdauer typisch» (P8) bei mehreren. Diese Zeilen werten nicht ab; sie gehören zur Vollständigkeit der Gesamtfreigabe (Konzept 9.5 Schritt 5).
+3. **Tomate: zwei Bänder schmaler als die Mindestbreite.** Im Wachstum ist die EC 1.2 bis 1.4 nur 0.2 breit; ab dem zweiten Topf meldet die App in 1.1 deshalb zusätzlich «EC bleibt 1.2 bis 1.4, schmaler als 0.3», und der Ansatz verlangt den Mischentscheid nach R2.4. Der Lead prüft das Band in der W0-Nachrecherche (Entscheid 0018). In der Anzucht ist der pH 5.6 bis 5.8 ebenfalls nur 0.2 breit (Abschnitt 1); das bleibt ohne Folge, weil die Anzucht auf den Stationen 4.2 und 4.3 läuft und die App in 1.1 am Umsetzdatum im Wachstum mit pH 5.8 bis 6.2 rechnet.
+4. **1.2, 2.2, 2.3 und 3.3 sind «Empfohlen».** Petersilie und Schnittlauch teilen pH 5.5 bis 6.0 und EC 1.0 bis 1.3. Die Restbreite EC ist genau die Mindestbreite 0.3 ohne Reserve; liegt u_EC aus der Geräteprüfung über 0.15, wird 2.2 zum Konfliktfall (Konzept, Risiko u_EC). Dasselbe gilt für Salat in 2.3 und 3.3 (EC 1.2 bis 1.5).
+5. **Fehlende Stammwerte:** Die Wuchshöhe (P5, P9) fehlt bei allen Arten und Sorten, die Wuchsform «hängend» bei Tumbling Tom und Ampelo Gelb; Pythium (P7), «Kulturdauer typisch» (P8) und der Wasserbedarf je Pflanze (P11) fehlen bei mehreren Arten. Diese Zeilen werten nicht ab; sie gehören zur Vollständigkeit der Gesamtfreigabe (Konzept 9.5 Schritt 5).
 
