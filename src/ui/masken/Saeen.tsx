@@ -659,8 +659,19 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
                 onWahl={(w) => setAktiv(Number(w))}
               />
             ) : null}
+            <Deckel
+              reihen={zielG.reihen}
+              loecher={loecher}
+              onLoch={(nr) => {
+                const t = toepfeZiel.find((x) => x.lochNr === nr);
+                if (t && passt(t) && aktivMalbar) lochTippen(t.netztopfId);
+              }}
+              {...(aktivMalbar ? { onReihe: reiheTippen } : {})}
+              kanten
+            />
             {fensterAktiv && aktiveSorte ? (
-              // Plan 278 A10: Umsetztag schon hier wählbar, damit ein Nachfolge-Topf (Folgesatz) am Plantag frei ist
+              // Plan 278 A10: Umsetztag schon hier wählbar, damit ein Nachfolge-Topf (Folgesatz) am Plantag frei ist; unter
+              // dem Deckel, damit dieser im Bild bleibt (UX6-AK2)
               <Stepper
                 label="Umsetzen am"
                 wert={versatzAktiv}
@@ -676,16 +687,6 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
                 hinweis={`${gewaehlt.length > 1 ? `${aktiveSorte.name}: ` : ''}Vorschlag ${tagKurz(fensterAktiv.vorschlag)} · ${fensterAktiv.grenze ? 'spätestens' : 'wählbar bis'} ${tagKurz(fensterAktiv.letzter)}`}
               />
             ) : null}
-            <Deckel
-              reihen={zielG.reihen}
-              loecher={loecher}
-              onLoch={(nr) => {
-                const t = toepfeZiel.find((x) => x.lochNr === nr);
-                if (t && passt(t) && aktivMalbar) lochTippen(t.netztopfId);
-              }}
-              {...(aktivMalbar ? { onReihe: reiheTippen } : {})}
-              kanten
-            />
             {gewaehlt.length === 1 ? (
               // Plan 228: bei einer Sorte wählt die Taste alle freien Löcher und öffnet Schritt 3 (wie «Wählen und weiter»)
               <Button
