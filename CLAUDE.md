@@ -6,7 +6,7 @@ Private PWA mit Supabase für Tims Hydroponikregal; einziger Nutzer Tim, bedient
 
 | Was | Wo |
 |---|---|
-| Fachkonzept (massgebend) | `docs/input/konzept_v1.11.md` (Fassung 1.11 vom 21.11.2026 mit E24 und E25 bestätigt am 22.11.2026; E23 beauftragt am 21.11.2026; E17 bis E22 bestätigt am 18.11.2026; E16 Erntekalender beauftragt am 14.11.2026); Änderungen nur als neue Fassung mit Eintrag in Anhang B.2 |
+| Fachkonzept (massgebend) | `docs/input/konzept_v1.12.md` (Fassung 1.12 vom 28.11.2026 mit E26 bis E30 bestätigt am 28.11.2026; E24 und E25 bestätigt am 22.11.2026; E23 beauftragt am 21.11.2026; E17 bis E22 bestätigt am 18.11.2026; E16 Erntekalender beauftragt am 14.11.2026); Änderungen nur als neue Fassung mit Eintrag in Anhang B.2 |
 | Rangfolge bei Widerspruch | Konzept vor `docs/input/use_cases_f4.md` vor `docs/input/duengeplan_v1.6.md` vor W0 |
 | Spezifikation (abgenommen 1.11.2026) | `docs/spec/` (Fachregeln, Datenmodell, Import W0, Architektur, Masken, Tests, Glossar) |
 | Entscheide | `docs/spec/00_rueckfragen.md` (Auftrag 1) und `docs/entscheide/` (je Entscheid eine Datei) |
@@ -143,6 +143,7 @@ Vorschau: Cloudflare Pages `hydrovisor-vorschau` baut jeden Zweig (`<zweig>.hydr
 - [0030 Eigene wiederkehrende Aufgaben vor M2](docs/entscheide/0030-eigene-aufgaben-vor-m2.md)
 - [0031 Referenzdatei Tüten ins Repository durch den Lead (Ausnahme)](docs/entscheide/0031-tuetenreferenz-durch-den-lead.md)
 - [0032 Spaltenrechte gestrichen, «Passt hierhin» bis 21.1., alte Worktrees gelöscht](docs/entscheide/0032-spaltenrechte-passt-hierhin-aufraeumen.md)
+- [0033 Belegungsplan Runde 1: Umsetztag beim Säen, Petersilie, Schnittsalat, Babyleaf](docs/entscheide/0033-belegungsplan-runde-1.md)
 - Übrige Entscheide vom 1.11.2026: `docs/spec/00_rueckfragen.md` (R1 bis R13, W1 bis W14, Annahmen 1 bis 16)
 
 ## Arbeitsweise in der Sitzung
