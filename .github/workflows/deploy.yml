@@ -5,7 +5,8 @@
 # Umgebung auf main beschränkt). Freigabe: mit ausstehender Migration nur Tim (Regel 2; Ausnahme Entscheid 0012), ohne
 # Migration der Lead (Entscheid 0010). Der Job vorhanden nennt die ausstehenden Migrationen in der Zusammenfassung
 # (Ausgabe mig), und «db push» läuft nur, wenn eine aussteht (Prüfer #31 Befund 1). Pages erst, wenn die App existiert.
-# Aktionen per Commit angeheftet (Version im Kommentar).
+# Aktionen per Commit angeheftet (Version im Kommentar). workflow_dispatch mit push_cron=true startet nur den Job
+# push-cron (Vault-Einträge des Push-Cron, Entscheid 0034), ohne Migration, Seed und Pages.
 name: deploy
 
 on:
@@ -87,7 +88,8 @@ jobs:
   migration:
     needs: vorhanden
     # seed_scharf startet den Job auch ohne Änderung unter supabase/, data/, scripts/seed* oder src/domain/ (Entscheid 0017)
-    if: needs.vorhanden.outputs.db == 'true' || inputs.seed_scharf
+    # nie zusammen mit push_cron: dessen Freigabe von production darf keine Migration mitfreigeben (Entscheid 0034)
+    if: (needs.vorhanden.outputs.db == 'true' || inputs.seed_scharf) && !inputs.push_cron
     runs-on: ubuntu-latest
     environment: production
     permissions:
@@ -127,24 +129,31 @@ jobs:
 
   # Entscheid 0034 (Tims Auftrag 28.11.2026): projekt_url und cron_geheimnis in Vault der Produktion anlegen, falls sie
   # fehlen (Plan 13 Handgriff 7, gleiche Anweisungen wie scripts/push-einrichten.ps1). Das Geheimnis entsteht in der
-  # Datenbank und verlässt Vault nie; die Adresse ist die öffentliche Variable VITE_SUPABASE_URL. Bestehende Einträge
-  # bleiben unverändert. Ausgabe nur Namen, Zeitpunkte, Zähler und HTTP-Status (öffentliches Repository).
+  # Datenbank und verlässt Vault nie; die Adresse entsteht wie im Skript aus SUPABASE_PROJECT_REF_PROD (streng geprüft,
+  # muss gleich VITE_SUPABASE_URL sein). Bestehende Einträge bleiben unverändert. Ausgabe nur Namen, Zeitpunkte,
+  # Ja/Nein und HTTP-Status (öffentliches Repository).
   push-cron:
     needs: vorhanden
     if: inputs.push_cron
     runs-on: ubuntu-latest
     environment: production
+    timeout-minutes: 15
     steps:
       - name: Vault setzen (nur fehlende Einträge) und Kette prüfen
         env:
           DB_URL: ${{ secrets.SUPABASE_DB_URL_POOLER }}
-          PROJEKT_URL: ${{ vars.VITE_SUPABASE_URL }}
+          REF: ${{ vars.SUPABASE_PROJECT_REF_PROD }}
+          APP_URL: ${{ vars.VITE_SUPABASE_URL }}
         run: |
-          case "$PROJEKT_URL" in https://*.supabase.co|https://*.supabase.co/) ;; *) echo "::error::VITE_SUPABASE_URL ist keine Supabase-Adresse"; exit 1 ;; esac
+          # Prüfer Sicherheit Befund 1: nur eine Projekt-Referenz aus 20 Kleinbuchstaben und Ziffern, gleich der App-Adresse
+          if [[ ! "$REF" =~ ^[a-z0-9]{20}$ ]]; then echo "::error::SUPABASE_PROJECT_REF_PROD ungültig"; exit 1; fi
+          PROJEKT_URL="https://$REF.supabase.co"
+          if [ "${APP_URL%/}" != "$PROJEKT_URL" ]; then echo "::error::VITE_SUPABASE_URL passt nicht zur Projekt-Referenz"; exit 1; fi
           psql "$DB_URL" -X -q -v ON_ERROR_STOP=1 -v url="$PROJEKT_URL" <<'SQL'
-          select vault.create_secret(encode(extensions.gen_random_bytes(32), 'hex'), 'cron_geheimnis')
+          \echo 'Angelegt (leer = bestand schon):'
+          select 'cron_geheimnis' as angelegt, vault.create_secret(encode(extensions.gen_random_bytes(32), 'hex'), 'cron_geheimnis') is not null as ok
            where not exists (select 1 from vault.secrets where name = 'cron_geheimnis');
-          select vault.create_secret(:'url', 'projekt_url')
+          select 'projekt_url' as angelegt, vault.create_secret(:'url', 'projekt_url') is not null as ok
            where not exists (select 1 from vault.secrets where name = 'projekt_url');
           \echo 'Vault-Einträge (Name, angelegt):'
           select name, created_at from vault.secrets where name in ('cron_geheimnis', 'projekt_url') order by name;
@@ -159,14 +168,14 @@ jobs:
            where j.jobname = 'push-taeglich' order by d.start_time desc limit 3;
           \echo 'Letzte HTTP-Antworten von pg_net (Status, Zeit): 204 = nichts fällig, 200 = gesendet, 401/503 = Fehler'
           select status_code, created from net._http_response order by created desc limit 3;
-          \echo 'Sammel-Push der letzten 14 Tage (Tag, gesendet, angezeigt):'
-          select datum_lokal, gesendet_am, angezeigt_am from public.v_push_zustellung
+          \echo 'Sammel-Push der letzten 14 Tage (Tag, gesendet ja/nein, angezeigt ja/nein):'
+          select datum_lokal, gesendet_am is not null as gesendet, angezeigt_am is not null as angezeigt from public.v_push_zustellung
            where datum_lokal >= current_date - 14 order by datum_lokal desc;
           SQL
 
   pages:
     needs: [vorhanden, migration]
-    if: always() && needs.vorhanden.result == 'success' && needs.vorhanden.outputs.app == 'true' && (needs.migration.result == 'success' || needs.migration.result == 'skipped')
+    if: always() && !inputs.push_cron && needs.vorhanden.result == 'success' && needs.vorhanden.outputs.app == 'true' && (needs.migration.result == 'success' || needs.migration.result == 'skipped')
     runs-on: ubuntu-latest
     permissions:
       pages: write
