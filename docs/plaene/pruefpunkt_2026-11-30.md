@@ -6,13 +6,13 @@ Stand 28.11.2026 (vorgezogen abgeschlossen, #275; Zwischenprognose 22.11., #268)
 
 ## Bedingungen
 
-| Nr. | Bedingung (13.5) | Stand 22.11. | Quelle | Offen bis 30.11. |
+| Nr. | Bedingung (13.5) | Stand 28.11. | Quelle | Offen |
 |---|---|---|---|---|
 | 1 | Spezifikation am 11.11. und Plan am 13.11. abgenommen (höchstens drei Tage Verzug) | erfüllt: Spezifikation und Plan am 1.11.2026 abgenommen (`pakete.md` Kopf: eingefroren mit Tims Abnahme von Auftrag 3, Frist 13.11.) | `CLAUDE.md`, `pakete.md` Kopf | nichts |
 | 2 | I0 zu mindestens zwei Dritteln zusammengeführt (rund 5.5 von 8 PT) und der gemessene Durchsatz hochgerechnet mindestens 3.6 PT je Woche netto (4.5 mit Zuschlag, 13.4) | erfüllt: alle Pakete I0 bis I2 (ohne I2-07) und beide Pool-Pakete vor M2 zusammengeführt (rund 38.25 PT, siehe unten) | gemergte Pull Requests bis #264 | nichts |
 | 3 | Kontingent in den Kalenderwochen 47 und 48 höchstens 80 % ohne Ausweichen auf Sonnet | erfüllt (A, von Tim am 28.11. bestätigt): Fenster 17.11. bis 24.11. zuletzt gemessen am 22.11. um 10 Uhr bei 68 % (alle Modelle; Fable allein 84 %, ohne Projektrolle auf Fable); Fenster 24.11. bis 1.12. (KW 48) am 28.11. bei 2 %; kein Ausweichen auf Sonnet. (A) Massgebend ist das Wochenkontingent aller Modelle; die Fable-Grenze ist eine Teilgrenze eines Modells | `get_usage` | nichts; KW 48 zählt für M0 weiter |
 | 4 | Tims Ist-Zeit im November höchstens 115 % des Plans (13.3; Plan rund 48 h) | **erfüllt (Stand 28.11.):** Tim meldet 50 h, das sind 104 % von 48 h | Tim im Chat 28.11.2026 | nichts |
-| 5 | im Mittel höchstens 1.5 Nachbesserungsrunden je Paket | erfüllt: 49 Runden auf 104 umgesetzte Pakete = 0.47 (A) | Labels `runde-1` und `runde-2` auf geschlossenen Issues der Klassen `routine`, `fachlogik`, `kern` (Abschluss «completed») | Zählung am 30.11. wiederholen |
+| 5 | im Mittel höchstens 1.5 Nachbesserungsrunden je Paket | erfüllt: 49 Runden auf 104 umgesetzte Pakete = 0.47 (A) | Labels `runde-1` und `runde-2` auf geschlossenen Issues der Klassen `routine`, `fachlogik`, `kern` (Abschluss «completed») | nichts; Zählung für M0 am 15.12. |
 | 6 | Referenzdatei Düngerrechner und `tueten_referenz.csv` liegen vor | **erfüllt (Stand 28.11., #273):** `tests/golden/duengerrechner_referenz.csv` mit `REFERENZ_HASH_RECHNER`; `data/eval/tueten_referenz.csv` (Tims Datei vom 4.11., 3 Tüten) mit `REFERENZ_HASH_TUETEN` (Entscheid 0031) | `git ls-files`, `gh variable list`, Job `referenz-hash` | nichts |
 
 (A) Zählweise Bedingung 5: `runde-1` zählt eine Runde, `runde-2` zwei, auch ohne `runde-1`. Pull Requests mit denselben Labels sind nicht zusätzlich gezählt; nicht umgesetzte Issues (I2-07 #39) und offene Issues zählen nicht.
