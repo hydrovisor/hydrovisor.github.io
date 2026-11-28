@@ -302,3 +302,81 @@ test('UC5 Saatgut auf 360 × 640 zeigt den Link «Säen» im Bild, ohne waagrech
   await expect(page).toHaveURL(/#\/saeen$/);
   await expect(page.getByRole('heading', { name: 'Säen', level: 1 })).toBeVisible();
 });
+
+// Issue #278, Plan 278: Schritt 3 zeigt je Satz mit Zieltopf den Stepper «Umsetzen am» (Baustein Stepper, Gruppe
+// «Umsetzen am», Knöpfe «Umsetzen am weniger» und «Umsetzen am mehr»), Wert «T.M.», Hinweis «Vorschlag T.M. ·
+// spätestens T.M.» (A5). Lollo Rossa (Fixture Salat ab 21, bis 28), Saat heute 7.1.: Vorschlag 28.1., letzter Tag 10.2.
+test('UC5-AK21 Umsetzen am mit −/+ 68 dp, Vorschlag, Grenzen deaktiviert, Speichern sendet das Ereignis', async ({
+  page,
+}) => {
+  const m = await mitDaten(page, regal(), '/#/saeen?box=R-A1');
+  await sorteWaehlen(page, 'Salat', 'Lollo Rossa', (ziel) => tipp(m, ziel));
+  await tipp(m, knopf(page, 'Weiter'));
+  await tipp(m, zielgefaess(page, '2.3'));
+  await tipp(m, reihe(page, 1));
+  await tipp(m, knopf(page, 'Weiter'));
+  await expect(page.getByText('Schritt 3 von 3')).toBeVisible();
+
+  const gruppe = page.getByRole('group', { name: 'Umsetzen am', exact: true });
+  await expect(gruppe).toHaveCount(1);
+  const weniger = knopf(page, 'Umsetzen am weniger');
+  const mehr = knopf(page, 'Umsetzen am mehr');
+  await expect(gruppe.getByText('28.1.', { exact: true })).toBeVisible();
+  await expect(gruppe.getByText('Vorschlag 28.1. · spätestens 10.2.', { exact: true })).toBeVisible();
+  // am Vorschlag ist − deaktiviert, + aktiv; beide Knöpfe 68 dp (Regal)
+  await expect(weniger).toBeDisabled();
+  await expect(mehr).toBeEnabled();
+  for (const k of [weniger, mehr]) {
+    const box = await k.boundingBox();
+    expect(box).not.toBeNull();
+    expect(box?.height ?? 0).toBeGreaterThanOrEqual(68);
+    expect(box?.width ?? 0).toBeGreaterThanOrEqual(68);
+  }
+  await ohneTastatur(page);
+
+  // + verschiebt um einen Tag
+  await mehr.click();
+  await expect(gruppe.getByText('29.1.', { exact: true })).toBeVisible();
+  await expect(weniger).toBeEnabled();
+  // bis zum letzten wählbaren Tag 10.2. (13 Tage nach dem Vorschlag): + deaktiviert
+  for (let i = 0; i < 12; i += 1) await mehr.click();
+  await expect(gruppe.getByText('10.2.', { exact: true })).toBeVisible();
+  await expect(mehr).toBeDisabled();
+  // zurück auf 29.1.
+  for (let i = 0; i < 12; i += 1) await weniger.click();
+  await expect(gruppe.getByText('29.1.', { exact: true })).toBeVisible();
+
+  await tipp(m, knopf(page, 'Säen speichern'));
+  await expect(page.getByText(/Gespeichert: 1 Satz/)).toBeVisible();
+  await expect.poll(() => zeilenVon(m, 'reservierung').length).toBe(3);
+  const [satz] = zeilenVon(m, 'satz');
+  const ereignisse = zeilenVon(m, 'ereignis');
+  expect(ereignisse).toHaveLength(1);
+  const [ereignis] = ereignisse;
+  expect(ereignis?.['typ']).toBe('umsetzdatum_geaendert');
+  expect(ereignis?.['satz_id']).toBe(satz?.['id']);
+  expect(ereignis?.['pflanzung_id'] ?? null).toBeNull();
+  expect(ereignis?.['daten']).toEqual({ von: '2027-01-28', nach: '2027-01-29', grund: 'saeen' });
+  // das Ereignis geht vor den Reservierungen hinaus (Plan 278 Risiko 1)
+  const reihenfolge = m.geschrieben.map(([t]) => t);
+  expect(reihenfolge.indexOf('ereignis')).toBeGreaterThan(reihenfolge.indexOf('satz'));
+  expect(reihenfolge.indexOf('ereignis')).toBeLessThan(reihenfolge.indexOf('reservierung'));
+  for (const r of zeilenVon(m, 'reservierung'))
+    expect(r).toMatchObject({ umsetzen_vorgabe_am: '2027-01-28', umsetzen_geplant_am: '2027-01-29' });
+});
+
+test('UC5-AK21 ohne Tipp auf «Umsetzen am» kein Ereignis, Reservierung am Vorschlag', async ({ page }) => {
+  const m = await mitDaten(page, regal(), '/#/saeen?box=R-A1');
+  await sorteWaehlen(page, 'Salat', 'Lollo Rossa', (ziel) => tipp(m, ziel));
+  await tipp(m, knopf(page, 'Weiter'));
+  await tipp(m, zielgefaess(page, '2.3'));
+  await tipp(m, reihe(page, 1));
+  await tipp(m, knopf(page, 'Weiter'));
+  await expect(page.getByRole('group', { name: 'Umsetzen am', exact: true })).toHaveCount(1);
+  await tipp(m, knopf(page, 'Säen speichern'));
+  await expect(page.getByText(/Gespeichert: 1 Satz/)).toBeVisible();
+  await expect.poll(() => zeilenVon(m, 'reservierung').length).toBe(3);
+  expect(zeilenVon(m, 'ereignis')).toEqual([]);
+  for (const r of zeilenVon(m, 'reservierung'))
+    expect(r).toMatchObject({ umsetzen_vorgabe_am: '2027-01-28', umsetzen_geplant_am: '2027-01-28' });
+});
