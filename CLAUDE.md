@@ -144,6 +144,7 @@ Vorschau: Cloudflare Pages `hydrovisor-vorschau` baut jeden Zweig (`<zweig>.hydr
 - [0031 Referenzdatei Tüten ins Repository durch den Lead (Ausnahme)](docs/entscheide/0031-tuetenreferenz-durch-den-lead.md)
 - [0032 Spaltenrechte gestrichen, «Passt hierhin» bis 21.1., alte Worktrees gelöscht](docs/entscheide/0032-spaltenrechte-passt-hierhin-aufraeumen.md)
 - [0033 Belegungsplan Runde 1: Umsetztag beim Säen, Petersilie, Schnittsalat, Babyleaf](docs/entscheide/0033-belegungsplan-runde-1.md)
+- [0034 Vault-Einträge des Push-Cron durch den Lead über deploy.yml (Ausnahme)](docs/entscheide/0034-push-vault-durch-den-lead.md)
 - Übrige Entscheide vom 1.11.2026: `docs/spec/00_rueckfragen.md` (R1 bis R13, W1 bis W14, Annahmen 1 bis 16)
 
 ## Arbeitsweise in der Sitzung

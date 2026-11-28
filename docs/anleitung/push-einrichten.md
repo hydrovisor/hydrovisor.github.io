@@ -33,6 +33,8 @@ Besteht ein VAPID-Secret in der Produktion, aber die Variable fehlt, bricht das 
 
 Öffne den SQL-Editor der Produktion, wenn das Skript dich dazu auffordert. Füge die Zwischenablage ein und führe sie aus. Damit kennt der Cron-Job die Adresse und das Geheimnis. Ohne diese Einträge ruft er nichts auf. Bestehende Einträge bleiben unverändert. Das Ergebnis zeigt zwei Zeilen, `cron_geheimnis` und `projekt_url`. Das Cron-Geheimnis erzeugt die Datenbank selbst. Es verlässt Vault nie, und du musst es nicht speichern.
 
+Seit Entscheid 0034 kann das auch der Lead: `gh workflow run deploy.yml --ref main -f push_cron=true` setzt fehlende Einträge in der Umgebung `production` und prüft die Kette (Cron, HTTP-Status, Sammel-Push der letzten 14 Tage).
+
 ## 3 Nach dem Merge
 
 - In GitHub die Freigabe von `deploy.yml` in der Umgebung `production` erteilen. Das liefert Migration und Edge Functions aus.
