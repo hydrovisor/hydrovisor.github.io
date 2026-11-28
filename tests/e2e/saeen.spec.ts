@@ -18,7 +18,7 @@
 //   «Rückgängig machen».
 // - Kein Eingabefeld, das die Systemtastatur öffnet (input für Text oder Zahl, textarea, select, contenteditable).
 import { expect, test, type Locator, type Page } from '@playwright/test';
-import { netztopfId, platzId, type Teile } from '../fixtures/regal.ts';
+import { netztopfId, platzId, uid, type Teile } from '../fixtures/regal.ts';
 import { aufStation, saatTeile, SORTE, STATION_5CM } from '../fixtures/saeen.ts';
 import { zeileAufnehmen } from '../fixtures/sichten.ts';
 import { authNachbilden, sitzungSpeichern } from './hilfen.ts';
@@ -301,4 +301,197 @@ test('UC5 Saatgut auf 360 × 640 zeigt den Link «Säen» im Bild, ohne waagrech
   await saeen.click();
   await expect(page).toHaveURL(/#\/saeen$/);
   await expect(page.getByRole('heading', { name: 'Säen', level: 1 })).toBeVisible();
+});
+
+// Issue #278, Plan 278: Schritt 3 zeigt je Satz mit Zieltopf den Stepper «Umsetzen am» (Baustein Stepper, Gruppe
+// «Umsetzen am», Knöpfe «Umsetzen am weniger» und «Umsetzen am mehr»), Wert «T.M.», Hinweis «Vorschlag T.M. ·
+// spätestens T.M.» (A5). Lollo Rossa (Fixture Salat ab 21, bis 28), Saat heute 7.1.: Vorschlag 28.1., letzter Tag 10.2.
+test('UC5-AK21 Umsetzen am mit −/+ 68 dp, Vorschlag, Grenzen deaktiviert, Speichern sendet das Ereignis', async ({
+  page,
+}) => {
+  const m = await mitDaten(page, regal(), '/#/saeen?box=R-A1');
+  await sorteWaehlen(page, 'Salat', 'Lollo Rossa', (ziel) => tipp(m, ziel));
+  await tipp(m, knopf(page, 'Weiter'));
+  await tipp(m, zielgefaess(page, '2.3'));
+  await tipp(m, reihe(page, 1));
+  await tipp(m, knopf(page, 'Weiter'));
+  await expect(page.getByText('Schritt 3 von 3')).toBeVisible();
+
+  const gruppe = page.getByRole('group', { name: 'Umsetzen am', exact: true });
+  await expect(gruppe).toHaveCount(1);
+  const weniger = knopf(page, 'Umsetzen am weniger');
+  const mehr = knopf(page, 'Umsetzen am mehr');
+  await expect(gruppe.getByText('28.1.', { exact: true })).toBeVisible();
+  await expect(gruppe.getByText('Vorschlag 28.1. · spätestens 10.2.', { exact: true })).toBeVisible();
+  // am Vorschlag ist − deaktiviert, + aktiv; beide Knöpfe 68 dp (Regal)
+  await expect(weniger).toBeDisabled();
+  await expect(mehr).toBeEnabled();
+  for (const k of [weniger, mehr]) {
+    const box = await k.boundingBox();
+    expect(box).not.toBeNull();
+    expect(box?.height ?? 0).toBeGreaterThanOrEqual(68);
+    expect(box?.width ?? 0).toBeGreaterThanOrEqual(68);
+  }
+  await ohneTastatur(page);
+
+  // + verschiebt um einen Tag
+  await mehr.click();
+  await expect(gruppe.getByText('29.1.', { exact: true })).toBeVisible();
+  await expect(weniger).toBeEnabled();
+  // bis zum letzten wählbaren Tag 10.2. (13 Tage nach dem Vorschlag): + deaktiviert
+  for (let i = 0; i < 12; i += 1) await mehr.click();
+  await expect(gruppe.getByText('10.2.', { exact: true })).toBeVisible();
+  await expect(mehr).toBeDisabled();
+  // zurück auf 29.1.
+  for (let i = 0; i < 12; i += 1) await weniger.click();
+  await expect(gruppe.getByText('29.1.', { exact: true })).toBeVisible();
+
+  await tipp(m, knopf(page, 'Säen speichern'));
+  await expect(page.getByText(/Gespeichert: 1 Satz/)).toBeVisible();
+  await expect.poll(() => zeilenVon(m, 'reservierung').length).toBe(3);
+  const [satz] = zeilenVon(m, 'satz');
+  const ereignisse = zeilenVon(m, 'ereignis');
+  expect(ereignisse).toHaveLength(1);
+  const [ereignis] = ereignisse;
+  expect(ereignis?.['typ']).toBe('umsetzdatum_geaendert');
+  expect(ereignis?.['satz_id']).toBe(satz?.['id']);
+  expect(ereignis?.['pflanzung_id'] ?? null).toBeNull();
+  expect(ereignis?.['daten']).toEqual({ von: '2027-01-28', nach: '2027-01-29', grund: 'saeen' });
+  // das Ereignis geht vor den Reservierungen hinaus (Plan 278 Risiko 1)
+  const reihenfolge = m.geschrieben.map(([t]) => t);
+  expect(reihenfolge.indexOf('ereignis')).toBeGreaterThan(reihenfolge.indexOf('satz'));
+  expect(reihenfolge.indexOf('ereignis')).toBeLessThan(reihenfolge.indexOf('reservierung'));
+  for (const r of zeilenVon(m, 'reservierung'))
+    expect(r).toMatchObject({ umsetzen_vorgabe_am: '2027-01-28', umsetzen_geplant_am: '2027-01-29' });
+});
+
+test('UC5-AK21 ohne Tipp auf «Umsetzen am» kein Ereignis, Reservierung am Vorschlag', async ({ page }) => {
+  const m = await mitDaten(page, regal(), '/#/saeen?box=R-A1');
+  await sorteWaehlen(page, 'Salat', 'Lollo Rossa', (ziel) => tipp(m, ziel));
+  await tipp(m, knopf(page, 'Weiter'));
+  await tipp(m, zielgefaess(page, '2.3'));
+  await tipp(m, reihe(page, 1));
+  await tipp(m, knopf(page, 'Weiter'));
+  await expect(page.getByRole('group', { name: 'Umsetzen am', exact: true })).toHaveCount(1);
+  await tipp(m, knopf(page, 'Säen speichern'));
+  await expect(page.getByText(/Gespeichert: 1 Satz/)).toBeVisible();
+  await expect.poll(() => zeilenVon(m, 'reservierung').length).toBe(3);
+  expect(zeilenVon(m, 'ereignis')).toEqual([]);
+  for (const r of zeilenVon(m, 'reservierung'))
+    expect(r).toMatchObject({ umsetzen_vorgabe_am: '2027-01-28', umsetzen_geplant_am: '2027-01-28' });
+});
+
+// Plan 278 A10: «Umsetzen am» auch in Schritt 2 für die aktive Sorte; der Deckel rechnet am gewählten Tag. Lokal im
+// Test: Vorgänger Eichblatt kopf (Satz 60, gesät 8.12.2026) steht auf 2.3 Loch 1; art_kulturform Salat kopf einmalig,
+// Ernte ab 33 Tagen nach dem Umsetzen (8.12. + 21 = 29.12., + 33 = 31.1.). Lollo Rossa, Saat 7.1.: am Vorschlag 28.1.
+// und bis 31.1. ist Loch 1 belegt, ab 1.2. frei als Nachfolge (einmalig: Ende vor dem Umsetztag, R11.2).
+function mitVorgaengerIn23(): Teile {
+  const t = regal();
+  const satz = uid('27', 60);
+  const pflanzung = uid('28', 6001);
+  const gilt = '2026-12-08T11:00:00.000Z';
+  (t['satz'] ??= []).push({
+    id: satz,
+    client_id: satz,
+    sorte_id: SORTE.eichblatt,
+    saatgut_id: null,
+    kulturform: 'kopf',
+    anzuchtort_platz_id: platzId('A1'),
+    direktsaat_platz_id: null,
+    anzahl_schwaemme: 1,
+    samen_je_schwamm: 1,
+    saatdatum: '2026-12-08',
+    gilt_ab: gilt,
+    storniert_am: null,
+  });
+  (t['pflanzung'] ??= []).push({
+    id: pflanzung,
+    client_id: pflanzung,
+    satz_id: satz,
+    gilt_ab: gilt,
+    storniert_am: null,
+  });
+  (t['v_pflanzung_zustand'] ??= []).push({
+    pflanzung_id: pflanzung,
+    satz_id: satz,
+    phase: 'wachstum',
+    phase_seit: '2026-12-29T11:00:00.000Z',
+    status: 'aktiv',
+    netztopf_id: null,
+    platz_id: platzId('2.3'),
+    loch_nr: 1,
+  });
+  t['art_kulturform'] = [
+    {
+      id: uid('37', 1),
+      art_id: 'lactuca_sativa',
+      kulturform: 'kopf',
+      ernteart: 'einmalig',
+      ernte_ab_d: 33,
+      kulturdauer_max_d: null,
+      kulturdauer_typisch_d: null,
+      gueltig_bis: null,
+    },
+  ];
+  return t;
+}
+
+test('UC5-AK21 Schritt 2: Umsetzen am macht einen Nachfolge-Topf wählbar, Schritt 3 zeigt den Tag, Speichern sendet Ereignis und Reservierung', async ({
+  page,
+}) => {
+  const m = await mitDaten(page, mitVorgaengerIn23(), '/#/saeen?box=R-A1');
+  await sorteWaehlen(page, 'Salat', 'Lollo Rossa', (ziel) => tipp(m, ziel));
+  await tipp(m, knopf(page, 'Weiter'));
+  await expect(page.getByText('Schritt 2 von 3')).toBeVisible();
+  await tipp(m, zielgefaess(page, '2.3'));
+
+  // Schritt 2: Stepper der aktiven Sorte am Vorschlag, Loch 1 belegt und nicht wählbar
+  const gruppe = page.getByRole('group', { name: 'Umsetzen am', exact: true });
+  await expect(gruppe).toHaveCount(1);
+  await expect(gruppe.getByText('28.1.', { exact: true })).toBeVisible();
+  await expect(gruppe.getByText('Vorschlag 28.1. · spätestens 10.2.', { exact: true })).toBeVisible();
+  const loch1 = loch(page, 1);
+  await expect(loch1).toHaveAttribute('aria-label', 'Loch 1, belegt');
+  await expect(loch1).toHaveText('bel.');
+  await expect(loch1).toHaveAttribute('aria-disabled', 'true');
+
+  // bis zum Ende des Vorgängers (31.1.) bleibt Loch 1 belegt
+  const mehr = knopf(page, 'Umsetzen am mehr');
+  for (let i = 0; i < 3; i += 1) await tipp(m, mehr);
+  await expect(gruppe.getByText('31.1.', { exact: true })).toBeVisible();
+  await expect(loch1).toHaveAttribute('aria-label', 'Loch 1, belegt');
+  // ab dem Tag danach (1.2.) frei als Nachfolge und wählbar
+  await tipp(m, mehr);
+  await expect(gruppe.getByText('1.2.', { exact: true })).toBeVisible();
+  await expect(loch1).toHaveAttribute('aria-label', 'Loch 1, frei als Nachfolge, belegt bis 31.1.');
+  await expect(loch1).toHaveText('bis 31.1.');
+  await expect(loch1).not.toHaveAttribute('aria-disabled', 'true');
+  await tipp(m, loch1);
+  await expect(
+    page.getByRole('button', { name: 'Loch 1, gewählt für Lollo Rossa', exact: true }),
+  ).toHaveCount(1);
+  await tipp(m, knopf(page, 'Weiter'));
+
+  // Schritt 3 zeigt denselben Tag
+  await expect(page.getByText('Schritt 3 von 3')).toBeVisible();
+  const gruppe3 = page.getByRole('group', { name: 'Umsetzen am', exact: true });
+  await expect(gruppe3).toHaveCount(1);
+  await expect(gruppe3.getByText('1.2.', { exact: true })).toBeVisible();
+
+  await tipp(m, knopf(page, 'Säen speichern'));
+  await expect(page.getByText(/Gespeichert: 1 Satz/)).toBeVisible();
+  await expect.poll(() => zeilenVon(m, 'reservierung').length).toBe(1);
+  const [satz] = zeilenVon(m, 'satz');
+  const ereignisse = zeilenVon(m, 'ereignis');
+  expect(ereignisse).toHaveLength(1);
+  expect(ereignisse[0]?.['typ']).toBe('umsetzdatum_geaendert');
+  expect(ereignisse[0]?.['satz_id']).toBe(satz?.['id']);
+  expect(ereignisse[0]?.['daten']).toEqual({ von: '2027-01-28', nach: '2027-02-01', grund: 'saeen' });
+  const reihenfolge = m.geschrieben.map(([t]) => t);
+  expect(reihenfolge.indexOf('ereignis')).toBeLessThan(reihenfolge.indexOf('reservierung'));
+  expect(zeilenVon(m, 'reservierung')[0]).toMatchObject({
+    netztopf_id: netztopfId('2.3.1'),
+    umsetzen_vorgabe_am: '2027-01-28',
+    umsetzen_geplant_am: '2027-02-01',
+  });
 });

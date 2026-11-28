@@ -1084,3 +1084,63 @@ describe('UC15-AK12 nach dem Umsetzen, mit Teilernte und bei Einmalernte unverä
     expect(satzZeile(vor(), SATZ_VOR.basilikumSchnitt)['sorte_id']).toBe(SORTE_E.basilikum);
   });
 });
+
+// Issue #278, Plan 278 (A6): der beim Säen gewählte Umsetztag (Ereignis umsetzdatum_geaendert am Satz, grund saeen)
+// ist der Bezug für «Ernte ab» einer Mehrfachernte vor dem Umsetzen. Darf vor dem Code grün sein.
+describe('UC5-AK19 Erntekalender mit dem beim Säen gewählten Umsetztag', () => {
+  const NR_GEWAEHLT = 102;
+  const SATZ_GEWAEHLT = uid('27', NR_GEWAEHLT);
+
+  /**
+   * Satz 102 Petersilie Mooskrause dauerkultur_blatt (mehrfach, Ernte ab 28 laut Option vorUmsetzen) in A3, gesät
+   * 7.1., Zieltopf 2.1.5; Art mit umsetzen_ab_d 21 und umsetzen_bis_d 35 (W0, Abweichung B): Vorschlag 28.1.; mit
+   * `gewaehlt` das Ereignis am Satz wie der Säen-Vorgang es schreibt.
+   */
+  function petersilie(gewaehlt?: string): Teile {
+    const t = vor();
+    for (const a of t['art'] ?? [])
+      if (a['art_id'] === 'petroselinum_crispum') {
+        a['umsetzen_ab_d'] = 21;
+        a['umsetzen_bis_d'] = 35;
+      }
+    satzAnlegen(t, {
+      nr: NR_GEWAEHLT,
+      sorteId: SORTE.mooskrause,
+      saatgutId: null,
+      kulturform: 'dauerkultur_blatt',
+      box: 'A3',
+      schwaemme: 1,
+      samen: 1,
+      saatdatum: '2027-01-07',
+      zieltoepfe: ['2.1.5'],
+    });
+    if (gewaehlt)
+      (t['ereignis'] ??= []).push({
+        id: uid('3e', 278),
+        client_id: uid('3e', 278),
+        typ: 'umsetzdatum_geaendert',
+        satz_id: SATZ_GEWAEHLT,
+        pflanzung_id: null,
+        daten: { von: '2027-01-28', nach: gewaehlt, grund: 'saeen' },
+        gilt_ab: '2027-01-07T08:00:00.000Z',
+        storniert_am: null,
+      });
+    return ernteSichtenNachrechnen(t);
+  }
+
+  it('UC5-AK19 Petersilie gewählt 11.2.: Ernte ab 11.3.', () => {
+    const t = petersilie('2027-02-11');
+    const res = (t['v_reservierung_aktiv'] ?? []).find(
+      (r) => r['pflanzung_id'] === pflanzungId(NR_GEWAEHLT, 1),
+    );
+    expect(res).toMatchObject({ umsetzen_vorgabe_am: '2027-01-28', umsetzen_geplant_am: '2027-02-11' });
+    expect(tagPlus('2027-02-11', 28)).toBe('2027-03-11');
+    expect(ersteErnteAb(t, pflanzungId(NR_GEWAEHLT, 1), '2027-02-11', J, Z)).toBe('2027-03-11');
+    expect(zeileVon(erntekalender(t, J, Z), SATZ_GEWAEHLT).ernte.ernteAb).toBe('2027-03-11');
+  });
+
+  it('UC5-AK19 Petersilie ohne Wahl: Ernte ab = Vorschlag 28.1. + 28 = 25.2. (Vergleich)', () => {
+    const t = petersilie();
+    expect(zeileVon(erntekalender(t, J, Z), SATZ_GEWAEHLT).ernte.ernteAb).toBe('2027-02-25');
+  });
+});

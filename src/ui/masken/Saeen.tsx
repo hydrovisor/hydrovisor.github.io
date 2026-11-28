@@ -21,6 +21,7 @@ import {
   saatVorgang,
   saatVorschlag,
   sortenAuswahl,
+  umsetzFensterSorte,
   zielgefaesse,
   zieltoepfe,
   type SaatEingabe,
@@ -32,7 +33,7 @@ import { sortenPassung, type SortePassung } from '../../domain/passung/kontext.t
 import { passungText, type Einstufung, type GrundCode, type Passung } from '../../domain/passung/passung.ts';
 import type { Kulturform } from '../../domain/phasen/profil.ts';
 import { lochbild } from '../../domain/vorlagen/lochbild.ts';
-import { kalendertag, tagKurz, tagPlus, ZEITZONE } from '../../domain/zeit.ts';
+import { kalendertag, tagKurz, tagPlus, tageZwischen, ZEITZONE } from '../../domain/zeit.ts';
 import { Button } from '../bausteine/Button.tsx';
 import { Choice } from '../bausteine/Choice.tsx';
 import { Deckel, type Loch } from '../bausteine/Deckel.tsx';
@@ -59,6 +60,8 @@ interface Menge {
   samen?: number | undefined;
   schwaemme?: number | undefined;
   pflanzen?: number | undefined;
+  /** Plan 278: Versatz des Umsetztags in Tagen ab dem Vorschlag (Vorgabe 0) */
+  umsetzen?: number | undefined;
 }
 
 const zahl2 = (x: number) => x.toFixed(2);
@@ -189,6 +192,15 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
         ? 'scan'
         : 'heute';
 
+  /** Plan 278: gewählter Umsetztag aus dem Versatz, nur im Fenster und nur, wenn er vom Vorschlag abweicht */
+  function umsetzWahl(sorteId: string, versatz: number | undefined): { umsetzenGeplantAm?: string } {
+    const f = teile && versatz ? umsetzFensterSorte(teile, sorteId, saatdatum) : undefined;
+    if (!f || !versatz) return {};
+    return {
+      umsetzenGeplantAm: tagPlus(f.vorschlag, Math.min(versatz, tageZwischen(f.vorschlag, f.letzter))),
+    };
+  }
+
   const eingabe: SaatEingabe | undefined = anlageId
     ? {
         anlageId,
@@ -210,6 +222,7 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
             ...(zieltopfIds.length === 0 ? { pflanzenOhneZiel: m.pflanzen ?? 1 } : {}),
             ...(m.samen !== undefined ? { samenJeSchwamm: m.samen } : {}),
             ...(m.schwaemme !== undefined ? { schwaemme: m.schwaemme } : {}),
+            ...(zieltopfIds.length > 0 && !zielG?.direktsaat ? umsetzWahl(id, m.umsetzen) : {}),
             ...(kopieAktiv && kopieAktiv.sorteId === id ? { kopiertVon: kopieAktiv.satzId } : {}),
           };
         }),
@@ -341,6 +354,8 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
   /** Umsetzdatum der aktiven Sorte (R11.2): Malmodus, «Alle freien» und Reihentipp prüfen gleich (Runde 1 Befund 2) */
   function umsetzenAktiv(): string | undefined {
     if (zielG?.direktsaat) return saatdatum;
+    const wahl = aktiveSorte ? umsetzWahl(aktiveSorte.sorteId, mengen[aktiveSorte.sorteId]?.umsetzen) : {};
+    if (wahl.umsetzenGeplantAm) return wahl.umsetzenGeplantAm;
     const ab = umsetzenAbVon(teile, aktiveSorte?.artId);
     return ab === undefined ? undefined : tagPlus(saatdatum, ab);
   }
@@ -526,6 +541,16 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
     // Zustand als Text, nie nur über Farbe (Prüfer Runde 1, Befunde 4, 5 und 9)
     // Plan 25 (R11.2): Zieltöpfe am Umsetzdatum der aktiven Sorte; Nachfolge-Töpfe sind wählbar
     const umsetzenAm = umsetzenAktiv();
+    const fensterAktiv =
+      teile && aktiveSorte && zielG && !zielG.direktsaat
+        ? umsetzFensterSorte(teile, aktiveSorte.sorteId, saatdatum)
+        : undefined;
+    const versatzAktiv = fensterAktiv
+      ? Math.min(
+          mengen[aktiveSorte?.sorteId ?? '']?.umsetzen ?? 0,
+          tageZwischen(fensterAktiv.vorschlag, fensterAktiv.letzter),
+        )
+      : 0;
     const toepfeZiel = zielG ? zieltoepfe(teile, zielG.platzId, toepfe, umsetzenAm, zielG.direktsaat) : [];
     const mitTopf: Loch[] = toepfeZiel.map((t): Loch => {
       const name = t.marke
@@ -644,6 +669,24 @@ export function Saeen({ box, ziel, von }: { box?: string; ziel?: string; von?: '
               {...(aktivMalbar ? { onReihe: reiheTippen } : {})}
               kanten
             />
+            {fensterAktiv && aktiveSorte ? (
+              // Plan 278 A10: Umsetztag schon hier wählbar, damit ein Nachfolge-Topf (Folgesatz) am Plantag frei ist; unter
+              // dem Deckel, damit dieser im Bild bleibt (UX6-AK2)
+              <Stepper
+                label="Umsetzen am"
+                wert={versatzAktiv}
+                min={0}
+                max={tageZwischen(fensterAktiv.vorschlag, fensterAktiv.letzter)}
+                onWert={(w) =>
+                  setMengen((alt) => ({
+                    ...alt,
+                    [aktiveSorte.sorteId]: { ...alt[aktiveSorte.sorteId], umsetzen: w },
+                  }))
+                }
+                anzeige={(w) => tagKurz(tagPlus(fensterAktiv.vorschlag, w))}
+                hinweis={`${gewaehlt.length > 1 ? `${aktiveSorte.name}: ` : ''}Vorschlag ${tagKurz(fensterAktiv.vorschlag)} · ${fensterAktiv.grenze ? 'spätestens' : 'wählbar bis'} ${tagKurz(fensterAktiv.letzter)}`}
+              />
+            ) : null}
             {gewaehlt.length === 1 ? (
               // Plan 228: bei einer Sorte wählt die Taste alle freien Löcher und öffnet Schritt 3 (wie «Wählen und weiter»)
               <Button
@@ -938,7 +981,19 @@ function SatzKarte({
       ) : null}
       {keim ? <p className="hv-saeen-zeile">{keim}</p> : null}
       {deckel ? <p className="hv-saeen-zeile">{deckel}</p> : null}
-      {!s.direktsaat && s.umsetzenAm ? (
+      {s.umsetzen ? (
+        // Plan 278: Umsetztag im Fenster wählen, Wert = Versatz ab dem Vorschlag (A5, A9)
+        <Stepper
+          label="Umsetzen am"
+          gesperrt={gesperrt}
+          wert={tageZwischen(s.umsetzen.vorschlag, s.umsetzen.gewaehlt)}
+          min={0}
+          max={tageZwischen(s.umsetzen.vorschlag, s.umsetzen.letzter)}
+          onWert={(w) => onMenge({ umsetzen: w })}
+          anzeige={(w) => tagKurz(tagPlus(s.umsetzen?.vorschlag ?? '', w))}
+          hinweis={`Vorschlag ${tagKurz(s.umsetzen.vorschlag)} · ${s.umsetzen.grenze ? 'spätestens' : 'wählbar bis'} ${tagKurz(s.umsetzen.letzter)}`}
+        />
+      ) : !s.direktsaat && s.umsetzenAm ? (
         <p className="hv-saeen-zeile">Umsetzen ab {tagKurz(s.umsetzenAm)}</p>
       ) : null}
       {s.passung && !spaeter ? <p className="hv-saeen-zeile">{passungText(s.passung)}</p> : null}

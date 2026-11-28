@@ -288,13 +288,18 @@ export function sortenPassung(
   saatdatum: string,
   jetzt: Date,
   zeitzone: Zeitzone,
+  /** Plan 278 (R3.1 «änderbar beim Säen»): gewählter Umsetztag je Sorte statt Saat + «Umsetzen ab»; nicht bei Direktsaat */
+  umsetzenAmJeSorte?: ReadonlyMap<string, string>,
 ): SortePassung[] {
   const direktsaat = istDirektsaat(teile, zielPlatzId);
   const teileJeTag = new Map<string, GefaessTeil | undefined>();
   const liste: Omit<SortePassung, 'rang'>[] = [];
   for (const s of sorten) {
     const kulturform = s.kulturform ?? s.vorgabe;
-    const { umsetzenAm, fehlt } = umsetzdatum(teile, s.sorteId, saatdatum, direktsaat);
+    const vorgabe = umsetzdatum(teile, s.sorteId, saatdatum, direktsaat);
+    const gewaehlt = direktsaat ? undefined : umsetzenAmJeSorte?.get(s.sorteId);
+    const umsetzenAm = gewaehlt ?? vorgabe.umsetzenAm;
+    const fehlt = vorgabe.fehlt;
     if (!teileJeTag.has(umsetzenAm))
       teileJeTag.set(
         umsetzenAm,

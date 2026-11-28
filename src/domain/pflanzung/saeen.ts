@@ -13,7 +13,7 @@ import {
 import { keimdauerTyp, stationsVorschau, type GeplanterSatz } from '../anzucht/kapazitaet.ts';
 import type { Schritt, Verstoss, Vorgang } from '../datenpfad/erfassung.ts';
 import { keimrate, keimrateArt, saatmenge, type Empfehlung, type Keimrate } from '../saatmenge/saatmenge.ts';
-import { kalendertag, tagPlus, tageZwischen, versatz, type Zeitzone } from '../zeit.ts';
+import { kalendertag, tagKurz, tagPlus, tageZwischen, versatz, type Zeitzone } from '../zeit.ts';
 import { sortenPassung } from '../passung/kontext.ts';
 import { vorratAus } from '../sorten/vorrat.ts';
 import type { Einstufung, Passung } from '../passung/passung.ts';
@@ -60,6 +60,7 @@ interface ArtZeile {
   kulturformen_erlaubt: string[];
   kulturform_vorgabe: string | null;
   umsetzen_ab_d: number | null;
+  umsetzen_bis_d?: number | null;
   standard_keimfaehigkeit?: number | string | null;
   gueltig_bis?: string | null;
 }
@@ -622,6 +623,8 @@ export interface SatzEingabe {
   schwaemme?: number;
   /** Original bei «Satz duplizieren» (satz.kopiert_von, Plan 25) */
   kopiertVon?: string;
+  /** Plan 278: gewählter Umsetztag im Fenster aus umsetzFenster(); fehlt = Vorschlag */
+  umsetzenGeplantAm?: string;
 }
 
 export interface SaatEingabe {
@@ -650,8 +653,10 @@ export interface SatzVorschlag {
   keimart?: string;
   keimdauer: Spanne;
   keimtemp: Spanne;
-  /** Vorgabe für umsetzen_vorgabe_am; Direktsaat der Saattag */
+  /** geplanter Umsetztag: Wahl, sonst Vorschlag (Plan 278); Direktsaat der Saattag; «Ziel später» der Vorschlag */
   umsetzenAm?: string;
+  /** Plan 278: Fenster mit gewähltem Tag, nur bei Anzucht mit Zieltöpfen und bekanntem umsetzen_ab_d */
+  umsetzen?: UmsetzFenster & { gewaehlt: string };
   /** Einstufung im Zielgefäss am Umsetzdatum (R3.2, R3.4; Plan 36) und Rang in der Gesamtliste */
   passung?: Passung;
   rang?: number;
@@ -687,6 +692,57 @@ function empfehlungFuer(
     : undefined;
 }
 
+// ---------------------------------------------------------------------------------------------------------------
+// Umsetzfenster (Plan 278, R6.2, R8.2)
+
+/** (A4) ohne umsetzen_bis_d ist der letzte wählbare Umsetztag Vorschlag + 14 (breiteste freigegebene Fenster) */
+export const UMSETZ_FENSTER_OHNE_BIS = 14;
+
+/** wählbare Umsetztage beim Säen: Vorschlag bis letzter Tag; Grenze nach R6.2 nur mit umsetzen_bis_d */
+export interface UmsetzFenster {
+  /** Saat + umsetzen_ab_d (umsetzen_vorgabe_am) */
+  vorschlag: string;
+  /** letzter wählbarer Tag: Grenze − 1, ohne Grenze Vorschlag + UMSETZ_FENSTER_OHNE_BIS */
+  letzter: string;
+  /** Saat + umsetzen_bis_d + 7: ab hier «Umsetzen überfällig» (R6.2) */
+  grenze?: string;
+}
+
+const KALENDERTAG = /^\d{4}-\d{2}-\d{2}$/;
+
+/** Plan 278: Fenster aus Saattag und Artwerten; ohne umsetzen_ab_d keines; bis < ab ergibt einen Tag (A3) */
+export function umsetzFenster(
+  saatdatum: string,
+  umsetzenAbD: number | undefined,
+  umsetzenBisD: number | undefined,
+): UmsetzFenster | undefined {
+  if (umsetzenAbD === undefined) return undefined;
+  const vorschlag = tagPlus(saatdatum, umsetzenAbD);
+  if (umsetzenBisD === undefined) return { vorschlag, letzter: tagPlus(vorschlag, UMSETZ_FENSTER_OHNE_BIS) };
+  const grenze = tagPlus(saatdatum, umsetzenBisD + 7);
+  const vorGrenze = tagPlus(grenze, -1);
+  return { vorschlag, letzter: vorGrenze < vorschlag ? vorschlag : vorGrenze, grenze };
+}
+
+/** Fenster mit den Werten der gültigen Art der Sorte; ohne gültiges Saatdatum keines */
+export function umsetzFensterSorte(
+  teile: Teile,
+  sorteId: string,
+  saatdatum: string,
+): UmsetzFenster | undefined {
+  if (!KALENDERTAG.test(saatdatum)) return undefined;
+  const sorte = sorteZeile(teile, sorteId);
+  if (!sorte) return undefined;
+  const art = artZeile(teile, sorte.art_id);
+  return umsetzFenster(saatdatum, zahl(art?.umsetzen_ab_d), zahl(art?.umsetzen_bis_d));
+}
+
+/** gültige Wahl im Fenster, sonst der Vorschlag (die Prüfung meldet den Verstoss) */
+const geplanterTag = (f: UmsetzFenster, wahl: string | undefined) =>
+  wahl !== undefined && KALENDERTAG.test(wahl) && wahl >= f.vorschlag && wahl <= f.letzter
+    ? wahl
+    : f.vorschlag;
+
 const zielIstDirektsaat = (teile: Teile, e: SaatEingabe) =>
   !!e.zielPlatzId &&
   DIREKTSAAT_BETRIEBSARTEN.has(gefaessAm(teile, e.zielPlatzId)?.betriebsart ?? '') &&
@@ -719,11 +775,17 @@ function satzVorschlag(
     platzzahl: box?.platzzahl ?? 25,
   });
   const umsetzenAb = zahl(art?.umsetzen_ab_d);
+  const fenster =
+    !direktsaat && s.zieltopfIds.length > 0 ? umsetzFensterSorte(teile, s.sorteId, e.saatdatum) : undefined;
+  // Prüfer Runde 1 Befund 4: gewählt = gültige Wahl, sonst Vorschlag (die Prüfung meldet die ungültige Wahl)
+  const umsetzen = fenster ? { ...fenster, gewaehlt: geplanterTag(fenster, s.umsetzenGeplantAm) } : undefined;
   const umsetzenAm = direktsaat
     ? e.saatdatum
-    : umsetzenAb === undefined
-      ? undefined
-      : tagPlus(e.saatdatum, umsetzenAb);
+    : umsetzen
+      ? umsetzen.gewaehlt
+      : umsetzenAb === undefined
+        ? undefined
+        : tagPlus(e.saatdatum, umsetzenAb);
   return {
     sorteId: s.sorteId,
     name: sorte.name,
@@ -742,7 +804,8 @@ function satzVorschlag(
     keimdauer: wahl.keimdauer,
     keimtemp: wahl.keimtemp,
     ...(umsetzenAm ? { umsetzenAm } : {}),
-    ...passungVon(teile, e, s, jetzt, zeitzone),
+    ...(umsetzen ? { umsetzen } : {}),
+    ...passungVon(teile, e, s, jetzt, zeitzone, umsetzen?.gewaehlt),
   };
 }
 
@@ -753,13 +816,16 @@ function passungVon(
   s: SatzEingabe,
   jetzt: Date,
   zeitzone: Zeitzone,
+  /** Plan 278: gewählter Umsetztag; Einstufung und Rang an diesem Tag (R3.1), die übrigen Sorten am Vorschlag */
+  umsetzenAm?: string,
 ): { passung?: Passung; rang?: number } {
   if (!e.zielPlatzId || !/^\d{4}-\d{2}-\d{2}$/.test(e.saatdatum)) return {};
   // Plan 215 A9: Rang unter denselben vorrätigen Sorten, die Säen zeigt
   const sorten = sortenAuswahl(teile, jetzt).map((w) =>
     w.sorteId === s.sorteId ? { ...w, kulturform: s.kulturform as Kulturform } : w,
   );
-  const x = sortenPassung(teile ?? {}, sorten, e.zielPlatzId, e.saatdatum, jetzt, zeitzone).find(
+  const tage = umsetzenAm ? new Map([[s.sorteId, umsetzenAm]]) : undefined;
+  const x = sortenPassung(teile ?? {}, sorten, e.zielPlatzId, e.saatdatum, jetzt, zeitzone, tage).find(
     (w) => w.sorteId === s.sorteId,
   );
   return x ? { passung: x.passung, rang: x.rang } : {};
@@ -857,13 +923,22 @@ export function saatEingabePruefen(
     } else if (!direktsaat && zahl(art?.umsetzen_ab_d) === undefined) {
       v.push({ feld: 'ziel', grund: `${sorte.name}: ${HINWEIS_OHNE_UMSETZEN}` });
     }
-    // Zieltöpfe am Umsetzdatum dieses Satzes (Plan 25, R11.2); ohne Umsetzdatum wie Plan 23
-    const umsetzenAb = zahl(art?.umsetzen_ab_d);
-    const umsetzenAm = direktsaat
-      ? eingabe.saatdatum
-      : umsetzenAb === undefined || !/^\d{4}-\d{2}-\d{2}$/.test(eingabe.saatdatum)
-        ? undefined
-        : tagPlus(eingabe.saatdatum, umsetzenAb);
+    // Plan 278: Wahl des Umsetztags nur bei Anzucht mit Zieltöpfen und Fenster, im Fenster
+    const fenster =
+      !direktsaat && s.zieltopfIds.length > 0
+        ? umsetzFensterSorte(teile, s.sorteId, eingabe.saatdatum)
+        : undefined;
+    const wahl = s.umsetzenGeplantAm;
+    if (wahl !== undefined) {
+      if (!fenster) v.push({ feld: 'umsetzen', grund: `${sorte.name}: Umsetzdatum hier nicht wählbar` });
+      else if (geplanterTag(fenster, wahl) !== wahl)
+        v.push({
+          feld: 'umsetzen',
+          grund: `${sorte.name}: Umsetzen am ${KALENDERTAG.test(wahl) ? tagKurz(wahl) : wahl} liegt ausserhalb ${tagKurz(fenster.vorschlag)} bis ${tagKurz(fenster.letzter)}`,
+        });
+    }
+    // Zieltöpfe am geplanten Umsetztag dieses Satzes (Plan 25, Plan 278, R11.2); ohne Umsetzdatum wie Plan 23
+    const umsetzenAm = direktsaat ? eingabe.saatdatum : fenster ? geplanterTag(fenster, wahl) : undefined;
     const toepfe = ziel ? zieltoepfe(teile, ziel.platzId, new Map(), umsetzenAm, direktsaat) : [];
     for (const id of s.zieltopfIds) {
       const topf = toepfe.find((t) => t.netztopfId === id);
@@ -952,6 +1027,17 @@ export function saatVorgang(
         gilt_ab: giltAb,
       }),
     );
+    // Plan 278: gewählter Umsetztag als Ereignis am Satz vor den Reservierungen; der Trigger
+    // reservierung_vorbelegen() setzt daraus umsetzen_geplant_am (8.1 Regel 2, D2)
+    if (s.umsetzen && s.umsetzen.gewaehlt !== s.umsetzen.vorschlag)
+      schritte.push(
+        neu('ereignis', ids(), {
+          typ: 'umsetzdatum_geaendert',
+          satz_id: satzId,
+          daten: { von: s.umsetzen.vorschlag, nach: s.umsetzen.gewaehlt, grund: 'saeen' },
+          gilt_ab: giltAb,
+        }),
+      );
     const pflanzungen = Array.from({ length: s.schwaemme }, () => ids());
     for (const id of pflanzungen)
       schritte.push(
@@ -971,7 +1057,7 @@ export function saatVorgang(
         neu('reservierung', ids(), {
           pflanzung_id: pflanzungen[k],
           netztopf_id: topf,
-          umsetzen_vorgabe_am: s.umsetzenAm,
+          umsetzen_vorgabe_am: s.umsetzen?.vorschlag ?? s.umsetzenAm,
           umsetzen_geplant_am: s.umsetzenAm,
           gilt_ab: giltAb,
         }),

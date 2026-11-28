@@ -395,3 +395,104 @@ describe('NB1-AK8 Passung beim Säen mit jetzt', () => {
     expect(rangNachher).toBe(liste(nachher));
   });
 });
+
+// Issue #278, Plan 278 A11 (Runde 1 Befund 1, R3.1 «zum geplanten Umsetzdatum, änderbar beim Säen»): Passung am beim
+// Säen gewählten Umsetztag. Lage wie «R3.4 saatVorgang rechnet mit dem erfassten Saatdatum»: Lollo Rossa in 2.3
+// einmalig mit Ernte ab 30 Tagen nach dem Umsetzen (28.12.) → Ende 27.1.; Eichblatt reserviert 2.3.4 bis 2.3.6.
+// Neuer Satz Lollo Rossa gesät 1.1. (Salat ab 21, bis 28): Vorschlag 22.1. (kein freies Loch, P2 und P3), Wahl 28.1.
+// (2.3.1 bis 2.3.3 frei als Nachfolge, nur P2).
+describe('UC5-AK18 Passung am beim Säen gewählten Umsetztag (Plan 278 A11)', () => {
+  const SAAT = '2027-01-01';
+  const WAHL = '2027-01-28';
+
+  function lage(): Teile {
+    const t = passungTeile();
+    stammSetzen(t, 'art_kulturform', (z) => z['art_id'] === ART.salat && z['kulturform'] === 'kopf', {
+      ernte_ab_d: 30,
+    });
+    return t;
+  }
+
+  /** Erwartung aus sortenPassung() mit dem gewählten Tag der gewählten Sorte */
+  function erwartetAm(t: Teile, sorteId: string, kulturform: string, ziel: string, tag?: string) {
+    const sorten = sortenAuswahl(t, J).map((s) =>
+      s.sorteId === sorteId ? { ...s, kulturform: kulturform as typeof s.vorgabe } : s,
+    );
+    const map = tag ? new Map([[sorteId, tag]]) : undefined;
+    const x = sortenPassung(t, sorten, ziel, SAAT, J, Z, map).find((s) => s.sorteId === sorteId);
+    if (!x) throw new Error('Sorte fehlt in sortenPassung');
+    return { einstufung: x.passung.einstufung, rang: x.rang, gruende: x.passung.gruende };
+  }
+
+  it('UC5-AK18 Passung am gewählten Tag: Einstufung, Rang und Gründe an der Pflanzung folgen der Wahl, ohne Wahl wie bisher', () => {
+    const t = lage();
+    const mitWahl = eingabe(
+      [
+        {
+          sorteId: SORTE.lollo,
+          kulturform: 'kopf',
+          zieltopfIds: [netztopfId('2.3.1')],
+          umsetzenGeplantAm: WAHL,
+        },
+      ],
+      { zielPlatzId: P23, saatdatum: SAAT },
+    );
+    expect(saatEingabePruefen(t, mitWahl, J, Z)).toEqual([]);
+    const [satz] = saatVorschlag(t, mitWahl, J, Z).saetze;
+    expect(satz?.umsetzenAm).toBe(WAHL);
+    const soll = erwartetAm(t, SORTE.lollo, 'kopf', P23, WAHL);
+    expect(satz?.passung?.gruende).toEqual(['P2']);
+    expect(satz?.passung?.gruende).toEqual(soll.gruende);
+    expect(satz?.passung?.einstufung).toBe(soll.einstufung);
+    expect(satz?.rang).toBe(soll.rang);
+
+    const v = saatVorgang(t, mitWahl, neueIds(), J, Z);
+    const pflanzungen = pflanzungenVon(v, SORTE.lollo);
+    expect(pflanzungen.length).toBeGreaterThan(0);
+    for (const p of pflanzungen) {
+      expect(p['einstufung']).toBe(soll.einstufung);
+      expect(p['rang']).toBe(soll.rang);
+      expect(p['gruende']).toEqual(soll.gruende);
+      expect(p['gruende']).not.toContain('P3');
+    }
+
+    // ohne Wahl: Passung am Vorschlag 22.1. wie bisher (kein freies Loch), der Topf 2.3.1 ist dann belegt
+    const ohne = eingabe([{ sorteId: SORTE.lollo, kulturform: 'kopf', zieltopfIds: [] }], {
+      zielPlatzId: P23,
+      saatdatum: SAAT,
+    });
+    const [vorher] = saatVorschlag(t, ohne, J, Z).saetze;
+    const sollVorher = erwartetAm(t, SORTE.lollo, 'kopf', P23);
+    expect(vorher?.umsetzenAm).toBe('2027-01-22');
+    expect(vorher?.passung?.gruende).toEqual(['P2', 'P3']);
+    expect(vorher?.passung?.gruende).toEqual(sollVorher.gruende);
+    expect(vorher?.rang).toBe(sollVorher.rang);
+    const ohneMitTopf = eingabe(
+      [{ sorteId: SORTE.lollo, kulturform: 'kopf', zieltopfIds: [netztopfId('2.3.1')] }],
+      {
+        zielPlatzId: P23,
+        saatdatum: SAAT,
+      },
+    );
+    expect(saatEingabePruefen(t, ohneMitTopf, J, Z)).toContainEqual({
+      feld: 'ziel',
+      grund: 'Topf 2.3.1 ist belegt',
+    });
+  });
+
+  it('UC5-AK18 sortenPassung() ohne umsetzenAmJeSorte wie bisher, bei Direktsaat bleibt der Saattag', () => {
+    const t = lage();
+    const sorten = sortenAuswahl(t, J);
+    // ohne Parameter und mit leerer Map gleich
+    expect(sortenPassung(t, sorten, P23, SAAT, J, Z, new Map())).toEqual(
+      sortenPassung(t, sorten, P23, SAAT, J, Z),
+    );
+    // mit Map am Anzuchtgefäss: die Sorte rechnet am gewählten Tag
+    const mit = sortenPassung(t, sorten, P23, SAAT, J, Z, new Map([[SORTE.lollo, WAHL]]));
+    expect(mit.find((s) => s.sorteId === SORTE.lollo)?.umsetzenAm).toBe(WAHL);
+    // Direktsaat (3.3 Kratky belüftet): die Map wirkt nicht, Bezug bleibt der Saattag
+    const direkt = sortenPassung(t, sorten, P33, HEUTE, J, Z, new Map([[SORTE.lollo, '2027-02-20']]));
+    expect(direkt.find((s) => s.sorteId === SORTE.lollo)?.umsetzenAm).toBe(HEUTE);
+    expect(direkt).toEqual(sortenPassung(t, sorten, P33, HEUTE, J, Z));
+  });
+});

@@ -884,6 +884,80 @@ describe('R5.2 Umsetzen und Reservierung prüfen', () => {
   });
 });
 
+// Issue #278, Plan 278 (A6): der beim Säen gewählte Umsetztag steht wie vom Trigger gesetzt in umsetzen_geplant_am;
+// die Aufgaben lesen ihn schon heute. Diese Tests sichern den Datenfluss ab und dürfen vor dem Code grün sein.
+describe('UC5-AK19 Umsetzen am beim Säen gewählten Tag (R6.2, R5.3)', () => {
+  /**
+   * Satz 17 Lollo Rossa in A1, gesät 29.12.2026 (Salat ab 14, bis 21): Vorschlag 12.1., Grenze 29.12. + 21 + 7 = 26.1.;
+   * beim Säen gewählt 20.1. (Reservierungen mit Vorgabe 12.1. und geplant 20.1., Ereignis am Satz mit grund saeen)
+   */
+  function gewaehlt(): Teile {
+    const t = leer();
+    boxDazu(t, 'R-A1', 'box_licht');
+    mitLoesung(t, { code: 'R-1.1', betriebsart: 'dwc', luftpumpe: 'P1' });
+    netztopfDazu(t, 'R-1.1.1');
+    netztopfDazu(t, 'R-1.1.2');
+    const p = satzDazu(t, { nr: 17, sorte: 'lollo', box: 'R-A1', saat: '2026-12-29' });
+    pflanzEreignisDazu(t, {
+      typ: 'umsetzdatum_geaendert',
+      satzId: satzId(17),
+      daten: { von: '2027-01-12', nach: '2027-01-20', grund: 'saeen' },
+      gilt: zh('2026-12-29'),
+    });
+    p.forEach((id, i) => {
+      keimungDazu(t, id, 2, zh('2027-01-02'));
+      const r = reservierungDazu(t, id, `R-1.1.${i + 1}`, '2027-01-20', zh('2026-12-29'));
+      for (const z of t['reservierung'] ?? []) if (z['id'] === r) z['umsetzen_vorgabe_am'] = '2027-01-12';
+    });
+    return fertig(t);
+  }
+
+  it('UC5-AK19 Umsetzen erscheint am gewählten Tag, Morgen bis zur Grenze', () => {
+    const t = gewaehlt();
+    // am Vorschlag 12.1. (heute) und am Tag davor keine Aufgabe
+    expect(von(faellig(t), 'umsetzen')).toEqual([]);
+    expect(von(faellig(t, jetztAm('2027-01-19')), 'umsetzen')).toEqual([]);
+    // die Liste aller Aufgaben führt «Umsetzen» schon heute mit dem gewählten Tag
+    expect(von(alle(t), 'umsetzen').map((a) => a.faelligAm)).toEqual(['2027-01-20']);
+    const am = einzig(von(faellig(t, jetztAm('2027-01-20')), 'umsetzen'), 'Umsetzen 20.1.');
+    expect(am).toMatchObject({
+      schluessel: schluessel('umsetzen', satzId(17), '2027-01-20'),
+      bezugArt: 'satz',
+      titel: 'Umsetzen · Lollo Rossa',
+      faelligAm: '2027-01-20',
+    });
+    expect(am.hinweis).toBeUndefined();
+    expect(am.morgen.erlaubt).toBe(true);
+    // letzter Tag vor der Grenze: Morgen erlaubt
+    const davor = einzig(von(faellig(t, jetztAm('2027-01-25')), 'umsetzen'), 'Umsetzen 25.1.');
+    expect(davor.hinweis).toBeUndefined();
+    expect(davor.morgen.erlaubt).toBe(true);
+    // an der Grenze 26.1.: «Umsetzen überfällig» ohne Morgen und «Reservierung prüfen»
+    const grenze = einzig(von(faellig(t, jetztAm('2027-01-26')), 'umsetzen'), 'Umsetzen 26.1.');
+    expect(grenze).toMatchObject({
+      hinweis: 'Umsetzen überfällig',
+      faelligAm: '2027-01-20',
+      tageUeberfaellig: 6,
+    });
+    expect(grenze.morgen.erlaubt).toBe(false);
+    expect(
+      einzig(von(faellig(t, jetztAm('2027-01-26')), 'reservierung_pruefen'), 'Reservierung prüfen')
+        .schluessel,
+    ).toBe(schluessel('reservierung_pruefen', satzId(17), '2027-01-26'));
+    expect(von(faellig(t, jetztAm('2027-01-25')), 'reservierung_pruefen')).toEqual([]);
+  });
+
+  it('UC5-AK19 Wahl beim Säen zählt nicht als Morgen', () => {
+    const t = gewaehlt();
+    const a = einzig(von(faellig(t, jetztAm('2027-01-23')), 'umsetzen'), 'Umsetzen 23.1.');
+    expect(a.morgen.verschoben).toBe(0);
+    expect(a.morgen.hinweis).toBeUndefined();
+    expect(a.grund).toBe('seit 3 Tagen überfällig');
+    expect(a.grund).not.toMatch(/verschoben/);
+    expect(a.anzeigeAb).toBe('2027-01-20');
+  });
+});
+
 describe('R5.2 Station auf 1. echte Blätter', () => {
   /** Station 4.4 mit Lösung seit 2.1. (Wechsel 16.1.), Satz 17 aus A1 an den Tagen `eintritt` auf die Station */
   function station(eintritt: string[], festeDosis = true): Teile {

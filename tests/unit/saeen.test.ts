@@ -25,10 +25,14 @@ import {
   saatVorgang,
   saatVorschlag,
   sortenAuswahl,
+  UMSETZ_FENSTER_OHNE_BIS,
+  umsetzFenster,
+  umsetzFensterSorte,
   zielgefaesse,
   zieltoepfe,
   type SaatEingabe,
 } from '../../src/domain/pflanzung/saeen.ts';
+import { ereignisDatenPruefen } from '../../src/domain/datenpfad/ereignisdaten.ts';
 import { ZEITZONE } from '../../src/domain/zeit.ts';
 import { netztopfId, platzId, uid, type Teile } from '../fixtures/regal.ts';
 import { ANLAGE_R, PACKUNG, reservierung, saatTeile, SORTE } from '../fixtures/saeen.ts';
@@ -564,5 +568,446 @@ describe('R12.2 Rückfall der Keimrate (Prüfer Runde 1)', () => {
     const v = saatVorschlag(t, e, JETZT, Z);
     expect(v.saetze[0]?.keimrate).toBeUndefined();
     expect(v.hinweise).toContain('Eichblatt: Keimrate unbekannt');
+  });
+});
+
+// ---------------------------------------------------------------------------------------------------------------
+// Issue #278, Plan 278: Umsetzdatum beim Säen wählen (R5.3, R6.1, R6.2, R8.2, R11.2, G2, TO2). Vertrag laut Plan 278
+// «Schnittstellen»:
+//   umsetzFenster(saatdatum, umsetzenAbD?, umsetzenBisD?): { vorschlag; letzter; grenze? } | undefined
+//     mit bis: grenze = Saat + bis + 7, letzter = max(vorschlag, grenze − 1); ohne bis: letzter = vorschlag + 14
+//   umsetzFensterSorte(teile, sorteId, saatdatum): Fenster aus der gültigen Art der Sorte
+//   UMSETZ_FENSTER_OHNE_BIS = 14
+//   SatzEingabe.umsetzenGeplantAm?; SatzVorschlag.umsetzen?: Fenster & { gewaehlt }; umsetzenAm = geplanter Tag
+//   saatEingabePruefen: Feld 'umsetzen', «<Sorte>: Umsetzdatum hier nicht wählbar» bzw.
+//     «<Sorte>: Umsetzen am T.M. liegt ausserhalb T.M. bis T.M.»
+//   saatVorgang: je Satz satz, (bei Wahl ungleich Vorschlag) ereignis umsetzdatum_geaendert am Satz
+//     { von: Vorschlag, nach: Wahl, grund: 'saeen' } mit gilt_ab des Satzes, pflanzung × m, reservierung × Z mit
+//     umsetzen_vorgabe_am = Vorschlag und umsetzen_geplant_am = Wahl.
+// Fixture-Werte (tests/fixtures/saeen.ts): Salat umsetzen_ab_d 21, umsetzen_bis_d 28 → Saat 7.1.: Vorschlag 28.1.,
+// letzter Tag 10.2., Grenze 11.2.; Petersilie ohne umsetzen_ab_d. Die W0-Beispiele aus dem Issue über Zahlen.
+
+/** ein Satz Lollo Rossa in A1 mit Zieltöpfen in 2.3 (Loch 4 bis 6 frei), optional mit gewähltem Umsetztag */
+function lolloIn23(umsetzenGeplantAm?: string, e: Partial<SaatEingabe> = {}): SaatEingabe {
+  return eingabe({
+    zielPlatzId: platzId('2.3'),
+    saetze: [
+      {
+        sorteId: SORTE.lollo,
+        kulturform: 'kopf',
+        boxPlatzId: platzId('A1'),
+        zieltopfIds: toepfe('2.3.4', '2.3.5', '2.3.6'),
+        ...(umsetzenGeplantAm !== undefined ? { umsetzenGeplantAm } : {}),
+      },
+    ],
+    ...e,
+  } as Partial<SaatEingabe>);
+}
+
+/** Satz «Ziel später» ohne Zielgefäss */
+function ohneZiel(satz: Record<string, unknown>): SaatEingabe {
+  const e = eingabe({
+    saetze: [{ zieltopfIds: [], pflanzenOhneZiel: 1, ...satz }],
+  } as unknown as Partial<SaatEingabe>);
+  delete (e as { zielPlatzId?: string }).zielPlatzId;
+  return e;
+}
+
+const tabellenFolge = (v: Vorgang) => {
+  const t = v.map((s) => s.tabelle);
+  return t.filter((x, i) => x !== t[i - 1]);
+};
+
+describe('UC5-AK17 Umsetzfenster beim Säen (R6.2, R8.2)', () => {
+  it('UC5-AK17 Fenster Tomate 7.1.: Vorschlag 17.1., letzter 29.1., Grenze 30.1.', () => {
+    // W0: Tomate umsetzen_ab_d 10, umsetzen_bis_d 16 → Grenze 7.1. + 16 + 7 = 30.1., letzter Tag 29.1.
+    expect(umsetzFenster('2027-01-07', 10, 16)).toEqual({
+      vorschlag: '2027-01-17',
+      letzter: '2027-01-29',
+      grenze: '2027-01-30',
+    });
+  });
+
+  it('UC5-AK17 Fenster Petersilie 7.1.: 28.1. bis 17.2.', () => {
+    // Abweichung B: Petersilie ab 21, bis 35 → Grenze 18.2., spätestens 17.2.
+    expect(umsetzFenster('2027-01-07', 21, 35)).toEqual({
+      vorschlag: '2027-01-28',
+      letzter: '2027-02-17',
+      grenze: '2027-02-18',
+    });
+  });
+
+  it('UC5-AK17 ohne umsetzen_bis_d: Vorschlag + 14, keine Grenze', () => {
+    expect(UMSETZ_FENSTER_OHNE_BIS).toBe(14);
+    // Basilikum 4.2. + 14 = 18.2.; letzter 18.2. + 14 = 4.3. (A4)
+    const f = umsetzFenster('2027-02-04', 14, undefined);
+    expect(f).toEqual({ vorschlag: '2027-02-18', letzter: '2027-03-04' });
+    expect(f !== undefined && 'grenze' in f).toBe(false);
+    // ohne umsetzen_ab_d kein Fenster
+    expect(umsetzFenster('2027-01-07', undefined, 35)).toBeUndefined();
+    expect(umsetzFenster('2027-01-07', undefined, undefined)).toBeUndefined();
+    // A3: bis kleiner als ab ergibt ein Fenster aus einem Tag
+    expect(umsetzFenster('2027-01-07', 21, 10)).toMatchObject({
+      vorschlag: '2027-01-28',
+      letzter: '2027-01-28',
+    });
+  });
+
+  it('UC5-AK17 TZ Fenster über die Sommerzeit (28.3.2027) zählt ganze Kalendertage', () => {
+    expect(umsetzFenster('2027-03-18', 12, 18)).toEqual({
+      vorschlag: '2027-03-30',
+      letzter: '2027-04-11',
+      grenze: '2027-04-12',
+    });
+  });
+
+  it('UC5-AK17 umsetzFensterSorte liest umsetzen_ab_d und umsetzen_bis_d der Art der Sorte', () => {
+    const t = saatTeile(JETZT);
+    expect(umsetzFensterSorte(t, SORTE.lollo, '2027-01-07')).toEqual({
+      vorschlag: '2027-01-28',
+      letzter: '2027-02-10',
+      grenze: '2027-02-11',
+    });
+    expect(umsetzFensterSorte(t, SORTE.mooskrause, '2027-01-07')).toBeUndefined();
+  });
+
+  it('UC5-AK17 Satzvorschlag nennt Vorschlag, letzten und gewählten Tag, ohne Wahl gewählt = Vorschlag', () => {
+    const t = saatTeile(JETZT);
+    const [ohne] = saatVorschlag(t, lolloIn23(), JETZT, Z).saetze;
+    expect(ohne?.umsetzen).toEqual({
+      vorschlag: '2027-01-28',
+      letzter: '2027-02-10',
+      grenze: '2027-02-11',
+      gewaehlt: '2027-01-28',
+    });
+    expect(ohne?.umsetzenAm).toBe('2027-01-28');
+    const [mit] = saatVorschlag(t, lolloIn23('2027-02-03'), JETZT, Z).saetze;
+    expect(mit?.umsetzen).toEqual({
+      vorschlag: '2027-01-28',
+      letzter: '2027-02-10',
+      grenze: '2027-02-11',
+      gewaehlt: '2027-02-03',
+    });
+    expect(mit?.umsetzenAm).toBe('2027-02-03');
+  });
+
+  it('UC5-AK17 keine Wahl bei Direktsaat, Ziel später und ohne umsetzen_ab_d', () => {
+    const t = saatTeile(JETZT);
+    // Direktsaat Rucola in 3.1: umsetzenAm = Saattag, kein Fenster
+    const direkt = eingabe({
+      zielPlatzId: platzId('3.1'),
+      saetze: [{ sorteId: SORTE.rucola, kulturform: 'babyleaf', zieltopfIds: toepfe('3.1.1') }],
+    } as Partial<SaatEingabe>);
+    const [d] = saatVorschlag(t, direkt, JETZT, Z).saetze;
+    expect(d?.direktsaat).toBe(true);
+    expect(d?.umsetzen).toBeUndefined();
+    expect(d?.umsetzenAm).toBe('2027-01-07');
+    // Ziel später (keine Zieltöpfe): kein Fenster, umsetzenAm bleibt der Vorschlag für die Zeile «Umsetzen ab»
+    const spaeter = ohneZiel({ sorteId: SORTE.lollo, kulturform: 'kopf', boxPlatzId: platzId('A1') });
+    const [s] = saatVorschlag(t, spaeter, JETZT, Z).saetze;
+    expect(s?.umsetzen).toBeUndefined();
+    expect(s?.umsetzenAm).toBe('2027-01-28');
+    // Petersilie ohne umsetzen_ab_d
+    const peter = ohneZiel({ sorteId: SORTE.mooskrause, kulturform: 'schnitt', boxPlatzId: platzId('A3') });
+    const [p] = saatVorschlag(t, peter, JETZT, Z).saetze;
+    expect(p?.umsetzen).toBeUndefined();
+    expect(p?.umsetzenAm).toBeUndefined();
+  });
+});
+
+describe('UC5-AK17 ungültige Wahl (Plan 278 Runde 1 Befund 4)', () => {
+  it('UC5-AK17 ungültige Wahl: umsetzen.gewaehlt = Vorschlag', () => {
+    const t = saatTeile(JETZT);
+    for (const tag of ['2027-01-27', '2027-02-11', '3.2.2027']) {
+      const [s] = saatVorschlag(t, lolloIn23(tag), JETZT, Z).saetze;
+      expect(s?.umsetzen, tag).toEqual({
+        vorschlag: '2027-01-28',
+        letzter: '2027-02-10',
+        grenze: '2027-02-11',
+        gewaehlt: '2027-01-28',
+      });
+      expect(s?.umsetzenAm, tag).toBe('2027-01-28');
+    }
+  });
+});
+
+describe('UC5-AK18 Gewählter Umsetztag in Prüfung und Vorgang (R5.3, R6.1, R8.2, R11.2)', () => {
+  it('UC5-AK18 Wahl vor dem Vorschlag, nach dem letzten Tag oder ohne Wahlmöglichkeit abgelehnt', () => {
+    const t = saatTeile(JETZT);
+    const umsetzen = (e: SaatEingabe) => pruefen(t, e).filter((v) => v.feld === 'umsetzen');
+    expect(umsetzen(lolloIn23('2027-01-27'))).toEqual([
+      { feld: 'umsetzen', grund: 'Lollo Rossa: Umsetzen am 27.1. liegt ausserhalb 28.1. bis 10.2.' },
+    ]);
+    expect(umsetzen(lolloIn23('2027-02-11'))).toEqual([
+      { feld: 'umsetzen', grund: 'Lollo Rossa: Umsetzen am 11.2. liegt ausserhalb 28.1. bis 10.2.' },
+    ]);
+    expect(umsetzen(lolloIn23('3.2.2027'))).toHaveLength(1);
+    for (const tag of ['2027-01-27', '2027-02-11', '3.2.2027'])
+      expect(vorgang(t, lolloIn23(tag)), tag).toEqual([]);
+    // die Ränder des Fensters sind gültig
+    expect(pruefen(t, lolloIn23('2027-01-28'))).toEqual([]);
+    expect(pruefen(t, lolloIn23('2027-02-10'))).toEqual([]);
+
+    // Direktsaat: keine Wahl
+    const direkt = eingabe({
+      zielPlatzId: platzId('3.1'),
+      saetze: [
+        {
+          sorteId: SORTE.rucola,
+          kulturform: 'babyleaf',
+          zieltopfIds: toepfe('3.1.1'),
+          umsetzenGeplantAm: '2027-01-10',
+        },
+      ],
+    } as Partial<SaatEingabe>);
+    expect(umsetzen(direkt)).toEqual([{ feld: 'umsetzen', grund: 'Rucola: Umsetzdatum hier nicht wählbar' }]);
+    expect(vorgang(t, direkt)).toEqual([]);
+    // Ziel später: keine Wahl
+    const spaeter = ohneZiel({
+      sorteId: SORTE.lollo,
+      kulturform: 'kopf',
+      boxPlatzId: platzId('A1'),
+      umsetzenGeplantAm: '2027-02-01',
+    });
+    expect(umsetzen(spaeter)).toEqual([
+      { feld: 'umsetzen', grund: 'Lollo Rossa: Umsetzdatum hier nicht wählbar' },
+    ]);
+    expect(vorgang(t, spaeter)).toEqual([]);
+    // Art ohne umsetzen_ab_d (Petersilie, Ziel später): keine Wahl
+    const peter = ohneZiel({
+      sorteId: SORTE.mooskrause,
+      kulturform: 'schnitt',
+      boxPlatzId: platzId('A3'),
+      umsetzenGeplantAm: '2027-02-01',
+    });
+    expect(umsetzen(peter)).toEqual([
+      { feld: 'umsetzen', grund: 'Mooskrause: Umsetzdatum hier nicht wählbar' },
+    ]);
+  });
+
+  it('UC5-AK18 Vorgang mit Wahl: Vorgabe = Vorschlag, Ereignis am Satz {von, nach, grund: saeen} nach dem Satz und vor den Reservierungen', () => {
+    const t = saatTeile(JETZT);
+    const e = lolloIn23('2027-02-03');
+    expect(pruefen(t, e)).toEqual([]);
+    const v = vorgang(t, e);
+    expect(tabellenFolge(v)).toEqual(['pflanzvorgang', 'satz', 'ereignis', 'pflanzung', 'reservierung']);
+    const [satz] = neue(v, 'satz');
+    const ereignisse = neue(v, 'ereignis');
+    expect(ereignisse).toHaveLength(1);
+    const [ev] = ereignisse;
+    expect(ev).toMatchObject({
+      typ: 'umsetzdatum_geaendert',
+      satz_id: satz?.['id'],
+      gilt_ab: satz?.['gilt_ab'],
+    });
+    expect(ev?.['id']).toBe(ev?.client_id);
+    expect(ev?.['pflanzung_id'] ?? null).toBeNull();
+    expect(ev?.['daten']).toEqual({ von: '2027-01-28', nach: '2027-02-03', grund: 'saeen' });
+    // Position: direkt nach dem Satz, vor der ersten Pflanzung und Reservierung (Risiko 1)
+    const index = (tabelle: string) => v.findIndex((s) => s.tabelle === tabelle);
+    expect(index('ereignis')).toBe(index('satz') + 1);
+    expect(index('ereignis')).toBeLessThan(index('reservierung'));
+    const res = neue(v, 'reservierung');
+    expect(res).toHaveLength(3);
+    for (const r of res)
+      expect(r).toMatchObject({ umsetzen_vorgabe_am: '2027-01-28', umsetzen_geplant_am: '2027-02-03' });
+  });
+
+  it('UC5-AK18 zwei Sorten, nur eine mit Wahl: Ereignis nur am Satz mit Wahl', () => {
+    const t = saatTeile(JETZT);
+    const e = eingabe({
+      zielPlatzId: platzId('2.3'),
+      saetze: [
+        {
+          sorteId: SORTE.lollo,
+          kulturform: 'kopf',
+          boxPlatzId: platzId('A1'),
+          zieltopfIds: toepfe('2.3.4', '2.3.5'),
+          umsetzenGeplantAm: '2027-02-01',
+        },
+        {
+          sorteId: SORTE.eichblatt,
+          kulturform: 'kopf',
+          boxPlatzId: platzId('A1'),
+          zieltopfIds: toepfe('2.3.6'),
+        },
+      ],
+    } as Partial<SaatEingabe>);
+    const v = vorgang(t, e);
+    expect(tabellenFolge(v)).toEqual([
+      'pflanzvorgang',
+      'satz',
+      'ereignis',
+      'pflanzung',
+      'reservierung',
+      'satz',
+      'pflanzung',
+      'reservierung',
+    ]);
+    const [lollo, eichblatt] = neue(v, 'satz');
+    expect(neue(v, 'ereignis').map((x) => x['satz_id'])).toEqual([lollo?.['id']]);
+    const resVon = (satz: Record<string, unknown> | undefined) => {
+      const p = neue(v, 'pflanzung')
+        .filter((x) => x['satz_id'] === satz?.['id'])
+        .map((x) => x['id']);
+      return neue(v, 'reservierung').filter((r) => p.includes(r['pflanzung_id']));
+    };
+    expect(resVon(lollo)).toHaveLength(2);
+    for (const r of resVon(lollo))
+      expect(r).toMatchObject({ umsetzen_vorgabe_am: '2027-01-28', umsetzen_geplant_am: '2027-02-01' });
+    expect(resVon(eichblatt)).toHaveLength(1);
+    for (const r of resVon(eichblatt))
+      expect(r).toMatchObject({ umsetzen_vorgabe_am: '2027-01-28', umsetzen_geplant_am: '2027-01-28' });
+  });
+
+  it('UC5-AK18 Ereignis besteht vorgangPruefen() und ereignisDatenPruefen() nimmt grund saeen an', () => {
+    const v = vorgang(saatTeile(JETZT), lolloIn23('2027-02-03'));
+    expect(neue(v, 'ereignis')).toHaveLength(1);
+    expect(vorgangPruefen(v)).toEqual([]);
+    expect(
+      ereignisDatenPruefen('umsetzdatum_geaendert', {
+        von: '2027-01-28',
+        nach: '2027-02-03',
+        grund: 'saeen',
+      }),
+    ).toEqual([]);
+    // die übrigen Gründe bleiben, ein unbekannter ist weiterhin ein Verstoss
+    for (const grund of ['morgen', 'in_station_lassen', 'ziel_spaeter'])
+      expect(
+        ereignisDatenPruefen('umsetzdatum_geaendert', { von: '2027-01-28', nach: '2027-01-29', grund }),
+        grund,
+      ).toEqual([]);
+    expect(
+      ereignisDatenPruefen('umsetzdatum_geaendert', { von: '2027-01-28', nach: '2027-02-03', grund: 'xyz' })
+        .length,
+    ).toBeGreaterThan(0);
+  });
+
+  it('UC5-AK18 ohne Wahl und mit Wahl = Vorschlag kein Ereignis (Vorgang wie bisher)', () => {
+    const t = saatTeile(JETZT);
+    const ohne = vorgang(t, lolloIn23());
+    const gleich = vorgang(t, lolloIn23('2027-01-28'));
+    expect(ohne.length).toBeGreaterThan(0);
+    expect(neue(ohne, 'ereignis')).toEqual([]);
+    expect(gleich).toEqual(ohne);
+    expect(tabellenFolge(ohne)).toEqual(['pflanzvorgang', 'satz', 'pflanzung', 'reservierung']);
+    for (const r of neue(gleich, 'reservierung'))
+      expect(r).toMatchObject({ umsetzen_vorgabe_am: '2027-01-28', umsetzen_geplant_am: '2027-01-28' });
+  });
+
+  it('UC5-AK18 Rückgängig storniert auch das Ereignis', () => {
+    const v = vorgang(saatTeile(JETZT), lolloIn23('2027-02-03'));
+    const [ev] = neue(v, 'ereignis');
+    expect(ev).toBeDefined();
+    const r = saatRueckgaengig(v);
+    expect(r).toHaveLength(v.length);
+    expect(r.map((s) => s.tabelle)).toEqual([...v.map((s) => s.tabelle)].reverse());
+    const i = r.findIndex((s) => s.tabelle === 'ereignis');
+    expect(r[i]).toEqual({
+      art: 'storno',
+      tabelle: 'ereignis',
+      clientId: ev?.client_id,
+      grund: 'rueckgaengig',
+    });
+    // nach den Reservierungen und Pflanzungen, direkt vor dem Satz
+    expect(r.slice(0, i).map((s) => s.tabelle)).not.toContain('satz');
+    expect(r[i + 1]?.tabelle).toBe('satz');
+  });
+
+  it('UC5-AK18 Zieltöpfe am gewählten Tag (Nachfolge-Topf frei)', () => {
+    // Satz in 2.3 (Lollo Rossa kopf, gesät 8.12.2026, Loch 1 bis 3) mit einmaliger Ernte 33 Tage nach dem Umsetzen
+    // (lokale Zeile art_kulturform): 8.12. + 21 = 29.12., + 33 = 31.1. → am Vorschlag 28.1. belegt, an der Wahl 3.2.
+    // frei als Nachfolge (R11.2)
+    const t = saatTeile(JETZT);
+    t['art_kulturform'] = [
+      {
+        id: uid('37', 1),
+        art_id: 'lactuca_sativa',
+        kulturform: 'kopf',
+        ernteart: 'einmalig',
+        ernte_ab_d: 33,
+        kulturdauer_max_d: null,
+        kulturdauer_typisch_d: null,
+        gueltig_bis: null,
+      },
+    ];
+    expect(zieltoepfe(t, platzId('2.3'), new Map(), '2027-02-03').find((z) => z.lochNr === 1)).toMatchObject({
+      zustand: 'frei',
+      belegtBis: '2027-01-31',
+    });
+    const mitTopf = (tag?: string) =>
+      eingabe({
+        zielPlatzId: platzId('2.3'),
+        saetze: [
+          {
+            sorteId: SORTE.eichblatt,
+            kulturform: 'kopf',
+            boxPlatzId: platzId('A1'),
+            zieltopfIds: toepfe('2.3.1'),
+            ...(tag ? { umsetzenGeplantAm: tag } : {}),
+          },
+        ],
+      } as Partial<SaatEingabe>);
+    expect(pruefen(t, mitTopf())).toContainEqual({ feld: 'ziel', grund: 'Topf 2.3.1 ist belegt' });
+    expect(vorgang(t, mitTopf())).toEqual([]);
+    expect(pruefen(t, mitTopf('2027-02-03'))).toEqual([]);
+    const v = vorgang(t, mitTopf('2027-02-03'));
+    expect(neue(v, 'reservierung').map((r) => r['netztopf_id'])).toEqual(toepfe('2.3.1'));
+  });
+
+  it('UC5-AK18 Stationsvorschau bis zum gewählten Tag', () => {
+    // Lollo Rossa (keimt 11.1., 4 Schwämme, 3 Zieltöpfe → 4 Plätze 5 cm) mit Mooskrause (keimt 7.1. + 21 = 28.1.,
+    // Ziel später): am 28.1. belegt Lollo Rossa die Station nur, wenn der gewählte Tag nach dem 28.1. liegt
+    const t = saatTeile(JETZT);
+    const mit = (tag?: string) => {
+      const e = lolloIn23(tag);
+      return {
+        ...e,
+        saetze: [
+          ...e.saetze,
+          {
+            sorteId: SORTE.mooskrause,
+            kulturform: 'schnitt',
+            boxPlatzId: platzId('A3'),
+            zieltopfIds: [],
+            pflanzenOhneZiel: 1,
+          },
+        ],
+      } as SaatEingabe;
+    };
+    const frei = (e: SaatEingabe, tag: string) =>
+      saatVorschlag(t, e, JETZT, Z).vorschau.zeilen.find((z) => z.tag === tag)?.frei50;
+    const ohne = frei(mit(), '2027-01-28');
+    const gewaehlt = frei(mit('2027-02-03'), '2027-01-28');
+    expect(ohne).toBeDefined();
+    expect(gewaehlt).toBeDefined();
+    expect((ohne ?? 0) - (gewaehlt ?? 0)).toBe(4);
+    // am Keimtag 11.1. gleich (Lollo Rossa belegt dort in beiden Fällen)
+    expect(frei(mit('2027-02-03'), '2027-01-11')).toBe(frei(mit(), '2027-01-11'));
+  });
+
+  it('UC5-AK18 TO2 gleiche Eingabe mit Wahl und gleiche IDs ergeben gleiche Schritte', () => {
+    const t = saatTeile(JETZT);
+    const eins = vorgang(t, lolloIn23('2027-02-03'));
+    const zwei = vorgang(t, lolloIn23('2027-02-03'));
+    expect(neue(eins, 'ereignis')).toHaveLength(1);
+    expect(zwei).toEqual(eins);
+    const ids = neue(eins).map((f) => f.client_id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it('UC5-AK18 Nacherfassung: Ereignis mit gilt_ab 12:00 Zürich am Saattag wie der Satz (R1.6)', () => {
+    // Saat 20.12.2026: Vorschlag 20.12. + 21 = 10.1., letzter Tag 20.12. + 28 + 6 = 23.1.; Wahl 15.1.
+    const t = saatTeile(JETZT);
+    const e = lolloIn23('2027-01-15', { saatdatum: '2026-12-20' });
+    expect(pruefen(t, e)).toEqual([]);
+    const v = vorgang(t, e);
+    const [satz] = neue(v, 'satz');
+    const [ev] = neue(v, 'ereignis');
+    expect(Date.parse(String(satz?.['gilt_ab']))).toBe(Date.parse('2026-12-20T11:00:00Z'));
+    expect(ev?.['gilt_ab']).toBe(satz?.['gilt_ab']);
+    expect(ev?.['daten']).toEqual({ von: '2027-01-10', nach: '2027-01-15', grund: 'saeen' });
+    for (const r of neue(v, 'reservierung'))
+      expect(r).toMatchObject({ umsetzen_vorgabe_am: '2027-01-10', umsetzen_geplant_am: '2027-01-15' });
   });
 });

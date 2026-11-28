@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 import postgres from 'postgres';
 import { afterAll, describe, expect, it } from 'vitest';
 import { zeileVorbereiten, type Schritt, type Vorgang } from '../../src/domain/datenpfad/erfassung.ts';
-import { saatVorgang, type SaatEingabe } from '../../src/domain/pflanzung/saeen.ts';
+import { saatRueckgaengig, saatVorgang, type SaatEingabe } from '../../src/domain/pflanzung/saeen.ts';
 import { artAuswahl } from '../../src/domain/w0/auswahl.ts';
 import { ladeplan } from '../../src/domain/w0/abbildung.ts';
 import { seedKonstanten } from '../../src/domain/w0/konstanten.ts';
@@ -362,6 +362,116 @@ describe('R8.1 und R8.2 in der Datenbank', () => {
           nacherfasst: true,
           einstieg: 'nacherfassung',
         });
+    });
+  });
+});
+
+// Issue #278, Plan 278: gewählter Umsetztag beim Säen. Testart B («Zwei») hat umsetzen_ab_d 10 und umsetzen_bis_d 18
+// (tests/fixtures/wissen): Saat 7.1. → Vorschlag 17.1., Grenze 1.2., letzter wählbarer Tag 31.1.; gewählt 20.1. Der
+// Vorgang schreibt das Ereignis umsetzdatum_geaendert am Satz vor den Reservierungen; reservierung_vorbelegen()
+// setzt umsetzen_geplant_am daraus, umsetzen_vorgabe_am bleibt der Vorschlag.
+const WAHL = '2027-01-20';
+
+async function gesaetMitWahl(tx: Db, wahl?: string): Promise<{ lage: Lage; vorgang: Vorgang }> {
+  const lage = await lageAufbauen(tx);
+  const e = eingabe(lage);
+  const [zwei, vier] = e.saetze;
+  const mitWahl = {
+    ...e,
+    saetze: [{ ...zwei, ...(wahl ? { umsetzenGeplantAm: wahl } : {}) }, vier],
+  } as SaatEingabe;
+  const vorgang = saatVorgang(await teileLesen(tx), mitWahl, neueIds(), JETZT, ZEITZONE);
+  expect(vorgang.length).toBeGreaterThan(0);
+  await einfuegen(tx, vorgang);
+  return { lage, vorgang };
+}
+
+describe('UC5-AK20 Gewählter Umsetztag in der Datenbank (R8.2, 8.1 Regel 2)', () => {
+  it('UC5-AK20 mit gewähltem Tag: umsetzen_geplant_am = Wahl, umsetzen_vorgabe_am = Vorschlag', async () => {
+    await inTransaktion(async (tx) => {
+      const { vorgang } = await gesaetMitWahl(tx, WAHL);
+      expect(ids(vorgang, 'ereignis')).toHaveLength(1);
+      const zeilen = await tx<{ vorgabe: string; geplant: string }[]>`
+        select umsetzen_vorgabe_am::text as vorgabe, umsetzen_geplant_am::text as geplant
+          from public.reservierung where client_id = any(${ids(vorgang, 'reservierung')}::uuid[])`;
+      expect(zeilen).toHaveLength(3);
+      for (const z of zeilen) expect(z).toEqual({ vorgabe: '2027-01-17', geplant: WAHL });
+      // das Ereignis steht am Satz «Zwei» ohne Pflanzung, mit grund saeen
+      const [satzZwei] = ids(vorgang, 'satz');
+      const ereignisse = await tx<
+        {
+          typ: string;
+          satz_id: string | null;
+          pflanzung_id: string | null;
+          grund: string;
+          von: string;
+          nach: string;
+        }[]
+      >`
+        select e.typ::text as typ, s.client_id as satz_id, e.pflanzung_id, e.daten ->> 'grund' as grund,
+               e.daten ->> 'von' as von, e.daten ->> 'nach' as nach
+          from public.ereignis e left join public.satz s on s.id = e.satz_id
+         where e.client_id = any(${ids(vorgang, 'ereignis')}::uuid[])`;
+      expect(ereignisse).toEqual([
+        {
+          typ: 'umsetzdatum_geaendert',
+          satz_id: satzZwei,
+          pflanzung_id: null,
+          grund: 'saeen',
+          von: '2027-01-17',
+          nach: WAHL,
+        },
+      ]);
+      // aktive Reservierungen in der Sicht mit dem gewählten Tag
+      const aktiv = await tx<{ geplant: string }[]>`
+        select umsetzen_geplant_am::text as geplant from public.v_reservierung_aktiv
+         where client_id = any(${ids(vorgang, 'reservierung')}::uuid[])`;
+      expect(aktiv.map((z) => z.geplant)).toEqual([WAHL, WAHL, WAHL]);
+    });
+  });
+
+  it('UC5-AK20 ohne Wahl: umsetzen_geplant_am = Vorgabe, kein Ereignis', async () => {
+    await inTransaktion(async (tx) => {
+      const { vorgang } = await gesaetMitWahl(tx);
+      expect(ids(vorgang, 'ereignis')).toEqual([]);
+      const zeilen = await tx<{ vorgabe: string; geplant: string }[]>`
+        select umsetzen_vorgabe_am::text as vorgabe, umsetzen_geplant_am::text as geplant
+          from public.reservierung where client_id = any(${ids(vorgang, 'reservierung')}::uuid[])`;
+      expect(zeilen).toHaveLength(3);
+      for (const z of zeilen) expect(z).toEqual({ vorgabe: '2027-01-17', geplant: '2027-01-17' });
+    });
+  });
+
+  it('UC5-AK20 Rückgängig in umgekehrter Folge läuft ohne Fehler durch', async () => {
+    await inTransaktion(async (tx) => {
+      const { vorgang } = await gesaetMitWahl(tx, WAHL);
+      expect(ids(vorgang, 'ereignis')).toHaveLength(1);
+      const storno = saatRueckgaengig(vorgang);
+      expect(storno.map((s) => s.tabelle)).toContain('ereignis');
+      // wie tests/seed/keimung.test.ts: Storno setzt storniert_am (pflanzvorgang hat kein storno_grund);
+      // cache_geschuetzt() und cache_aus_ereignis() dürfen dabei keine Ausnahme werfen
+      for (const s of storno) {
+        expect(s.art).toBe('storno');
+        if (s.art !== 'storno') continue;
+        await tx.unsafe(
+          `update public.${s.tabelle} set storniert_am = $1::timestamptz
+            where client_id = $2::uuid and storniert_am is null`,
+          [JETZT.toISOString(), s.clientId],
+        );
+      }
+      for (const tabelle of ['satz', 'pflanzung', 'reservierung', 'ereignis', 'pflanzvorgang']) {
+        const offen = ids(vorgang, tabelle);
+        if (offen.length === 0) continue;
+        const [z] = await tx.unsafe<{ n: number }[]>(
+          `select count(*)::int as n from public.${tabelle} where client_id = any($1::uuid[]) and storniert_am is null`,
+          [offen],
+        );
+        expect(z?.n, tabelle).toBe(0);
+      }
+      const [aktiv] = await tx<{ n: number }[]>`
+        select count(*)::int as n from public.v_reservierung_aktiv
+         where client_id = any(${ids(vorgang, 'reservierung')}::uuid[])`;
+      expect(aktiv?.n).toBe(0);
     });
   });
 });
