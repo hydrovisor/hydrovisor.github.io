@@ -37,26 +37,31 @@ ak = 'ak.'
 # Tim im Chat am 28.11.2026 auf die Empfehlungen des Lead zum Belegungsplan-Abgleich: «Ja, so umsetzen». Entscheid C:
 # Die Standzeit von 42 Tagen der Schnittsalate (Lollo Rossa, Eissalat, Eichblatt) gilt ab Umsetzen (Plan, Konzept 14.1);
 # der Plantag liegt 14 Tage nach der Saat. Die App rechnet das Ende als Saat + kulturdauer_max_d (03_import_w0.md 4.3.3).
+# Die Quelle selbst zählt sechs Wochen ab Saat (Direktsaat in die Schalen); 56 stützt sich auf Tims Entscheid (Befund 1).
 korrektur(f'{ak}lactuca_sativa.schnitt.kulturdauer_max_d', f'{ak}lactuca_sativa.schnitt.kulturdauer_max_d#2', 56,
-          '42 Tage Standzeit ab Umsetzen (6 Wochen nach D4) + 14 Tage von der Saat bis zum Plantag (Konzept 14.1) = '
-          '56 Tage ab Saat; Zählweise nach Tims Entscheid C vom 28.11.2026',
+          'Die Quelle zählt sechs Wochen ab Saat (Direktsaat in die Schalen, 42 Tage nach D4); nach Tims Entscheid C vom '
+          '28.11.2026 gilt die Standzeit von 42 Tagen ab Umsetzen (Konzept 14.1), also 42 Tage Standzeit + 14 Tage von der '
+          'Saat bis zum Plantag = 56 Tage ab Saat; die 56 Tage stützen sich auf Tims Entscheid, nicht auf die Quelle',
           'Tims Entscheid C vom 28.11.2026 im Chat («Ja, so umsetzen», Belegungsplan-Abgleich): Standzeit 42 Tage ab '
-          'Umsetzen gilt, Plantag 14 Tage nach der Saat, also 42 + 14 = 56 Tage ab Saat statt 42; Quelle, Kurzzitat und '
-          'Klasse der alten Zeile bleiben')
+          'Umsetzen gilt, Plantag 14 Tage nach der Saat, also 42 + 14 = 56 Tage ab Saat statt 42 (die Quelle belegt sechs '
+          'Wochen ab Saat, 56 folgt aus der Zählweise ab Umsetzen nach Tims Entscheid); Quelle, Kurzzitat und Klasse der '
+          'alten Zeile bleiben')
 
 # ---------------- F: Nüsslisalat, Ernte ab (Lead, (A)) ----------------
 # Die Quelle (Floating, Klasse A) zählt die 29 Tage ab dem Umsetzen nach 22 Tagen Anzucht in Steinwolle (dieselbe Quelle
-# trägt art.valerianella_locusta.umsetzen_ab_d 22). Die Anlage sät Nüsslisalat direkt (3.1, Kratky, Konzept 3.3 und 14.1);
-# die App rechnet bei Direktsaat Saat + ernte_ab_d (D7, ersteErnteAb()). D7 regelt nur die Gegenrichtung (Quelle ab Saat,
-# Anlage setzt um) und nimmt Direktsaat aus; hier addiert der Lead den Umsetztag der Quelle (Plan 277 A2, keine neue Regel).
+# trägt art.valerianella_locusta.umsetzen_ab_d 22). Die Anlage sät Nüsslisalat direkt (3.1, Kratky, Konzept 3.3 und 14.1).
+# Regel D7 Satz 1 und 03_import_w0.md 4.3.3: ernte_ab_d zählt bei Direktsaat ab Saat; die App rechnet einmalige Ernte bei
+# Direktsaat als Saat + ernte_ab_d (voraussichtlichesEnde(), ernteStand().moeglichAb). Die Quelle liefert beide Teile;
+# dieselbe Summe trägt schon ak.valerianella_locusta.kopf.kulturdauer_typisch_d 51 (12.11.2026).
 korrektur(f'{ak}valerianella_locusta.kopf.ernte_ab_d', f'{ak}valerianella_locusta.kopf.ernte_ab_d#2', 51,
           '29 Tage ab Umsetzen + 22 Tage Anzucht derselben Quelle (Abschnitt 4.1, art.valerianella_locusta.umsetzen_ab_d) '
-          '= 51 Tage ab Saat, weil die Anlage Nüsslisalat direkt sät und die App bei Direktsaat ab Saat rechnet '
-          '(Umkehrung von D7, Plan 277 A2)',
-          'Abweichung F des Belegungsplan-Abgleichs, (A): Die Quelle zählt 29 Tage ab Umsetzen nach 22 Tagen Anzucht; '
-          'die Anlage sät direkt (3.1, Kratky), die App rechnet dann ab Saat; D7 nimmt Direktsaat aus, deshalb neue '
-          'Ableitung 29 + 22 = 51 statt 29; mit Saat 7.1.2027 erste Ernte 27.2.2027 wie im Plan (26.2. bis 8.3.), '
-          'unter kulturdauer_max_d 66')
+          '= 51 Tage ab Saat; Regel D7 Satz 1 und 03_import_w0.md 4.3.3: «Ernte ab» zählt bei Direktsaat ab Saat, die '
+          'Anlage sät Nüsslisalat direkt (3.1, Kratky), die Quelle liefert beide Teile; gleich '
+          'ak.valerianella_locusta.kopf.kulturdauer_typisch_d 51 derselben Quelle',
+          'Abweichung F des Belegungsplan-Abgleichs, Regel D7 Satz 1 (A): «Ernte ab» zählt bei Direktsaat ab Saat '
+          '(03_import_w0.md 4.3.3); die Quelle zählt 29 Tage ab Umsetzen nach 22 Tagen Anzucht, die Anlage sät direkt '
+          '(3.1, Kratky), also 29 + 22 = 51 Tage ab Saat statt 29 (gleich kulturdauer_typisch_d 51 derselben Quelle); '
+          'mit Saat 7.1.2027 erste Ernte 27.2.2027 wie im Plan (26.2. bis 8.3.), unter kulturdauer_max_d 66')
 
 # ---------------- Nachkontrolle Basilikum Schnitt, Ernte ab ----------------
 # ak.ocimum_basilicum.schnitt.ernte_ab_d 50 (Adv. Hort. Sci. 27(4), vor D7 freigegeben): Quellenprüfer am 28.11.2026
