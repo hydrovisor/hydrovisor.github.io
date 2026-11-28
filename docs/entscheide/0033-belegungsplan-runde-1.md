@@ -19,6 +19,6 @@ Dazu zwei Lead-Entscheide nach Entscheid 0018 (W0-Freigabe durch den Lead); sie 
 - **F** Nüsslisalat: `ak.valerianella_locusta.kopf.ernte_ab_d` als neue Zeile 51 Tage (die Quelle zählt 29 Tage ab Umsetzen nach 22 Tagen; (A) neue Ableitung, weil Regel D7 Direktsaat ausnimmt). Umsetzung #277.
 - **Basilikum:** Nachkontrolle `ak.ocimum_basilicum.schnitt.ernte_ab_d` = 50 (vor Regel D7 freigegeben; zählt die Quelle ab Saat, Korrektur nach D7). Umsetzung #277.
 
-**Folge für den Plan (A, Lead):** Mit B zieht Petersilie am 11.2. in die 7 Tage alte Lösung von 2.2 (Erstansatz 4.2.). Nach R2.2 schlägt die App am Umsetztag einen Wechsel vor. Der Belegungsplan nimmt an, dass Tim ihn ablehnt und 2.2 wie geplant am 14.2. wechselt; sonst trägt der 11.2. vier Ansätze statt höchstens drei. Tim bestätigt die Annahme mit der Konzeptfassung 1.12.
+**Folge für den Plan (A, Lead):** Mit B zieht Petersilie am 11.2. in die 7 Tage alte Lösung von 2.2 (Erstansatz 4.2.). Nach R2.2 schlägt die App am Umsetztag einen Wechsel vor. Der Belegungsplan nimmt an, dass Tim ihn ablehnt und 2.2 wie geplant am 14.2. wechselt; sonst trägt der 11.2. vier Ansätze statt höchstens drei. Tim hat die Annahme mit der Konzeptfassung 1.12 am 28.11.2026 bestätigt («Ja, mit 11.2.»; Alternative wäre der 10.2. ohne Annahme gewesen).
 
 **Widerruf.** Ein Satz von Tim im Chat genügt.
