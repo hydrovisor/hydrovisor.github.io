@@ -715,6 +715,22 @@ describe('UC5-AK17 Umsetzfenster beim Säen (R6.2, R8.2)', () => {
   });
 });
 
+describe('UC5-AK17 ungültige Wahl (Plan 278 Runde 1 Befund 4)', () => {
+  it('UC5-AK17 ungültige Wahl: umsetzen.gewaehlt = Vorschlag', () => {
+    const t = saatTeile(JETZT);
+    for (const tag of ['2027-01-27', '2027-02-11', '3.2.2027']) {
+      const [s] = saatVorschlag(t, lolloIn23(tag), JETZT, Z).saetze;
+      expect(s?.umsetzen, tag).toEqual({
+        vorschlag: '2027-01-28',
+        letzter: '2027-02-10',
+        grenze: '2027-02-11',
+        gewaehlt: '2027-01-28',
+      });
+      expect(s?.umsetzenAm, tag).toBe('2027-01-28');
+    }
+  });
+});
+
 describe('UC5-AK18 Gewählter Umsetztag in Prüfung und Vorgang (R5.3, R6.1, R8.2, R11.2)', () => {
   it('UC5-AK18 Wahl vor dem Vorschlag, nach dem letzten Tag oder ohne Wahlmöglichkeit abgelehnt', () => {
     const t = saatTeile(JETZT);
