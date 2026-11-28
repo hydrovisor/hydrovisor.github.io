@@ -121,6 +121,7 @@ Stand 1.11.2026 · Auftrag 2 «Spezifikation». Bedeutungen stehen in Konzept v1
 | Edge Functions | `push-taeglich`, `push-quittung`, `ki-tuete` | – |
 | Zugriff | `zugang`, `ist_tim()` | – |
 | Umsetzen, Sämling, Zieltopf (Plan 33) | Ereignisse `umsetzen`, `umsetzdatum_geaendert`, `ernte`, `abschluss` | `umsetzAnsicht()`, `wieGeplant()`, `umsetzZiele()`, `alleFreienWaehlen()`, `umsetzEingabePruefen()`, `umsetzVorgang()`, `umsetzZusammenfassung()`, `umsetzAufgaben()` |
+| Umsetzdatum beim Säen (Plan 278) | `reservierung.umsetzen_vorgabe_am`, `umsetzen_geplant_am`, Ereignis `umsetzdatum_geaendert` (Grund `saeen`) | `umsetzFenster()`, `umsetzFensterSorte()`, `UmsetzFenster`, `UMSETZ_FENSTER_OHNE_BIS` |
 | Verschieben, Tausch, Wurzelregel (Plan 33) | Ereignisse `verschieben`, `tausch` (`vorgang_id`) | `verschiebenPruefen()`, `verschiebZiele()`, `verschiebAnsicht()`, `verschiebVorgang()`, `umgesetztAm()`, `HINWEIS_WURZELN` |
 | Topf und Deckel (Plan 33) | `v_netztopf_platz`, `netztopf` | `topfOrt()`, `pflanzungenImTopf()`, `lochGroesse()`, `topfPasst()`, `deckelBelegung()`, `DeckelLoch` |
 | Deckel-Hilfen und Typen (Plan 33) | – | `lochText()`, `lochArt()`, `lochName()`, `deckelReihen()`, `istStation()`, `UmsetzEingabe`, `Saemling` |

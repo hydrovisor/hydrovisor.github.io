@@ -93,7 +93,11 @@ const SCHEMA: Readonly<Record<EreignisTyp, Schema>> = {
   },
   verschieben: { schluessel: ORTSWECHSEL },
   umsetzdatum_geaendert: {
-    schluessel: { von: undefined, nach: undefined, grund: ['morgen', 'in_station_lassen', 'ziel_spaeter'] },
+    schluessel: {
+      von: undefined,
+      nach: undefined,
+      grund: ['morgen', 'in_station_lassen', 'ziel_spaeter', 'saeen'],
+    },
   },
   // Plan 36 A7: Einstufung bei frei gewähltem Zielgefäss { einstufung, rang, gruende }
   umsetzen: {
